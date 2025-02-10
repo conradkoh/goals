@@ -226,3 +226,9 @@ A modern web application for managing organizational goals and tasks across diff
 - Keyboard shortcuts for common actions
 - Consistent layout across different views
 - Clear visual feedback for all actions
+
+## Editor Enhancements
+
+- Keyboard Shortcut for Hyperlink Embedding: The application will support Cmd+K in text fields, which will trigger a modal/dialog allowing users to embed hyperlinks. This ensures that users can easily add links to goal descriptions, task details, and other text content.
+
+- Preservation of Hyperlinks and Formatting on Cut and Paste: When users cut and paste content (such as an entire day's content), all hyperlinks and rich text formatting (e.g., bold, italics, underlining) will be maintained to ensure consistency and preservation of the intended design.
