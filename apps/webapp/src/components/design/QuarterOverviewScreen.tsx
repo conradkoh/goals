@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { DateTime } from 'luxon';
-import NavigationHeader from './NavigationHeader';
-import { DailyGoalSection } from './goals/DailyGoalSection';
-import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
-import { QuarterlyGoalSection } from './goals/QuarlerlyGoalSection';
+import {
+  EditState,
+  QuarterlyGoalBase,
+  QuarterlyGoalWeekState,
+} from '../../types/goals';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,511 +16,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
+import NavigationHeader from './NavigationHeader';
+import { DailyGoalSection } from './goals/DailyGoalSection';
+import { QuarterlyGoalSection } from './goals/QuarterlyGoalSection';
+import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
 
 interface WeekData {
   weekLabel: string;
   weekNumber: number;
   days: string[];
-  quarterlyGoals: QuarterlyGoal[];
+  quarterlyGoal: QuarterlyGoalBase;
+  quarterlyGoalWeekState: QuarterlyGoalWeekState;
 }
-
-interface QuarterlyGoal {
-  id: string;
-  title: string;
-  path: string;
-  quarter: 1 | 2 | 3 | 4;
-  progress: number;
-  isStarred?: boolean;
-  isPinned?: boolean;
-  weeklyGoals: {
-    id: string;
-    title: string;
-    path: string;
-    isComplete: boolean;
-    isHardComplete: boolean;
-    tasks: {
-      id: string;
-      title: string;
-      isComplete: boolean;
-      path: string;
-      date: string;
-    }[];
-  }[];
-}
-
-interface EditState {
-  weekIndex: number;
-  goalId: string;
-  type: 'title' | 'progress';
-  originalValue: string;
-}
-
-// Mock data structure
-const mockWeekData: WeekData[] = [
-  {
-    weekLabel: 'Prev Week',
-    weekNumber: 1,
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    quarterlyGoals: [
-      {
-        id: 'q1',
-        title: 'Increase Sales',
-        path: '/q1',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w1',
-            title: 'Improve Customer Acquisition',
-            path: '/q1/w1',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't1',
-                title: 'Review marketing analytics',
-                isComplete: true,
-                path: '/q1/w1/t1',
-                date: '2024-03-01',
-              },
-              {
-                id: 't2',
-                title: 'Update social media strategy',
-                isComplete: false,
-                path: '/q1/w1/t2',
-                date: '2024-03-01',
-              },
-            ],
-          },
-          {
-            id: 'w2',
-            title: 'Optimize Sales Funnel',
-            path: '/q1/w2',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't3',
-                title: 'Analyze conversion rates',
-                isComplete: false,
-                path: '/q1/w2/t3',
-                date: '2024-03-01',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'q2',
-        title: 'Launch New Product',
-        path: '/q2',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w3',
-            title: 'Complete MVP Development',
-            path: '/q2/w3',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't4',
-                title: 'Finalize feature list',
-                isComplete: true,
-                path: '/q2/w3/t4',
-                date: '2024-03-01',
-              },
-              {
-                id: 't5',
-                title: 'Run integration tests',
-                isComplete: false,
-                path: '/q2/w3/t5',
-                date: '2024-03-01',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    weekLabel: 'Last Week',
-    weekNumber: 2,
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    quarterlyGoals: [
-      {
-        id: 'q1',
-        title: 'Increase Sales',
-        path: '/q1',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w1',
-            title: 'Improve Customer Acquisition',
-            path: '/q1/w1',
-            isComplete: true,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't1',
-                title: 'Review marketing analytics',
-                isComplete: true,
-                path: '/q1/w1/t1',
-                date: '2024-03-08',
-              },
-              {
-                id: 't2',
-                title: 'Update social media strategy',
-                isComplete: true,
-                path: '/q1/w1/t2',
-                date: '2024-03-08',
-              },
-            ],
-          },
-          {
-            id: 'w2',
-            title: 'Optimize Sales Funnel',
-            path: '/q1/w2',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't3',
-                title: 'Analyze conversion rates',
-                isComplete: false,
-                path: '/q1/w2/t3',
-                date: '2024-03-08',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'q2',
-        title: 'Launch New Product',
-        path: '/q2',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w3',
-            title: 'Complete MVP Development',
-            path: '/q2/w3',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't4',
-                title: 'Finalize feature list',
-                isComplete: true,
-                path: '/q2/w3/t4',
-                date: '2024-03-08',
-              },
-              {
-                id: 't5',
-                title: 'Run integration tests',
-                isComplete: false,
-                path: '/q2/w3/t5',
-                date: '2024-03-08',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    weekLabel: 'This Week',
-    weekNumber: 3,
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    quarterlyGoals: [
-      {
-        id: 'q1',
-        title: 'Increase Sales',
-        path: '/q1',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w1',
-            title: 'Improve Customer Acquisition',
-            path: '/q1/w1',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't1',
-                title: 'Review marketing analytics',
-                isComplete: false,
-                path: '/q1/w1/t1',
-                date: '2024-03-15',
-              },
-              {
-                id: 't2',
-                title: 'Update social media strategy',
-                isComplete: false,
-                path: '/q1/w1/t2',
-                date: '2024-03-15',
-              },
-            ],
-          },
-          {
-            id: 'w2',
-            title: 'Optimize Sales Funnel',
-            path: '/q1/w2',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't3',
-                title: 'Analyze conversion rates',
-                isComplete: false,
-                path: '/q1/w2/t3',
-                date: '2024-03-15',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'q2',
-        title: 'Launch New Product',
-        path: '/q2',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w3',
-            title: 'Complete MVP Development',
-            path: '/q2/w3',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't4',
-                title: 'Finalize feature list',
-                isComplete: false,
-                path: '/q2/w3/t4',
-                date: '2024-03-15',
-              },
-              {
-                id: 't5',
-                title: 'Run integration tests',
-                isComplete: false,
-                path: '/q2/w3/t5',
-                date: '2024-03-15',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    weekLabel: 'Next Week',
-    weekNumber: 4,
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    quarterlyGoals: [
-      {
-        id: 'q1',
-        title: 'Increase Sales',
-        path: '/q1',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w1',
-            title: 'Improve Customer Acquisition',
-            path: '/q1/w1',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't1',
-                title: 'Review marketing analytics',
-                isComplete: false,
-                path: '/q1/w1/t1',
-                date: '2024-03-22',
-              },
-              {
-                id: 't2',
-                title: 'Update social media strategy',
-                isComplete: false,
-                path: '/q1/w1/t2',
-                date: '2024-03-22',
-              },
-            ],
-          },
-          {
-            id: 'w2',
-            title: 'Optimize Sales Funnel',
-            path: '/q1/w2',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't3',
-                title: 'Analyze conversion rates',
-                isComplete: false,
-                path: '/q1/w2/t3',
-                date: '2024-03-22',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'q2',
-        title: 'Launch New Product',
-        path: '/q2',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w3',
-            title: 'Complete MVP Development',
-            path: '/q2/w3',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't4',
-                title: 'Finalize feature list',
-                isComplete: false,
-                path: '/q2/w3/t4',
-                date: '2024-03-22',
-              },
-              {
-                id: 't5',
-                title: 'Run integration tests',
-                isComplete: false,
-                path: '/q2/w3/t5',
-                date: '2024-03-22',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    weekLabel: 'Next Next Week',
-    weekNumber: 5,
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    quarterlyGoals: [
-      {
-        id: 'q1',
-        title: 'Increase Sales',
-        path: '/q1',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w1',
-            title: 'Improve Customer Acquisition',
-            path: '/q1/w1',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't1',
-                title: 'Review marketing analytics',
-                isComplete: false,
-                path: '/q1/w1/t1',
-                date: '2024-03-29',
-              },
-              {
-                id: 't2',
-                title: 'Update social media strategy',
-                isComplete: false,
-                path: '/q1/w1/t2',
-                date: '2024-03-29',
-              },
-            ],
-          },
-          {
-            id: 'w2',
-            title: 'Optimize Sales Funnel',
-            path: '/q1/w2',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't3',
-                title: 'Analyze conversion rates',
-                isComplete: false,
-                path: '/q1/w2/t3',
-                date: '2024-03-29',
-              },
-            ],
-          },
-        ],
-      },
-      {
-        id: 'q2',
-        title: 'Launch New Product',
-        path: '/q2',
-        quarter: 1,
-        progress: 0,
-        weeklyGoals: [
-          {
-            id: 'w3',
-            title: 'Complete MVP Development',
-            path: '/q2/w3',
-            isComplete: false,
-            isHardComplete: false,
-            tasks: [
-              {
-                id: 't4',
-                title: 'Finalize feature list',
-                isComplete: false,
-                path: '/q2/w3/t4',
-                date: '2024-03-29',
-              },
-              {
-                id: 't5',
-                title: 'Run integration tests',
-                isComplete: false,
-                path: '/q2/w3/t5',
-                date: '2024-03-29',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
-];
-
-// Generate mock data based on current date
-const generateMockData = (): WeekData[] => {
-  const now = DateTime.now();
-  const currentQuarter = Math.ceil(now.month / 3) as 1 | 2 | 3 | 4;
-
-  return mockWeekData.map((week, index) => {
-    // Calculate the date for this week relative to current week
-    const weekOffset = index - 2; // index 2 is "This Week"
-    const weekDate = now.plus({ weeks: weekOffset });
-
-    return {
-      ...week,
-      weekNumber: weekDate.weekNumber,
-      quarterlyGoals: week.quarterlyGoals.map((goal) => ({
-        ...goal,
-        quarter: currentQuarter,
-        weeklyGoals: goal.weeklyGoals.map((weeklyGoal) => ({
-          ...weeklyGoal,
-          tasks: weeklyGoal.tasks.map((task) => ({
-            ...task,
-            date: weekDate.toISODate() as string,
-          })),
-        })),
-      })),
-    };
-  });
-};
 
 interface IncompleteTasksWarningProps {
   isOpen: boolean;
@@ -527,6 +35,191 @@ interface IncompleteTasksWarningProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
+
+const generateMockData = (): WeekData[] => {
+  // Define the base quarterly goals
+  const salesGoal: QuarterlyGoalBase = {
+    id: 'q1',
+    title: 'Increase Sales',
+    path: '/q1',
+    quarter: 1,
+    weeklyGoals: [
+      {
+        id: 'w1',
+        title: 'Improve Customer Acquisition',
+        path: '/q1/w1',
+        tasks: [
+          {
+            id: 't1',
+            title: 'Review marketing analytics',
+            path: '/q1/w1/t1',
+          },
+          {
+            id: 't2',
+            title: 'Update social media strategy',
+            path: '/q1/w1/t2',
+          },
+        ],
+      },
+      {
+        id: 'w2',
+        title: 'Optimize Sales Funnel',
+        path: '/q1/w2',
+        tasks: [
+          {
+            id: 't3',
+            title: 'Analyze conversion rates',
+            path: '/q1/w2/t3',
+          },
+        ],
+      },
+    ],
+  };
+
+  const productGoal: QuarterlyGoalBase = {
+    id: 'q2',
+    title: 'Launch New Product',
+    path: '/q2',
+    quarter: 1,
+    weeklyGoals: [
+      {
+        id: 'w3',
+        title: 'Complete MVP Development',
+        path: '/q2/w3',
+        tasks: [
+          {
+            id: 't4',
+            title: 'Finalize feature list',
+            path: '/q2/w3/t4',
+          },
+          {
+            id: 't5',
+            title: 'Run integration tests',
+            path: '/q2/w3/t5',
+          },
+        ],
+      },
+    ],
+  };
+
+  // Create week states with different progress and completion states
+  const weeks: WeekData[] = [
+    {
+      weekLabel: 'Prev Week',
+      weekNumber: 1,
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      quarterlyGoal: salesGoal,
+      quarterlyGoalWeekState: {
+        goalId: salesGoal.id,
+        weekNumber: 1,
+        progress: 3,
+        isStarred: true,
+        isPinned: false,
+        weeklyGoalStates: [
+          {
+            goalId: 'w1',
+            isComplete: true,
+            isHardComplete: false,
+            taskStates: [
+              { taskId: 't1', isComplete: true, date: '2024-03-01' },
+              { taskId: 't2', isComplete: false, date: '2024-03-01' },
+            ],
+          },
+          {
+            goalId: 'w2',
+            isComplete: false,
+            isHardComplete: false,
+            taskStates: [
+              { taskId: 't3', isComplete: false, date: '2024-03-01' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      weekLabel: 'Last Week',
+      weekNumber: 2,
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      quarterlyGoal: productGoal,
+      quarterlyGoalWeekState: {
+        goalId: productGoal.id,
+        weekNumber: 2,
+        progress: 7,
+        isStarred: false,
+        isPinned: true,
+        weeklyGoalStates: [
+          {
+            goalId: 'w3',
+            isComplete: true,
+            isHardComplete: true,
+            taskStates: [
+              { taskId: 't4', isComplete: true, date: '2024-03-08' },
+              { taskId: 't5', isComplete: true, date: '2024-03-08' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      weekLabel: 'This Week',
+      weekNumber: 3,
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      quarterlyGoal: salesGoal,
+      quarterlyGoalWeekState: {
+        goalId: salesGoal.id,
+        weekNumber: 3,
+        progress: 5,
+        isStarred: false,
+        isPinned: false,
+        weeklyGoalStates: [
+          {
+            goalId: 'w1',
+            isComplete: false,
+            isHardComplete: false,
+            taskStates: [
+              { taskId: 't1', isComplete: false, date: '2024-03-15' },
+              { taskId: 't2', isComplete: false, date: '2024-03-15' },
+            ],
+          },
+          {
+            goalId: 'w2',
+            isComplete: false,
+            isHardComplete: false,
+            taskStates: [
+              { taskId: 't3', isComplete: false, date: '2024-03-15' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      weekLabel: 'Next Week',
+      weekNumber: 4,
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+      quarterlyGoal: productGoal,
+      quarterlyGoalWeekState: {
+        goalId: productGoal.id,
+        weekNumber: 4,
+        progress: 2,
+        isStarred: false,
+        isPinned: false,
+        weeklyGoalStates: [
+          {
+            goalId: 'w3',
+            isComplete: false,
+            isHardComplete: false,
+            taskStates: [
+              { taskId: 't4', isComplete: false, date: '2024-03-22' },
+              { taskId: 't5', isComplete: false, date: '2024-03-22' },
+            ],
+          },
+        ],
+      },
+    },
+  ];
+
+  return weeks;
+};
 
 const IncompleteTasksWarning: React.FC<IncompleteTasksWarningProps> = ({
   isOpen,
@@ -557,12 +250,14 @@ const IncompleteTasksWarning: React.FC<IncompleteTasksWarningProps> = ({
 );
 
 const QuarterOverviewScreen = () => {
-  const [localGoals, setLocalGoals] = useState<WeekData[]>(generateMockData());
+  const [localGoals, setLocalGoals] = useState<WeekData[]>(() =>
+    generateMockData()
+  );
   const [isTeamCollapsed, setIsTeamCollapsed] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
-  const [goalSectionOpenStates, setGoalSectionOpenStates] = useState<boolean[]>(
-    []
-  );
+  const [goalSectionOpenStates, setGoalSectionOpenStates] = useState<
+    Record<number, boolean>
+  >({});
   const containerRef = useRef<HTMLDivElement>(null);
   const [warningDialog, setWarningDialog] = useState<{
     isOpen: boolean;
@@ -578,7 +273,9 @@ const QuarterOverviewScreen = () => {
 
   // Initialize open states when localGoals changes
   useEffect(() => {
-    setGoalSectionOpenStates(new Array(localGoals.length).fill(false));
+    setGoalSectionOpenStates(
+      Object.fromEntries(localGoals.map((_, index) => [index, false]))
+    );
   }, [localGoals.length]);
 
   // Center the scroll position on current week when component mounts
@@ -622,9 +319,9 @@ const QuarterOverviewScreen = () => {
 
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((quarterlyGoal) => ({
-            ...quarterlyGoal,
-            weeklyGoals: quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
+          quarterlyGoal: {
+            ...week.quarterlyGoal,
+            weeklyGoals: week.quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
               if (weeklyGoal.id !== weeklyGoalId) return weeklyGoal;
 
               return {
@@ -639,7 +336,26 @@ const QuarterOverviewScreen = () => {
                 }),
               };
             }),
-          })),
+          },
+          quarterlyGoalWeekState: {
+            ...week.quarterlyGoalWeekState,
+            weeklyGoalStates: week.quarterlyGoalWeekState.weeklyGoalStates.map(
+              (state) => {
+                if (state.goalId !== weeklyGoalId) return state;
+                return {
+                  ...state,
+                  isHardComplete: true,
+                  ...(completeAllTasks && {
+                    isComplete: true,
+                    taskStates: state.taskStates.map((taskState) => ({
+                      ...taskState,
+                      isComplete: true,
+                    })),
+                  }),
+                };
+              }
+            ),
+          },
         };
       })
     );
@@ -648,9 +364,9 @@ const QuarterOverviewScreen = () => {
   // Handler for toggling weekly goal completion
   const handleWeeklyGoalToggle = (weekIndex: number, weeklyGoalId: string) => {
     const week = localGoals[weekIndex];
-    const weeklyGoal = week.quarterlyGoals
-      .flatMap((q) => q.weeklyGoals)
-      .find((wg) => wg.id === weeklyGoalId);
+    const weeklyGoal = week.quarterlyGoal.weeklyGoals.find(
+      (wg) => wg.id === weeklyGoalId
+    );
 
     if (!weeklyGoal) return;
 
@@ -662,16 +378,27 @@ const QuarterOverviewScreen = () => {
 
           return {
             ...week,
-            quarterlyGoals: week.quarterlyGoals.map((quarterlyGoal) => ({
-              ...quarterlyGoal,
-              weeklyGoals: quarterlyGoal.weeklyGoals.map((wg) => {
+            quarterlyGoal: {
+              ...week.quarterlyGoal,
+              weeklyGoals: week.quarterlyGoal.weeklyGoals.map((wg) => {
                 if (wg.id !== weeklyGoalId) return wg;
                 return {
                   ...wg,
                   isHardComplete: false,
                 };
               }),
-            })),
+            },
+            quarterlyGoalWeekState: {
+              ...week.quarterlyGoalWeekState,
+              weeklyGoalStates:
+                week.quarterlyGoalWeekState.weeklyGoalStates.map((state) => {
+                  if (state.goalId !== weeklyGoalId) return state;
+                  return {
+                    ...state,
+                    isHardComplete: false,
+                  };
+                }),
+            },
           };
         })
       );
@@ -707,11 +434,17 @@ const QuarterOverviewScreen = () => {
       prevGoals.map((week, idx) => {
         if (idx !== weekIndex) return week;
 
+        const weeklyGoal = week.quarterlyGoal.weeklyGoals.find(
+          (wg) => wg.id === weeklyGoalId
+        );
+        const toggledTask = weeklyGoal?.tasks.find((t) => t.id === taskId);
+        const isUnchecking = toggledTask?.isComplete;
+
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((quarterlyGoal) => ({
-            ...quarterlyGoal,
-            weeklyGoals: quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
+          quarterlyGoal: {
+            ...week.quarterlyGoal,
+            weeklyGoals: week.quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
               if (weeklyGoal.id !== weeklyGoalId) return weeklyGoal;
 
               const updatedTasks = weeklyGoal.tasks.map((task) =>
@@ -719,13 +452,6 @@ const QuarterOverviewScreen = () => {
                   ? { ...task, isComplete: !task.isComplete }
                   : task
               );
-
-              // Find the task being toggled
-              const toggledTask = weeklyGoal.tasks.find((t) => t.id === taskId);
-              if (!toggledTask) return weeklyGoal;
-
-              // If we're unchecking a task, also uncheck the weekly goal's hard completion
-              const isUnchecking = toggledTask.isComplete;
 
               // Update weekly goal soft completion based on all tasks being complete
               const allTasksComplete = updatedTasks.every(
@@ -739,7 +465,33 @@ const QuarterOverviewScreen = () => {
                 ...(isUnchecking && { isHardComplete: false }), // Remove hard completion when unchecking a task
               };
             }),
-          })),
+          },
+          quarterlyGoalWeekState: {
+            ...week.quarterlyGoalWeekState,
+            weeklyGoalStates: week.quarterlyGoalWeekState.weeklyGoalStates.map(
+              (state) => {
+                if (state.goalId !== weeklyGoalId) return state;
+
+                const updatedTaskStates = state.taskStates.map((taskState) =>
+                  taskState.taskId === taskId
+                    ? { ...taskState, isComplete: !taskState.isComplete }
+                    : taskState
+                );
+
+                // Update weekly goal soft completion based on all tasks being complete
+                const allTasksComplete = updatedTaskStates.every(
+                  (task) => task.isComplete
+                );
+
+                return {
+                  ...state,
+                  taskStates: updatedTaskStates,
+                  isComplete: allTasksComplete,
+                  ...(isUnchecking && { isHardComplete: false }), // Remove hard completion when unchecking a task
+                };
+              }
+            ),
+          },
         };
       })
     );
@@ -751,9 +503,7 @@ const QuarterOverviewScreen = () => {
     goalId: string,
     type: 'title' | 'progress'
   ) => {
-    const goal = localGoals[weekIndex].quarterlyGoals.find(
-      (g) => g.id === goalId
-    );
+    const goal = localGoals[weekIndex].quarterlyGoal;
     if (!goal) return;
 
     setEditState({
@@ -761,7 +511,7 @@ const QuarterOverviewScreen = () => {
       goalId,
       type,
       originalValue:
-        type === 'title' ? goal.title : `[${goal.weeklyGoals.length}/10]`,
+        type === 'title' ? goal.title : String(goal.weeklyGoals.length),
     });
   };
 
@@ -770,14 +520,15 @@ const QuarterOverviewScreen = () => {
     goalId: string,
     newTitle: string
   ) => {
-    setLocalGoals((prevGoals) =>
-      prevGoals.map((week, idx) => {
+    setLocalGoals((prev) =>
+      prev.map((week, idx) => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((goal) =>
-            goal.id === goalId ? { ...goal, title: newTitle } : goal
-          ),
+          quarterlyGoal: {
+            ...week.quarterlyGoal,
+            title: newTitle,
+          },
         };
       })
     );
@@ -789,67 +540,55 @@ const QuarterOverviewScreen = () => {
     goalId: string,
     newProgress: number
   ) => {
-    setLocalGoals((prevGoals) =>
-      prevGoals.map((week, idx) => {
+    setLocalGoals((prev) =>
+      prev.map((week, idx) => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((goal) =>
-            goal.id === goalId
-              ? {
-                  ...goal,
-                  weeklyGoals: goal.weeklyGoals.map((wg, i) =>
-                    i < newProgress
-                      ? { ...wg, isComplete: true }
-                      : { ...wg, isComplete: false }
-                  ),
-                }
-              : goal
-          ),
+          quarterlyGoalWeekState: {
+            ...week.quarterlyGoalWeekState,
+            progress: newProgress,
+          },
         };
       })
     );
     setEditState(null);
   };
 
-  const handleToggleStar = (weekIndex: number, goalId: string) => {
-    setLocalGoals((prevGoals) =>
-      prevGoals.map((week, idx) => {
+  const handleToggleStar = (weekIndex: number) => {
+    setLocalGoals((prev) =>
+      prev.map((week, idx) => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((goal) =>
-            goal.id === goalId
-              ? { ...goal, isStarred: !goal.isStarred, isPinned: false }
-              : goal
-          ),
+          quarterlyGoalWeekState: {
+            ...week.quarterlyGoalWeekState,
+            isStarred: !week.quarterlyGoalWeekState.isStarred,
+            isPinned: false,
+          },
         };
       })
     );
   };
 
-  const handleTogglePin = (weekIndex: number, goalId: string) => {
-    setLocalGoals((prevGoals) =>
-      prevGoals.map((week, idx) => {
+  const handleTogglePin = (weekIndex: number) => {
+    setLocalGoals((prev) =>
+      prev.map((week, idx) => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoals: week.quarterlyGoals.map((goal) =>
-            goal.id === goalId
-              ? { ...goal, isPinned: !goal.isPinned, isStarred: false }
-              : goal
-          ),
+          quarterlyGoalWeekState: {
+            ...week.quarterlyGoalWeekState,
+            isPinned: !week.quarterlyGoalWeekState.isPinned,
+            isStarred: false,
+          },
         };
       })
     );
   };
 
   const handleGoalSectionOpenChange = (weekIndex: number, isOpen: boolean) => {
-    setGoalSectionOpenStates((prev) => {
-      const newStates = [...prev];
-      newStates[weekIndex] = isOpen;
-      return newStates;
-    });
+    setGoalSectionOpenStates((prev) => ({ ...prev, [weekIndex]: isOpen }));
   };
 
   return (
@@ -870,16 +609,16 @@ const QuarterOverviewScreen = () => {
           setWarningDialog((prev) => ({ ...prev, isOpen: false }));
         }}
       />
-      <div className="w-full px-4 py-4">
+      <div className="w-full h-[calc(100vh-64px)] px-4 py-4">
         <div
           ref={containerRef}
-          className="w-full overflow-x-auto scrollbar-hide"
+          className="w-full h-full overflow-x-auto scrollbar-hide"
           style={{
             scrollSnapType: 'x mandatory',
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          <div className="flex" style={{ gap: '1rem', padding: '0' }}>
+          <div className="flex h-full" style={{ gap: '1rem', padding: '0' }}>
             {localGoals.map((week, weekIndex) => (
               <div
                 key={weekIndex}
@@ -888,9 +627,11 @@ const QuarterOverviewScreen = () => {
                   flexShrink: 0,
                   scrollSnapAlign: 'center',
                 }}
-                className="flex flex-col border rounded shadow bg-white p-4"
+                className="flex flex-col border rounded shadow bg-white p-4 h-full overflow-y-auto"
               >
-                <h2 className="font-bold text-lg mb-2">{week.weekLabel}</h2>
+                <h2 className="font-bold text-lg mb-2 sticky top-0 bg-white z-10 py-2">
+                  {week.weekLabel}
+                </h2>
 
                 {/* Team Coordination Section */}
                 <section className="mb-4">
@@ -914,7 +655,8 @@ const QuarterOverviewScreen = () => {
 
                 {/* Quarter Goals Section */}
                 <QuarterlyGoalSection
-                  goals={week.quarterlyGoals}
+                  goalBase={week.quarterlyGoal}
+                  weekState={week.quarterlyGoalWeekState}
                   weekIndex={weekIndex}
                   isOpen={goalSectionOpenStates[weekIndex] ?? false}
                   onOpenChange={(isOpen) =>
@@ -925,15 +667,16 @@ const QuarterOverviewScreen = () => {
                   onCancelEditing={() => setEditState(null)}
                   onUpdateGoal={handleUpdateGoal}
                   onUpdateProgress={handleUpdateProgress}
-                  onToggleStar={handleToggleStar}
-                  onTogglePin={handleTogglePin}
+                  onToggleStar={() => handleToggleStar(weekIndex)}
+                  onTogglePin={() => handleTogglePin(weekIndex)}
                 />
 
                 {/* Weekly Goals Section */}
                 <section className="mb-4">
                   <h3 className="font-semibold mb-3">Weekly Goals</h3>
                   <WeeklyGoalSection
-                    quarterlyGoals={week.quarterlyGoals}
+                    quarterlyGoal={week.quarterlyGoal}
+                    weekState={week.quarterlyGoalWeekState}
                     onWeeklyGoalToggle={(goalId) =>
                       handleWeeklyGoalToggle(weekIndex, goalId)
                     }
@@ -944,12 +687,10 @@ const QuarterOverviewScreen = () => {
                 <section>
                   <h3 className="font-semibold mb-4">Daily Goals</h3>
                   <DailyGoalSection
-                    quarterlyGoals={week.quarterlyGoals}
+                    quarterlyGoal={week.quarterlyGoal}
+                    weekState={week.quarterlyGoalWeekState}
                     onTaskToggle={(taskId, weeklyGoalId) =>
                       handleTaskToggle(weekIndex, taskId, weeklyGoalId)
-                    }
-                    onWeeklyGoalToggle={(weeklyGoalId) =>
-                      handleWeeklyGoalToggle(weekIndex, weeklyGoalId)
                     }
                   />
                 </section>

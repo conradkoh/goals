@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "convex dev"
+    "dev": "convex dev",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "convex": "^1.19.0"

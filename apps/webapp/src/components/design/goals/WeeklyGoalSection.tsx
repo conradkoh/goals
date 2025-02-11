@@ -3,22 +3,25 @@
  */
 import React from 'react';
 import { Check } from 'lucide-react';
+import {
+  QuarterlyGoalBase,
+  QuarterlyGoalWeekState,
+  WeeklyGoalBase,
+} from '../../../types/goals';
 
-export interface WeeklyGoal {
-  id: string;
-  title: string;
-  path: string; // Format: /<quarter-id>/<week-id>
-  isComplete: boolean; // soft completion (inferred from tasks)
-  isHardComplete: boolean; // hard completion (manually set)
+interface WeeklyGoalView extends WeeklyGoalBase {
+  isComplete: boolean;
+  isHardComplete: boolean;
 }
 
 interface WeeklyGoalSectionProps {
-  quarterlyGoals: { id: string; title: string; weeklyGoals: WeeklyGoal[] }[];
+  quarterlyGoal: QuarterlyGoalBase;
+  weekState: QuarterlyGoalWeekState;
   onWeeklyGoalToggle: (weeklyGoalId: string) => void;
 }
 
 const WeeklyGoalItem: React.FC<{
-  goal: WeeklyGoal;
+  goal: WeeklyGoalView;
   onToggle: () => void;
 }> = ({ goal, onToggle }) => (
   <div
@@ -51,27 +54,40 @@ const WeeklyGoalItem: React.FC<{
 );
 
 export const WeeklyGoalSection: React.FC<WeeklyGoalSectionProps> = ({
-  quarterlyGoals,
+  quarterlyGoal,
+  weekState,
   onWeeklyGoalToggle,
 }) => {
+  // Combine base data with week-specific state
+  const weeklyGoals: WeeklyGoalView[] = quarterlyGoal.weeklyGoals.map(
+    (weeklyGoal) => {
+      const weeklyState = weekState.weeklyGoalStates.find(
+        (state) => state.goalId === weeklyGoal.id
+      );
+      return {
+        ...weeklyGoal,
+        isComplete: weeklyState?.isComplete ?? false,
+        isHardComplete: weeklyState?.isHardComplete ?? false,
+      };
+    }
+  );
+
   return (
     <div className="space-y-4">
-      {quarterlyGoals.map((quarterlyGoal) => (
-        <div key={quarterlyGoal.id}>
-          <h4 className="font-medium text-gray-700 mb-2">
-            {quarterlyGoal.title}
-          </h4>
-          <div className="space-y-1 pl-4">
-            {quarterlyGoal.weeklyGoals.map((goal) => (
-              <WeeklyGoalItem
-                key={goal.id}
-                goal={goal}
-                onToggle={() => onWeeklyGoalToggle(goal.id)}
-              />
-            ))}
-          </div>
+      <div>
+        <h4 className="font-medium text-gray-700 mb-2">
+          {quarterlyGoal.title}
+        </h4>
+        <div className="space-y-1 pl-4">
+          {weeklyGoals.map((goal) => (
+            <WeeklyGoalItem
+              key={goal.id}
+              goal={goal}
+              onToggle={() => onWeeklyGoalToggle(goal.id)}
+            />
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 };

@@ -6,6 +6,7 @@
 import React, { ChangeEvent, KeyboardEvent, MouseEvent } from 'react';
 import { Star, Pin, Check, X } from 'lucide-react';
 import { Input } from '../../ui/input';
+import { EditState } from '../../../types/goals';
 
 interface QuarterlyGoal {
   id: string;
@@ -13,8 +14,8 @@ interface QuarterlyGoal {
   path: string;
   quarter: 1 | 2 | 3 | 4;
   progress: number;
-  isStarred?: boolean;
-  isPinned?: boolean;
+  isStarred: boolean;
+  isPinned: boolean;
   weeklyGoals: {
     id: string;
     title: string;
@@ -29,13 +30,6 @@ interface QuarterlyGoal {
       date: string;
     }[];
   }[];
-}
-
-interface EditState {
-  weekIndex: number;
-  goalId: string;
-  type: 'title' | 'progress';
-  originalValue: string;
 }
 
 interface GoalCardProps {
@@ -255,59 +249,53 @@ export const GoalCard: React.FC<GoalCardProps> = ({
             onTogglePin={onTogglePin}
           />
         </div>
-        <div className="w-2" data-testid="goal-icons-spacer" />
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 min-w-0" data-testid="goal-content">
-        {isEditingTitle ? (
-          <EditableField
-            value={editState?.originalValue || goal.title}
-            onConfirm={(value) => onUpdateGoal(weekIndex, goal.id, value)}
-            inputClassName="h-8"
-            onCancel={onCancelEditing}
-          />
-        ) : (
-          <div
-            className="flex items-center justify-between cursor-pointer"
-            onClick={() => onStartEditing(weekIndex, goal.id, 'title')}
-            data-testid="goal-display"
-          >
-            <span className="truncate" data-testid="goal-title">
+      {/* Goal content */}
+      <div className="flex-1 ml-2">
+        <div className="flex items-center gap-2">
+          {isEditingTitle ? (
+            <EditableField
+              value={editState?.originalValue || goal.title}
+              onConfirm={(value) => onUpdateGoal(weekIndex, goal.id, value)}
+              inputClassName="h-6 text-sm py-0 px-1"
+              onCancel={onCancelEditing}
+            />
+          ) : (
+            <div
+              className="flex-1 text-sm cursor-pointer"
+              onClick={() => onStartEditing(weekIndex, goal.id, 'title')}
+            >
               {goal.title}
-            </span>
-            {/* Progress indicator */}
-            {isEditingProgress ? (
-              <EditableField
-                value={editState?.originalValue || `[${goal.progress}/10]`}
-                onConfirm={(value) => {
-                  const match = value.match(/\[?(\d+)(?:\/10)?\]?/);
-                  if (match) {
-                    onUpdateProgress(weekIndex, goal.id, parseInt(match[1]));
-                  }
-                  onCancelEditing();
-                }}
-                inputClassName="w-16 h-6 text-center px-1 text-sm"
-                onCancel={onCancelEditing}
-                isProgress={true}
-                onProgressChange={(value) =>
-                  onUpdateProgress(weekIndex, goal.id, value)
+            </div>
+          )}
+
+          {isEditingProgress ? (
+            <EditableField
+              value={editState?.originalValue || `[${goal.progress}/10]`}
+              onConfirm={(value) => {
+                const match = value.match(/\[?(\d+)(?:\/10)?\]?/);
+                if (match) {
+                  const progress = parseInt(match[1]);
+                  onUpdateProgress(weekIndex, goal.id, progress);
                 }
-              />
-            ) : (
-              <span
-                className="text-gray-500 cursor-pointer text-sm ml-2 flex-shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStartEditing(weekIndex, goal.id, 'progress');
-                }}
-                data-testid="goal-progress"
-              >
-                [{goal.progress}/10]
-              </span>
-            )}
-          </div>
-        )}
+              }}
+              inputClassName="h-6 text-sm py-0 px-1 w-16 text-right"
+              onCancel={onCancelEditing}
+              isProgress
+              onProgressChange={(value) =>
+                onUpdateProgress(weekIndex, goal.id, value)
+              }
+            />
+          ) : (
+            <div
+              className="text-sm text-gray-500 cursor-pointer"
+              onClick={() => onStartEditing(weekIndex, goal.id, 'progress')}
+            >
+              [{goal.progress}/10]
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
