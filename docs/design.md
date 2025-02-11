@@ -119,7 +119,32 @@ _Maps to PRD: Hierarchical Goal Management_
 - Click status to update
 - Hover for quick actions
 
-### 2.2 Progress Tracker Component
+### 2.2 Goal Section Component
+
+_Maps to PRD: Quarter Goals Progress_
+
+#### Properties
+
+- List of goals with their states
+- Week index for context
+- Collapsible state
+- Edit state management
+
+#### Organization
+
+- Starred goals (priority focus)
+- Pinned goals (secondary focus)
+- Regular goals (collapsible section)
+
+#### Interactions
+
+- Toggle collapsible section
+- Edit goal titles and progress
+- Star/unstar goals
+- Pin/unpin goals
+- Show count of remaining items
+
+### 2.3 Progress Tracker Component
 
 _Maps to PRD: Progress Tracking_
 
@@ -136,7 +161,7 @@ _Maps to PRD: Progress Tracking_
 - Hover for detailed history
 - Double-click for edit mode
 
-### 2.3 Team Member Component
+### 2.4 Team Member Component
 
 _Maps to PRD: Team Coordination_
 
@@ -153,7 +178,7 @@ _Maps to PRD: Team Coordination_
 - Hover for quick stats
 - Drag to assign tasks
 
-### 2.4 Resource Link Component
+### 2.5 Resource Link Component
 
 _Maps to PRD: Resource Management_
 
@@ -209,6 +234,21 @@ _Maps to PRD: Weekly Goals_
 2. Automatic rollup to quarter goals
 3. Week-over-week comparison
 4. Snapshot preservation
+
+#### Completion States
+
+1. Soft Completion
+
+   - Automatically inferred from task completion
+   - Visual: Light green background
+   - No checkmark displayed
+   - Hidden by default in daily view, visible on hover
+
+2. Hard Completion
+   - Manually toggled by user
+   - Visual: Green checkmark
+   - Warning dialog when completing with incomplete tasks
+   - Automatically removed when any task is unchecked
 
 ### 3.3 Daily Task Management
 
@@ -286,6 +326,26 @@ interface User {
 }
 ```
 
+#### Weekly Goal
+
+```typescript
+interface WeeklyGoal {
+  id: string;
+  title: string;
+  description: string;
+  progress: number; // 0-10
+  type: 'quarter' | 'weekly' | 'daily';
+  status: 'active' | 'completed' | 'archived';
+  isComplete: boolean; // soft completion (inferred from tasks)
+  isHardComplete: boolean; // hard completion (manually set)
+  dependencies: string[]; // Goal IDs
+  assignees: string[]; // User IDs
+  resources: Resource[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
 ### 4.3 API Endpoints
 
 #### Goals API
@@ -294,23 +354,4 @@ interface User {
 - `GET /api/goals/weekly` - Get weekly goals
 - `POST /api/goals` - Create new goal
 - `PATCH /api/goals/:id` - Update goal
-- `DELETE /api/goals/:id` - Delete goal
-
-#### Tasks API
-
-- `GET /api/tasks/daily` - Get daily tasks
-- `POST /api/tasks` - Create task
-- `PATCH /api/tasks/:id` - Update task
-- `DELETE /api/tasks/:id` - Delete task
-
-#### Users API
-
-- `GET /api/users` - Get team members
-- `PATCH /api/users/:id/availability` - Update availability
-- `GET /api/users/:id/tasks` - Get user's tasks
-
-## 5. Editor Enhancements
-
-- Keyboard Shortcut for Hyperlink Embedding: Pressing Cmd + K in any editable text field will open a modal/dialog that allows users to embed hyperlinks. Users can enter the URL and optional display text to create clickable links within goal descriptions, task details, and other text content.
-
-- Rich Text Preservation on Cut and Paste: When users cut and paste content (for example, an entire day's content), all hyperlinks and rich text formatting (such as bold, italics, underlining) will be preserved, ensuring consistency in appearance and functionality.
+- `

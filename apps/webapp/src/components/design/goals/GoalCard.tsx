@@ -7,15 +7,31 @@ import React, { ChangeEvent, KeyboardEvent, MouseEvent } from 'react';
 import { Star, Pin, Check, X } from 'lucide-react';
 import { Input } from '../../ui/input';
 
-export interface Goal {
+interface QuarterlyGoal {
   id: string;
   title: string;
+  path: string;
+  quarter: 1 | 2 | 3 | 4;
   progress: number;
   isStarred?: boolean;
   isPinned?: boolean;
+  weeklyGoals: {
+    id: string;
+    title: string;
+    path: string;
+    isComplete: boolean;
+    isHardComplete: boolean;
+    tasks: {
+      id: string;
+      title: string;
+      isComplete: boolean;
+      path: string;
+      date: string;
+    }[];
+  }[];
 }
 
-export interface EditState {
+interface EditState {
   weekIndex: number;
   goalId: string;
   type: 'title' | 'progress';
@@ -23,7 +39,7 @@ export interface EditState {
 }
 
 interface GoalCardProps {
-  goal: Goal;
+  goal: QuarterlyGoal;
   weekIndex: number;
   isEditingTitle: boolean;
   isEditingProgress: boolean;
@@ -135,7 +151,7 @@ const EditableField: React.FC<{
  * GoalActionButtons component handles the star/pin toggle buttons
  */
 const GoalActionButtons: React.FC<{
-  goal: Goal;
+  goal: QuarterlyGoal;
   weekIndex: number;
   onToggleStar: (weekIndex: number, goalId: string) => void;
   onTogglePin: (weekIndex: number, goalId: string) => void;
@@ -191,10 +207,7 @@ const GoalActionButtons: React.FC<{
   }
 
   return (
-    <div
-      className="flex items-center gap-1 opacity-0 group-hover:opacity-100"
-      data-testid="goal-default-actions"
-    >
+    <div className="flex items-center gap-1" data-testid="goal-default-actions">
       <ActionButton
         icon={<Star className="h-3.5 w-3.5" />}
         onClick={() => onToggleStar(weekIndex, goal.id)}

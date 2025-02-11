@@ -32,6 +32,9 @@ A modern web application for managing organizational goals and tasks across diff
   - Status indicators:
     - Star (★) markers to indicate selected focus items from quarterly goals
     - Progress tracking for each selected focus item
+    - Dual completion states:
+      - Soft completion (automatically inferred from tasks)
+      - Hard completion (manually checked off)
   - Team member assignment and tracking
   - Resource linking (documents, threads, analysis)
   - Weekly progress summaries and state preservation

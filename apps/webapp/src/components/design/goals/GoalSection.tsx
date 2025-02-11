@@ -12,10 +12,41 @@ import {
 } from '../../ui/collapsible';
 import { Button } from '../../ui/button';
 import { ChevronsUpDown } from 'lucide-react';
-import { GoalCard, Goal, EditState } from './GoalCard';
+import { GoalCard } from './GoalCard';
+
+interface QuarterlyGoal {
+  id: string;
+  title: string;
+  path: string;
+  quarter: 1 | 2 | 3 | 4;
+  progress: number;
+  isStarred?: boolean;
+  isPinned?: boolean;
+  weeklyGoals: {
+    id: string;
+    title: string;
+    path: string;
+    isComplete: boolean;
+    isHardComplete: boolean;
+    tasks: {
+      id: string;
+      title: string;
+      isComplete: boolean;
+      path: string;
+      date: string;
+    }[];
+  }[];
+}
+
+interface EditState {
+  weekIndex: number;
+  goalId: string;
+  type: 'title' | 'progress';
+  originalValue: string;
+}
 
 interface GoalSectionProps {
-  goals: Goal[];
+  goals: QuarterlyGoal[];
   weekIndex: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,7 +84,11 @@ export const GoalSection: React.FC<GoalSectionProps> = ({
   const pinnedGoals = goals.filter((g) => g.isPinned && !g.isStarred);
   const regularGoals = goals.filter((g) => !g.isStarred && !g.isPinned);
 
-  const renderGoal = (goal: Goal) => (
+  // If there are no starred or pinned goals, show all goals without collapsible
+  const shouldShowAllGoals =
+    starredGoals.length === 0 && pinnedGoals.length === 0;
+
+  const renderGoal = (goal: QuarterlyGoal) => (
     <GoalCard
       key={goal.id}
       goal={goal}
@@ -88,24 +123,26 @@ export const GoalSection: React.FC<GoalSectionProps> = ({
       {/* Pinned Goals */}
       {pinnedGoals.map(renderGoal)}
 
-      {/* Regular Goals in Collapsible */}
-      {regularGoals.length > 0 && (
-        <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-gray-500">
-              {regularGoals.length} more items
-            </span>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <ChevronsUpDown className="h-4 w-4" />
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent>
-            {regularGoals.map(renderGoal)}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+      {/* Regular Goals - either in Collapsible or direct based on condition */}
+      {shouldShowAllGoals
+        ? regularGoals.map(renderGoal)
+        : regularGoals.length > 0 && (
+            <Collapsible open={isOpen} onOpenChange={onOpenChange}>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-500">
+                  {regularGoals.length} more items
+                </span>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <ChevronsUpDown className="h-4 w-4" />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                {regularGoals.map(renderGoal)}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
     </section>
   );
 };
