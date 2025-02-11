@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import NavigationHeader from './NavigationHeader';
 import { DailyGoalSection } from './goals/DailyGoalSection';
 import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
-import { GoalSection } from './goals/GoalSection';
+import { QuarterlyGoalSection } from './goals/QuarlerlyGoalSection';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -913,7 +913,7 @@ const QuarterOverviewScreen = () => {
                 </section>
 
                 {/* Quarter Goals Section */}
-                <GoalSection
+                <QuarterlyGoalSection
                   goals={week.quarterlyGoals}
                   weekIndex={weekIndex}
                   isOpen={goalSectionOpenStates[weekIndex] ?? false}

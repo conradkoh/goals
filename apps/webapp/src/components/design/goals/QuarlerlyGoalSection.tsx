@@ -45,7 +45,7 @@ interface EditState {
   originalValue: string;
 }
 
-interface GoalSectionProps {
+interface QuarterlyGoalSectionProps {
   goals: QuarterlyGoal[];
   weekIndex: number;
   isOpen: boolean;
@@ -67,7 +67,7 @@ interface GoalSectionProps {
   onTogglePin: (weekIndex: number, goalId: string) => void;
 }
 
-export const GoalSection: React.FC<GoalSectionProps> = ({
+export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
   goals,
   weekIndex,
   isOpen,
