@@ -1,41 +1,13 @@
 'use client';
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  ChangeEvent,
-  KeyboardEvent,
-  MouseEvent,
-} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NavigationHeader from './NavigationHeader';
-import { Star, Pin, ChevronsUpDown, Check, X } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-
-interface Goal {
-  id: string;
-  title: string;
-  progress: number;
-  isStarred?: boolean;
-  isPinned?: boolean;
-}
+import { Goal, EditState } from './goals/GoalCard';
+import { GoalSection } from './goals/GoalSection';
 
 interface WeekData {
   weekLabel: string;
   days: string[];
   goals: Goal[];
-}
-
-interface EditState {
-  weekIndex: number;
-  goalId: string;
-  type: 'title' | 'progress';
-  originalValue: string;
 }
 
 const mockGoals: Goal[] = [
@@ -218,273 +190,6 @@ const QuarterOverviewScreen = () => {
     setEditingGoal(null);
   };
 
-  const renderActionButtons = (goal: Goal, weekIndex: number) => {
-    const renderIconSlot = (
-      icon: React.ReactNode,
-      onClick: () => void,
-      className: string
-    ) => (
-      <button
-        onClick={onClick}
-        className={`w-4 flex justify-center items-center transition-colors ${className}`}
-        data-testid="goal-action-button"
-      >
-        {icon}
-      </button>
-    );
-
-    if (goal.isStarred) {
-      return (
-        <div
-          className="flex items-center gap-1"
-          data-testid="goal-starred-actions"
-        >
-          {renderIconSlot(
-            <Pin className="h-3.5 w-3.5" />,
-            () => {
-              toggleStar(weekIndex, goal.id);
-              togglePin(weekIndex, goal.id);
-            },
-            'text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100'
-          )}
-          {renderIconSlot(
-            <Star className="h-3.5 w-3.5" />,
-            () => toggleStar(weekIndex, goal.id),
-            'text-yellow-500 hover:text-yellow-600'
-          )}
-        </div>
-      );
-    }
-
-    if (goal.isPinned) {
-      return (
-        <div
-          className="flex items-center gap-1"
-          data-testid="goal-pinned-actions"
-        >
-          {renderIconSlot(
-            <Star className="h-3.5 w-3.5" />,
-            () => {
-              togglePin(weekIndex, goal.id);
-              toggleStar(weekIndex, goal.id);
-            },
-            'text-gray-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100'
-          )}
-          {renderIconSlot(
-            <Pin className="h-3.5 w-3.5" />,
-            () => togglePin(weekIndex, goal.id),
-            'text-blue-500 hover:text-blue-600'
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div
-        className="flex items-center gap-1 opacity-0 group-hover:opacity-100"
-        data-testid="goal-default-actions"
-      >
-        {renderIconSlot(
-          <Star className="h-3.5 w-3.5" />,
-          () => toggleStar(weekIndex, goal.id),
-          'text-gray-400 hover:text-yellow-500'
-        )}
-        {renderIconSlot(
-          <Pin className="h-3.5 w-3.5" />,
-          () => togglePin(weekIndex, goal.id),
-          'text-gray-400 hover:text-blue-500'
-        )}
-      </div>
-    );
-  };
-
-  const renderEditableField = (
-    value: string,
-    onConfirm: (value: string) => void,
-    inputClassName: string,
-    goal: Goal,
-    weekIndex: number
-  ) => (
-    <div className="relative">
-      <Input
-        type="text"
-        className={inputClassName}
-        value={value}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-          if (editingGoal?.type === 'progress') {
-            const match = e.target.value.match(/\[?(\d+)(?:\/10)?\]?/);
-            if (match) {
-              const value = parseInt(match[1]);
-              handleProgressUpdate(weekIndex, goal.id, value);
-            }
-          }
-        }}
-        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-          if (e.key === 'Enter') {
-            onConfirm(e.currentTarget.value);
-          } else if (e.key === 'Escape') {
-            cancelEditing();
-          }
-        }}
-        autoFocus
-        onClick={(e: MouseEvent) => e.stopPropagation()}
-      />
-      <div className="absolute -bottom-6 left-0 flex items-center gap-1">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onConfirm(
-              e.currentTarget.form?.querySelector('input')?.value || ''
-            );
-          }}
-          className="p-1 hover:bg-green-50 rounded text-green-600"
-          aria-label="Confirm"
-        >
-          <Check className="h-3 w-3" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            cancelEditing();
-          }}
-          className="p-1 hover:bg-red-50 rounded text-red-600"
-          aria-label="Cancel"
-        >
-          <X className="h-3 w-3" />
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderGoal = (goal: Goal, weekIndex: number) => {
-    const isEditingTitle =
-      editingGoal?.weekIndex === weekIndex &&
-      editingGoal?.goalId === goal.id &&
-      editingGoal?.type === 'title';
-    const isEditingProgress =
-      editingGoal?.weekIndex === weekIndex &&
-      editingGoal?.goalId === goal.id &&
-      editingGoal?.type === 'progress';
-
-    return (
-      <div
-        key={goal.id}
-        className="group flex items-center p-2 hover:bg-gray-50 rounded"
-        data-testid={`goal-item-${goal.id}`}
-      >
-        {/* Action buttons container - always reserve space for two icons with consistent gap */}
-        <div className="flex items-center" data-testid="goal-actions-container">
-          <div
-            className="flex items-center gap-2"
-            data-testid="goal-icons-container"
-          >
-            {renderActionButtons(goal, weekIndex)}
-          </div>
-          {/* Add a spacer with the same gap */}
-          <div className="w-2" data-testid="goal-icons-spacer" />
-        </div>
-
-        {/* Main content */}
-        <div className="flex-1 min-w-0" data-testid="goal-content">
-          {isEditingTitle ? (
-            renderEditableField(
-              editingGoal?.originalValue || goal.title,
-              (value) => handleGoalUpdate(weekIndex, goal.id, value),
-              'h-8',
-              goal,
-              weekIndex
-            )
-          ) : (
-            <div
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => startEditing(weekIndex, goal.id, 'title')}
-              data-testid="goal-display"
-            >
-              <span className="truncate" data-testid="goal-title">
-                {goal.title}
-              </span>
-              {/* Progress indicator */}
-              {isEditingProgress ? (
-                renderEditableField(
-                  editingGoal?.originalValue || `[${goal.progress}/10]`,
-                  (value) => {
-                    const match = value.match(/\[?(\d+)(?:\/10)?\]?/);
-                    if (match) {
-                      handleProgressUpdate(
-                        weekIndex,
-                        goal.id,
-                        parseInt(match[1])
-                      );
-                    }
-                    cancelEditing();
-                  },
-                  'w-16 h-6 text-center px-1 text-sm',
-                  goal,
-                  weekIndex
-                )
-              ) : (
-                <span
-                  className="text-gray-500 cursor-pointer text-sm ml-2 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startEditing(weekIndex, goal.id, 'progress');
-                  }}
-                  data-testid="goal-progress"
-                >
-                  [{goal.progress}/10]
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderGoalsSection = (week: WeekData, weekIndex: number) => {
-    const starredGoals = week.goals.filter((g) => g.isStarred);
-    const pinnedGoals = week.goals.filter((g) => g.isPinned && !g.isStarred);
-    const regularGoals = week.goals.filter((g) => !g.isStarred && !g.isPinned);
-
-    return (
-      <section className="mb-4">
-        <h3 className="font-semibold mb-2">Quarter Goals Progress</h3>
-
-        {/* Starred Goals */}
-        {starredGoals.map((goal) => renderGoal(goal, weekIndex))}
-
-        {/* Pinned Goals */}
-        {pinnedGoals.map((goal) => renderGoal(goal, weekIndex))}
-
-        {/* Regular Goals in Collapsible */}
-        {regularGoals.length > 0 && (
-          <Collapsible
-            open={isGoalsOpen[weekIndex]}
-            onOpenChange={(open: boolean) =>
-              setIsGoalsOpen((prev) => ({ ...prev, [weekIndex]: open }))
-            }
-          >
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-500">
-                {regularGoals.length} more items
-              </span>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <ChevronsUpDown className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-            </div>
-            <CollapsibleContent>
-              {regularGoals.map((goal) => renderGoal(goal, weekIndex))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-      </section>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <NavigationHeader />
@@ -509,7 +214,21 @@ const QuarterOverviewScreen = () => {
                 className="flex flex-col border rounded shadow bg-white p-4"
               >
                 <h2 className="font-bold text-lg mb-2">{week.weekLabel}</h2>
-                {renderGoalsSection(week, weekIndex)}
+                <GoalSection
+                  goals={week.goals}
+                  weekIndex={weekIndex}
+                  isOpen={isGoalsOpen[weekIndex]}
+                  onOpenChange={(open) =>
+                    setIsGoalsOpen((prev) => ({ ...prev, [weekIndex]: open }))
+                  }
+                  editState={editingGoal}
+                  onStartEditing={startEditing}
+                  onCancelEditing={cancelEditing}
+                  onUpdateGoal={handleGoalUpdate}
+                  onUpdateProgress={handleProgressUpdate}
+                  onToggleStar={toggleStar}
+                  onTogglePin={togglePin}
+                />
 
                 {/* Team Coordination Section */}
                 <section className="mb-4">
