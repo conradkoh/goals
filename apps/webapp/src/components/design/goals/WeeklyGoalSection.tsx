@@ -3,20 +3,15 @@
  */
 import React from 'react';
 import { Check } from 'lucide-react';
+import { QuarterlyGoalBase, QuarterlyGoalState } from '../../../types/goals';
 import {
-  QuarterlyGoalBase,
-  QuarterlyGoalWeekState,
-  WeeklyGoalBase,
-} from '../../../types/goals';
-
-interface WeeklyGoalView extends WeeklyGoalBase {
-  isComplete: boolean;
-  isHardComplete: boolean;
-}
+  WeeklyGoalView,
+  createWeeklyGoalView,
+} from '../../../types/goals/view';
 
 interface WeeklyGoalSectionProps {
   quarterlyGoal: QuarterlyGoalBase;
-  weekState: QuarterlyGoalWeekState;
+  weekState: QuarterlyGoalState;
   onWeeklyGoalToggle: (weeklyGoalId: string) => void;
 }
 
@@ -58,17 +53,24 @@ export const WeeklyGoalSection: React.FC<WeeklyGoalSectionProps> = ({
   weekState,
   onWeeklyGoalToggle,
 }) => {
-  // Combine base data with week-specific state
+  // Combine base data with week-specific state using our utility function
   const weeklyGoals: WeeklyGoalView[] = quarterlyGoal.weeklyGoals.map(
     (weeklyGoal) => {
       const weeklyState = weekState.weeklyGoalStates.find(
-        (state) => state.goalId === weeklyGoal.id
+        (state) => state.id === weeklyGoal.id
       );
-      return {
-        ...weeklyGoal,
-        isComplete: weeklyState?.isComplete ?? false,
-        isHardComplete: weeklyState?.isHardComplete ?? false,
-      };
+      if (!weeklyState) {
+        return {
+          ...weeklyGoal,
+          isComplete: false,
+          isHardComplete: false,
+          tasks: weeklyGoal.tasks.map((task) => ({
+            ...task,
+            isComplete: false,
+          })),
+        };
+      }
+      return createWeeklyGoalView(weeklyGoal, weeklyState);
     }
   );
 

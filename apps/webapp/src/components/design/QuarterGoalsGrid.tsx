@@ -1,15 +1,38 @@
 import React from 'react';
+import { QuarterlyGoalView } from '../../types/goals/view';
 
-interface Goal {
-  id: string;
-  title: string;
-  progress: number; // out of 10
-}
-
-const mockGoals: Goal[] = [
-  { id: '1', title: 'Increase Sales', progress: 7 },
-  { id: '2', title: 'Improve Customer Satisfaction', progress: 5 },
-  { id: '3', title: 'Expand Market Reach', progress: 8 },
+// Mock data using our QuarterlyGoalView type
+const mockGoals: QuarterlyGoalView[] = [
+  {
+    id: '1',
+    title: 'Increase Sales',
+    path: '/q1/1',
+    quarter: 1,
+    progress: 7,
+    isStarred: false,
+    isPinned: false,
+    weeklyGoals: [],
+  },
+  {
+    id: '2',
+    title: 'Improve Customer Satisfaction',
+    path: '/q1/2',
+    quarter: 1,
+    progress: 5,
+    isStarred: false,
+    isPinned: false,
+    weeklyGoals: [],
+  },
+  {
+    id: '3',
+    title: 'Expand Market Reach',
+    path: '/q1/3',
+    quarter: 1,
+    progress: 8,
+    isStarred: false,
+    isPinned: false,
+    weeklyGoals: [],
+  },
 ];
 
 const QuarterGoalsGrid = () => {

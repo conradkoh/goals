@@ -6,34 +6,17 @@
 import React, { ChangeEvent, KeyboardEvent, MouseEvent } from 'react';
 import { Star, Pin, Check, X } from 'lucide-react';
 import { Input } from '../../ui/input';
-import { EditState } from '../../../types/goals';
+import { EditState, QuarterlyGoalBase } from '../../../types/goals';
 
-interface QuarterlyGoal {
-  id: string;
-  title: string;
-  path: string;
-  quarter: 1 | 2 | 3 | 4;
-  progress: number;
+// Local interface for the goal with state properties
+interface QuarterlyGoalWithState extends QuarterlyGoalBase {
   isStarred: boolean;
   isPinned: boolean;
-  weeklyGoals: {
-    id: string;
-    title: string;
-    path: string;
-    isComplete: boolean;
-    isHardComplete: boolean;
-    tasks: {
-      id: string;
-      title: string;
-      isComplete: boolean;
-      path: string;
-      date: string;
-    }[];
-  }[];
+  progress: number;
 }
 
 interface GoalCardProps {
-  goal: QuarterlyGoal;
+  goal: QuarterlyGoalWithState;
   weekIndex: number;
   isEditingTitle: boolean;
   isEditingProgress: boolean;
@@ -145,7 +128,7 @@ const EditableField: React.FC<{
  * GoalActionButtons component handles the star/pin toggle buttons
  */
 const GoalActionButtons: React.FC<{
-  goal: QuarterlyGoal;
+  goal: QuarterlyGoalWithState;
   weekIndex: number;
   onToggleStar: (weekIndex: number, goalId: string) => void;
   onTogglePin: (weekIndex: number, goalId: string) => void;

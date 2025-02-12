@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import {
   EditState,
   QuarterlyGoalBase,
-  QuarterlyGoalWeekState,
+  QuarterlyGoalState,
 } from '../../types/goals';
 import {
   AlertDialog,
@@ -26,7 +26,7 @@ interface WeekData {
   weekNumber: number;
   days: string[];
   quarterlyGoal: QuarterlyGoalBase;
-  quarterlyGoalWeekState: QuarterlyGoalWeekState;
+  quarterlyGoalState: QuarterlyGoalState;
 }
 
 interface IncompleteTasksWarningProps {
@@ -48,15 +48,16 @@ const generateMockData = (): WeekData[] => {
         id: 'w1',
         title: 'Improve Customer Acquisition',
         path: '/q1/w1',
+        weekNumber: 1,
         tasks: [
           {
             id: 't1',
-            title: 'Review marketing analytics',
+            title: 'Research competitor pricing',
             path: '/q1/w1/t1',
           },
           {
             id: 't2',
-            title: 'Update social media strategy',
+            title: 'Analyze customer feedback',
             path: '/q1/w1/t2',
           },
         ],
@@ -65,10 +66,11 @@ const generateMockData = (): WeekData[] => {
         id: 'w2',
         title: 'Optimize Sales Funnel',
         path: '/q1/w2',
+        weekNumber: 2,
         tasks: [
           {
             id: 't3',
-            title: 'Analyze conversion rates',
+            title: 'Review conversion rates',
             path: '/q1/w2/t3',
           },
         ],
@@ -86,6 +88,7 @@ const generateMockData = (): WeekData[] => {
         id: 'w3',
         title: 'Complete MVP Development',
         path: '/q2/w3',
+        weekNumber: 3,
         tasks: [
           {
             id: 't4',
@@ -102,115 +105,111 @@ const generateMockData = (): WeekData[] => {
     ],
   };
 
-  // Create week states with different progress and completion states
+  // Create week data with states
   const weeks: WeekData[] = [
     {
-      weekLabel: 'Prev Week',
+      weekLabel: 'Week 1',
       weekNumber: 1,
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
       quarterlyGoal: salesGoal,
-      quarterlyGoalWeekState: {
-        goalId: salesGoal.id,
-        weekNumber: 1,
-        progress: 3,
+      quarterlyGoalState: {
+        id: salesGoal.id,
+        isComplete: false,
+        progress: 7,
         isStarred: true,
         isPinned: false,
         weeklyGoalStates: [
           {
-            goalId: 'w1',
+            id: 'w1',
             isComplete: true,
-            isHardComplete: false,
+            isHardComplete: true,
             taskStates: [
-              { taskId: 't1', isComplete: true, date: '2024-03-01' },
-              { taskId: 't2', isComplete: false, date: '2024-03-01' },
+              { id: 't1', isComplete: true, date: '2024-03-01' },
+              { id: 't2', isComplete: false, date: '2024-03-01' },
             ],
           },
           {
-            goalId: 'w2',
+            id: 'w2',
             isComplete: false,
             isHardComplete: false,
-            taskStates: [
-              { taskId: 't3', isComplete: false, date: '2024-03-01' },
-            ],
+            taskStates: [{ id: 't3', isComplete: false, date: '2024-03-01' }],
           },
         ],
       },
     },
     {
-      weekLabel: 'Last Week',
+      weekLabel: 'Week 2',
       weekNumber: 2,
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
       quarterlyGoal: productGoal,
-      quarterlyGoalWeekState: {
-        goalId: productGoal.id,
-        weekNumber: 2,
-        progress: 7,
+      quarterlyGoalState: {
+        id: productGoal.id,
+        isComplete: true,
+        progress: 10,
         isStarred: false,
         isPinned: true,
         weeklyGoalStates: [
           {
-            goalId: 'w3',
+            id: 'w3',
             isComplete: true,
             isHardComplete: true,
             taskStates: [
-              { taskId: 't4', isComplete: true, date: '2024-03-08' },
-              { taskId: 't5', isComplete: true, date: '2024-03-08' },
+              { id: 't4', isComplete: true, date: '2024-03-08' },
+              { id: 't5', isComplete: true, date: '2024-03-08' },
             ],
           },
         ],
       },
     },
     {
-      weekLabel: 'This Week',
+      weekLabel: 'Week 3',
       weekNumber: 3,
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
       quarterlyGoal: salesGoal,
-      quarterlyGoalWeekState: {
-        goalId: salesGoal.id,
-        weekNumber: 3,
+      quarterlyGoalState: {
+        id: salesGoal.id,
+        isComplete: false,
         progress: 5,
         isStarred: false,
         isPinned: false,
         weeklyGoalStates: [
           {
-            goalId: 'w1',
+            id: 'w1',
             isComplete: false,
             isHardComplete: false,
             taskStates: [
-              { taskId: 't1', isComplete: false, date: '2024-03-15' },
-              { taskId: 't2', isComplete: false, date: '2024-03-15' },
+              { id: 't1', isComplete: false, date: '2024-03-15' },
+              { id: 't2', isComplete: false, date: '2024-03-15' },
             ],
           },
           {
-            goalId: 'w2',
+            id: 'w2',
             isComplete: false,
             isHardComplete: false,
-            taskStates: [
-              { taskId: 't3', isComplete: false, date: '2024-03-15' },
-            ],
+            taskStates: [{ id: 't3', isComplete: false, date: '2024-03-15' }],
           },
         ],
       },
     },
     {
-      weekLabel: 'Next Week',
+      weekLabel: 'Week 4',
       weekNumber: 4,
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
       quarterlyGoal: productGoal,
-      quarterlyGoalWeekState: {
-        goalId: productGoal.id,
-        weekNumber: 4,
+      quarterlyGoalState: {
+        id: productGoal.id,
+        isComplete: false,
         progress: 2,
         isStarred: false,
         isPinned: false,
         weeklyGoalStates: [
           {
-            goalId: 'w3',
+            id: 'w3',
             isComplete: false,
             isHardComplete: false,
             taskStates: [
-              { taskId: 't4', isComplete: false, date: '2024-03-22' },
-              { taskId: 't5', isComplete: false, date: '2024-03-22' },
+              { id: 't4', isComplete: false, date: '2024-03-22' },
+              { id: 't5', isComplete: false, date: '2024-03-22' },
             ],
           },
         ],
@@ -337,11 +336,11 @@ const QuarterOverviewScreen = () => {
               };
             }),
           },
-          quarterlyGoalWeekState: {
-            ...week.quarterlyGoalWeekState,
-            weeklyGoalStates: week.quarterlyGoalWeekState.weeklyGoalStates.map(
+          quarterlyGoalState: {
+            ...week.quarterlyGoalState,
+            weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
               (state) => {
-                if (state.goalId !== weeklyGoalId) return state;
+                if (state.id !== weeklyGoalId) return state;
                 return {
                   ...state,
                   isHardComplete: true,
@@ -367,37 +366,31 @@ const QuarterOverviewScreen = () => {
     const weeklyGoal = week.quarterlyGoal.weeklyGoals.find(
       (wg) => wg.id === weeklyGoalId
     );
+    const weeklyGoalState = week.quarterlyGoalState.weeklyGoalStates.find(
+      (state) => state.id === weeklyGoalId
+    );
 
     if (!weeklyGoal) return;
 
     // If the goal is already hard complete, just toggle it off
-    if (weeklyGoal.isHardComplete) {
+    if (weeklyGoalState?.isHardComplete) {
       setLocalGoals((prevGoals) =>
         prevGoals.map((week, idx) => {
           if (idx !== weekIndex) return week;
 
           return {
             ...week,
-            quarterlyGoal: {
-              ...week.quarterlyGoal,
-              weeklyGoals: week.quarterlyGoal.weeklyGoals.map((wg) => {
-                if (wg.id !== weeklyGoalId) return wg;
-                return {
-                  ...wg,
-                  isHardComplete: false,
-                };
-              }),
-            },
-            quarterlyGoalWeekState: {
-              ...week.quarterlyGoalWeekState,
-              weeklyGoalStates:
-                week.quarterlyGoalWeekState.weeklyGoalStates.map((state) => {
-                  if (state.goalId !== weeklyGoalId) return state;
+            quarterlyGoalState: {
+              ...week.quarterlyGoalState,
+              weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
+                (state) => {
+                  if (state.id !== weeklyGoalId) return state;
                   return {
                     ...state,
                     isHardComplete: false,
                   };
-                }),
+                }
+              ),
             },
           };
         })
@@ -406,9 +399,12 @@ const QuarterOverviewScreen = () => {
     }
 
     // Check if all tasks are complete
-    const hasIncompleteTasks = weeklyGoal.tasks.some(
-      (task) => !task.isComplete
+    const weeklyGoalState2 = week.quarterlyGoalState.weeklyGoalStates.find(
+      (state) => state.id === weeklyGoalId
     );
+    const hasIncompleteTasks =
+      weeklyGoalState2?.taskStates.some((taskState) => !taskState.isComplete) ??
+      true;
 
     if (hasIncompleteTasks) {
       // Show warning dialog
@@ -434,53 +430,31 @@ const QuarterOverviewScreen = () => {
       prevGoals.map((week, idx) => {
         if (idx !== weekIndex) return week;
 
-        const weeklyGoal = week.quarterlyGoal.weeklyGoals.find(
-          (wg) => wg.id === weeklyGoalId
+        const weeklyGoalState = week.quarterlyGoalState.weeklyGoalStates.find(
+          (state) => state.id === weeklyGoalId
         );
-        const toggledTask = weeklyGoal?.tasks.find((t) => t.id === taskId);
-        const isUnchecking = toggledTask?.isComplete;
+        const toggledTaskState = weeklyGoalState?.taskStates.find(
+          (t) => t.id === taskId
+        );
+        const isUnchecking = toggledTaskState?.isComplete;
 
         return {
           ...week,
-          quarterlyGoal: {
-            ...week.quarterlyGoal,
-            weeklyGoals: week.quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
-              if (weeklyGoal.id !== weeklyGoalId) return weeklyGoal;
-
-              const updatedTasks = weeklyGoal.tasks.map((task) =>
-                task.id === taskId
-                  ? { ...task, isComplete: !task.isComplete }
-                  : task
-              );
-
-              // Update weekly goal soft completion based on all tasks being complete
-              const allTasksComplete = updatedTasks.every(
-                (task) => task.isComplete
-              );
-
-              return {
-                ...weeklyGoal,
-                tasks: updatedTasks,
-                isComplete: allTasksComplete,
-                ...(isUnchecking && { isHardComplete: false }), // Remove hard completion when unchecking a task
-              };
-            }),
-          },
-          quarterlyGoalWeekState: {
-            ...week.quarterlyGoalWeekState,
-            weeklyGoalStates: week.quarterlyGoalWeekState.weeklyGoalStates.map(
+          quarterlyGoalState: {
+            ...week.quarterlyGoalState,
+            weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
               (state) => {
-                if (state.goalId !== weeklyGoalId) return state;
+                if (state.id !== weeklyGoalId) return state;
 
                 const updatedTaskStates = state.taskStates.map((taskState) =>
-                  taskState.taskId === taskId
+                  taskState.id === taskId
                     ? { ...taskState, isComplete: !taskState.isComplete }
                     : taskState
                 );
 
                 // Update weekly goal soft completion based on all tasks being complete
                 const allTasksComplete = updatedTaskStates.every(
-                  (task) => task.isComplete
+                  (taskState) => taskState.isComplete
                 );
 
                 return {
@@ -545,8 +519,8 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalWeekState: {
-            ...week.quarterlyGoalWeekState,
+          quarterlyGoalState: {
+            ...week.quarterlyGoalState,
             progress: newProgress,
           },
         };
@@ -561,9 +535,9 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalWeekState: {
-            ...week.quarterlyGoalWeekState,
-            isStarred: !week.quarterlyGoalWeekState.isStarred,
+          quarterlyGoalState: {
+            ...week.quarterlyGoalState,
+            isStarred: !week.quarterlyGoalState.isStarred,
             isPinned: false,
           },
         };
@@ -577,9 +551,9 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalWeekState: {
-            ...week.quarterlyGoalWeekState,
-            isPinned: !week.quarterlyGoalWeekState.isPinned,
+          quarterlyGoalState: {
+            ...week.quarterlyGoalState,
+            isPinned: !week.quarterlyGoalState.isPinned,
             isStarred: false,
           },
         };
@@ -656,7 +630,7 @@ const QuarterOverviewScreen = () => {
                 {/* Quarter Goals Section */}
                 <QuarterlyGoalSection
                   goalBase={week.quarterlyGoal}
-                  weekState={week.quarterlyGoalWeekState}
+                  weekState={week.quarterlyGoalState}
                   weekIndex={weekIndex}
                   isOpen={goalSectionOpenStates[weekIndex] ?? false}
                   onOpenChange={(isOpen) =>
@@ -676,7 +650,7 @@ const QuarterOverviewScreen = () => {
                   <h3 className="font-semibold mb-3">Weekly Goals</h3>
                   <WeeklyGoalSection
                     quarterlyGoal={week.quarterlyGoal}
-                    weekState={week.quarterlyGoalWeekState}
+                    weekState={week.quarterlyGoalState}
                     onWeeklyGoalToggle={(goalId) =>
                       handleWeeklyGoalToggle(weekIndex, goalId)
                     }
@@ -688,7 +662,7 @@ const QuarterOverviewScreen = () => {
                   <h3 className="font-semibold mb-4">Daily Goals</h3>
                   <DailyGoalSection
                     quarterlyGoal={week.quarterlyGoal}
-                    weekState={week.quarterlyGoalWeekState}
+                    weekState={week.quarterlyGoalState}
                     onTaskToggle={(taskId, weeklyGoalId) =>
                       handleTaskToggle(weekIndex, taskId, weeklyGoalId)
                     }

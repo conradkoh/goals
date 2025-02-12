@@ -15,13 +15,13 @@ import { ChevronsUpDown } from 'lucide-react';
 import { GoalCard } from './GoalCard';
 import {
   QuarterlyGoalBase,
-  QuarterlyGoalWeekState,
+  QuarterlyGoalState,
   EditState,
 } from '../../../types/goals';
 
 interface QuarterlyGoalSectionProps {
   goalBase: QuarterlyGoalBase;
-  weekState: QuarterlyGoalWeekState; // Required
+  weekState: QuarterlyGoalState;
   weekIndex: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -62,7 +62,7 @@ export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
   }
 
   // Verify that weekState matches goalBase
-  if (weekState.goalId !== goalBase.id) {
+  if (weekState.id !== goalBase.id) {
     console.error('Week state does not match goal base');
     return null;
   }
@@ -75,7 +75,7 @@ export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
     isPinned: weekState.isPinned,
     weeklyGoals: goalBase.weeklyGoals.map((weeklyGoal) => {
       const weeklyState = weekState.weeklyGoalStates.find(
-        (state) => state.goalId === weeklyGoal.id
+        (state) => state.id === weeklyGoal.id
       );
       if (!weeklyState) {
         console.error(`No weekly state found for goal ${weeklyGoal.id}`);
@@ -96,7 +96,7 @@ export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
         isHardComplete: weeklyState.isHardComplete,
         tasks: weeklyGoal.tasks.map((task) => {
           const taskState = weeklyState.taskStates.find(
-            (state) => state.taskId === task.id
+            (state) => state.id === task.id
           );
           if (!taskState) {
             console.error(`No task state found for task ${task.id}`);
