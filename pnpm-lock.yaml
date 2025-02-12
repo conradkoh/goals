@@ -30,6 +30,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.2
         version: 1.1.2(@types/react@19.0.8)(react@19.0.0)
+      '@services/backend':
+        specifier: workspace:*
+        version: link:../../services/backend
       '@types/luxon':
         specifier: ^3.4.2
         version: 3.4.2
@@ -39,6 +42,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      convex:
+        specifier: ^1.19.0
+        version: 1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       lucide-react:
         specifier: ^0.475.0
         version: 0.475.0(react@19.0.0)
@@ -91,6 +97,19 @@ importers:
       convex:
         specifier: ^1.19.0
         version: 1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      convex-helpers:
+        specifier: ^0.1.71
+        version: 0.1.71(convex@1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)(zod@3.24.2)
+      luxon:
+        specifier: ^3.5.0
+        version: 3.5.0
+      zod:
+        specifier: ^3.24.2
+        version: 3.24.2
+    devDependencies:
+      '@types/luxon':
+        specifier: ^3.4.2
+        version: 3.4.2
 
 packages:
 
@@ -1093,6 +1112,22 @@ packages:
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+
+  convex-helpers@0.1.71:
+    resolution: {integrity: sha512-/uucsexesq9CNl1J+wZIdjcvPWd9nXcZKE8sIGokduhmtPI+6GtXz/dkpNm9pgFXx6yPJ51lFMuuZFAkVicI0A==}
+    hasBin: true
+    peerDependencies:
+      convex: ^1.13.0
+      hono: ^4.0.5
+      react: ^17.0.2 || ^18.0.0 || ^19.0.0
+      zod: ^3.22.4
+    peerDependenciesMeta:
+      hono:
+        optional: true
+      react:
+        optional: true
+      zod:
+        optional: true
 
   convex@1.19.0:
     resolution: {integrity: sha512-TcglkEi392oK0Ah+zDoetFCRFXBM/lvCewi6AWfIgVCtVc9I/xdimdFOLN602V5wp7H4PN8wotpdIoixwSH7mQ==}
@@ -2553,6 +2588,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
+
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
@@ -3433,6 +3471,13 @@ snapshots:
   commander@4.1.1: {}
 
   concat-map@0.0.1: {}
+
+  convex-helpers@0.1.71(convex@1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)(zod@3.24.2):
+    dependencies:
+      convex: 1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+    optionalDependencies:
+      react: 19.0.0
+      zod: 3.24.2
 
   convex@1.19.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
@@ -5177,3 +5222,5 @@ snapshots:
       yargs-parser: 21.1.1
 
   yocto-queue@0.1.0: {}
+
+  zod@3.24.2: {}
