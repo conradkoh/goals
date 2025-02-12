@@ -607,6 +607,23 @@ const QuarterOverviewScreen = () => {
                   {week.weekLabel}
                 </h2>
 
+                {/* Quarter Goals Section */}
+                <QuarterlyGoalSection
+                  goalBase={week.quarterlyGoal}
+                  weekState={week.quarterlyGoalState}
+                  weekIndex={weekIndex}
+                  isOpen={goalSectionOpenStates[weekIndex] ?? false}
+                  onOpenChange={(isOpen) =>
+                    handleGoalSectionOpenChange(weekIndex, isOpen)
+                  }
+                  editState={editState}
+                  onStartEditing={handleStartEditing}
+                  onCancelEditing={() => setEditState(null)}
+                  onUpdateGoal={handleUpdateGoal}
+                  onUpdateProgress={handleUpdateProgress}
+                  onToggleStar={() => handleToggleStar(weekIndex)}
+                  onTogglePin={() => handleTogglePin(weekIndex)}
+                />
                 {/* Team Coordination Section */}
                 <section className="mb-4">
                   <div className="flex justify-between items-center">
@@ -626,25 +643,6 @@ const QuarterOverviewScreen = () => {
                     </div>
                   )}
                 </section>
-
-                {/* Quarter Goals Section */}
-                <QuarterlyGoalSection
-                  goalBase={week.quarterlyGoal}
-                  weekState={week.quarterlyGoalState}
-                  weekIndex={weekIndex}
-                  isOpen={goalSectionOpenStates[weekIndex] ?? false}
-                  onOpenChange={(isOpen) =>
-                    handleGoalSectionOpenChange(weekIndex, isOpen)
-                  }
-                  editState={editState}
-                  onStartEditing={handleStartEditing}
-                  onCancelEditing={() => setEditState(null)}
-                  onUpdateGoal={handleUpdateGoal}
-                  onUpdateProgress={handleUpdateProgress}
-                  onToggleStar={() => handleToggleStar(weekIndex)}
-                  onTogglePin={() => handleTogglePin(weekIndex)}
-                />
-
                 {/* Weekly Goals Section */}
                 <section className="mb-4">
                   <h3 className="font-semibold mb-3">Weekly Goals</h3>
