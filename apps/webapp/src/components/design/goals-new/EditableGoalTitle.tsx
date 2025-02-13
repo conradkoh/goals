@@ -1,15 +1,18 @@
 import { Input } from '@/components/ui/input';
 import { Check, Edit2, X } from 'lucide-react';
 import { useState } from 'react';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface EditableGoalTitleProps {
   title: string;
   onSubmit: (newTitle: string) => Promise<void>;
+  onDelete: () => Promise<void>;
 }
 
 export const EditableGoalTitle = ({
   title,
   onSubmit,
+  onDelete,
 }: EditableGoalTitleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(title);
@@ -74,12 +77,15 @@ export const EditableGoalTitle = ({
   return (
     <div className="flex items-center gap-1 min-w-0 group/title flex-grow">
       <span className="text-sm truncate flex-grow">{title}</span>
-      <button
-        onClick={() => setIsEditing(true)}
-        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
-      >
-        <Edit2 className="h-3.5 w-3.5" />
-      </button>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+        >
+          <Edit2 className="h-3.5 w-3.5" />
+        </button>
+        <DeleteGoalIconButton onDelete={onDelete} />
+      </div>
     </div>
   );
 };

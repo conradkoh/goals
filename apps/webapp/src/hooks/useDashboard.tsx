@@ -152,6 +152,7 @@ interface DashboardContextValue {
     goalId: Id<'goals'>;
     title: string;
   }) => Promise<void>;
+  deleteQuarterlyGoal: (args: { goalId: Id<'goals'> }) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -172,6 +173,9 @@ export const DashboardProvider = ({
   );
   const updateQuarterlyGoalTitleMutation = useMutation(
     api.dashboard.updateQuarterlyGoalTitle
+  );
+  const deleteQuarterlyGoalMutation = useMutation(
+    api.dashboard.deleteQuarterlyGoal
   );
 
   // Use a single source of truth for current date
@@ -243,6 +247,13 @@ export const DashboardProvider = ({
     });
   };
 
+  const deleteQuarterlyGoal = async ({ goalId }: { goalId: Id<'goals'> }) => {
+    await deleteQuarterlyGoalMutation({
+      sessionId,
+      goalId,
+    });
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -260,6 +271,7 @@ export const DashboardProvider = ({
         createQuarterlyGoal,
         updateQuarterlyGoalStatus,
         updateQuarterlyGoalTitle,
+        deleteQuarterlyGoal,
       }}
     >
       {children}

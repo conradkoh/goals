@@ -6,6 +6,7 @@ import { SessionProvider } from '@/modules/auth/SessionContext';
 import { Bell, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Toaster } from '@/components/ui/toaster';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -55,6 +56,7 @@ export default function QuarterOverviewLayout({
       <SessionProvider>
         <DashboardProvider>
           <DashboardLayout>{children}</DashboardLayout>
+          <Toaster />
         </DashboardProvider>
       </SessionProvider>
     </ClientOnly>

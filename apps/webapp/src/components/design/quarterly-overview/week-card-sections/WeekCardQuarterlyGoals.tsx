@@ -22,6 +22,7 @@ export const WeekCardQuarterlyGoals = ({
     createQuarterlyGoal,
     updateQuarterlyGoalStatus,
     updateQuarterlyGoalTitle,
+    deleteQuarterlyGoal,
   } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
 
@@ -66,6 +67,17 @@ export const WeekCardQuarterlyGoals = ({
     }
   };
 
+  const handleDeleteGoal = async (goalId: Id<'goals'>) => {
+    try {
+      await deleteQuarterlyGoal({
+        goalId,
+      });
+    } catch (error) {
+      console.error('Failed to delete goal:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* List of goals */}
@@ -103,6 +115,7 @@ export const WeekCardQuarterlyGoals = ({
                   onSubmit={(newTitle) =>
                     handleUpdateTitle(goal.id as Id<'goals'>, newTitle)
                   }
+                  onDelete={() => handleDeleteGoal(goal.id as Id<'goals'>)}
                 />
               </div>
               {state.progress > 0 && (

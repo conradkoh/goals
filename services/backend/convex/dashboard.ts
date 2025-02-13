@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
+import { ConvexError } from 'convex/values';
 // @deprecated
 // type WeeklyState = {
 //   quarterlyGoals: {
@@ -312,6 +313,71 @@ export const updateQuarterlyGoalTitle = mutation({
     await ctx.db.patch(goalId, {
       title,
     });
+
+    return goalId;
+  },
+});
+
+export const deleteQuarterlyGoal = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Find the goal and verify ownership
+    const goal = await ctx.db.get(goalId);
+    if (!goal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Goal not found',
+      });
+    }
+    if (goal.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to delete this goal',
+      });
+    }
+
+    // Check for child goals
+    const childGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter', (q) =>
+        q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
+      )
+      .filter((q) => q.eq(q.field('parentId'), goalId))
+      .collect();
+
+    if (childGoals.length > 0) {
+      throw new ConvexError({
+        code: 'VALIDATION_ERROR',
+        message:
+          'Cannot delete goal with child goals. Please delete all child goals first.',
+        details: {
+          childCount: childGoals.length,
+        },
+      });
+    }
+
+    // Delete all weekly goals associated with this goal
+    const weeklyGoals = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
+      )
+      .filter((q) => q.eq(q.field('goalId'), goalId))
+      .collect();
+
+    for (const weeklyGoal of weeklyGoals) {
+      await ctx.db.delete(weeklyGoal._id);
+    }
+
+    // Delete the goal itself
+    await ctx.db.delete(goalId);
 
     return goalId;
   },
