@@ -8,15 +8,6 @@ export interface Goal {
   title: string;
   path: string;
 }
-
-/**
- * Represents a quarterly goal, which is the highest level goal type
- */
-export interface QuarterlyGoalBase extends Goal {
-  quarter: 1 | 2 | 3 | 4;
-  weeklyGoals: WeeklyGoalBase[];
-}
-
 /**
  * Represents a weekly goal, which is a sub-goal of a quarterly goal
  */
@@ -40,16 +31,6 @@ export interface TaskBase extends Goal {
 export interface GoalState {
   id: string; // ID of the goal this state belongs to
   isComplete: boolean;
-}
-
-/**
- * State tracking for quarterly goals
- */
-export interface QuarterlyGoalState extends GoalState {
-  progress: number;
-  isStarred: boolean;
-  isPinned: boolean;
-  weeklyGoalStates: WeeklyGoalState[];
 }
 
 /**

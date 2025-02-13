@@ -1,14 +1,9 @@
-import {
-  QuarterlyGoalBase,
-  QuarterlyGoalState,
-  WeeklyGoalBase,
-} from '@/types/goals';
-import { Star, Pin } from 'lucide-react';
-import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { useState } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetails';
+import { Pin, Star } from 'lucide-react';
+import { useState } from 'react';
+import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
