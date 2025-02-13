@@ -20,7 +20,7 @@ const ActionButton = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-4 flex justify-center items-center transition-colors ${className}`}
+    className={`w-4 flex justify-center items-center transition-all ${className}`}
   >
     {icon}
   </button>
@@ -35,15 +35,17 @@ export const GoalStarPin = ({
 
   if (isStarred) {
     return (
-      <div className="flex items-center gap-1">
-        <ActionButton
-          icon={<Pin className="h-3.5 w-3.5" />}
-          onClick={() => {
-            onStarred();
-            onPinned();
-          }}
-          className="text-gray-400 hover:text-blue-500 opacity-0 group-hover:opacity-100"
-        />
+      <div className="flex items-center">
+        <div className="w-0 group-hover:w-4 overflow-hidden transition-all duration-200">
+          <ActionButton
+            icon={<Pin className="h-3.5 w-3.5" />}
+            onClick={() => {
+              onStarred();
+              onPinned();
+            }}
+            className="text-gray-400 hover:text-blue-500"
+          />
+        </div>
         <ActionButton
           icon={<Star className="h-3.5 w-3.5" />}
           onClick={onStarred}
@@ -55,15 +57,17 @@ export const GoalStarPin = ({
 
   if (isPinned) {
     return (
-      <div className="flex items-center gap-1">
-        <ActionButton
-          icon={<Star className="h-3.5 w-3.5" />}
-          onClick={() => {
-            onPinned();
-            onStarred();
-          }}
-          className="text-gray-400 hover:text-yellow-500 opacity-0 group-hover:opacity-100"
-        />
+      <div className="flex items-center">
+        <div className="w-0 group-hover:w-4 overflow-hidden transition-all duration-200">
+          <ActionButton
+            icon={<Star className="h-3.5 w-3.5" />}
+            onClick={() => {
+              onPinned();
+              onStarred();
+            }}
+            className="text-gray-400 hover:text-yellow-500"
+          />
+        </div>
         <ActionButton
           icon={<Pin className="h-3.5 w-3.5" />}
           onClick={onPinned}
@@ -74,12 +78,14 @@ export const GoalStarPin = ({
   }
 
   return (
-    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-      <ActionButton
-        icon={<Star className="h-3.5 w-3.5" />}
-        onClick={onStarred}
-        className="text-gray-400 hover:text-yellow-500"
-      />
+    <div className="flex items-center">
+      <div className="w-0 group-hover:w-4 overflow-hidden transition-all duration-200">
+        <ActionButton
+          icon={<Star className="h-3.5 w-3.5" />}
+          onClick={onStarred}
+          className="text-gray-400 hover:text-yellow-500"
+        />
+      </div>
       <ActionButton
         icon={<Pin className="h-3.5 w-3.5" />}
         onClick={onPinned}

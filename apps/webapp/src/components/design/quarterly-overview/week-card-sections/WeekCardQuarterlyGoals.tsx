@@ -6,6 +6,8 @@ import { GoalStarPin } from '../../goals-new/GoalStarPin';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { ChevronsUpDown } from 'lucide-react';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
@@ -50,11 +52,21 @@ export const WeekCardQuarterlyGoals = ({
     deleteQuarterlyGoal,
   } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleCreateGoal = async () => {
     if (!newGoalTitle.trim()) return;
     try {
-      await createQuarterlyGoal(newGoalTitle.trim());
+      const goalId = await createQuarterlyGoal(newGoalTitle.trim());
+      // If not expanded, immediately pin the goal so it's visible
+      if (!isExpanded && goalId) {
+        await updateQuarterlyGoalStatus({
+          weekNumber,
+          goalId,
+          isStarred: false,
+          isPinned: true,
+        });
+      }
       setNewGoalTitle('');
     } catch (error) {
       console.error('Failed to create quarterly goal:', error);
@@ -106,57 +118,94 @@ export const WeekCardQuarterlyGoals = ({
   // Sort the goals before rendering
   const sortedGoals = sortGoals(quarterlyGoals, quarterlyGoalStates);
 
+  // Split goals into important (starred/pinned) and other
+  const importantGoals = sortedGoals.filter(
+    ({ state }) => state.isStarred || state.isPinned
+  );
+  const otherGoals = sortedGoals.filter(
+    ({ state }) => !state.isStarred && !state.isPinned
+  );
+
+  const renderGoal = ({
+    goal,
+    state,
+  }: {
+    goal: QuarterlyGoalBase;
+    state: QuarterlyGoalState;
+  }) => (
+    <div
+      key={goal.id}
+      className="group px-2 py-1.5 rounded-sm hover:bg-gray-50 flex items-center justify-between"
+    >
+      <div className="flex items-center gap-2 min-w-0 flex-grow">
+        <GoalStarPin
+          value={{
+            isStarred: state.isStarred,
+            isPinned: state.isPinned,
+          }}
+          onStarred={() =>
+            handleToggleStatus(goal.id as Id<'goals'>, !state.isStarred, false)
+          }
+          onPinned={() =>
+            handleToggleStatus(goal.id as Id<'goals'>, false, !state.isPinned)
+          }
+        />
+        <EditableGoalTitle
+          title={goal.title}
+          onSubmit={(newTitle) =>
+            handleUpdateTitle(goal.id as Id<'goals'>, newTitle)
+          }
+          onDelete={() => handleDeleteGoal(goal.id as Id<'goals'>)}
+        />
+      </div>
+      {state.progress > 0 && (
+        <span className="text-xs text-muted-foreground ml-2 tabular-nums">
+          {state.progress}%
+        </span>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {/* List of goals */}
       <div className="space-y-1">
-        {sortedGoals.map(({ goal, state }) => (
-          <div
-            key={goal.id}
-            className="group px-2 py-1.5 rounded-sm hover:bg-gray-50 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-2 min-w-0 flex-grow">
-              <GoalStarPin
-                value={{
-                  isStarred: state.isStarred,
-                  isPinned: state.isPinned,
-                }}
-                onStarred={() =>
-                  handleToggleStatus(
-                    goal.id as Id<'goals'>,
-                    !state.isStarred,
-                    false
-                  )
-                }
-                onPinned={() =>
-                  handleToggleStatus(
-                    goal.id as Id<'goals'>,
-                    false,
-                    !state.isPinned
-                  )
-                }
-              />
-              <EditableGoalTitle
-                title={goal.title}
-                onSubmit={(newTitle) =>
-                  handleUpdateTitle(goal.id as Id<'goals'>, newTitle)
-                }
-                onDelete={() => handleDeleteGoal(goal.id as Id<'goals'>)}
-              />
+        {/* Important goals are always visible */}
+        {importantGoals.map(renderGoal)}
+
+        {/* Other goals are shown when expanded */}
+        {otherGoals.length > 0 && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="h-6 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
+              >
+                <span>
+                  {isExpanded ? 'Show less' : `${otherGoals.length} more goals`}
+                </span>
+                <ChevronsUpDown className="h-3 w-3" />
+              </Button>
             </div>
-            {state.progress > 0 && (
-              <span className="text-xs text-muted-foreground ml-2 tabular-nums">
-                {state.progress}%
-              </span>
+            {isExpanded && (
+              <div className="space-y-1 animate-in slide-in-from-top-1 duration-100">
+                {otherGoals.map(renderGoal)}
+              </div>
             )}
           </div>
-        ))}
+        )}
       </div>
 
       {/* Input for new goal */}
       <div className="pt-1">
         <CreateGoalInput
-          placeholder="Add a quarterly goal..."
+          placeholder={
+            isExpanded
+              ? 'Add a quarterly goal...'
+              : 'Add a pinned quarterly goal...'
+          }
           value={newGoalTitle}
           onChange={setNewGoalTitle}
           onSubmit={handleCreateGoal}
