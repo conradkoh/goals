@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { query, mutation } from './_generated/server';
-import { Id } from './_generated/dataModel';
+import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 // @deprecated
 // type WeeklyState = {
@@ -72,15 +72,14 @@ export const getQuarterOverview = query({
       const goal = goalsMap.get(weeklyGoal.goalId);
       if (goal) {
         acc[weekNumber].goals.push({
-          goalId: weeklyGoal.goalId,
-          progress: weeklyGoal.progress,
-          isComplete: weeklyGoal.isComplete,
+          title: goal.title,
           depth: goal.depth,
+          ...weeklyGoal,
         });
       }
 
       return acc;
-    }, {} as Record<number, { weekNumber: number; goals: any[] }>);
+    }, {} as Record<number, { weekNumber: number; goals: (Pick<Doc<'goals'>, 'title' | 'depth'> & Doc<'goalsWeekly'>)[] }>);
 
     return weekSummaries;
   },
@@ -236,5 +235,55 @@ export const createQuarterlyGoal = mutation({
     }
 
     return goalId;
+  },
+});
+
+export const updateQuarterlyGoalStatus = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    quarter: v.number(),
+    weekNumber: v.number(),
+    goalId: v.id('goals'),
+    isStarred: v.boolean(),
+    isPinned: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const {
+      sessionId,
+      year,
+      quarter,
+      weekNumber,
+      goalId,
+      isStarred,
+      isPinned,
+    } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Find the weekly goal record
+    const weeklyGoal = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', year)
+          .eq('quarter', quarter)
+          .eq('weekNumber', weekNumber)
+      )
+      .filter((q) => q.eq(q.field('goalId'), goalId))
+      .first();
+
+    if (!weeklyGoal) {
+      throw new Error('Weekly goal not found');
+    }
+
+    // Update the status
+    await ctx.db.patch(weeklyGoal._id, {
+      isStarred,
+      isPinned,
+    });
+
+    return weeklyGoal._id;
   },
 });

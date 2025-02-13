@@ -129,23 +129,30 @@ export const useDashboard = () => {
   return val;
 };
 
-const DashboardContext = createContext<
-  | {
-      data: AsyncQueryReturnType<typeof api.dashboard.getQuarterOverview>;
-      isLoading: boolean;
-      currentDate: DateTime;
-      currentYear: number;
-      currentQuarter: 1 | 2 | 3 | 4;
-      currentWeekNumber: number;
-      currentMonth: number;
-      currentMonthName: string;
-      currentDayOfMonth: number;
-      currentDayName: string;
-      weekData: WeekData[];
-      createQuarterlyGoal: (title: string) => Promise<void>;
-    }
-  | 'not-found'
->('not-found');
+interface DashboardContextValue {
+  data: AsyncQueryReturnType<typeof api.dashboard.getQuarterOverview>;
+  isLoading: boolean;
+  currentDate: DateTime;
+  currentYear: number;
+  currentQuarter: 1 | 2 | 3 | 4;
+  currentWeekNumber: number;
+  currentMonth: number;
+  currentMonthName: string;
+  currentDayOfMonth: number;
+  currentDayName: string;
+  weekData: WeekData[];
+  createQuarterlyGoal: (title: string) => Promise<void>;
+  updateQuarterlyGoalStatus: (args: {
+    weekNumber: number;
+    goalId: Id<'goals'>;
+    isStarred: boolean;
+    isPinned: boolean;
+  }) => Promise<void>;
+}
+
+const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
+  'not-found'
+);
 
 export const DashboardProvider = ({
   children,
@@ -155,6 +162,9 @@ export const DashboardProvider = ({
   const { sessionId } = useSession();
   const createQuarterlyGoalMutation = useMutation(
     api.dashboard.createQuarterlyGoal
+  );
+  const updateQuarterlyGoalStatusMutation = useMutation(
+    api.dashboard.updateQuarterlyGoalStatus
   );
 
   // Use a single source of truth for current date
@@ -190,6 +200,28 @@ export const DashboardProvider = ({
     });
   };
 
+  const updateQuarterlyGoalStatus = async ({
+    weekNumber,
+    goalId,
+    isStarred,
+    isPinned,
+  }: {
+    weekNumber: number;
+    goalId: Id<'goals'>;
+    isStarred: boolean;
+    isPinned: boolean;
+  }) => {
+    await updateQuarterlyGoalStatusMutation({
+      sessionId,
+      year: currentYear,
+      quarter: currentQuarter,
+      weekNumber,
+      goalId,
+      isStarred,
+      isPinned,
+    });
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -205,6 +237,7 @@ export const DashboardProvider = ({
         currentDayName,
         weekData,
         createQuarterlyGoal,
+        updateQuarterlyGoalStatus,
       }}
     >
       {children}

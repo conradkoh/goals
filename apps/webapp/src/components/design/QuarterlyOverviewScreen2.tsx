@@ -3,6 +3,7 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
 import { WeekCard } from './quarterly-overview/WeekCard';
+import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 
 export const QuarterlyOverviewScreen2 = () => {
   const { weekData, currentWeekNumber } = useDashboard();
@@ -21,7 +22,11 @@ export const QuarterlyOverviewScreen2 = () => {
         >
           <div className="space-y-6">
             <WeekCardSection title="Quarterly Goals">
-              {/* Quarterly goals content will go here */}
+              <WeekCardQuarterlyGoals
+                weekNumber={week.weekNumber}
+                quarterlyGoals={week.quarterlyGoals}
+                quarterlyGoalStates={week.quarterlyGoalStates}
+              />
             </WeekCardSection>
 
             <WeekCardSection title="Weekly Goals">
