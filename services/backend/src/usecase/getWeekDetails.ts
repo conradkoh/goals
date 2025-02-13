@@ -10,7 +10,13 @@ export type WeekGoalsTree = {
 };
 
 type Goal = Doc<'goals'>;
-type GoalWithWeeklyGoal = Goal & { weeklyGoal?: Doc<'goalsWeekly'> };
+type GoalWithWeeklyGoal = Goal & {
+  weeklyGoal?: Doc<'goalsWeekly'>;
+  daily?: {
+    dayOfWeek: number;
+    dateTimestamp: number;
+  };
+};
 export type QuarterlyGoalInWeek = TWithChildren<GoalWithWeeklyGoal>;
 /**
  * Represents a type that includes a path and children for a given type T.

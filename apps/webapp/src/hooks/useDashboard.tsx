@@ -13,6 +13,11 @@ interface WeekData {
   weekLabel: string;
   weekNumber: number;
   mondayDate: string;
+  days: Array<{
+    dayOfWeek: number;
+    date: string;
+    dateTimestamp: number;
+  }>;
 
   // actual data
   tree: WeekGoalsTree;
@@ -42,6 +47,11 @@ const generateWeeksForQuarter = (
       weekLabel: `Week ${weekNum}`,
       weekNumber: weekNum,
       mondayDate: weekStart.toFormat('LLL d'),
+      days: Array.from({ length: 7 }, (_, i) => ({
+        dayOfWeek: i + 1,
+        date: weekStart.plus({ days: i }).toFormat('LLL d'),
+        dateTimestamp: weekStart.plus({ days: i }).toMillis(),
+      })),
       tree: quarterOverview[weekNum] || {
         quarterlyGoals: [],
         weekNumber: weekNum,
