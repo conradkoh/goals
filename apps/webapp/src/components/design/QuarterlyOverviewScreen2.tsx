@@ -12,6 +12,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 
 export const QuarterlyOverviewScreen2 = () => {
   const { weekData, currentWeekNumber, updateQuarterlyGoalStatus } =
@@ -90,7 +91,11 @@ export const QuarterlyOverviewScreen2 = () => {
               </WeekCardSection>
 
               <WeekCardSection title="Weekly Goals">
-                {/* Weekly goals content will go here */}
+                <WeekCardWeeklyGoals
+                  weekNumber={week.weekNumber}
+                  quarterlyGoals={week.quarterlyGoals}
+                  quarterlyGoalStates={week.quarterlyGoalStates}
+                />
               </WeekCardSection>
 
               <WeekCardSection title="Daily Goals">
