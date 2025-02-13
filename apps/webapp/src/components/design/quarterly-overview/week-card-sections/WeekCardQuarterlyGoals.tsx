@@ -8,6 +8,8 @@ import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDown } from 'lucide-react';
+import { useDroppable } from '@dnd-kit/core';
+import { DraggableGoal } from '../../goals-new/DraggableGoal';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
@@ -53,6 +55,19 @@ export const WeekCardQuarterlyGoals = ({
   } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Setup droppable area
+  const { setNodeRef, isOver } = useDroppable({
+    id: `week-${weekNumber}`,
+    data: {
+      weekNumber,
+    },
+  });
+
+  const handleDragOver = (e: React.DragEvent) => {
+    // Prevent scrolling when dragging over
+    e.preventDefault();
+  };
 
   const handleCreateGoal = async () => {
     if (!newGoalTitle.trim()) return;
@@ -125,41 +140,23 @@ export const WeekCardQuarterlyGoals = ({
     goal: QuarterlyGoalBase;
     state: QuarterlyGoalState;
   }) => (
-    <div
+    <DraggableGoal
       key={goal.id}
-      className="group px-2 py-1.5 rounded-sm hover:bg-gray-50 flex items-center justify-between"
-    >
-      <div className="flex items-center gap-2 min-w-0 flex-grow">
-        <GoalStarPin
-          value={{
-            isStarred: state.isStarred,
-            isPinned: state.isPinned,
-          }}
-          onStarred={() =>
-            handleToggleStatus(goal.id as Id<'goals'>, !state.isStarred, false)
-          }
-          onPinned={() =>
-            handleToggleStatus(goal.id as Id<'goals'>, false, !state.isPinned)
-          }
-        />
-        <EditableGoalTitle
-          title={goal.title}
-          onSubmit={(newTitle) =>
-            handleUpdateTitle(goal.id as Id<'goals'>, newTitle)
-          }
-          onDelete={() => handleDeleteGoal(goal.id as Id<'goals'>)}
-        />
-      </div>
-      {state.progress > 0 && (
-        <span className="text-xs text-muted-foreground ml-2 tabular-nums">
-          {state.progress}%
-        </span>
-      )}
-    </div>
+      goal={goal}
+      state={state}
+      weekNumber={weekNumber}
+      onToggleStatus={handleToggleStatus}
+      onUpdateTitle={handleUpdateTitle}
+      onDelete={handleDeleteGoal}
+    />
   );
 
   return (
-    <div className="space-y-3">
+    <div
+      ref={setNodeRef}
+      onDragOver={handleDragOver}
+      className={`space-y-3 ${isOver ? 'bg-gray-50 rounded-md' : ''}`}
+    >
       {/* List of goals */}
       <div className="space-y-1">
         {/* Important goals are always visible */}
