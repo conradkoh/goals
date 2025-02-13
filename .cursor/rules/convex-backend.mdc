@@ -1,0 +1,7 @@
+---
+description: Instructions when creating queries / mutations / actions on the backend, for auth and sessions
+globs: 
+---
+# Auth
+1. Assume the sessionId is passed in as a parameter to the function.
+2. Always do a look up against the session table to get the user id, rather than in-built convex functions
