@@ -3,6 +3,7 @@ import { query, mutation } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
+import { getWeekDetails } from '../src/usecase/getWeekDetails';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -16,44 +17,44 @@ export const getQuarterOverview = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Get all goals for the quarter
-    const goals = await ctx.db
-      .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) =>
-        q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
-      )
-      .collect();
+    // Get details for all 13 weeks in the quarter
+    const weekPromises = Array.from({ length: 13 }, (_, i) => i + 1).map(
+      (weekNumber) =>
+        getWeekDetails(ctx, {
+          userId,
+          year,
+          quarter,
+          weekNumber,
+        })
+    );
 
-    // Create a map of goals by ID for quick lookup
-    const goalsMap = new Map(goals.map((goal) => [goal._id, goal]));
+    const weekResults = await Promise.all(weekPromises);
 
-    // Get weekly summaries
-    const weeklyGoals = await ctx.db
-      .query('goalsWeekly')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
-      )
-      .collect();
+    // Convert to the expected format
+    const weekSummaries = weekResults.reduce((acc, goals, index) => {
+      const weekNumber = index + 1;
 
-    // Organize by week number
-    const weekSummaries = weeklyGoals.reduce((acc, weeklyGoal) => {
-      const weekNumber = weeklyGoal.weekNumber;
-      if (!acc[weekNumber]) {
+      // Flatten the tree structure and convert to the expected format
+      const flattenedGoals = goals.flatMap((goal) => {
+        const weeklyGoal = goal.weeklyGoals;
+        if (!weeklyGoal) return [];
+
+        return [
+          {
+            title: goal.title,
+            depth: goal.depth,
+            inPath: goal.inPath,
+            parentId: goal.parentId,
+            ...weeklyGoal,
+          },
+        ];
+      });
+
+      if (flattenedGoals.length > 0) {
         acc[weekNumber] = {
           weekNumber,
-          goals: [],
+          goals: flattenedGoals,
         };
-      }
-
-      const goal = goalsMap.get(weeklyGoal.goalId);
-      if (goal) {
-        acc[weekNumber].goals.push({
-          title: goal.title,
-          depth: goal.depth,
-          inPath: goal.inPath,
-          parentId: goal.parentId,
-          ...weeklyGoal,
-        });
       }
 
       return acc;
@@ -82,7 +83,7 @@ export const createQuarterlyGoal = mutation({
       year,
       quarter,
       title,
-      inPath: `/quarters/${quarter}`,
+      inPath: '/',
       depth: 0, // 0 for quarterly goals
     });
 
@@ -256,10 +257,9 @@ export const createWeeklyGoal = mutation({
     title: v.string(),
     parentId: v.id('goals'),
     weekNumber: v.number(),
-    inPath: v.string(),
   },
   handler: async (ctx, args) => {
-    const { sessionId, title, parentId, weekNumber, inPath } = args;
+    const { sessionId, title, parentId, weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -276,7 +276,10 @@ export const createWeeklyGoal = mutation({
       quarter: parentGoal.quarter,
       title,
       parentId,
-      inPath,
+      inPath:
+        parentGoal.inPath === '/'
+          ? `/${parentGoal._id}`
+          : parentGoal.inPath + '/' + parentGoal._id,
       depth: 1, // 1 for weekly goals
     });
 

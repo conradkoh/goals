@@ -71,21 +71,21 @@ const mergeBackendData = (
     const transformedQuarterlyGoals = quarterlyGoals.map((goal) => ({
       id: goal.goalId,
       title: goal.title || 'Set your quarterly goal',
-      path: `/goals/${goal.goalId}`,
+      path: goal.inPath + '/' + goal.goalId,
       quarter: week.quarterlyGoals[0]?.quarter || 1,
       weeklyGoals: weeklyGoals
         .filter((wg) => wg.parentId === goal.goalId)
         .map((wg) => ({
           id: wg.goalId,
           title: wg.title || 'Set your weekly goal',
-          path: `/goals/${goal.goalId}/${wg.goalId}`,
+          path: wg.inPath + '/' + wg.goalId,
           weekNumber: week.weekNumber,
           tasks: dailyGoals
             .filter((dg) => dg.parentId === wg.goalId)
             .map((task) => ({
               id: task.goalId,
               title: task.title || 'New task',
-              path: `/goals/${goal.goalId}/${wg.goalId}/${task.goalId}`,
+              path: task.inPath + '/' + task.goalId,
             })),
         })),
     }));
@@ -146,7 +146,6 @@ interface DashboardContextValue {
     title: string;
     parentId: Id<'goals'>;
     weekNumber: number;
-    inPath: string;
   }) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
     weekNumber: number;
@@ -224,19 +223,16 @@ export const DashboardProvider = ({
     title,
     parentId,
     weekNumber,
-    inPath,
   }: {
     title: string;
     parentId: Id<'goals'>;
     weekNumber: number;
-    inPath: string;
   }) => {
     await createWeeklyGoalMutation({
       sessionId,
       title,
       parentId,
       weekNumber,
-      inPath,
     });
   };
 

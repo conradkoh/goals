@@ -78,7 +78,6 @@ export const WeekCardWeeklyGoals = ({
         title: title.trim(),
         parentId: quarterlyGoal.id as Id<'goals'>,
         weekNumber,
-        inPath: quarterlyGoal.path,
       });
       // Clear the input after successful creation
       setNewGoalTitles((prev) => ({ ...prev, [quarterlyGoal.id]: '' }));
