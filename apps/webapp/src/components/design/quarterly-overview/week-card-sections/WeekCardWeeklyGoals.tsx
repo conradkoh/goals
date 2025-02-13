@@ -4,6 +4,7 @@ import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetail
 import { Pin, Star } from 'lucide-react';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
+import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -26,9 +27,21 @@ const QuarterlyGoalHeader = ({ goal }: { goal: QuarterlyGoalInWeek }) => (
 );
 
 // Internal component for rendering a weekly goal
-const WeeklyGoal = ({ goal }: { goal: QuarterlyGoalInWeek }) => (
+const WeeklyGoal = ({
+  goal,
+  onUpdateTitle,
+  onDelete,
+}: {
+  goal: QuarterlyGoalInWeek;
+  onUpdateTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
+  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+}) => (
   <div className="px-2 py-1 text-sm hover:bg-gray-50 rounded-sm">
-    {goal.title}
+    <EditableGoalTitle
+      title={goal.title}
+      onSubmit={(newTitle) => onUpdateTitle(goal._id as Id<'goals'>, newTitle)}
+      onDelete={() => onDelete(goal._id as Id<'goals'>)}
+    />
   </div>
 );
 
@@ -36,7 +49,8 @@ export const WeekCardWeeklyGoals = ({
   weekNumber,
   quarterlyGoals,
 }: WeekCardWeeklyGoalsProps) => {
-  const { createWeeklyGoal } = useDashboard();
+  const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
+    useDashboard();
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
   );
@@ -63,6 +77,32 @@ export const WeekCardWeeklyGoals = ({
     }
   };
 
+  const handleUpdateWeeklyGoalTitle = async (
+    goalId: Id<'goals'>,
+    newTitle: string
+  ) => {
+    try {
+      await updateQuarterlyGoalTitle({
+        goalId,
+        title: newTitle,
+      });
+    } catch (error) {
+      console.error('Failed to update weekly goal title:', error);
+      throw error; // Re-throw to let EditableGoalTitle handle the error state
+    }
+  };
+
+  const handleDeleteWeeklyGoal = async (goalId: Id<'goals'>) => {
+    try {
+      await deleteQuarterlyGoal({
+        goalId,
+      });
+    } catch (error) {
+      console.error('Failed to delete weekly goal:', error);
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-4">
       {importantQuarterlyGoals.length === 0 ? (
@@ -78,7 +118,12 @@ export const WeekCardWeeklyGoals = ({
               <QuarterlyGoalHeader goal={goal} />
               <div className="pl-6 space-y-1">
                 {weeklyGoals.map((weeklyGoal) => (
-                  <WeeklyGoal key={weeklyGoal._id} goal={weeklyGoal} />
+                  <WeeklyGoal
+                    key={weeklyGoal._id}
+                    goal={weeklyGoal}
+                    onUpdateTitle={handleUpdateWeeklyGoalTitle}
+                    onDelete={handleDeleteWeeklyGoal}
+                  />
                 ))}
                 <CreateGoalInput
                   placeholder="Add a weekly goal..."
