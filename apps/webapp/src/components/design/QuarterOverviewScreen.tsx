@@ -21,6 +21,9 @@ import NavigationHeader from './NavigationHeader';
 import { DailyGoalSection } from './goals/DailyGoalSection';
 import { QuarterlyGoalSection } from './goals/QuarterlyGoalSection';
 import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
+import { Button } from '../ui/button';
+import { Search, Bell, User } from 'lucide-react';
+import { Input } from '../ui/input';
 
 // Backend types
 interface BackendGoal {
@@ -108,7 +111,6 @@ const QuarterOverviewScreen = () => {
   >({});
   const containerRef = useRef<HTMLDivElement>(null);
   const hasScrolledToCenter = useRef(false);
-  console.log({ hasScrolledToCenter: hasScrolledToCenter.current });
   const [warningDialog, setWarningDialog] = useState<{
     isOpen: boolean;
     weekIndex: number;
@@ -133,7 +135,7 @@ const QuarterOverviewScreen = () => {
     );
   }, [localGoals.length]);
 
-  // Center the scroll position on current week only on first load
+  // Update the scroll to center effect to be more reliable
   useEffect(() => {
     if (
       containerRef.current &&
@@ -141,31 +143,41 @@ const QuarterOverviewScreen = () => {
       localGoals.length > 0
     ) {
       const scrollToCenter = () => {
-        const containerWidth = containerRef.current?.clientWidth || 0;
-        const cardWidth = containerWidth / 4; // Each card takes up 25% of the container
+        const container = containerRef.current;
+        if (!container) return;
 
-        // Find the index of the current week using the week number from context
+        // Calculate card width based on container width
+        // Container should show 6 weeks
+        const containerWidth = container.clientWidth;
+        const cardWidth = Math.floor(containerWidth / 6); // Each card takes 1/6 of the container
+
+        // Find the index of the current week
         const currentWeekIndex = localGoals.findIndex(
           (week) => week.weekNumber === currentWeekNumber
         );
 
-        // Calculate scroll position to center on current week
-        const scrollPosition =
-          cardWidth * currentWeekIndex - (containerWidth - cardWidth) / 2;
+        if (currentWeekIndex !== -1) {
+          // Calculate scroll position to place current week as second week
+          const targetPosition = cardWidth; // One card width from the left
+          const scrollPosition = Math.max(
+            0,
+            cardWidth * currentWeekIndex - targetPosition
+          );
 
-        containerRef.current?.scrollTo({
-          left: scrollPosition,
-        });
+          container.scrollTo({
+            left: scrollPosition,
+          });
+        }
       };
 
+      // Initial scroll
       scrollToCenter();
-      // Reapply centering after a short delay to ensure all content is loaded
-      setTimeout(() => {
-        scrollToCenter();
-        hasScrolledToCenter.current = true;
-      }, 100);
+
+      // Ensure layout is complete before final scroll
+      setTimeout(scrollToCenter, 100);
+      hasScrolledToCenter.current = true;
     }
-  }, [localGoals.length, currentWeekNumber]); // Only depend on length for first load check
+  }, [localGoals.length, currentWeekNumber]);
 
   const completeWeeklyGoal = (
     weekIndex: number,
@@ -421,8 +433,120 @@ const QuarterOverviewScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavigationHeader />
+    <div className="min-h-screen bg-background">
+      <header className="border-b">
+        <div className="w-full flex h-16 items-center justify-between px-6">
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-semibold">Goals Dashboard</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search..."
+                className="w-64 pl-8"
+              />
+            </div>
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex flex-col h-[calc(100vh-4rem)] mt-2">
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-x-auto overflow-y-hidden px-0"
+        >
+          <div className="flex gap-4 h-full pb-4">
+            {localGoals.map((week, weekIndex) => (
+              <div
+                key={weekIndex}
+                className="w-[calc(100%/6)] shrink-0 flex flex-col border rounded-lg shadow bg-white h-full"
+              >
+                <div className="border-b p-4">
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {week.mondayDate}
+                    </p>
+                    <h2 className="text-lg font-semibold">{week.weekLabel}</h2>
+                  </div>
+                </div>
+                <div className="flex-1 p-4 space-y-6 overflow-y-auto">
+                  {/* Quarter Goals Section */}
+                  <QuarterlyGoalSection
+                    goalBase={week.quarterlyGoal}
+                    weekState={week.quarterlyGoalState}
+                    weekIndex={weekIndex}
+                    isOpen={goalSectionOpenStates[weekIndex] ?? false}
+                    onOpenChange={(isOpen) =>
+                      handleGoalSectionOpenChange(weekIndex, isOpen)
+                    }
+                    editState={editState}
+                    onStartEditing={handleStartEditing}
+                    onCancelEditing={() => setEditState(null)}
+                    onUpdateGoal={handleUpdateGoal}
+                    onUpdateProgress={handleUpdateProgress}
+                    onToggleStar={() => handleToggleStar(weekIndex)}
+                    onTogglePin={() => handleTogglePin(weekIndex)}
+                  />
+
+                  {/* Team Coordination Section */}
+                  <div>
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="font-semibold">Team Coordination</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsTeamCollapsed(!isTeamCollapsed)}
+                      >
+                        {isTeamCollapsed ? 'Expand' : 'Collapse'}
+                      </Button>
+                    </div>
+                    {!isTeamCollapsed && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          OOO Status: Jane Doe, John Smith
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Weekly Goals Section */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Weekly Goals</h3>
+                    <WeeklyGoalSection
+                      quarterlyGoal={week.quarterlyGoal}
+                      weekState={week.quarterlyGoalState}
+                      onWeeklyGoalToggle={(goalId) =>
+                        handleWeeklyGoalToggle(weekIndex, goalId)
+                      }
+                    />
+                  </div>
+
+                  {/* Daily Goals Section */}
+                  <div>
+                    <h3 className="font-semibold mb-3">Daily Goals</h3>
+                    <DailyGoalSection
+                      quarterlyGoal={week.quarterlyGoal}
+                      weekState={week.quarterlyGoalState}
+                      onTaskToggle={(taskId, weeklyGoalId) =>
+                        handleTaskToggle(weekIndex, taskId, weeklyGoalId)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+
       <IncompleteTasksWarning
         isOpen={warningDialog.isOpen}
         weeklyGoalTitle={warningDialog.weeklyGoalTitle}
@@ -438,95 +562,6 @@ const QuarterOverviewScreen = () => {
           setWarningDialog((prev) => ({ ...prev, isOpen: false }));
         }}
       />
-      <div className="w-full h-[calc(100vh-64px)] px-4 py-4">
-        <div
-          ref={containerRef}
-          className="w-full h-full overflow-x-auto scrollbar-hide"
-          style={{
-            scrollSnapType: 'x mandatory',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          <div className="flex h-full" style={{ gap: '1rem', padding: '0' }}>
-            {localGoals.map((week, weekIndex) => (
-              <div
-                key={weekIndex}
-                style={{
-                  width: 'calc(25vw - 1.5rem)',
-                  flexShrink: 0,
-                  scrollSnapAlign: 'center',
-                }}
-                className="flex flex-col border rounded shadow bg-white px-4 pb-4 h-full overflow-y-auto"
-              >
-                <div className="text-center mb-4 sticky top-0 bg-white z-10 border-b">
-                  <div className="text-gray-600 text-sm">{week.mondayDate}</div>
-                  <div className="font-bold text-sm">{week.weekLabel}</div>
-                </div>
-
-                {/* Quarter Goals Section */}
-                <QuarterlyGoalSection
-                  goalBase={week.quarterlyGoal}
-                  weekState={week.quarterlyGoalState}
-                  weekIndex={weekIndex}
-                  isOpen={goalSectionOpenStates[weekIndex] ?? false}
-                  onOpenChange={(isOpen) =>
-                    handleGoalSectionOpenChange(weekIndex, isOpen)
-                  }
-                  editState={editState}
-                  onStartEditing={handleStartEditing}
-                  onCancelEditing={() => setEditState(null)}
-                  onUpdateGoal={handleUpdateGoal}
-                  onUpdateProgress={handleUpdateProgress}
-                  onToggleStar={() => handleToggleStar(weekIndex)}
-                  onTogglePin={() => handleTogglePin(weekIndex)}
-                />
-                {/* Team Coordination Section */}
-                <section className="mb-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-semibold">Team Coordination</h3>
-                    <button
-                      onClick={() => setIsTeamCollapsed(!isTeamCollapsed)}
-                      className="text-blue-500 text-sm"
-                    >
-                      {isTeamCollapsed ? 'Expand' : 'Collapse'}
-                    </button>
-                  </div>
-                  {!isTeamCollapsed && (
-                    <div className="mt-2">
-                      <p className="text-sm">
-                        OOO Status: Jane Doe, John Smith
-                      </p>
-                    </div>
-                  )}
-                </section>
-                {/* Weekly Goals Section */}
-                <section className="mb-4">
-                  <h3 className="font-semibold mb-3">Weekly Goals</h3>
-                  <WeeklyGoalSection
-                    quarterlyGoal={week.quarterlyGoal}
-                    weekState={week.quarterlyGoalState}
-                    onWeeklyGoalToggle={(goalId) =>
-                      handleWeeklyGoalToggle(weekIndex, goalId)
-                    }
-                  />
-                </section>
-
-                {/* Daily Goals Section */}
-                <section>
-                  <h3 className="font-semibold mb-4">Daily Goals</h3>
-                  <DailyGoalSection
-                    quarterlyGoal={week.quarterlyGoal}
-                    weekState={week.quarterlyGoalState}
-                    onTaskToggle={(taskId, weeklyGoalId) =>
-                      handleTaskToggle(weekIndex, taskId, weeklyGoalId)
-                    }
-                  />
-                </section>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
