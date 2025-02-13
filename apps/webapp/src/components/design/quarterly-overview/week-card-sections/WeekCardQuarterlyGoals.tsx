@@ -1,7 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
-import { QuarterlyGoalBase, QuarterlyGoalState } from '@/types/goals';
 import { GoalStarPin } from '../../goals-new/GoalStarPin';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
@@ -10,42 +9,35 @@ import { Button } from '@/components/ui/button';
 import { ChevronsUpDown } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { DraggableGoal } from '../../goals-new/DraggableGoal';
+import { GoalTreeNode } from '@services/backend/src/usecase/getWeekDetails';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: QuarterlyGoalBase[];
-  quarterlyGoalStates: QuarterlyGoalState[];
+  quarterlyGoals: GoalTreeNode[];
 }
 
 // Helper function to sort goals by status and title
-const sortGoals = (
-  goals: QuarterlyGoalBase[],
-  states: QuarterlyGoalState[]
-): { goal: QuarterlyGoalBase; state: QuarterlyGoalState }[] => {
-  // Create pairs of goals and their states
-  const pairs = goals.map((goal, index) => ({
-    goal,
-    state: states[index],
-  }));
-
+const sortGoals = (goals: GoalTreeNode[]): GoalTreeNode[] => {
   // Sort function that prioritizes starred -> pinned -> neither
   // Within each group, sort alphabetically by title
-  return pairs.sort((a, b) => {
+  return [...goals].sort((a, b) => {
+    const aWeekly = a.weeklyGoal;
+    const bWeekly = b.weeklyGoal;
+
     // First, group by status
-    if (a.state.isStarred && !b.state.isStarred) return -1;
-    if (!a.state.isStarred && b.state.isStarred) return 1;
-    if (a.state.isPinned && !b.state.isPinned) return -1;
-    if (!a.state.isPinned && b.state.isPinned) return 1;
+    if (aWeekly?.isStarred && !bWeekly?.isStarred) return -1;
+    if (!aWeekly?.isStarred && bWeekly?.isStarred) return 1;
+    if (aWeekly?.isPinned && !bWeekly?.isPinned) return -1;
+    if (!aWeekly?.isPinned && bWeekly?.isPinned) return 1;
 
     // Within the same status group, sort alphabetically
-    return a.goal.title.localeCompare(b.goal.title);
+    return a.title.localeCompare(b.title);
   });
 };
 
 export const WeekCardQuarterlyGoals = ({
   weekNumber,
   quarterlyGoals,
-  quarterlyGoalStates,
 }: WeekCardQuarterlyGoalsProps) => {
   const {
     createQuarterlyGoal,
@@ -123,32 +115,14 @@ export const WeekCardQuarterlyGoals = ({
   };
 
   // Sort the goals before rendering
-  const sortedGoals = sortGoals(quarterlyGoals, quarterlyGoalStates);
+  const sortedGoals = sortGoals(quarterlyGoals);
 
   // Split goals into important (starred/pinned) and other
   const importantGoals = sortedGoals.filter(
-    ({ state }) => state.isStarred || state.isPinned
+    (goal) => goal.weeklyGoal?.isStarred || goal.weeklyGoal?.isPinned
   );
   const otherGoals = sortedGoals.filter(
-    ({ state }) => !state.isStarred && !state.isPinned
-  );
-
-  const renderGoal = ({
-    goal,
-    state,
-  }: {
-    goal: QuarterlyGoalBase;
-    state: QuarterlyGoalState;
-  }) => (
-    <DraggableGoal
-      key={goal.id}
-      goal={goal}
-      state={state}
-      weekNumber={weekNumber}
-      onToggleStatus={handleToggleStatus}
-      onUpdateTitle={handleUpdateTitle}
-      onDelete={handleDeleteGoal}
-    />
+    (goal) => !goal.weeklyGoal?.isStarred && !goal.weeklyGoal?.isPinned
   );
 
   return (
@@ -160,7 +134,17 @@ export const WeekCardQuarterlyGoals = ({
       {/* List of goals */}
       <div className="space-y-1">
         {/* Important goals are always visible */}
-        {importantGoals.map(renderGoal)}
+        {importantGoals.map((goal) => (
+          <DraggableGoal
+            key={goal._id}
+            goal={goal}
+            weeklyGoal={goal.weeklyGoal}
+            weekNumber={weekNumber}
+            onToggleStatus={handleToggleStatus}
+            onUpdateTitle={handleUpdateTitle}
+            onDelete={handleDeleteGoal}
+          />
+        ))}
 
         {/* Other goals are shown when expanded */}
         {otherGoals.length > 0 && (
@@ -180,7 +164,17 @@ export const WeekCardQuarterlyGoals = ({
             </div>
             {isExpanded && (
               <div className="space-y-1 animate-in slide-in-from-top-1 duration-100">
-                {otherGoals.map(renderGoal)}
+                {otherGoals.map((goal) => (
+                  <DraggableGoal
+                    key={goal._id}
+                    goal={goal}
+                    weeklyGoal={goal.weeklyGoal}
+                    weekNumber={weekNumber}
+                    onToggleStatus={handleToggleStatus}
+                    onUpdateTitle={handleUpdateTitle}
+                    onDelete={handleDeleteGoal}
+                  />
+                ))}
               </div>
             )}
           </div>

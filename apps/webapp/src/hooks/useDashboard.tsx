@@ -1,27 +1,30 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
-import { useQuery, useMutation } from 'convex/react';
+import { api } from '@services/backend/convex/_generated/api';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
+import { useMutation, useQuery } from 'convex/react';
 import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalBase, QuarterlyGoalState } from '@/types/goals';
+import React, { createContext, useContext, useMemo } from 'react';
 
 interface WeekData {
   weekLabel: string;
   weekNumber: number;
-  days: string[];
-  quarterlyGoals: QuarterlyGoalBase[];
-  quarterlyGoalStates: QuarterlyGoalState[];
   mondayDate: string;
+
+  // actual data
+  tree: WeekGoalsTree;
 }
+
+type IndexedQuarterlyGoalsByWeek = Record<number, WeekGoalsTree>;
 
 // Helper function to generate weeks for a quarter
 const generateWeeksForQuarter = (
   year: number,
-  quarter: 1 | 2 | 3 | 4
+  quarter: 1 | 2 | 3 | 4,
+  quarterOverview: IndexedQuarterlyGoalsByWeek
 ): WeekData[] => {
   const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
   const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
@@ -39,86 +42,14 @@ const generateWeeksForQuarter = (
       weekLabel: `Week ${weekNum}`,
       weekNumber: weekNum,
       mondayDate: weekStart.toFormat('LLL d'),
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoals: [],
-      quarterlyGoalStates: [],
+      tree: quarterOverview[weekNum] || {
+        quarterlyGoals: [],
+        weekNumber: weekNum,
+        allGoals: [],
+      },
     });
   }
   return weeks;
-};
-
-// Transform backend data to frontend format
-const mergeBackendData = (
-  weeks: WeekData[],
-  weekSummaries?: Record<number, { weekNumber: number; goals: any[] }>
-): WeekData[] => {
-  if (!weekSummaries) return weeks;
-
-  return weeks.map((week) => {
-    const weekSummary = weekSummaries[week.weekNumber];
-    if (!weekSummary || !weekSummary.goals.length) {
-      return week; // Return the empty week structure if no data
-    }
-
-    const goals = weekSummary.goals;
-
-    // Group goals by depth
-    const quarterlyGoals = goals.filter((g) => g.depth === 0);
-    const weeklyGoals = goals.filter((g) => g.depth === 1);
-    const dailyGoals = goals.filter((g) => g.depth === 2);
-
-    // Transform quarterly goals
-    const transformedQuarterlyGoals = quarterlyGoals.map((goal) => ({
-      id: goal.goalId,
-      title: goal.title || 'Set your quarterly goal',
-      path: goal.inPath + '/' + goal.goalId,
-      quarter: week.quarterlyGoals[0]?.quarter || 1,
-      weeklyGoals: weeklyGoals
-        .filter((wg) => wg.parentId === goal.goalId)
-        .map((wg) => ({
-          id: wg.goalId,
-          title: wg.title || 'Set your weekly goal',
-          path: wg.inPath + '/' + wg.goalId,
-          weekNumber: week.weekNumber,
-          tasks: dailyGoals
-            .filter((dg) => dg.parentId === wg.goalId)
-            .map((task) => ({
-              id: task.goalId,
-              title: task.title || 'New task',
-              path: task.inPath + '/' + task.goalId,
-            })),
-        })),
-    }));
-
-    // Transform quarterly goal states
-    const transformedQuarterlyGoalStates = quarterlyGoals.map((goal) => ({
-      id: goal.goalId,
-      isComplete: goal.isComplete || false,
-      progress: parseInt(goal.progress || '0', 10),
-      isStarred: goal.isStarred || false,
-      isPinned: goal.isPinned || false,
-      weeklyGoalStates: weeklyGoals
-        .filter((wg) => wg.parentId === goal.goalId)
-        .map((wg) => ({
-          id: wg.goalId,
-          isComplete: wg.isComplete || false,
-          isHardComplete: wg.isComplete || false,
-          taskStates: dailyGoals
-            .filter((dg) => dg.parentId === wg.goalId)
-            .map((task) => ({
-              id: task.goalId,
-              isComplete: task.isComplete || false,
-              date: DateTime.now().toISODate() || '',
-            })),
-        })),
-    }));
-
-    return {
-      ...week,
-      quarterlyGoals: transformedQuarterlyGoals,
-      quarterlyGoalStates: transformedQuarterlyGoalStates,
-    };
-  });
 };
 
 export const useDashboard = () => {
@@ -196,17 +127,25 @@ export const DashboardProvider = ({
   const currentWeekNumber = currentDate.weekNumber;
   const currentQuarter = Math.ceil(currentDate.month / 3) as 1 | 2 | 3 | 4;
 
-  const data = useQuery(api.dashboard.getQuarterOverview, {
+  const weeksForQuarter = useQuery(api.dashboard.getQuarterOverview, {
     sessionId,
     year: currentYear,
     quarter: currentQuarter,
   });
 
+  const weekData = useMemo(() => {
+    if (weeksForQuarter === undefined) {
+      return undefined; //propagate the loading state
+    }
+    const data = generateWeeksForQuarter(
+      currentYear,
+      currentQuarter,
+      weeksForQuarter
+    );
+    return data;
+  }, [weeksForQuarter]);
+
   // Transform data into week data
-  const weekData = mergeBackendData(
-    generateWeeksForQuarter(currentYear, currentQuarter),
-    data
-  );
 
   const createQuarterlyGoal = async (title: string, isPinned?: boolean) => {
     await createQuarterlyGoalMutation({
@@ -278,11 +217,14 @@ export const DashboardProvider = ({
     });
   };
 
+  if (!weekData) {
+    return <div>Loading...</div>;
+  }
   return (
     <DashboardContext.Provider
       value={{
-        data,
-        isLoading: data === undefined,
+        data: weeksForQuarter,
+        isLoading: weeksForQuarter === undefined,
         currentDate,
         currentYear,
         currentQuarter,

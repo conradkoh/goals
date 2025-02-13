@@ -1,8 +1,32 @@
-import { Id } from '../../convex/_generated/dataModel';
+import { Doc, Id } from '../../convex/_generated/dataModel';
 import { MutationCtx, QueryCtx } from '../../convex/_generated/server';
 import { joinPath } from '../util/path';
 
-export const getWeekDetails = async (
+// A tree of quarterly goals with their weekly goals and daily goals
+export type WeekGoalsTree = {
+  quarterlyGoals: GoalTreeNode[];
+  weekNumber: number;
+  allGoals: GoalTreeNode[];
+};
+
+// A goal with its weekly goal details
+export type GoalTreeNode = TWithChildren<Doc<'goals'>> & {
+  weeklyGoal: Doc<'goalsWeekly'> | undefined;
+};
+
+/**
+ * Retrieves the details of the specified week, including associated goals.
+ *
+ * @param ctx - The context for the mutation or query, providing access to the database.
+ * @param args - The arguments for the function.
+ * @param args.userId - The ID of the user for whom the week details are being retrieved.
+ * @param args.year - The year of the week to retrieve.
+ * @param args.quarter - The quarter of the year for the week to retrieve.
+ * @param args.weekNumber - The week number within the quarter to retrieve details for.
+ * @returns A promise that resolves to an array of week details, each containing goal information.
+ */
+
+export const getWeekGoalsTree = async (
   ctx: MutationCtx | QueryCtx,
   args: {
     userId: Id<'users'>;
@@ -10,7 +34,7 @@ export const getWeekDetails = async (
     quarter: number;
     weekNumber: number;
   }
-) => {
+): Promise<WeekGoalsTree> => {
   const { userId, year, quarter, weekNumber } = args;
 
   // Get goals for this specific week
@@ -34,7 +58,7 @@ export const getWeekDetails = async (
   const weeklyGoalsMap = new Map(weeklyGoals.map((wg) => [wg.goalId, wg]));
 
   // Organize goals by depth, root goals (depth 0) are quarterly goals
-  const { tree: quarterlyGoals } = buildGoalTree(goals, (n) => {
+  const { tree: quarterlyGoals, index } = buildGoalTree(goals, (n) => {
     // augment the tree with weekly goal data
     return {
       //add data from the weekly goals (timeseries)
@@ -43,7 +67,11 @@ export const getWeekDetails = async (
     };
   });
 
-  return quarterlyGoals;
+  return {
+    quarterlyGoals,
+    weekNumber,
+    allGoals: Object.values(index),
+  };
 };
 
 /**

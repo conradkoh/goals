@@ -3,7 +3,7 @@ import { query, mutation } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
-import { getWeekDetails } from '../src/usecase/getWeekDetails';
+import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -20,7 +20,7 @@ export const getQuarterOverview = query({
     // Get details for all 13 weeks in the quarter
     const weekPromises = Array.from({ length: 13 }, (_, i) => i + 1).map(
       (weekNumber) =>
-        getWeekDetails(ctx, {
+        getWeekGoalsTree(ctx, {
           userId,
           year,
           quarter,
@@ -30,35 +30,11 @@ export const getQuarterOverview = query({
 
     const weekResults = await Promise.all(weekPromises);
 
-    // Convert to the expected format
-    const weekSummaries = weekResults.reduce((acc, goals, index) => {
-      const weekNumber = index + 1;
-
-      // Flatten the tree structure and convert to the expected format
-      const flattenedGoals = goals.flatMap((goal) => {
-        const weeklyGoal = goal.weeklyGoal;
-        if (!weeklyGoal) return [];
-
-        return [
-          {
-            title: goal.title,
-            depth: goal.depth,
-            inPath: goal.inPath,
-            parentId: goal.parentId,
-            ...weeklyGoal,
-          },
-        ];
-      });
-
-      if (flattenedGoals.length > 0) {
-        acc[weekNumber] = {
-          weekNumber,
-          goals: flattenedGoals,
-        };
-      }
-
+    const weekSummaries = weekResults.reduce((acc, week) => {
+      acc[week.weekNumber] = week;
       return acc;
-    }, {} as Record<number, { weekNumber: number; goals: (Pick<Doc<'goals'>, 'title' | 'depth' | 'inPath' | 'parentId'> & Doc<'goalsWeekly'>)[] }>);
+    }, {} as Record<number, WeekGoalsTree>);
+
     return weekSummaries;
   },
 });

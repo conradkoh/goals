@@ -1,15 +1,15 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { QuarterlyGoalBase, QuarterlyGoalState } from '@/types/goals';
 import { GoalStarPin } from './GoalStarPin';
 import { EditableGoalTitle } from './EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { GoalTreeNode } from '@services/backend/src/usecase/getWeekDetails';
 
 interface DraggableGoalProps {
-  goal: QuarterlyGoalBase;
-  state: QuarterlyGoalState;
+  goal: GoalTreeNode;
+  weeklyGoal: GoalTreeNode['weeklyGoal'];
   weekNumber: number;
   onToggleStatus: (
     goalId: Id<'goals'>,
@@ -22,7 +22,7 @@ interface DraggableGoalProps {
 
 export const DraggableGoal = ({
   goal,
-  state,
+  weeklyGoal,
   weekNumber,
   onToggleStatus,
   onUpdateTitle,
@@ -49,10 +49,10 @@ export const DraggableGoal = ({
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
-      id: `${goal.id}-week-${weekNumber}`,
+      id: `${goal._id}-week-${weekNumber}`,
       data: {
         goal,
-        state,
+        weeklyGoal,
         sourceWeekNumber: weekNumber,
         shiftKey,
       },
@@ -79,27 +79,25 @@ export const DraggableGoal = ({
       <div className="flex items-center gap-2 min-w-0 flex-grow">
         <GoalStarPin
           value={{
-            isStarred: state.isStarred,
-            isPinned: state.isPinned,
+            isStarred: weeklyGoal?.isStarred ?? false,
+            isPinned: weeklyGoal?.isPinned ?? false,
           }}
           onStarred={() =>
-            onToggleStatus(goal.id as Id<'goals'>, !state.isStarred, false)
+            onToggleStatus(goal._id, !weeklyGoal?.isStarred, false)
           }
           onPinned={() =>
-            onToggleStatus(goal.id as Id<'goals'>, false, !state.isPinned)
+            onToggleStatus(goal._id, false, !weeklyGoal?.isPinned)
           }
         />
         <EditableGoalTitle
           title={goal.title}
-          onSubmit={(newTitle) =>
-            onUpdateTitle(goal.id as Id<'goals'>, newTitle)
-          }
-          onDelete={() => onDelete(goal.id as Id<'goals'>)}
+          onSubmit={(newTitle) => onUpdateTitle(goal._id, newTitle)}
+          onDelete={() => onDelete(goal._id)}
         />
       </div>
-      {state.progress > 0 && (
+      {weeklyGoal?.progress && Number(weeklyGoal.progress) > 0 && (
         <span className="text-xs text-muted-foreground ml-2 tabular-nums">
-          {state.progress}%
+          {weeklyGoal.progress}%
         </span>
       )}
     </div>

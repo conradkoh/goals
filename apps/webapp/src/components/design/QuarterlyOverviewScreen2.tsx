@@ -75,35 +75,39 @@ export const QuarterlyOverviewScreen2 = () => {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
-        {weekData.map((week, weekIndex) => (
-          <WeekCard
-            key={weekIndex}
-            weekLabel={week.weekLabel}
-            mondayDate={week.mondayDate}
-          >
-            <div className="space-y-6">
-              <WeekCardSection title="Quarterly Goals">
-                <WeekCardQuarterlyGoals
-                  weekNumber={week.weekNumber}
-                  quarterlyGoals={week.quarterlyGoals}
-                  quarterlyGoalStates={week.quarterlyGoalStates}
-                />
-              </WeekCardSection>
+        {weekData.map((week, weekIndex) => {
+          const quarterlyGoals = week.tree.allGoals.filter(
+            (v) => v.depth === 0
+          );
+          return (
+            <WeekCard
+              key={weekIndex}
+              weekLabel={week.weekLabel}
+              mondayDate={week.mondayDate}
+            >
+              <div className="space-y-6">
+                <WeekCardSection title="Quarterly Goals">
+                  <WeekCardQuarterlyGoals
+                    weekNumber={week.weekNumber}
+                    quarterlyGoals={quarterlyGoals}
+                  />
+                </WeekCardSection>
 
-              <WeekCardSection title="Weekly Goals">
-                <WeekCardWeeklyGoals
-                  weekNumber={week.weekNumber}
-                  quarterlyGoals={week.quarterlyGoals}
-                  quarterlyGoalStates={week.quarterlyGoalStates}
-                />
-              </WeekCardSection>
+                {/* <WeekCardSection title="Weekly Goals">
+                  <WeekCardWeeklyGoals
+                    weekNumber={week.weekNumber}
+                    quarterlyGoals={week.quarterlyGoals}
+                    quarterlyGoalStates={week.quarterlyGoalStates}
+                  />
+                </WeekCardSection> */}
 
-              <WeekCardSection title="Daily Goals">
-                {/* Daily goals content will go here */}
-              </WeekCardSection>
-            </div>
-          </WeekCard>
-        ))}
+                <WeekCardSection title="Daily Goals">
+                  {/* Daily goals content will go here */}
+                </WeekCardSection>
+              </div>
+            </WeekCard>
+          );
+        })}
       </QuarterlyGrid>
     </DndContext>
   );
