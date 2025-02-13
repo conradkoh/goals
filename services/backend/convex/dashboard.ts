@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { query } from './_generated/server';
+import { query, mutation } from './_generated/server';
 import { Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 // @deprecated
@@ -196,3 +196,45 @@ function buildGoalTree<
     index: nodeIndex,
   };
 }
+
+export const createQuarterlyGoal = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    quarter: v.number(),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, year, quarter, title } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Create the quarterly goal
+    const goalId = await ctx.db.insert('goals', {
+      userId,
+      year,
+      quarter,
+      title,
+      inPath: `/quarters/${quarter}`,
+      depth: 0, // 0 for quarterly goals
+    });
+
+    // Create initial weekly states for this goal (for all weeks in the quarter)
+    // A quarter typically has 13 weeks
+    for (let weekNumber = 1; weekNumber <= 13; weekNumber++) {
+      await ctx.db.insert('goalsWeekly', {
+        userId,
+        year,
+        quarter,
+        goalId,
+        weekNumber,
+        progress: '0',
+        isStarred: false,
+        isPinned: false,
+        isComplete: false,
+      });
+    }
+
+    return goalId;
+  },
+});

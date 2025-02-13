@@ -6,6 +6,10 @@ import type {
   EditState,
   QuarterlyGoalBase,
   QuarterlyGoalState,
+  WeeklyGoalBase,
+  WeeklyGoalState,
+  TaskBase,
+  TaskState,
 } from '../../types/goals';
 import {
   AlertDialog,
@@ -22,8 +26,13 @@ import { DailyGoalSection } from './goals/DailyGoalSection';
 import { QuarterlyGoalSection } from './goals/QuarterlyGoalSection';
 import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
 import { Button } from '../ui/button';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, Plus, ChevronsUpDown } from 'lucide-react';
 import { Input } from '../ui/input';
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from '../ui/collapsible';
 
 // Backend types
 interface BackendGoal {
@@ -54,8 +63,8 @@ interface WeekData {
   weekLabel: string;
   weekNumber: number;
   days: string[];
-  quarterlyGoal: QuarterlyGoalBase;
-  quarterlyGoalState: QuarterlyGoalState;
+  quarterlyGoals: QuarterlyGoalBase[];
+  quarterlyGoalStates: QuarterlyGoalState[];
   mondayDate: string;
 }
 
@@ -94,6 +103,45 @@ const IncompleteTasksWarning: React.FC<IncompleteTasksWarningProps> = ({
   </AlertDialog>
 );
 
+interface GoalInputProps {
+  placeholder: string;
+  onSubmit: (value: string) => void;
+}
+
+const GoalInput: React.FC<GoalInputProps> = ({ placeholder, onSubmit }) => {
+  const [value, setValue] = useState('');
+
+  const handleSubmit = () => {
+    if (!value.trim()) return;
+    onSubmit(value.trim());
+    setValue('');
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyPress={(e) => {
+          if (e.key === 'Enter') {
+            handleSubmit();
+          }
+        }}
+        className="h-8 text-sm"
+      />
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-8 w-8 p-0"
+        onClick={handleSubmit}
+      >
+        <Plus className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const QuarterOverviewScreen = () => {
   const {
     currentYear,
@@ -101,9 +149,10 @@ const QuarterOverviewScreen = () => {
     currentDate,
     currentWeekNumber,
     weekData,
+    createQuarterlyGoal,
   } = useDashboard();
 
-  const [localGoals, setLocalGoals] = useState<WeekData[]>(() => weekData);
+  const [localGoals, setLocalGoals] = useState<WeekData[]>(weekData);
   const [isTeamCollapsed, setIsTeamCollapsed] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [goalSectionOpenStates, setGoalSectionOpenStates] = useState<
@@ -122,6 +171,7 @@ const QuarterOverviewScreen = () => {
     weeklyGoalId: '',
     weeklyGoalTitle: '',
   });
+  const [newQuarterlyGoalTitle, setNewQuarterlyGoalTitle] = useState('');
 
   // Update localGoals when weekData changes
   useEffect(() => {
@@ -190,23 +240,28 @@ const QuarterOverviewScreen = () => {
 
         return {
           ...week,
-          quarterlyGoal: {
-            ...week.quarterlyGoal,
-            weeklyGoals: week.quarterlyGoal.weeklyGoals.map((weeklyGoal) => {
-              if (weeklyGoal.id !== weeklyGoalId) return weeklyGoal;
+          quarterlyGoals: week.quarterlyGoals.map((goal) => {
+            if (goal.id !== weeklyGoalId) return goal;
 
-              return {
-                ...weeklyGoal,
-                tasks: weeklyGoal.tasks.map((task) => ({
-                  ...task,
-                })),
-              };
-            }),
-          },
-          quarterlyGoalState: {
-            ...week.quarterlyGoalState,
-            weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
-              (state) => {
+            return {
+              ...goal,
+              weeklyGoals: goal.weeklyGoals.map((weeklyGoal) => {
+                if (weeklyGoal.id !== weeklyGoalId) return weeklyGoal;
+
+                return {
+                  ...weeklyGoal,
+                  tasks: weeklyGoal.tasks.map((task) => ({
+                    ...task,
+                  })),
+                };
+              }),
+            };
+          }),
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => {
+            if (state.id !== weeklyGoalId) return state;
+            return {
+              ...state,
+              weeklyGoalStates: state.weeklyGoalStates.map((state) => {
                 if (state.id !== weeklyGoalId) return state;
                 return {
                   ...state,
@@ -219,9 +274,9 @@ const QuarterOverviewScreen = () => {
                     })),
                   }),
                 };
-              }
-            ),
-          },
+              }),
+            };
+          }),
         };
       })
     );
@@ -230,14 +285,25 @@ const QuarterOverviewScreen = () => {
   // Handler for toggling weekly goal completion
   const handleWeeklyGoalToggle = (weekIndex: number, weeklyGoalId: string) => {
     const week = localGoals[weekIndex];
-    const weeklyGoal = week.quarterlyGoal.weeklyGoals.find(
+    // Find the quarterly goal that contains this weekly goal
+    const quarterlyGoal = week.quarterlyGoals.find((goal) =>
+      goal.weeklyGoals.some((wg) => wg.id === weeklyGoalId)
+    );
+    if (!quarterlyGoal) return;
+
+    const quarterlyGoalState = week.quarterlyGoalStates.find(
+      (state) => state.id === quarterlyGoal.id
+    );
+    if (!quarterlyGoalState) return;
+
+    const weeklyGoal = quarterlyGoal.weeklyGoals.find(
       (wg) => wg.id === weeklyGoalId
     );
-    const weeklyGoalState = week.quarterlyGoalState.weeklyGoalStates.find(
+    if (!weeklyGoal) return;
+
+    const weeklyGoalState = quarterlyGoalState.weeklyGoalStates.find(
       (state) => state.id === weeklyGoalId
     );
-
-    if (!weeklyGoal) return;
 
     // If the goal is already hard complete, just toggle it off
     if (weeklyGoalState?.isHardComplete) {
@@ -247,18 +313,19 @@ const QuarterOverviewScreen = () => {
 
           return {
             ...week,
-            quarterlyGoalState: {
-              ...week.quarterlyGoalState,
-              weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
-                (state) => {
-                  if (state.id !== weeklyGoalId) return state;
+            quarterlyGoalStates: week.quarterlyGoalStates.map((state) => {
+              if (state.id !== quarterlyGoal.id) return state;
+              return {
+                ...state,
+                weeklyGoalStates: state.weeklyGoalStates.map((wgState) => {
+                  if (wgState.id !== weeklyGoalId) return wgState;
                   return {
-                    ...state,
+                    ...wgState,
                     isHardComplete: false,
                   };
-                }
-              ),
-            },
+                }),
+              };
+            }),
           };
         })
       );
@@ -266,11 +333,8 @@ const QuarterOverviewScreen = () => {
     }
 
     // Check if all tasks are complete
-    const weeklyGoalState2 = week.quarterlyGoalState.weeklyGoalStates.find(
-      (state) => state.id === weeklyGoalId
-    );
     const hasIncompleteTasks =
-      weeklyGoalState2?.taskStates.some((taskState) => !taskState.isComplete) ??
+      weeklyGoalState?.taskStates.some((taskState) => !taskState.isComplete) ??
       true;
 
     if (hasIncompleteTasks) {
@@ -297,42 +361,42 @@ const QuarterOverviewScreen = () => {
       prevGoals.map((week, idx) => {
         if (idx !== weekIndex) return week;
 
-        const weeklyGoalState = week.quarterlyGoalState.weeklyGoalStates.find(
-          (state) => state.id === weeklyGoalId
-        );
-        const toggledTaskState = weeklyGoalState?.taskStates.find(
-          (t) => t.id === taskId
-        );
-        const isUnchecking = toggledTaskState?.isComplete;
-
         return {
           ...week,
-          quarterlyGoalState: {
-            ...week.quarterlyGoalState,
-            weeklyGoalStates: week.quarterlyGoalState.weeklyGoalStates.map(
-              (state) => {
-                if (state.id !== weeklyGoalId) return state;
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => {
+            const weeklyGoalState = state.weeklyGoalStates.find(
+              (wgs) => wgs.id === weeklyGoalId
+            );
+            if (!weeklyGoalState) return state;
 
-                const updatedTaskStates = state.taskStates.map((taskState) =>
-                  taskState.id === taskId
-                    ? { ...taskState, isComplete: !taskState.isComplete }
-                    : taskState
+            const toggledTaskState = weeklyGoalState.taskStates.find(
+              (t) => t.id === taskId
+            );
+            const isUnchecking = toggledTaskState?.isComplete;
+
+            return {
+              ...state,
+              weeklyGoalStates: state.weeklyGoalStates.map((wgs) => {
+                if (wgs.id !== weeklyGoalId) return wgs;
+
+                const updatedTaskStates = wgs.taskStates.map((ts) =>
+                  ts.id === taskId ? { ...ts, isComplete: !ts.isComplete } : ts
                 );
 
                 // Update weekly goal soft completion based on all tasks being complete
                 const allTasksComplete = updatedTaskStates.every(
-                  (taskState) => taskState.isComplete
+                  (ts) => ts.isComplete
                 );
 
                 return {
-                  ...state,
+                  ...wgs,
                   taskStates: updatedTaskStates,
                   isComplete: allTasksComplete,
                   ...(isUnchecking && { isHardComplete: false }), // Remove hard completion when unchecking a task
                 };
-              }
-            ),
-          },
+              }),
+            };
+          }),
         };
       })
     );
@@ -344,7 +408,9 @@ const QuarterOverviewScreen = () => {
     goalId: string,
     type: 'title' | 'progress'
   ) => {
-    const goal = localGoals[weekIndex].quarterlyGoal;
+    const goal = localGoals[weekIndex].quarterlyGoals.find(
+      (g) => g.id === goalId
+    );
     if (!goal) return;
 
     setEditState({
@@ -366,10 +432,9 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoal: {
-            ...week.quarterlyGoal,
-            title: newTitle,
-          },
+          quarterlyGoals: week.quarterlyGoals.map((goal) =>
+            goal.id === goalId ? { ...goal, title: newTitle } : goal
+          ),
         };
       })
     );
@@ -386,10 +451,9 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalState: {
-            ...week.quarterlyGoalState,
-            progress: newProgress,
-          },
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) =>
+            state.id === goalId ? { ...state, progress: newProgress } : state
+          ),
         };
       })
     );
@@ -402,11 +466,11 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalState: {
-            ...week.quarterlyGoalState,
-            isStarred: !week.quarterlyGoalState.isStarred,
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => ({
+            ...state,
+            isStarred: !state.isStarred,
             isPinned: false,
-          },
+          })),
         };
       })
     );
@@ -418,11 +482,11 @@ const QuarterOverviewScreen = () => {
         if (idx !== weekIndex) return week;
         return {
           ...week,
-          quarterlyGoalState: {
-            ...week.quarterlyGoalState,
-            isPinned: !week.quarterlyGoalState.isPinned,
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => ({
+            ...state,
+            isPinned: !state.isPinned,
             isStarred: false,
-          },
+          })),
         };
       })
     );
@@ -430,6 +494,304 @@ const QuarterOverviewScreen = () => {
 
   const handleGoalSectionOpenChange = (weekIndex: number, isOpen: boolean) => {
     setGoalSectionOpenStates((prev) => ({ ...prev, [weekIndex]: isOpen }));
+  };
+
+  const handleNewQuarterlyGoal = async (weekIndex: number) => {
+    if (!newQuarterlyGoalTitle.trim()) return;
+
+    // Create a new quarterly goal with all required properties
+    const newGoal: QuarterlyGoalBase = {
+      id: Math.random().toString(36).substr(2, 9),
+      title: newQuarterlyGoalTitle.trim(),
+      quarter: (Math.floor(weekIndex / 4) + 1) as 1 | 2 | 3 | 4,
+      path: `/${weekIndex + 1}`,
+      weeklyGoals: [],
+    };
+
+    // Create a new state for the quarterly goal
+    const newGoalState: QuarterlyGoalState = {
+      id: newGoal.id,
+      progress: 0,
+      isStarred: false,
+      isPinned: false,
+      isComplete: false,
+      weeklyGoalStates: [],
+    };
+
+    setLocalGoals((prev: WeekData[]) =>
+      prev.map((week) => {
+        if (week.weekNumber !== weekIndex) return week;
+        return {
+          ...week,
+          quarterlyGoals: [...week.quarterlyGoals, newGoal],
+          quarterlyGoalStates: [...week.quarterlyGoalStates, newGoalState],
+        };
+      })
+    );
+
+    setNewQuarterlyGoalTitle('');
+  };
+
+  const handleNewWeeklyGoal = (
+    weekIndex: number,
+    quarterlyGoalId: string,
+    title: string
+  ) => {
+    if (!title.trim()) return;
+
+    setLocalGoals((prevGoals) =>
+      prevGoals.map((week, idx) => {
+        if (idx !== weekIndex) return week;
+
+        const quarterlyGoal = week.quarterlyGoals.find(
+          (goal) => goal.id === quarterlyGoalId
+        );
+        if (!quarterlyGoal) return week;
+
+        const quarterlyGoalState = week.quarterlyGoalStates.find(
+          (state) => state.id === quarterlyGoal.id
+        );
+        if (!quarterlyGoalState) return week;
+
+        const newWeeklyGoal: WeeklyGoalBase = {
+          id: Math.random().toString(36).substr(2, 9),
+          title: title.trim(),
+          path: `/quarters/${quarterlyGoal.quarter}/weeks/${week.weekNumber}`,
+          weekNumber: week.weekNumber,
+          tasks: [],
+        };
+
+        const newWeeklyGoalState: WeeklyGoalState = {
+          id: newWeeklyGoal.id,
+          isComplete: false,
+          isHardComplete: false,
+          taskStates: [],
+        };
+
+        return {
+          ...week,
+          quarterlyGoals: week.quarterlyGoals.map((goal) => {
+            if (goal.id !== quarterlyGoalId) return goal;
+            return {
+              ...goal,
+              weeklyGoals: [...goal.weeklyGoals, newWeeklyGoal],
+            };
+          }),
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => {
+            if (state.id !== quarterlyGoalId) return state;
+            return {
+              ...state,
+              weeklyGoalStates: [...state.weeklyGoalStates, newWeeklyGoalState],
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const handleNewDailyGoal = (
+    weekIndex: number,
+    weeklyGoalId: string,
+    dayDate: string,
+    title: string
+  ) => {
+    if (!title.trim()) return;
+
+    setLocalGoals((prevGoals) =>
+      prevGoals.map((week, idx) => {
+        if (idx !== weekIndex) return week;
+
+        // Find the quarterly goal that contains this weekly goal
+        const quarterlyGoal = week.quarterlyGoals.find((goal) =>
+          goal.weeklyGoals.some((wg) => wg.id === weeklyGoalId)
+        );
+        if (!quarterlyGoal) return week;
+
+        const quarterlyGoalState = week.quarterlyGoalStates.find(
+          (state) => state.id === quarterlyGoal.id
+        );
+        if (!quarterlyGoalState) return week;
+
+        const weeklyGoal = quarterlyGoal.weeklyGoals.find(
+          (wg) => wg.id === weeklyGoalId
+        );
+        if (!weeklyGoal) return week;
+
+        const newTask: TaskBase = {
+          id: Math.random().toString(36).substr(2, 9),
+          title: title.trim(),
+          path: `${weeklyGoal.path}/task/${weeklyGoal.tasks.length + 1}`,
+          date: dayDate,
+        };
+
+        const newTaskState: TaskState = {
+          id: newTask.id,
+          isComplete: false,
+          date: dayDate,
+        };
+
+        return {
+          ...week,
+          quarterlyGoals: week.quarterlyGoals.map((goal) => {
+            if (goal.id !== quarterlyGoal.id) return goal;
+            return {
+              ...goal,
+              weeklyGoals: goal.weeklyGoals.map((wg) => {
+                if (wg.id !== weeklyGoalId) return wg;
+                return {
+                  ...wg,
+                  tasks: [...wg.tasks, newTask],
+                };
+              }),
+            };
+          }),
+          quarterlyGoalStates: week.quarterlyGoalStates.map((state) => {
+            if (state.id !== quarterlyGoal.id) return state;
+            return {
+              ...state,
+              weeklyGoalStates: state.weeklyGoalStates.map((wgs) => {
+                if (wgs.id !== weeklyGoalId) return wgs;
+                return {
+                  ...wgs,
+                  taskStates: [...wgs.taskStates, newTaskState],
+                };
+              }),
+            };
+          }),
+        };
+      })
+    );
+  };
+
+  const renderQuarterlyGoals = (week: WeekData) => {
+    if (!week.quarterlyGoals || !week.quarterlyGoalStates) return null;
+
+    // Separate goals into starred/pinned and regular
+    const starredGoals = week.quarterlyGoals.filter(
+      (goal, index) => week.quarterlyGoalStates[index].isStarred
+    );
+    const pinnedGoals = week.quarterlyGoals.filter(
+      (goal, index) =>
+        !week.quarterlyGoalStates[index].isStarred &&
+        week.quarterlyGoalStates[index].isPinned
+    );
+    const regularGoals = week.quarterlyGoals.filter(
+      (goal, index) =>
+        !week.quarterlyGoalStates[index].isStarred &&
+        !week.quarterlyGoalStates[index].isPinned
+    );
+
+    return (
+      <div className="space-y-2">
+        {/* Render starred goals first */}
+        {starredGoals.map((goal) => (
+          <QuarterlyGoalSection
+            key={goal.id}
+            goalBase={goal}
+            weekState={
+              week.quarterlyGoalStates[week.quarterlyGoals.indexOf(goal)]
+            }
+            weekIndex={week.weekNumber}
+            isOpen={goalSectionOpenStates[week.weekNumber] ?? false}
+            onOpenChange={(open) =>
+              handleGoalSectionOpenChange(week.weekNumber, open)
+            }
+            editState={editState}
+            onStartEditing={handleStartEditing}
+            onCancelEditing={() => setEditState(null)}
+            onUpdateGoal={handleUpdateGoal}
+            onUpdateProgress={handleUpdateProgress}
+            onToggleStar={() => handleToggleStar(week.weekNumber)}
+            onTogglePin={() => handleTogglePin(week.weekNumber)}
+          />
+        ))}
+
+        {/* Render pinned goals next */}
+        {pinnedGoals.map((goal) => (
+          <QuarterlyGoalSection
+            key={goal.id}
+            goalBase={goal}
+            weekState={
+              week.quarterlyGoalStates[week.quarterlyGoals.indexOf(goal)]
+            }
+            weekIndex={week.weekNumber}
+            isOpen={goalSectionOpenStates[week.weekNumber] ?? false}
+            onOpenChange={(open) =>
+              handleGoalSectionOpenChange(week.weekNumber, open)
+            }
+            editState={editState}
+            onStartEditing={handleStartEditing}
+            onCancelEditing={() => setEditState(null)}
+            onUpdateGoal={handleUpdateGoal}
+            onUpdateProgress={handleUpdateProgress}
+            onToggleStar={() => handleToggleStar(week.weekNumber)}
+            onTogglePin={() => handleTogglePin(week.weekNumber)}
+          />
+        ))}
+
+        {/* Render regular goals in a collapsible section */}
+        {regularGoals.length > 0 && (
+          <Collapsible
+            open={goalSectionOpenStates[week.weekNumber] ?? false}
+            onOpenChange={(open) =>
+              handleGoalSectionOpenChange(week.weekNumber, open)
+            }
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Other Goals</span>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <ChevronsUpDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <div className="space-y-1 mt-1">
+                {regularGoals.map((goal) => (
+                  <QuarterlyGoalSection
+                    key={goal.id}
+                    goalBase={goal}
+                    weekState={
+                      week.quarterlyGoalStates[
+                        week.quarterlyGoals.indexOf(goal)
+                      ]
+                    }
+                    weekIndex={week.weekNumber}
+                    isOpen={goalSectionOpenStates[week.weekNumber] ?? false}
+                    onOpenChange={(open) =>
+                      handleGoalSectionOpenChange(week.weekNumber, open)
+                    }
+                    editState={editState}
+                    onStartEditing={handleStartEditing}
+                    onCancelEditing={() => setEditState(null)}
+                    onUpdateGoal={handleUpdateGoal}
+                    onUpdateProgress={handleUpdateProgress}
+                    onToggleStar={() => handleToggleStar(week.weekNumber)}
+                    onTogglePin={() => handleTogglePin(week.weekNumber)}
+                  />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Input for new quarterly goals */}
+        <div className="mt-2">
+          <Input
+            placeholder="Add a quarterly goal..."
+            value={newQuarterlyGoalTitle}
+            onChange={(e) => setNewQuarterlyGoalTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newQuarterlyGoalTitle.trim()) {
+                handleNewQuarterlyGoal(week.weekNumber);
+                setNewQuarterlyGoalTitle('');
+              }
+            }}
+            className="h-8 text-sm"
+          />
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -479,66 +841,80 @@ const QuarterOverviewScreen = () => {
                 </div>
                 <div className="flex-1 p-4 space-y-6 overflow-y-auto">
                   {/* Quarter Goals Section */}
-                  <QuarterlyGoalSection
-                    goalBase={week.quarterlyGoal}
-                    weekState={week.quarterlyGoalState}
-                    weekIndex={weekIndex}
-                    isOpen={goalSectionOpenStates[weekIndex] ?? false}
-                    onOpenChange={(isOpen) =>
-                      handleGoalSectionOpenChange(weekIndex, isOpen)
-                    }
-                    editState={editState}
-                    onStartEditing={handleStartEditing}
-                    onCancelEditing={() => setEditState(null)}
-                    onUpdateGoal={handleUpdateGoal}
-                    onUpdateProgress={handleUpdateProgress}
-                    onToggleStar={() => handleToggleStar(weekIndex)}
-                    onTogglePin={() => handleTogglePin(weekIndex)}
-                  />
-
-                  {/* Team Coordination Section */}
-                  <div>
-                    <div className="mb-2 flex items-center justify-between">
-                      <h3 className="font-semibold">Team Coordination</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsTeamCollapsed(!isTeamCollapsed)}
-                      >
-                        {isTeamCollapsed ? 'Expand' : 'Collapse'}
-                      </Button>
-                    </div>
-                    {!isTeamCollapsed && (
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          OOO Status: Jane Doe, John Smith
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  {renderQuarterlyGoals(week)}
 
                   {/* Weekly Goals Section */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Weekly Goals</h3>
-                    <WeeklyGoalSection
-                      quarterlyGoal={week.quarterlyGoal}
-                      weekState={week.quarterlyGoalState}
-                      onWeeklyGoalToggle={(goalId) =>
-                        handleWeeklyGoalToggle(weekIndex, goalId)
-                      }
-                    />
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Weekly Goals</h3>
+                    <div className="pl-4">
+                      {week.quarterlyGoals.map(
+                        (quarterlyGoal: QuarterlyGoalBase) => (
+                          <div key={quarterlyGoal.id}>
+                            <p className="text-sm font-medium mb-2">
+                              {quarterlyGoal.title}
+                            </p>
+                            <GoalInput
+                              placeholder="Add weekly goal..."
+                              onSubmit={(value) =>
+                                handleNewWeeklyGoal(
+                                  weekIndex,
+                                  quarterlyGoal.id,
+                                  value
+                                )
+                              }
+                            />
+                            {quarterlyGoal.weeklyGoals.map(
+                              (weeklyGoal: WeeklyGoalBase) => (
+                                <div key={weeklyGoal.id} className="mt-2">
+                                  <p className="text-sm font-medium">
+                                    {weeklyGoal.title}
+                                  </p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
 
                   {/* Daily Goals Section */}
-                  <div>
-                    <h3 className="font-semibold mb-3">Daily Goals</h3>
-                    <DailyGoalSection
-                      quarterlyGoal={week.quarterlyGoal}
-                      weekState={week.quarterlyGoalState}
-                      onTaskToggle={(taskId, weeklyGoalId) =>
-                        handleTaskToggle(weekIndex, taskId, weeklyGoalId)
-                      }
-                    />
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Daily Goals</h3>
+                    {week.days.map((day) => (
+                      <div key={day} className="space-y-2">
+                        <h4 className="text-sm font-medium">{day}</h4>
+                        {week.quarterlyGoals.map((quarterlyGoal) =>
+                          quarterlyGoal.weeklyGoals.map((weeklyGoal) => (
+                            <div key={weeklyGoal.id} className="pl-4 space-y-2">
+                              <p className="text-sm text-muted-foreground">
+                                {weeklyGoal.title}
+                              </p>
+                              {weeklyGoal.tasks
+                                .filter((task) => task.date === day)
+                                .map((task) => (
+                                  <div key={task.id} className="pl-4">
+                                    {task.title}
+                                  </div>
+                                ))}
+                              <div className="mt-1">
+                                <GoalInput
+                                  placeholder="Add daily goal..."
+                                  onSubmit={(value) =>
+                                    handleNewDailyGoal(
+                                      weekIndex,
+                                      weeklyGoal.id,
+                                      day,
+                                      value
+                                    )
+                                  }
+                                />
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

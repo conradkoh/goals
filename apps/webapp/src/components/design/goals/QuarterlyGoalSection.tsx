@@ -18,6 +18,8 @@ import {
   QuarterlyGoalState,
   EditState,
 } from '../../../types/goals';
+import { Star, Pin } from 'lucide-react';
+import { Input } from '../../ui/input';
 
 interface QuarterlyGoalSectionProps {
   goalBase: QuarterlyGoalBase;
@@ -40,7 +42,95 @@ interface QuarterlyGoalSectionProps {
   ) => void;
   onToggleStar: (weekIndex: number, goalId: string) => void;
   onTogglePin: (weekIndex: number, goalId: string) => void;
+  children?: React.ReactNode;
 }
+
+const GoalItem: React.FC<{
+  goal: QuarterlyGoalBase & {
+    progress: number;
+    isStarred: boolean;
+    isPinned: boolean;
+  };
+  weekIndex: number;
+  isEditing: boolean;
+  onStartEditing: () => void;
+  onCancelEditing: () => void;
+  onUpdateGoal: (newTitle: string) => void;
+  onToggleStar: () => void;
+  onTogglePin: () => void;
+}> = ({
+  goal,
+  weekIndex,
+  isEditing,
+  onStartEditing,
+  onCancelEditing,
+  onUpdateGoal,
+  onToggleStar,
+  onTogglePin,
+}) => {
+  const [editValue, setEditValue] = React.useState(goal.title);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onUpdateGoal(editValue);
+    } else if (e.key === 'Escape') {
+      onCancelEditing();
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 py-1 hover:bg-gray-50 rounded group">
+      <div className="flex items-center gap-0.5 min-w-[60px]">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-7 w-7 p-0 ${
+            goal.isStarred
+              ? 'text-yellow-500'
+              : 'text-gray-400 hover:text-yellow-500'
+          }`}
+          onClick={onToggleStar}
+        >
+          <Star className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-7 w-7 p-0 ${
+            goal.isPinned
+              ? 'text-blue-500'
+              : 'text-gray-400 hover:text-blue-500'
+          }`}
+          onClick={onTogglePin}
+        >
+          <Pin className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {isEditing ? (
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => onUpdateGoal(editValue)}
+            autoFocus
+            className="h-7"
+          />
+        ) : (
+          <span
+            className="flex-1 cursor-pointer truncate"
+            onClick={onStartEditing}
+          >
+            {goal.title}
+          </span>
+        )}
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          [{goal.progress}/10]
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
   goalBase,
@@ -73,106 +163,25 @@ export const QuarterlyGoalSection: React.FC<QuarterlyGoalSectionProps> = ({
     progress: weekState.progress,
     isStarred: weekState.isStarred,
     isPinned: weekState.isPinned,
-    weeklyGoals: goalBase.weeklyGoals.map((weeklyGoal) => {
-      const weeklyState = weekState.weeklyGoalStates.find(
-        (state) => state.id === weeklyGoal.id
-      );
-      if (!weeklyState) {
-        console.error(`No weekly state found for goal ${weeklyGoal.id}`);
-        return {
-          ...weeklyGoal,
-          isComplete: false,
-          isHardComplete: false,
-          tasks: weeklyGoal.tasks.map((task) => ({
-            ...task,
-            isComplete: false,
-            date: '',
-          })),
-        };
-      }
-      return {
-        ...weeklyGoal,
-        isComplete: weeklyState.isComplete,
-        isHardComplete: weeklyState.isHardComplete,
-        tasks: weeklyGoal.tasks.map((task) => {
-          const taskState = weeklyState.taskStates.find(
-            (state) => state.id === task.id
-          );
-          if (!taskState) {
-            console.error(`No task state found for task ${task.id}`);
-            return {
-              ...task,
-              isComplete: false,
-              date: '',
-            };
-          }
-          return {
-            ...task,
-            isComplete: taskState.isComplete,
-            date: taskState.date,
-          };
-        }),
-      };
-    }),
   };
 
-  // Filter goals based on their state
-  const isStarred = weekState.isStarred;
-  const isPinned = weekState.isPinned;
-
-  // Determine if we should show all goals without collapsible
-  const shouldShowAllGoals = !isStarred && !isPinned;
-
-  const renderGoal = () => (
-    <GoalCard
-      key={goalBase.id}
-      goal={combinedGoalData}
-      weekIndex={weekIndex}
-      isEditingTitle={
-        editState?.weekIndex === weekIndex &&
-        editState?.goalId === goalBase.id &&
-        editState?.type === 'title'
-      }
-      isEditingProgress={
-        editState?.weekIndex === weekIndex &&
-        editState?.goalId === goalBase.id &&
-        editState?.type === 'progress'
-      }
-      editState={editState}
-      onStartEditing={onStartEditing}
-      onCancelEditing={onCancelEditing}
-      onUpdateGoal={onUpdateGoal}
-      onUpdateProgress={onUpdateProgress}
-      onToggleStar={onToggleStar}
-      onTogglePin={onTogglePin}
-    />
-  );
+  const isEditing =
+    editState?.weekIndex === weekIndex &&
+    editState?.goalId === goalBase.id &&
+    editState?.type === 'title';
 
   return (
-    <section className="mb-4">
-      <h3 className="font-semibold mb-2">Quarter Goals Progress</h3>
-
-      {/* Render based on starred/pinned status */}
-      {isStarred && renderGoal()}
-      {!isStarred && isPinned && renderGoal()}
-
-      {/* Regular Goals - either in Collapsible or direct based on condition */}
-      {shouldShowAllGoals
-        ? renderGoal()
-        : !isStarred &&
-          !isPinned && (
-            <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-gray-500">1 more item</span>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <ChevronsUpDown className="h-4 w-4" />
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent>{renderGoal()}</CollapsibleContent>
-            </Collapsible>
-          )}
-    </section>
+    <GoalItem
+      goal={combinedGoalData}
+      weekIndex={weekIndex}
+      isEditing={isEditing}
+      onStartEditing={() => onStartEditing(weekIndex, goalBase.id, 'title')}
+      onCancelEditing={onCancelEditing}
+      onUpdateGoal={(newTitle) =>
+        onUpdateGoal(weekIndex, goalBase.id, newTitle)
+      }
+      onToggleStar={() => onToggleStar(weekIndex, goalBase.id)}
+      onTogglePin={() => onTogglePin(weekIndex, goalBase.id)}
+    />
   );
 };

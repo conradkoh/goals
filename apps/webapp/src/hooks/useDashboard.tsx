@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -13,8 +13,8 @@ interface WeekData {
   weekLabel: string;
   weekNumber: number;
   days: string[];
-  quarterlyGoal: QuarterlyGoalBase;
-  quarterlyGoalState: QuarterlyGoalState;
+  quarterlyGoals: QuarterlyGoalBase[];
+  quarterlyGoalStates: QuarterlyGoalState[];
   mondayDate: string;
 }
 
@@ -40,21 +40,8 @@ const generateWeeksForQuarter = (
       weekNumber: weekNum,
       mondayDate: weekStart.toFormat('LLL d'),
       days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoal: {
-        id: '', // Will be populated from backend if exists
-        title: 'Set your quarterly goal',
-        path: '',
-        quarter,
-        weeklyGoals: [],
-      },
-      quarterlyGoalState: {
-        id: '',
-        isComplete: false,
-        progress: 0,
-        isStarred: false,
-        isPinned: false,
-        weeklyGoalStates: [],
-      },
+      quarterlyGoals: [],
+      quarterlyGoalStates: [],
     });
   }
   return weeks;
@@ -74,52 +61,62 @@ const mergeBackendData = (
     }
 
     const goals = weekSummary.goals;
-    const mainGoal = goals[0];
+
+    // Group goals by depth
+    const quarterlyGoals = goals.filter((g) => g.depth === 0);
+    const weeklyGoals = goals.filter((g) => g.depth === 1);
+    const dailyGoals = goals.filter((g) => g.depth === 2);
+
+    // Transform quarterly goals
+    const transformedQuarterlyGoals = quarterlyGoals.map((goal) => ({
+      id: goal.goalId,
+      title: goal.title || 'Set your quarterly goal',
+      path: `/goals/${goal.goalId}`,
+      quarter: week.quarterlyGoals[0]?.quarter || 1,
+      weeklyGoals: weeklyGoals
+        .filter((wg) => wg.parentId === goal.goalId)
+        .map((wg) => ({
+          id: wg.goalId,
+          title: wg.title || 'Set your weekly goal',
+          path: `/goals/${goal.goalId}/${wg.goalId}`,
+          weekNumber: week.weekNumber,
+          tasks: dailyGoals
+            .filter((dg) => dg.parentId === wg.goalId)
+            .map((task) => ({
+              id: task.goalId,
+              title: task.title || 'New task',
+              path: `/goals/${goal.goalId}/${wg.goalId}/${task.goalId}`,
+            })),
+        })),
+    }));
+
+    // Transform quarterly goal states
+    const transformedQuarterlyGoalStates = quarterlyGoals.map((goal) => ({
+      id: goal.goalId,
+      isComplete: goal.isComplete || false,
+      progress: parseInt(goal.progress || '0', 10),
+      isStarred: goal.isStarred || false,
+      isPinned: goal.isPinned || false,
+      weeklyGoalStates: weeklyGoals
+        .filter((wg) => wg.parentId === goal.goalId)
+        .map((wg) => ({
+          id: wg.goalId,
+          isComplete: wg.isComplete || false,
+          isHardComplete: wg.isComplete || false,
+          taskStates: dailyGoals
+            .filter((dg) => dg.parentId === wg.goalId)
+            .map((task) => ({
+              id: task.goalId,
+              isComplete: task.isComplete || false,
+              date: DateTime.now().toISODate() || '',
+            })),
+        })),
+    }));
 
     return {
       ...week,
-      quarterlyGoal: {
-        id: mainGoal.goalId,
-        title: mainGoal.title || 'Set your quarterly goal',
-        path: `/goals/${mainGoal.goalId}`,
-        quarter: week.quarterlyGoal.quarter,
-        weeklyGoals: goals
-          .filter((g) => g.depth === 1)
-          .map((wg) => ({
-            id: wg.goalId,
-            title: wg.title || 'Set your weekly goal',
-            path: `/goals/${mainGoal.goalId}/${wg.goalId}`,
-            weekNumber: week.weekNumber,
-            tasks: goals
-              .filter((g) => g.depth === 2 && g.parentId === wg.goalId)
-              .map((task) => ({
-                id: task.goalId,
-                title: task.title || 'New task',
-                path: `/goals/${mainGoal.goalId}/${wg.goalId}/${task.goalId}`,
-              })),
-          })),
-      },
-      quarterlyGoalState: {
-        id: mainGoal.goalId,
-        isComplete: mainGoal.isComplete || false,
-        progress: parseInt(mainGoal.progress || '0', 10),
-        isStarred: mainGoal.isStarred || false,
-        isPinned: mainGoal.isPinned || false,
-        weeklyGoalStates: goals
-          .filter((g) => g.depth === 1)
-          .map((wg) => ({
-            id: wg.goalId,
-            isComplete: wg.isComplete || false,
-            isHardComplete: wg.isComplete || false,
-            taskStates: goals
-              .filter((g) => g.depth === 2 && g.parentId === wg.goalId)
-              .map((task) => ({
-                id: task.goalId,
-                isComplete: task.isComplete || false,
-                date: DateTime.now().toISODate() || '',
-              })),
-          })),
-      },
+      quarterlyGoals: transformedQuarterlyGoals,
+      quarterlyGoalStates: transformedQuarterlyGoalStates,
     };
   });
 };
@@ -145,6 +142,7 @@ const DashboardContext = createContext<
       currentDayOfMonth: number;
       currentDayName: string;
       weekData: WeekData[];
+      createQuarterlyGoal: (title: string) => Promise<void>;
     }
   | 'not-found'
 >('not-found');
@@ -155,6 +153,10 @@ export const DashboardProvider = ({
   children: React.ReactNode;
 }) => {
   const { sessionId } = useSession();
+  const createQuarterlyGoalMutation = useMutation(
+    api.dashboard.createQuarterlyGoal
+  );
+
   // Use a single source of truth for current date
   const currentDate = DateTime.now();
 
@@ -179,6 +181,15 @@ export const DashboardProvider = ({
     data
   );
 
+  const createQuarterlyGoal = async (title: string) => {
+    await createQuarterlyGoalMutation({
+      sessionId,
+      year: currentYear,
+      quarter: currentQuarter,
+      title,
+    });
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -193,6 +204,7 @@ export const DashboardProvider = ({
         currentDayOfMonth,
         currentDayName,
         weekData,
+        createQuarterlyGoal,
       }}
     >
       {children}

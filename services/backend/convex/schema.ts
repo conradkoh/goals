@@ -49,9 +49,18 @@ export default defineSchema({
     goalId: v.id('goals'),
     weekNumber: v.number(),
     progress: v.string(),
+    // quarterly goals
     isStarred: v.boolean(),
     isPinned: v.boolean(),
+    // weekly goals
     isComplete: v.boolean(),
+    // daily goals
+    daily: v.optional(
+      v.object({
+        dayOfWeek: v.number(),
+        dateTimestamp: v.number(),
+      })
+    ),
   }).index('by_user_and_year_and_quarter_and_week', [
     'userId',
     'year',
