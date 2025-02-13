@@ -19,9 +19,35 @@ export const QuarterlyOverviewScreen2 = () => {
           weekLabel={week.weekLabel}
           mondayDate={week.mondayDate}
         >
-          {/* We'll implement the content rendering here incrementally */}
+          <div className="space-y-6">
+            <WeekCardSection title="Quarterly Goals">
+              {/* Quarterly goals content will go here */}
+            </WeekCardSection>
+
+            <WeekCardSection title="Weekly Goals">
+              {/* Weekly goals content will go here */}
+            </WeekCardSection>
+
+            <WeekCardSection title="Daily Goals">
+              {/* Daily goals content will go here */}
+            </WeekCardSection>
+          </div>
         </WeekCard>
       ))}
     </QuarterlyGrid>
+  );
+};
+
+interface WeekCardSectionProps {
+  title: string;
+  children?: React.ReactNode;
+}
+
+const WeekCardSection = ({ title, children }: WeekCardSectionProps) => {
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold">{title}</h3>
+      <div className="space-y-2">{children}</div>
+    </div>
   );
 };
