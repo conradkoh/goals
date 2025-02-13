@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Check, Edit2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface EditableGoalTitleProps {
@@ -16,8 +16,9 @@ export const EditableGoalTitle = ({
 }: EditableGoalTitleProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(title);
+  const [isSelecting, setIsSelecting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!editText.trim() || editText.trim() === title) {
       setIsEditing(false);
       setEditText(title);
@@ -33,26 +34,63 @@ export const EditableGoalTitle = ({
       setEditText(title);
       setIsEditing(false);
     }
-  };
+  }, [editText, title, onSubmit]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setIsEditing(false);
     setEditText(title);
-  };
+  }, [title]);
+
+  const handleMouseDown = useCallback(() => {
+    setIsSelecting(false);
+  }, []);
+
+  const handleMouseMove = useCallback(() => {
+    if (!isSelecting) {
+      setIsSelecting(true);
+    }
+  }, [isSelecting]);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Only start editing if we're not selecting text
+      if (!isSelecting) {
+        setIsEditing(true);
+      }
+      setIsSelecting(false);
+    },
+    [isSelecting]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleSubmit();
+      } else if (e.key === 'Escape') {
+        handleCancel();
+      }
+    },
+    [handleSubmit, handleCancel]
+  );
+
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditText(e.target.value);
+    },
+    []
+  );
+
+  const startEditing = useCallback(() => {
+    setIsEditing(true);
+  }, []);
 
   if (isEditing) {
     return (
       <div className="flex items-center min-w-0 flex-grow">
         <Input
           value={editText}
-          onChange={(e) => setEditText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleSubmit();
-            } else if (e.key === 'Escape') {
-              handleCancel();
-            }
-          }}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
           className="h-7 text-sm bg-transparent"
           autoFocus
         />
@@ -76,10 +114,17 @@ export const EditableGoalTitle = ({
 
   return (
     <div className="flex items-center gap-1 min-w-0 group/title flex-grow">
-      <span className="text-sm truncate flex-grow">{title}</span>
+      <span
+        className="text-sm truncate flex-grow cursor-pointer"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onClick={handleClick}
+      >
+        {title}
+      </span>
       <div className="flex items-center gap-1">
         <button
-          onClick={() => setIsEditing(true)}
+          onClick={startEditing}
           className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
         >
           <Edit2 className="h-3.5 w-3.5" />
