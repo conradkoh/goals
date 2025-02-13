@@ -74,7 +74,7 @@ export const GoalStarPin = ({
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
       <ActionButton
         icon={<Star className="h-3.5 w-3.5" />}
         onClick={onStarred}
