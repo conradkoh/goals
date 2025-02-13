@@ -217,9 +217,6 @@ export const DashboardProvider = ({
     });
   };
 
-  if (!weekData) {
-    return <div>Loading...</div>;
-  }
   return (
     <DashboardContext.Provider
       value={{
@@ -233,7 +230,7 @@ export const DashboardProvider = ({
         currentMonthName,
         currentDayOfMonth,
         currentDayName,
-        weekData,
+        weekData: weekData ?? [],
         createQuarterlyGoal,
         createWeeklyGoal,
         updateQuarterlyGoalStatus,
