@@ -5,15 +5,6 @@ import { Id } from '../../convex/_generated/dataModel';
 // Since it's not exported, we'll need to test through getWeekDetails
 // Let's create a test-only export of buildGoalTree
 import { buildGoalTree } from './getWeekDetails';
-
-type GoalNode = {
-  _id: Id<'goals'>;
-  depth: number;
-  inPath: string;
-  title: string;
-  parentId?: Id<'goals'>;
-};
-
 describe('buildGoalTree', () => {
   it('should build a tree with quarterly and weekly goals', () => {
     const goals = [
