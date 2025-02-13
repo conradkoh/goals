@@ -4,14 +4,20 @@ import { joinPath } from '../util/path';
 
 // A tree of quarterly goals with their weekly goals and daily goals
 export type WeekGoalsTree = {
-  quarterlyGoals: GoalTreeNode[];
+  quarterlyGoals: QuarterlyGoalInWeek[];
   weekNumber: number;
-  allGoals: GoalTreeNode[];
+  allGoals: QuarterlyGoalInWeek[];
 };
 
-// A goal with its weekly goal details
-export type GoalTreeNode = TWithChildren<Doc<'goals'>> & {
-  weeklyGoal: Doc<'goalsWeekly'> | undefined;
+type Goal = Doc<'goals'>;
+type GoalWithWeeklyGoal = Goal & { weeklyGoal?: Doc<'goalsWeekly'> };
+export type QuarterlyGoalInWeek = TWithChildren<GoalWithWeeklyGoal>;
+/**
+ * Represents a type that includes a path and children for a given type T.
+ */
+export type TWithChildren<T> = T & {
+  path: string;
+  children: TWithChildren<T>[];
 };
 
 /**
@@ -75,11 +81,6 @@ export const getWeekGoalsTree = async (
 };
 
 /**
- * Represents a type that includes a path and children for a given type T.
- */
-type TWithChildren<T> = T & { path: string; children: T[] };
-
-/**
  * Builds a tree structure from an array of goals, attaching additional data to each node.
  *
  * @template T - The type of the goal, which must include an _id, optional parentId, inPath, and depth.
@@ -88,27 +89,23 @@ type TWithChildren<T> = T & { path: string; children: T[] };
  * @param attach - A function that takes a goal with children and returns a modified version of that goal.
  * @returns An object containing the tree structure and an index of the nodes by goalId.
  */
-export function buildGoalTree<
-  T extends {
-    _id: Id<'goals'>;
-    parentId?: Id<'goals'>;
-    inPath: string;
-    depth: number;
-  },
-  V extends TWithChildren<T>
->(n: T[], attach: (n: TWithChildren<T>) => V) {
-  const roots: V[] = [];
+export function buildGoalTree(
+  n: Goal[],
+  attach: (n: QuarterlyGoalInWeek) => QuarterlyGoalInWeek
+) {
+  const roots: QuarterlyGoalInWeek[] = [];
 
   //index the nodes by goalId
   const nodeIndex = n.reduce((acc, n) => {
-    const base: TWithChildren<T> = {
+    const base: QuarterlyGoalInWeek = {
       ...n,
       path: joinPath(n.inPath, n._id),
+      weeklyGoal: undefined,
       children: [],
     };
     acc[n._id] = attach(base);
     return acc;
-  }, {} as Record<Id<'goals'>, V>);
+  }, {} as Record<Id<'goals'>, QuarterlyGoalInWeek>);
 
   for (const key in nodeIndex) {
     const node = nodeIndex[key as Id<'goals'>];

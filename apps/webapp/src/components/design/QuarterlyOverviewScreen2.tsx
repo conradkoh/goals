@@ -93,13 +93,12 @@ export const QuarterlyOverviewScreen2 = () => {
                   />
                 </WeekCardSection>
 
-                {/* <WeekCardSection title="Weekly Goals">
+                <WeekCardSection title="Weekly Goals">
                   <WeekCardWeeklyGoals
                     weekNumber={week.weekNumber}
-                    quarterlyGoals={week.quarterlyGoals}
-                    quarterlyGoalStates={week.quarterlyGoalStates}
+                    quarterlyGoals={quarterlyGoals}
                   />
-                </WeekCardSection> */}
+                </WeekCardSection>
 
                 <WeekCardSection title="Daily Goals">
                   {/* Daily goals content will go here */}

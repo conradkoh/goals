@@ -19,12 +19,20 @@ describe('buildGoalTree', () => {
     const goals = [
       {
         _id: 'quarterly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 1',
       },
       {
         _id: 'weekly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
@@ -32,6 +40,10 @@ describe('buildGoalTree', () => {
       },
       {
         _id: 'weekly2' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
@@ -39,12 +51,9 @@ describe('buildGoalTree', () => {
       },
     ];
 
-    const { tree, index } = buildGoalTree<
-      GoalNode,
-      GoalNode & { path: string; children: GoalNode[]; weeklyGoal: null }
-    >(goals, (n) => ({
+    const { tree, index } = buildGoalTree(goals, (n) => ({
       ...n,
-      weeklyGoal: null,
+      weeklyGoal: undefined,
     }));
 
     // Verify tree structure
@@ -55,27 +64,39 @@ describe('buildGoalTree', () => {
     expect(tree[0].children[1]._id).toBe('weekly2');
 
     // Verify paths
-    expect((tree[0] as any).path).toBe('/quarterly1');
-    expect((tree[0].children[0] as any).path).toBe('/quarterly1/weekly1');
-    expect((tree[0].children[1] as any).path).toBe('/quarterly1/weekly2');
+    expect(tree[0].path).toBe('/quarterly1');
+    expect(tree[0].children[0].path).toBe('/quarterly1/weekly1');
+    expect(tree[0].children[1].path).toBe('/quarterly1/weekly2');
   });
 
   it('should handle multiple quarterly goals', () => {
     const goals = [
       {
         _id: 'quarterly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 1',
       },
       {
         _id: 'quarterly2' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 2',
       },
       {
         _id: 'weekly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
@@ -83,6 +104,10 @@ describe('buildGoalTree', () => {
       },
       {
         _id: 'weekly2' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly2',
         parentId: 'quarterly2' as Id<'goals'>,
@@ -90,12 +115,9 @@ describe('buildGoalTree', () => {
       },
     ];
 
-    const { tree } = buildGoalTree<
-      GoalNode,
-      GoalNode & { path: string; children: GoalNode[]; weeklyGoal: null }
-    >(goals, (n) => ({
+    const { tree } = buildGoalTree(goals, (n) => ({
       ...n,
-      weeklyGoal: null,
+      weeklyGoal: undefined,
     }));
 
     expect(tree).toHaveLength(2);
@@ -107,6 +129,10 @@ describe('buildGoalTree', () => {
     const goals = [
       {
         _id: 'weekly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly1',
         title: 'Weekly Goal 1',
@@ -114,12 +140,9 @@ describe('buildGoalTree', () => {
     ];
 
     expect(() =>
-      buildGoalTree<
-        GoalNode,
-        GoalNode & { path: string; children: GoalNode[]; weeklyGoal: null }
-      >(goals, (n) => ({
+      buildGoalTree(goals, (n) => ({
         ...n,
-        weeklyGoal: null,
+        weeklyGoal: undefined,
       }))
     ).toThrow('depth 1 goal has no parent');
   });
@@ -128,6 +151,10 @@ describe('buildGoalTree', () => {
     const goals = [
       {
         _id: 'weekly1' as Id<'goals'>,
+        _creationTime: 1234567890,
+        userId: 'user1' as Id<'users'>,
+        year: 2024,
+        quarter: 1,
         depth: 1,
         inPath: '/quarterly1',
         parentId: 'nonexistent' as Id<'goals'>,
@@ -136,12 +163,9 @@ describe('buildGoalTree', () => {
     ];
 
     expect(() =>
-      buildGoalTree<
-        GoalNode,
-        GoalNode & { path: string; children: GoalNode[]; weeklyGoal: null }
-      >(goals, (n) => ({
+      buildGoalTree(goals, (n) => ({
         ...n,
-        weeklyGoal: null,
+        weeklyGoal: undefined,
       }))
     ).toThrow('depth 1 goal has no parent');
   });
