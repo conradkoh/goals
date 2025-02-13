@@ -8,10 +8,22 @@ export default defineSchema({
     userId: v.id('users'),
     status: v.literal('active'),
   }),
-  users: defineTable({
-    email: v.string(),
-    name: v.string(),
-  }),
+  users: defineTable(
+    v.union(
+      v.object({
+        type: v.literal('user'),
+        email: v.string(),
+        name: v.string(),
+        displayName: v.string(),
+      }),
+      v.object({
+        type: v.literal('anonymous'),
+        email: v.optional(v.string()),
+        name: v.optional(v.string()),
+        displayName: v.optional(v.string()),
+      })
+    )
+  ),
 
   goals: defineTable({
     //partition

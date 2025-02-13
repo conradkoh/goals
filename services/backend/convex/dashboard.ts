@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { query } from './_generated/server';
 import { Id } from './_generated/dataModel';
-
+import { requireLogin } from '../src/usecase/requireLogin';
 // @deprecated
 // type WeeklyState = {
 //   quarterlyGoals: {
@@ -31,13 +31,14 @@ import { Id } from './_generated/dataModel';
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
   args: {
-    userId: v.id('users'),
     sessionId: v.id('sessions'),
     quarter: v.number(),
     year: v.number(),
   },
   handler: async (ctx, args) => {
-    const { userId, year, quarter } = args;
+    const { sessionId, year, quarter } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
 
     // Get all goals for the quarter
     const goals = await ctx.db
