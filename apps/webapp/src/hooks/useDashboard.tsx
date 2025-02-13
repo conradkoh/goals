@@ -142,6 +142,12 @@ interface DashboardContextValue {
   currentDayName: string;
   weekData: WeekData[];
   createQuarterlyGoal: (title: string, isPinned?: boolean) => Promise<void>;
+  createWeeklyGoal: (args: {
+    title: string;
+    parentId: Id<'goals'>;
+    weekNumber: number;
+    inPath: string;
+  }) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
     weekNumber: number;
     goalId: Id<'goals'>;
@@ -168,6 +174,7 @@ export const DashboardProvider = ({
   const createQuarterlyGoalMutation = useMutation(
     api.dashboard.createQuarterlyGoal
   );
+  const createWeeklyGoalMutation = useMutation(api.dashboard.createWeeklyGoal);
   const updateQuarterlyGoalStatusMutation = useMutation(
     api.dashboard.updateQuarterlyGoalStatus
   );
@@ -195,6 +202,7 @@ export const DashboardProvider = ({
     year: currentYear,
     quarter: currentQuarter,
   });
+  console.log({ quarterlyOverview: data });
 
   // Transform data into week data
   const weekData = mergeBackendData(
@@ -209,6 +217,26 @@ export const DashboardProvider = ({
       quarter: currentQuarter,
       title,
       isPinned,
+    });
+  };
+
+  const createWeeklyGoal = async ({
+    title,
+    parentId,
+    weekNumber,
+    inPath,
+  }: {
+    title: string;
+    parentId: Id<'goals'>;
+    weekNumber: number;
+    inPath: string;
+  }) => {
+    await createWeeklyGoalMutation({
+      sessionId,
+      title,
+      parentId,
+      weekNumber,
+      inPath,
     });
   };
 
@@ -270,6 +298,7 @@ export const DashboardProvider = ({
         currentDayName,
         weekData,
         createQuarterlyGoal,
+        createWeeklyGoal,
         updateQuarterlyGoalStatus,
         updateQuarterlyGoalTitle,
         deleteQuarterlyGoal,

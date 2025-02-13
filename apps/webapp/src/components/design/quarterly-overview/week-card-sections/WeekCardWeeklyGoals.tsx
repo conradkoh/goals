@@ -4,6 +4,10 @@ import {
   WeeklyGoalBase,
 } from '@/types/goals';
 import { Star, Pin } from 'lucide-react';
+import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
+import { useState } from 'react';
+import { useDashboard } from '@/hooks/useDashboard';
+import { Id } from '@services/backend/convex/_generated/dataModel';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -40,22 +44,15 @@ export const WeekCardWeeklyGoals = ({
   quarterlyGoals,
   quarterlyGoalStates,
 }: WeekCardWeeklyGoalsProps) => {
-  console.log('WeekCardWeeklyGoals props:', {
-    weekNumber,
-    quarterlyGoals: quarterlyGoals.map((g) => ({
-      id: g.id,
-      title: g.title,
-      weeklyGoals: g.weeklyGoals.length,
-    })),
-    quarterlyGoalStates: quarterlyGoalStates.map((s) => ({
-      isStarred: s.isStarred,
-      isPinned: s.isPinned,
-    })),
-  });
+  const { createWeeklyGoal } = useDashboard();
+  const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
+    {}
+  );
 
   // Filter for important (starred/pinned) quarterly goals
   const importantQuarterlyGoals = quarterlyGoals.filter((goal, index) => {
     const state = quarterlyGoalStates[index];
+
     return state.isStarred || state.isPinned;
   });
 
@@ -67,23 +64,28 @@ export const WeekCardWeeklyGoals = ({
 
   // Filter weekly goals for the current week
   const getWeeklyGoals = (quarterlyGoal: QuarterlyGoalBase) => {
-    const weeklyGoals = quarterlyGoal.weeklyGoals.filter((goal) =>
-      goal.path.includes(
-        `/quarters/${quarterlyGoal.quarter}/weeks/${weekNumber}`
-      )
+    return quarterlyGoal.weeklyGoals.filter(
+      (goal) => goal.weekNumber === weekNumber
     );
-    console.log('Weekly goals for', quarterlyGoal.title, ':', weeklyGoals);
-    return weeklyGoals;
   };
 
-  // Debug output for important goals
-  console.log(
-    'Important quarterly goals:',
-    importantQuarterlyGoals.map((g) => ({
-      title: g.title,
-      weeklyGoals: g.weeklyGoals.length,
-    }))
-  );
+  const handleCreateWeeklyGoal = async (quarterlyGoal: QuarterlyGoalBase) => {
+    const title = newGoalTitles[quarterlyGoal.id];
+    if (!title?.trim()) return;
+
+    try {
+      await createWeeklyGoal({
+        title: title.trim(),
+        parentId: quarterlyGoal.id as Id<'goals'>,
+        weekNumber,
+        inPath: quarterlyGoal.path,
+      });
+      // Clear the input after successful creation
+      setNewGoalTitles((prev) => ({ ...prev, [quarterlyGoal.id]: '' }));
+    } catch (error) {
+      console.error('Failed to create weekly goal:', error);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -99,17 +101,19 @@ export const WeekCardWeeklyGoals = ({
           return (
             <div key={goal.id} className="space-y-2">
               <QuarterlyGoalHeader goal={goal} state={state} />
-              {weeklyGoals.length > 0 ? (
-                <div className="pl-6 space-y-1">
-                  {weeklyGoals.map((weeklyGoal) => (
-                    <WeeklyGoal key={weeklyGoal.id} goal={weeklyGoal} />
-                  ))}
-                </div>
-              ) : (
-                <div className="pl-6 text-sm text-muted-foreground italic">
-                  No weekly goals for this week
-                </div>
-              )}
+              <div className="pl-6 space-y-1">
+                {weeklyGoals.map((weeklyGoal) => (
+                  <WeeklyGoal key={weeklyGoal.id} goal={weeklyGoal} />
+                ))}
+                <CreateGoalInput
+                  placeholder="Add a weekly goal..."
+                  value={newGoalTitles[goal.id] || ''}
+                  onChange={(value) =>
+                    setNewGoalTitles((prev) => ({ ...prev, [goal.id]: value }))
+                  }
+                  onSubmit={() => handleCreateWeeklyGoal(goal)}
+                />
+              </div>
             </div>
           );
         })

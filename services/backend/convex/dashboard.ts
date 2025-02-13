@@ -75,12 +75,14 @@ export const getQuarterOverview = query({
         acc[weekNumber].goals.push({
           title: goal.title,
           depth: goal.depth,
+          inPath: goal.inPath,
+          parentId: goal.parentId,
           ...weeklyGoal,
         });
       }
 
       return acc;
-    }, {} as Record<number, { weekNumber: number; goals: (Pick<Doc<'goals'>, 'title' | 'depth'> & Doc<'goalsWeekly'>)[] }>);
+    }, {} as Record<number, { weekNumber: number; goals: (Pick<Doc<'goals'>, 'title' | 'depth' | 'inPath' | 'parentId'> & Doc<'goalsWeekly'>)[] }>);
 
     return weekSummaries;
   },
@@ -89,14 +91,15 @@ export const getQuarterOverview = query({
 // Get detailed data for a specific week
 export const getWeekDetails = query({
   args: {
-    userId: v.id('users'),
     sessionId: v.id('sessions'),
     year: v.number(),
     quarter: v.number(),
     weekNumber: v.number(),
   },
   handler: async (ctx, args) => {
-    const { userId, year, quarter, weekNumber } = args;
+    const { sessionId, year, quarter, weekNumber } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
 
     // Get goals for this specific week
     const weeklyGoals = await ctx.db
@@ -379,6 +382,53 @@ export const deleteQuarterlyGoal = mutation({
 
     // Delete the goal itself
     await ctx.db.delete(goalId);
+
+    return goalId;
+  },
+});
+
+export const createWeeklyGoal = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    title: v.string(),
+    parentId: v.id('goals'),
+    weekNumber: v.number(),
+    inPath: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, title, parentId, weekNumber, inPath } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the parent goal to get year and quarter
+    const parentGoal = await ctx.db.get(parentId);
+    if (!parentGoal) {
+      throw new ConvexError('Parent goal not found');
+    }
+
+    // Create the weekly goal
+    const goalId = await ctx.db.insert('goals', {
+      userId,
+      year: parentGoal.year,
+      quarter: parentGoal.quarter,
+      title,
+      parentId,
+      inPath,
+      depth: 1, // 1 for weekly goals
+    });
+
+    // Create initial weekly state
+    await ctx.db.insert('goalsWeekly', {
+      userId,
+      year: parentGoal.year,
+      quarter: parentGoal.quarter,
+      goalId,
+      weekNumber,
+      progress: '0',
+      isStarred: false,
+      isPinned: false,
+      isComplete: false,
+    });
 
     return goalId;
   },
