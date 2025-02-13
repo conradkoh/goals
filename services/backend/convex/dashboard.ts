@@ -36,7 +36,7 @@ export const getQuarterOverview = query({
 
       // Flatten the tree structure and convert to the expected format
       const flattenedGoals = goals.flatMap((goal) => {
-        const weeklyGoal = goal.weeklyGoals;
+        const weeklyGoal = goal.weeklyGoal;
         if (!weeklyGoal) return [];
 
         return [
@@ -59,7 +59,6 @@ export const getQuarterOverview = query({
 
       return acc;
     }, {} as Record<number, { weekNumber: number; goals: (Pick<Doc<'goals'>, 'title' | 'depth' | 'inPath' | 'parentId'> & Doc<'goalsWeekly'>)[] }>);
-
     return weekSummaries;
   },
 });

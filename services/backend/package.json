@@ -5,7 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "convex dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "convex": "^1.19.0",
@@ -14,6 +16,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/luxon": "^3.4.2"
+    "@types/luxon": "^3.4.2",
+    "vitest": "^3.0.5"
   }
 }

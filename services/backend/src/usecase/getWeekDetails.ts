@@ -1,5 +1,6 @@
 import { Id } from '../../convex/_generated/dataModel';
 import { MutationCtx, QueryCtx } from '../../convex/_generated/server';
+import { joinPath } from '../util/path';
 
 export const getWeekDetails = async (
   ctx: MutationCtx | QueryCtx,
@@ -38,9 +39,10 @@ export const getWeekDetails = async (
     return {
       //add data from the weekly goals (timeseries)
       ...n,
-      weeklyGoals: weeklyGoalsMap.get(n._id),
+      weeklyGoal: weeklyGoalsMap.get(n._id),
     };
   });
+
   return quarterlyGoals;
 };
 
@@ -58,7 +60,7 @@ type TWithChildren<T> = T & { path: string; children: T[] };
  * @param attach - A function that takes a goal with children and returns a modified version of that goal.
  * @returns An object containing the tree structure and an index of the nodes by goalId.
  */
-function buildGoalTree<
+export function buildGoalTree<
   T extends {
     _id: Id<'goals'>;
     parentId?: Id<'goals'>;
@@ -67,13 +69,13 @@ function buildGoalTree<
   },
   V extends TWithChildren<T>
 >(n: T[], attach: (n: TWithChildren<T>) => V) {
-  const roots: TWithChildren<V>[] = [];
+  const roots: V[] = [];
 
   //index the nodes by goalId
   const nodeIndex = n.reduce((acc, n) => {
     const base: TWithChildren<T> = {
       ...n,
-      path: `${n.inPath}/${n._id}`,
+      path: joinPath(n.inPath, n._id),
       children: [],
     };
     acc[n._id] = attach(base);
@@ -84,7 +86,7 @@ function buildGoalTree<
     const node = nodeIndex[key as Id<'goals'>];
     switch (node.depth) {
       case 0: {
-        roots.push({ ...node, children: [] });
+        roots.push(node);
         break;
       }
       case 1:
@@ -95,10 +97,12 @@ function buildGoalTree<
           );
         }
         const parent = nodeIndex[node.parentId];
-
-        if (parent) {
-          parent.children.push(node);
+        if (!parent) {
+          throw new Error(
+            `depth ${node.depth} goal has no parent. node id: ${node._id}`
+          );
         }
+        parent.children.push(node);
         break;
       }
     }

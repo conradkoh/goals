@@ -201,7 +201,6 @@ export const DashboardProvider = ({
     year: currentYear,
     quarter: currentQuarter,
   });
-  console.log({ quarterlyOverview: data });
 
   // Transform data into week data
   const weekData = mergeBackendData(
