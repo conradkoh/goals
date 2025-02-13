@@ -1,12 +1,27 @@
+'use client';
+
+import { useDashboard } from '@/hooks/useDashboard';
+import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
+import { WeekCard } from './quarterly-overview/WeekCard';
+
 export const QuarterlyOverviewScreen2 = () => {
+  const { weekData, currentWeekNumber } = useDashboard();
+
+  const currentIndex = weekData.findIndex(
+    (week) => week.weekNumber === currentWeekNumber
+  );
+
   return (
-    <div className="flex-1 overflow-x-auto overflow-y-hidden px-6">
-      <div className="flex gap-4 h-full pb-4">
-        {/* Content will be implemented incrementally */}
-        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-          Content coming soon...
-        </div>
-      </div>
-    </div>
+    <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
+      {weekData.map((week, weekIndex) => (
+        <WeekCard
+          key={weekIndex}
+          weekLabel={week.weekLabel}
+          mondayDate={week.mondayDate}
+        >
+          {/* We'll implement the content rendering here incrementally */}
+        </WeekCard>
+      ))}
+    </QuarterlyGrid>
   );
 };
