@@ -147,38 +147,40 @@ export const WeekCardQuarterlyGoals = ({
         ))}
 
         {/* Other goals are shown when expanded */}
-        {otherGoals.length > 0 && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-6 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
-              >
-                <span>
-                  {isExpanded ? 'Show less' : `${otherGoals.length} more goals`}
-                </span>
-                <ChevronsUpDown className="h-3 w-3" />
-              </Button>
-            </div>
-            {isExpanded && (
-              <div className="space-y-1 animate-in slide-in-from-top-1 duration-100">
-                {otherGoals.map((goal) => (
-                  <DraggableGoal
-                    key={goal._id}
-                    goal={goal}
-                    weeklyGoal={goal.weeklyGoal}
-                    weekNumber={weekNumber}
-                    onToggleStatus={handleToggleStatus}
-                    onUpdateTitle={handleUpdateTitle}
-                    onDelete={handleDeleteGoal}
-                  />
-                ))}
-              </div>
-            )}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="h-6 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
+            >
+              <span>
+                {isExpanded
+                  ? 'Show less'
+                  : otherGoals.length > 0
+                  ? `${otherGoals.length} more goals`
+                  : 'Show unpinned goals'}
+              </span>
+              <ChevronsUpDown className="h-3 w-3" />
+            </Button>
           </div>
-        )}
+          {isExpanded && otherGoals.length > 0 && (
+            <div className="space-y-1 animate-in slide-in-from-top-1 duration-100">
+              {otherGoals.map((goal) => (
+                <DraggableGoal
+                  key={goal._id}
+                  goal={goal}
+                  weeklyGoal={goal.weeklyGoal}
+                  weekNumber={weekNumber}
+                  onToggleStatus={handleToggleStatus}
+                  onUpdateTitle={handleUpdateTitle}
+                  onDelete={handleDeleteGoal}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Input for new goal */}
