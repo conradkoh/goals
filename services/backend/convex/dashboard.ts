@@ -203,9 +203,10 @@ export const createQuarterlyGoal = mutation({
     year: v.number(),
     quarter: v.number(),
     title: v.string(),
+    isPinned: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, title } = args;
+    const { sessionId, year, quarter, title, isPinned } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -230,7 +231,7 @@ export const createQuarterlyGoal = mutation({
         weekNumber,
         progress: '0',
         isStarred: false,
-        isPinned: false,
+        isPinned: isPinned ?? false,
         isComplete: false,
       });
     }

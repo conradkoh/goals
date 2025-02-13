@@ -141,7 +141,7 @@ interface DashboardContextValue {
   currentDayOfMonth: number;
   currentDayName: string;
   weekData: WeekData[];
-  createQuarterlyGoal: (title: string) => Promise<void>;
+  createQuarterlyGoal: (title: string, isPinned?: boolean) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
     weekNumber: number;
     goalId: Id<'goals'>;
@@ -202,12 +202,13 @@ export const DashboardProvider = ({
     data
   );
 
-  const createQuarterlyGoal = async (title: string) => {
+  const createQuarterlyGoal = async (title: string, isPinned?: boolean) => {
     await createQuarterlyGoalMutation({
       sessionId,
       year: currentYear,
       quarter: currentQuarter,
       title,
+      isPinned,
     });
   };
 

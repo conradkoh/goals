@@ -57,16 +57,8 @@ export const WeekCardQuarterlyGoals = ({
   const handleCreateGoal = async () => {
     if (!newGoalTitle.trim()) return;
     try {
-      const goalId = await createQuarterlyGoal(newGoalTitle.trim());
-      // If not expanded, immediately pin the goal so it's visible
-      if (!isExpanded && goalId) {
-        await updateQuarterlyGoalStatus({
-          weekNumber,
-          goalId,
-          isStarred: false,
-          isPinned: true,
-        });
-      }
+      // When not expanded, create the goal as pinned by default
+      await createQuarterlyGoal(newGoalTitle.trim(), !isExpanded);
       setNewGoalTitle('');
     } catch (error) {
       console.error('Failed to create quarterly goal:', error);
