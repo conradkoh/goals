@@ -287,3 +287,32 @@ export const updateQuarterlyGoalStatus = mutation({
     return weeklyGoal._id;
   },
 });
+
+export const updateQuarterlyGoalTitle = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+    title: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId, title } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Find the goal and verify ownership
+    const goal = await ctx.db.get(goalId);
+    if (!goal) {
+      throw new Error('Goal not found');
+    }
+    if (goal.userId !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    // Update the goal title
+    await ctx.db.patch(goalId, {
+      title,
+    });
+
+    return goalId;
+  },
+});

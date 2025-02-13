@@ -3,6 +3,8 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
 import { QuarterlyGoalBase, QuarterlyGoalState } from '@/types/goals';
 import { GoalStarPin } from '../../goals-new/GoalStarPin';
+import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
+import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 
 interface WeekCardQuarterlyGoalsProps {
@@ -16,7 +18,11 @@ export const WeekCardQuarterlyGoals = ({
   quarterlyGoals,
   quarterlyGoalStates,
 }: WeekCardQuarterlyGoalsProps) => {
-  const { createQuarterlyGoal, updateQuarterlyGoalStatus } = useDashboard();
+  const {
+    createQuarterlyGoal,
+    updateQuarterlyGoalStatus,
+    updateQuarterlyGoalTitle,
+  } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
 
   const handleCreateGoal = async () => {
@@ -48,6 +54,18 @@ export const WeekCardQuarterlyGoals = ({
     }
   };
 
+  const handleUpdateTitle = async (goalId: Id<'goals'>, newTitle: string) => {
+    try {
+      await updateQuarterlyGoalTitle({
+        goalId,
+        title: newTitle,
+      });
+    } catch (error) {
+      console.error('Failed to update goal title:', error);
+      throw error; // Re-throw to let EditableGoalTitle handle the error state
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* List of goals */}
@@ -59,7 +77,7 @@ export const WeekCardQuarterlyGoals = ({
               key={goal.id}
               className="group px-2 py-1.5 rounded-sm hover:bg-gray-50 flex items-center justify-between"
             >
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 min-w-0 flex-grow">
                 <GoalStarPin
                   value={{
                     isStarred: state.isStarred,
@@ -80,7 +98,12 @@ export const WeekCardQuarterlyGoals = ({
                     )
                   }
                 />
-                <span className="text-sm truncate">{goal.title}</span>
+                <EditableGoalTitle
+                  title={goal.title}
+                  onSubmit={(newTitle) =>
+                    handleUpdateTitle(goal.id as Id<'goals'>, newTitle)
+                  }
+                />
               </div>
               {state.progress > 0 && (
                 <span className="text-xs text-muted-foreground ml-2 tabular-nums">
@@ -94,16 +117,11 @@ export const WeekCardQuarterlyGoals = ({
 
       {/* Input for new goal */}
       <div className="pt-1">
-        <Input
+        <CreateGoalInput
           placeholder="Add a quarterly goal..."
           value={newGoalTitle}
-          onChange={(e) => setNewGoalTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleCreateGoal();
-            }
-          }}
-          className="h-7 text-sm"
+          onChange={setNewGoalTitle}
+          onSubmit={handleCreateGoal}
         />
       </div>
     </div>
