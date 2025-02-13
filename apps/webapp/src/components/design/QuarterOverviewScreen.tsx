@@ -1,7 +1,8 @@
 'use client';
+import { Id } from '@services/backend/convex/_generated/dataModel';
 import React, { useEffect, useRef, useState } from 'react';
-import { DateTime } from 'luxon';
-import {
+import { useDashboard } from '../../hooks/useDashboard';
+import type {
   EditState,
   QuarterlyGoalBase,
   QuarterlyGoalState,
@@ -21,12 +22,38 @@ import { DailyGoalSection } from './goals/DailyGoalSection';
 import { QuarterlyGoalSection } from './goals/QuarterlyGoalSection';
 import { WeeklyGoalSection } from './goals/WeeklyGoalSection';
 
+// Backend types
+interface BackendGoal {
+  _id: Id<'goals'>;
+  userId: Id<'users'>;
+  year: number;
+  quarter: number;
+  title: string;
+  parentId?: Id<'goals'>;
+  inPath: string;
+  depth: number;
+}
+
+interface BackendWeeklyGoal {
+  _id: Id<'goalsWeekly'>;
+  userId: Id<'users'>;
+  year: number;
+  quarter: number;
+  goalId: Id<'goals'>;
+  weekNumber: number;
+  progress: string;
+  isStarred: boolean;
+  isPinned: boolean;
+  isComplete: boolean;
+}
+
 interface WeekData {
   weekLabel: string;
   weekNumber: number;
   days: string[];
   quarterlyGoal: QuarterlyGoalBase;
   quarterlyGoalState: QuarterlyGoalState;
+  mondayDate: string;
 }
 
 interface IncompleteTasksWarningProps {
@@ -35,190 +62,6 @@ interface IncompleteTasksWarningProps {
   onConfirm: () => void;
   onCancel: () => void;
 }
-
-const generateMockData = (): WeekData[] => {
-  // Define the base quarterly goals
-  const salesGoal: QuarterlyGoalBase = {
-    id: 'q1',
-    title: 'Increase Sales',
-    path: '/q1',
-    quarter: 1,
-    weeklyGoals: [
-      {
-        id: 'w1',
-        title: 'Improve Customer Acquisition',
-        path: '/q1/w1',
-        weekNumber: 1,
-        tasks: [
-          {
-            id: 't1',
-            title: 'Research competitor pricing',
-            path: '/q1/w1/t1',
-          },
-          {
-            id: 't2',
-            title: 'Analyze customer feedback',
-            path: '/q1/w1/t2',
-          },
-        ],
-      },
-      {
-        id: 'w2',
-        title: 'Optimize Sales Funnel',
-        path: '/q1/w2',
-        weekNumber: 2,
-        tasks: [
-          {
-            id: 't3',
-            title: 'Review conversion rates',
-            path: '/q1/w2/t3',
-          },
-        ],
-      },
-    ],
-  };
-
-  const productGoal: QuarterlyGoalBase = {
-    id: 'q2',
-    title: 'Launch New Product',
-    path: '/q2',
-    quarter: 1,
-    weeklyGoals: [
-      {
-        id: 'w3',
-        title: 'Complete MVP Development',
-        path: '/q2/w3',
-        weekNumber: 3,
-        tasks: [
-          {
-            id: 't4',
-            title: 'Finalize feature list',
-            path: '/q2/w3/t4',
-          },
-          {
-            id: 't5',
-            title: 'Run integration tests',
-            path: '/q2/w3/t5',
-          },
-        ],
-      },
-    ],
-  };
-
-  // Create week data with states
-  const weeks: WeekData[] = [
-    {
-      weekLabel: 'Week 1',
-      weekNumber: 1,
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoal: salesGoal,
-      quarterlyGoalState: {
-        id: salesGoal.id,
-        isComplete: false,
-        progress: 7,
-        isStarred: true,
-        isPinned: false,
-        weeklyGoalStates: [
-          {
-            id: 'w1',
-            isComplete: true,
-            isHardComplete: true,
-            taskStates: [
-              { id: 't1', isComplete: true, date: '2024-03-01' },
-              { id: 't2', isComplete: false, date: '2024-03-01' },
-            ],
-          },
-          {
-            id: 'w2',
-            isComplete: false,
-            isHardComplete: false,
-            taskStates: [{ id: 't3', isComplete: false, date: '2024-03-01' }],
-          },
-        ],
-      },
-    },
-    {
-      weekLabel: 'Week 2',
-      weekNumber: 2,
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoal: productGoal,
-      quarterlyGoalState: {
-        id: productGoal.id,
-        isComplete: true,
-        progress: 10,
-        isStarred: false,
-        isPinned: true,
-        weeklyGoalStates: [
-          {
-            id: 'w3',
-            isComplete: true,
-            isHardComplete: true,
-            taskStates: [
-              { id: 't4', isComplete: true, date: '2024-03-08' },
-              { id: 't5', isComplete: true, date: '2024-03-08' },
-            ],
-          },
-        ],
-      },
-    },
-    {
-      weekLabel: 'Week 3',
-      weekNumber: 3,
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoal: salesGoal,
-      quarterlyGoalState: {
-        id: salesGoal.id,
-        isComplete: false,
-        progress: 5,
-        isStarred: false,
-        isPinned: false,
-        weeklyGoalStates: [
-          {
-            id: 'w1',
-            isComplete: false,
-            isHardComplete: false,
-            taskStates: [
-              { id: 't1', isComplete: false, date: '2024-03-15' },
-              { id: 't2', isComplete: false, date: '2024-03-15' },
-            ],
-          },
-          {
-            id: 'w2',
-            isComplete: false,
-            isHardComplete: false,
-            taskStates: [{ id: 't3', isComplete: false, date: '2024-03-15' }],
-          },
-        ],
-      },
-    },
-    {
-      weekLabel: 'Week 4',
-      weekNumber: 4,
-      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-      quarterlyGoal: productGoal,
-      quarterlyGoalState: {
-        id: productGoal.id,
-        isComplete: false,
-        progress: 2,
-        isStarred: false,
-        isPinned: false,
-        weeklyGoalStates: [
-          {
-            id: 'w3',
-            isComplete: false,
-            isHardComplete: false,
-            taskStates: [
-              { id: 't4', isComplete: false, date: '2024-03-22' },
-              { id: 't5', isComplete: false, date: '2024-03-22' },
-            ],
-          },
-        ],
-      },
-    },
-  ];
-
-  return weeks;
-};
 
 const IncompleteTasksWarning: React.FC<IncompleteTasksWarningProps> = ({
   isOpen,
@@ -249,15 +92,23 @@ const IncompleteTasksWarning: React.FC<IncompleteTasksWarningProps> = ({
 );
 
 const QuarterOverviewScreen = () => {
-  const [localGoals, setLocalGoals] = useState<WeekData[]>(() =>
-    generateMockData()
-  );
+  const {
+    currentYear,
+    currentQuarter,
+    currentDate,
+    currentWeekNumber,
+    weekData,
+  } = useDashboard();
+
+  const [localGoals, setLocalGoals] = useState<WeekData[]>(() => weekData);
   const [isTeamCollapsed, setIsTeamCollapsed] = useState(false);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [goalSectionOpenStates, setGoalSectionOpenStates] = useState<
     Record<number, boolean>
   >({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasScrolledToCenter = useRef(false);
+  console.log({ hasScrolledToCenter: hasScrolledToCenter.current });
   const [warningDialog, setWarningDialog] = useState<{
     isOpen: boolean;
     weekIndex: number;
@@ -270,6 +121,11 @@ const QuarterOverviewScreen = () => {
     weeklyGoalTitle: '',
   });
 
+  // Update localGoals when weekData changes
+  useEffect(() => {
+    setLocalGoals(weekData);
+  }, [weekData]);
+
   // Initialize open states when localGoals changes
   useEffect(() => {
     setGoalSectionOpenStates(
@@ -277,16 +133,18 @@ const QuarterOverviewScreen = () => {
     );
   }, [localGoals.length]);
 
-  // Center the scroll position on current week when component mounts
+  // Center the scroll position on current week only on first load
   useEffect(() => {
-    if (containerRef.current) {
+    if (
+      containerRef.current &&
+      !hasScrolledToCenter.current &&
+      localGoals.length > 0
+    ) {
       const scrollToCenter = () => {
         const containerWidth = containerRef.current?.clientWidth || 0;
         const cardWidth = containerWidth / 4; // Each card takes up 25% of the container
 
-        // Find the index of the current week
-        const now = DateTime.now();
-        const currentWeekNumber = now.weekNumber;
+        // Find the index of the current week using the week number from context
         const currentWeekIndex = localGoals.findIndex(
           (week) => week.weekNumber === currentWeekNumber
         );
@@ -297,15 +155,17 @@ const QuarterOverviewScreen = () => {
 
         containerRef.current?.scrollTo({
           left: scrollPosition,
-          behavior: 'smooth',
         });
       };
 
       scrollToCenter();
       // Reapply centering after a short delay to ensure all content is loaded
-      setTimeout(scrollToCenter, 100);
+      setTimeout(() => {
+        scrollToCenter();
+        hasScrolledToCenter.current = true;
+      }, 100);
     }
-  }, [localGoals]); // Run when localGoals changes
+  }, [localGoals.length, currentWeekNumber]); // Only depend on length for first load check
 
   const completeWeeklyGoal = (
     weekIndex: number,
@@ -325,14 +185,9 @@ const QuarterOverviewScreen = () => {
 
               return {
                 ...weeklyGoal,
-                isHardComplete: true,
-                ...(completeAllTasks && {
-                  isComplete: true,
-                  tasks: weeklyGoal.tasks.map((task) => ({
-                    ...task,
-                    isComplete: true,
-                  })),
-                }),
+                tasks: weeklyGoal.tasks.map((task) => ({
+                  ...task,
+                })),
               };
             }),
           },
@@ -601,11 +456,12 @@ const QuarterOverviewScreen = () => {
                   flexShrink: 0,
                   scrollSnapAlign: 'center',
                 }}
-                className="flex flex-col border rounded shadow bg-white p-4 h-full overflow-y-auto"
+                className="flex flex-col border rounded shadow bg-white px-4 pb-4 h-full overflow-y-auto"
               >
-                <h2 className="font-bold text-lg mb-2 sticky top-0 bg-white z-10 py-2">
-                  {week.weekLabel}
-                </h2>
+                <div className="text-center mb-4 sticky top-0 bg-white z-10 border-b">
+                  <div className="text-gray-600 text-sm">{week.mondayDate}</div>
+                  <div className="font-bold text-sm">{week.weekLabel}</div>
+                </div>
 
                 {/* Quarter Goals Section */}
                 <QuarterlyGoalSection

@@ -4,4 +4,6 @@ globs:
 ---
 1. We use pnpm for this project
 2. Ensure to install @types/... for packages that needed it, we use typescript
-3. This is a monorepo, ensure that you install the packages in the right repo. Look first at the pnpm-workspace.yaml file.
+3. This is a monorepo, ensure that you install the packages in the right repo. These are the workspace packages
+    * @apps/webapp
+    * @services/backend

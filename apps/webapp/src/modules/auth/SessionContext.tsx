@@ -35,7 +35,6 @@ export const SessionProvider = ({
     </SessionContext.Provider>
   );
 };
-
 export const SessionContext = createContext<{
   sessionId: Id<'sessions'> | undefined;
 }>({

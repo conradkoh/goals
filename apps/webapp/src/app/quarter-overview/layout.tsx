@@ -1,3 +1,7 @@
+'use client';
+
+import { ClientOnly } from '@/components/util/ClientOnly';
+import { DashboardProvider } from '@/hooks/useDashboard';
 import { SessionProvider } from '@/modules/auth/SessionContext';
 
 export default function QuarterOverviewLayout({
@@ -5,5 +9,11 @@ export default function QuarterOverviewLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <ClientOnly>
+      <SessionProvider>
+        <DashboardProvider>{children}</DashboardProvider>
+      </SessionProvider>
+    </ClientOnly>
+  );
 }

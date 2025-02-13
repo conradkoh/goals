@@ -11,7 +11,6 @@ export const useAnonymousSession = mutation({
     if (prevSessionId) {
       // check validity
       const prevSession = await ctx.db.get(prevSessionId as Id<'sessions'>);
-      console.log({ prevSessionId, prevSession });
       if (prevSession && prevSession.status === 'active') {
         return prevSessionId as Id<'sessions'>; //return the same one already active
       }
