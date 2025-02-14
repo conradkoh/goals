@@ -14,6 +14,14 @@ import {
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+
+export interface DragData {
+  goal: GoalWithDetailsAndChildren;
+  state: GoalWithDetailsAndChildren['state'];
+  sourceWeekNumber: number;
+  shiftKey: boolean;
+}
 
 export const QuarterlyOverviewScreen2 = () => {
   const { weekData, currentWeekNumber, updateQuarterlyGoalStatus } =
@@ -36,12 +44,7 @@ export const QuarterlyOverviewScreen2 = () => {
 
     if (!over || !active.data.current) return;
 
-    const sourceData = active.data.current as {
-      goal: { id: string };
-      state: { isStarred: boolean; isPinned: boolean };
-      sourceWeekNumber: number;
-      shiftKey: boolean;
-    };
+    const sourceData = active.data.current as DragData;
     const targetWeekNumber = parseInt(over.id.toString().split('-')[1], 10);
 
     if (sourceData.sourceWeekNumber === targetWeekNumber) return;
@@ -50,20 +53,20 @@ export const QuarterlyOverviewScreen2 = () => {
       // Port over the status (starred/pinned) to the target week
       await updateQuarterlyGoalStatus({
         weekNumber: targetWeekNumber,
-        goalId: sourceData.goal.id as Id<'goals'>,
-        isStarred: sourceData.state.isStarred,
-        isPinned: sourceData.state.isPinned,
+        goalId: sourceData.goal._id,
+        isStarred: sourceData.state?.isStarred ?? false,
+        isPinned: sourceData.state?.isPinned ?? false,
       });
 
       // If shift key is not pressed and the item was starred or pinned,
       // remove the star/pin from the source week
       if (
         !sourceData.shiftKey &&
-        (sourceData.state.isStarred || sourceData.state.isPinned)
+        (sourceData.state?.isStarred || sourceData.state?.isPinned)
       ) {
         await updateQuarterlyGoalStatus({
           weekNumber: sourceData.sourceWeekNumber,
-          goalId: sourceData.goal.id as Id<'goals'>,
+          goalId: sourceData.goal._id,
           isStarred: false,
           isPinned: false,
         });

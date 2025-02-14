@@ -6,6 +6,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { DragData } from '../QuarterlyOverviewScreen2';
 
 interface DraggableGoalProps {
   goal: GoalWithDetailsAndChildren;
@@ -47,15 +48,17 @@ export const DraggableGoal = ({
     };
   }, []);
 
+  const dragData = {
+    goal,
+    state: goalState,
+    sourceWeekNumber: weekNumber,
+    shiftKey,
+  } satisfies DragData;
+
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `${goal._id}-week-${weekNumber}`,
-      data: {
-        goal,
-        weeklyGoal: goalState,
-        sourceWeekNumber: weekNumber,
-        shiftKey,
-      },
+      data: dragData,
     });
 
   const style = transform

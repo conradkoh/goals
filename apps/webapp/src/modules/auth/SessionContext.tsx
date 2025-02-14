@@ -13,9 +13,10 @@ export const SessionProvider = ({
   children: React.ReactNode;
 }) => {
   const enforceSession = useMutation(api.auth.useAnonymousSession);
-  const [sessionId, setSessionId] = useState<Id<'sessions'> | undefined>(
-    localStorage.getItem(SESSION_ID_KEY) as Id<'sessions'> | undefined
+  const [sessionId, setSessionId] = useState<Id<'sessions'> | null>(
+    localStorage.getItem(SESSION_ID_KEY) as Id<'sessions'> | null
   );
+  console.log('sessionId', sessionId);
   useEffect(() => {
     (async () => {
       const nextSessionId = await enforceSession({
@@ -29,14 +30,12 @@ export const SessionProvider = ({
   }, [enforceSession, sessionId]);
   return (
     <SessionContext.Provider value={{ sessionId }}>
-      <ConditionalRender condition={sessionId !== undefined}>
-        {children}
-      </ConditionalRender>
+      <ConditionalRender condition={!!sessionId}>{children}</ConditionalRender>
     </SessionContext.Provider>
   );
 };
 export const SessionContext = createContext<{
-  sessionId: Id<'sessions'> | undefined;
+  sessionId: Id<'sessions'> | null;
 }>({
-  sessionId: undefined,
+  sessionId: null,
 });
