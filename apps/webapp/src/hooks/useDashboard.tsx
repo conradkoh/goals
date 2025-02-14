@@ -82,7 +82,12 @@ interface DashboardContextValue {
   currentDayOfMonth: number;
   currentDayName: string;
   weekData: WeekData[];
-  createQuarterlyGoal: (title: string, isPinned?: boolean) => Promise<void>;
+  createQuarterlyGoal: (args: {
+    title: string;
+    weekNumber: number;
+    isPinned?: boolean;
+    isStarred?: boolean;
+  }) => Promise<void>;
   createWeeklyGoal: (args: {
     title: string;
     parentId: Id<'goals'>;
@@ -173,13 +178,25 @@ export const DashboardProvider = ({
 
   // Transform data into week data
 
-  const createQuarterlyGoal = async (title: string, isPinned?: boolean) => {
+  const createQuarterlyGoal = async ({
+    title,
+    weekNumber,
+    isPinned,
+    isStarred,
+  }: {
+    title: string;
+    weekNumber: number;
+    isPinned?: boolean;
+    isStarred?: boolean;
+  }) => {
     await createQuarterlyGoalMutation({
       sessionId,
       year: currentYear,
       quarter: currentQuarter,
+      weekNumber,
       title,
       isPinned,
+      isStarred,
     });
   };
 

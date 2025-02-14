@@ -46,10 +46,14 @@ export const createQuarterlyGoal = mutation({
     year: v.number(),
     quarter: v.number(),
     title: v.string(),
+    weekNumber: v.number(),
     isPinned: v.optional(v.boolean()),
+    isStarred: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, title, isPinned } = args;
+    const { sessionId, year, quarter, title, weekNumber, isPinned, isStarred } =
+      args;
+    console.log({ weekNumber });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -65,16 +69,16 @@ export const createQuarterlyGoal = mutation({
 
     // Create initial weekly states for this goal (for all weeks in the quarter)
     // A quarter typically has 13 weeks
-    for (let weekNumber = 1; weekNumber <= 13; weekNumber++) {
+    for (let weekNum = 1; weekNum <= 13; weekNum++) {
       await ctx.db.insert('goalsWeekly', {
         userId,
         year,
         quarter,
         goalId,
-        weekNumber,
+        weekNumber: weekNum,
         progress: '0',
-        isStarred: false,
-        isPinned: isPinned ?? false,
+        isStarred: weekNum === weekNumber ? isStarred ?? false : false,
+        isPinned: weekNum === weekNumber ? isPinned ?? false : false,
         isComplete: false,
       });
     }

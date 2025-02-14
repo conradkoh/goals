@@ -16,7 +16,6 @@ export const SessionProvider = ({
   const [sessionId, setSessionId] = useState<Id<'sessions'> | null>(
     localStorage.getItem(SESSION_ID_KEY) as Id<'sessions'> | null
   );
-  console.log('sessionId', sessionId);
   useEffect(() => {
     (async () => {
       const nextSessionId = await enforceSession({
