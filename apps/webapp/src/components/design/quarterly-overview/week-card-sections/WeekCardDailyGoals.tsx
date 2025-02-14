@@ -14,6 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  CollapsibleMinimal,
+  CollapsibleMinimalTrigger,
+  CollapsibleMinimalContent,
+} from '@/components/ui/collapsible-minimal';
 
 // Day of week constants
 const DayOfWeek = {
@@ -57,16 +62,72 @@ interface DayData {
   };
 }
 
+// Helper to get the start of day timestamp
+const getStartOfDay = (date: Date) => {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  ).getTime();
+};
+
 export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
   const { days, weeklyGoals } = useWeek();
   const { createDailyGoal } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
     const today = new Date().getDay();
     return today === 0 ? DayOfWeek.SUNDAY : (today as DayOfWeek);
   });
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
     useState<Id<'goals'>>();
+
+  // Sort and categorize days
+  const { currentDay, futureDays, pastDays } = useMemo(() => {
+    const now = getStartOfDay(new Date());
+    const sortedDays = [...(days as DayData[])];
+
+    // Find current day
+    const currentDayData = sortedDays.find(
+      (d) => getStartOfDay(new Date(d.dateTimestamp)) === now
+    );
+
+    // Separate future and past days
+    const future = sortedDays
+      .filter((d) => getStartOfDay(new Date(d.dateTimestamp)) > now)
+      .sort((a, b) => a.dateTimestamp - b.dateTimestamp); // Sort chronologically
+
+    const past = sortedDays
+      .filter((d) => getStartOfDay(new Date(d.dateTimestamp)) < now)
+      .sort((a, b) => b.dateTimestamp - a.dateTimestamp); // Sort reverse chronologically
+
+    return {
+      currentDay: currentDayData,
+      futureDays: future,
+      pastDays: past,
+    };
+  }, [days]);
+
+  // Calculate past days summary
+  const pastDaysSummary = useMemo(() => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+
+    pastDays.forEach((day) => {
+      day.dailyGoalsView?.weeklyGoals.forEach(({ weeklyGoal }) => {
+        const dailyGoals = weeklyGoal.children.filter(
+          (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === day.dayOfWeek
+        );
+        totalTasks += dailyGoals.length;
+        completedTasks += dailyGoals.filter(
+          (goal) => goal.state?.isComplete
+        ).length;
+      });
+    });
+
+    return { totalTasks, completedTasks };
+  }, [pastDays]);
 
   // Get the available weekly goals for the selected day, sorted appropriately
   const availableWeeklyGoals = useMemo(() => {
@@ -119,6 +180,35 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
 
   return (
     <div className="space-y-4">
+      {/* Past Days Collapsible Section - Always First */}
+      {pastDays.length > 0 && (
+        <CollapsibleMinimal
+          open={isPastDaysExpanded}
+          onOpenChange={setIsPastDaysExpanded}
+        >
+          <CollapsibleMinimalTrigger>
+            <div className="flex justify-between w-full">
+              <span className="font-medium">Past Days</span>
+              <span className="text-gray-600">
+                {pastDaysSummary.completedTasks}/{pastDaysSummary.totalTasks}{' '}
+                tasks completed
+              </span>
+            </div>
+          </CollapsibleMinimalTrigger>
+          <CollapsibleMinimalContent>
+            {pastDays.map((day) => (
+              <DayProvider
+                key={day.dayOfWeek}
+                dayOfWeek={day.dayOfWeek}
+                date={day.date}
+                dateTimestamp={day.dateTimestamp}
+              >
+                <DaySection />
+              </DayProvider>
+            ))}
+          </CollapsibleMinimalContent>
+        </CollapsibleMinimal>
+      )}
       <div>
         <CreateGoalInput
           placeholder="Add a daily goal..."
@@ -158,7 +248,20 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
         </CreateGoalInput>
       </div>
       <div className="space-y-2">
-        {(days as DayData[]).map((day) => (
+        {/* Current Day */}
+        {currentDay && (
+          <DayProvider
+            key={currentDay.dayOfWeek}
+            dayOfWeek={currentDay.dayOfWeek}
+            date={currentDay.date}
+            dateTimestamp={currentDay.dateTimestamp}
+          >
+            <DaySection />
+          </DayProvider>
+        )}
+
+        {/* Future Days */}
+        {futureDays.map((day) => (
           <DayProvider
             key={day.dayOfWeek}
             dayOfWeek={day.dayOfWeek}

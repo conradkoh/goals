@@ -2,12 +2,15 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
-import { ChevronsUpDown } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { DraggableGoal } from '../../goals-new/DraggableGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import {
+  CollapsibleMinimal,
+  CollapsibleMinimalTrigger,
+  CollapsibleMinimalContent,
+} from '@/components/ui/collapsible-minimal';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
@@ -157,26 +160,12 @@ export const WeekCardQuarterlyGoals = ({
         ))}
 
         {/* Other goals are shown when expanded */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-6 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-between"
-            >
-              <span>
-                {isExpanded
-                  ? 'Show less'
-                  : otherGoals.length > 0
-                  ? `${otherGoals.length} more goals`
-                  : 'Show unpinned goals'}
-              </span>
-              <ChevronsUpDown className="h-3 w-3" />
-            </Button>
-          </div>
-          {isExpanded && otherGoals.length > 0 && (
-            <div className="space-y-1 animate-in slide-in-from-top-1 duration-100">
+        {otherGoals.length > 0 && (
+          <CollapsibleMinimal open={isExpanded} onOpenChange={setIsExpanded}>
+            <CollapsibleMinimalTrigger>
+              {isExpanded ? 'Show less' : `${otherGoals.length} more goals`}
+            </CollapsibleMinimalTrigger>
+            <CollapsibleMinimalContent>
               {otherGoals.map((goal) => (
                 <DraggableGoal
                   key={goal._id}
@@ -188,9 +177,9 @@ export const WeekCardQuarterlyGoals = ({
                   onDelete={handleDeleteGoal}
                 />
               ))}
-            </div>
-          )}
-        </div>
+            </CollapsibleMinimalContent>
+          </CollapsibleMinimal>
+        )}
       </div>
     </div>
   );
