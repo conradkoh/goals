@@ -126,7 +126,7 @@ export const WeekCardWeeklyGoals = ({
 
   return (
     <div className="space-y-4">
-      <div className="px-3">
+      <div>
         <CreateGoalInput
           placeholder="Add a weekly goal..."
           value={newGoalTitle}

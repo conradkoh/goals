@@ -119,7 +119,7 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="px-3">
+      <div>
         <CreateGoalInput
           placeholder="Add a daily goal..."
           value={newGoalTitle}
@@ -134,7 +134,7 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
                   setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
                 }
               >
-                <SelectTrigger className="h-7 text-xs">
+                <SelectTrigger className="text-xs">
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
