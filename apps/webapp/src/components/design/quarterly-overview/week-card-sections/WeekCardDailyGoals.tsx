@@ -242,6 +242,7 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
                 value={selectedWeeklyGoalId}
                 onChange={setSelectedWeeklyGoalId}
                 placeholder="Select weekly goal"
+                emptyStateMessage="No weekly goals available"
               />
             </div>
           </div>
