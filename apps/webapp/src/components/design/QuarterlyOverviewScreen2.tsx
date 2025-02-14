@@ -11,7 +11,6 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { Id } from '@services/backend/convex/_generated/dataModel';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
