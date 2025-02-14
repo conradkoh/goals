@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
-import { mutation } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import { Id } from './_generated/dataModel';
+import { requireLogin } from '../src/usecase/requireLogin';
 
 export const useAnonymousSession = mutation({
   args: {
@@ -26,5 +27,16 @@ export const useAnonymousSession = mutation({
       status: 'active',
     });
     return sessionId;
+  },
+});
+
+export const getUser = query({
+  args: {
+    sessionId: v.id('sessions'),
+  },
+  async handler(ctx, args) {
+    const { sessionId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    return user;
   },
 });
