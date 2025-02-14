@@ -77,8 +77,24 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
-    const today = new Date().getDay();
-    return today === 0 ? DayOfWeek.SUNDAY : (today as DayOfWeek);
+    const today = new Date();
+    const todayTimestamp = getStartOfDay(today);
+
+    // Check if any of the days in this week match today's date
+    const isCurrentWeek = days?.some(
+      (day) => getStartOfDay(new Date(day.dateTimestamp)) === todayTimestamp
+    );
+
+    // If we're in the current week, select today's day
+    if (isCurrentWeek) {
+      const todayDayNumber = today.getDay();
+      return todayDayNumber === 0
+        ? DayOfWeek.SUNDAY
+        : (todayDayNumber as DayOfWeek);
+    }
+
+    // Otherwise, select Monday by default
+    return DayOfWeek.MONDAY;
   });
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
     useState<Id<'goals'>>();
