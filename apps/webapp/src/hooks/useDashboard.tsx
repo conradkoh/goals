@@ -85,17 +85,20 @@ interface DashboardContextValue {
   weekData: WeekData[];
   createQuarterlyGoal: (args: {
     title: string;
+    details?: string;
     weekNumber: number;
     isPinned?: boolean;
     isStarred?: boolean;
   }) => Promise<void>;
   createWeeklyGoal: (args: {
     title: string;
+    details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
   }) => Promise<void>;
   createDailyGoal: (args: {
     title: string;
+    details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
     dayOfWeek: number;
@@ -110,6 +113,7 @@ interface DashboardContextValue {
   updateQuarterlyGoalTitle: (args: {
     goalId: Id<'goals'>;
     title: string;
+    details?: string;
   }) => Promise<void>;
   deleteQuarterlyGoal: (args: { goalId: Id<'goals'> }) => Promise<void>;
   toggleGoalCompletion: (args: {
@@ -190,11 +194,13 @@ export const DashboardProvider = ({
 
   const createQuarterlyGoal = async ({
     title,
+    details,
     weekNumber,
     isPinned,
     isStarred,
   }: {
     title: string;
+    details?: string;
     weekNumber: number;
     isPinned?: boolean;
     isStarred?: boolean;
@@ -205,6 +211,7 @@ export const DashboardProvider = ({
       quarter: selectedQuarter,
       weekNumber,
       title,
+      details,
       isPinned,
       isStarred,
     });
@@ -212,16 +219,19 @@ export const DashboardProvider = ({
 
   const createWeeklyGoal = async ({
     title,
+    details,
     parentId,
     weekNumber,
   }: {
     title: string;
+    details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
   }) => {
     await createWeeklyGoalMutation({
       sessionId,
       title,
+      details,
       parentId,
       weekNumber,
     });
@@ -229,12 +239,14 @@ export const DashboardProvider = ({
 
   const createDailyGoal = async ({
     title,
+    details,
     parentId,
     weekNumber,
     dayOfWeek,
     dateTimestamp,
   }: {
     title: string;
+    details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
     dayOfWeek: number;
@@ -243,6 +255,7 @@ export const DashboardProvider = ({
     await createDailyGoalMutation({
       sessionId,
       title,
+      details,
       parentId,
       weekNumber,
       dayOfWeek,
@@ -275,14 +288,17 @@ export const DashboardProvider = ({
   const updateQuarterlyGoalTitle = async ({
     goalId,
     title,
+    details,
   }: {
     goalId: Id<'goals'>;
     title: string;
+    details?: string;
   }) => {
     await updateQuarterlyGoalTitleMutation({
       sessionId,
       goalId,
       title,
+      details,
     });
   };
 

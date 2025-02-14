@@ -54,13 +54,22 @@ export const createQuarterlyGoal = mutation({
     year: v.number(),
     quarter: v.number(),
     title: v.string(),
+    details: v.optional(v.string()),
     weekNumber: v.number(),
     isPinned: v.optional(v.boolean()),
     isStarred: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, title, weekNumber, isPinned, isStarred } =
-      args;
+    const {
+      sessionId,
+      year,
+      quarter,
+      title,
+      details,
+      weekNumber,
+      isPinned,
+      isStarred,
+    } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -70,6 +79,7 @@ export const createQuarterlyGoal = mutation({
       year,
       quarter,
       title,
+      details,
       inPath: '/',
       depth: 0, // 0 for quarterly goals
     });
@@ -154,9 +164,10 @@ export const updateQuarterlyGoalTitle = mutation({
     sessionId: v.id('sessions'),
     goalId: v.id('goals'),
     title: v.string(),
+    details: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, title } = args;
+    const { sessionId, goalId, title, details } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -169,9 +180,10 @@ export const updateQuarterlyGoalTitle = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Update the goal title
+    // Update the goal title and details
     await ctx.db.patch(goalId, {
       title,
+      ...(details !== undefined ? { details } : {}),
     });
 
     return goalId;
@@ -247,11 +259,12 @@ export const createWeeklyGoal = mutation({
   args: {
     sessionId: v.id('sessions'),
     title: v.string(),
+    details: v.optional(v.string()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
   },
   handler: async (ctx, args) => {
-    const { sessionId, title, parentId, weekNumber } = args;
+    const { sessionId, title, details, parentId, weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -267,6 +280,7 @@ export const createWeeklyGoal = mutation({
       year: parentGoal.year,
       quarter: parentGoal.quarter,
       title,
+      details,
       parentId,
       inPath:
         parentGoal.inPath === '/'
@@ -296,6 +310,7 @@ export const createDailyGoal = mutation({
   args: {
     sessionId: v.id('sessions'),
     title: v.string(),
+    details: v.optional(v.string()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
     dayOfWeek: v.number(),
@@ -319,6 +334,7 @@ export const createDailyGoal = mutation({
       year: parentGoal.year,
       quarter: parentGoal.quarter,
       title: args.title,
+      details: args.details,
       parentId: args.parentId,
       inPath: joinPath(parentGoal.inPath, parentGoal._id),
       depth: 2, // Daily goals are depth 2

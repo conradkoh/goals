@@ -33,6 +33,7 @@ export default defineSchema({
 
     //data
     title: v.string(),
+    details: v.optional(v.string()), // Rich text content for the goal
     parentId: v.optional(v.id('goals')),
     inPath: v.string(), //recursive structure
     depth: v.number(), // 0 for quarterly, 1 for weekly, 2 for daily
