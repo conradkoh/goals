@@ -8,6 +8,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
 import React, { createContext, useContext, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 interface WeekData {
   weekLabel: string;
@@ -128,6 +129,7 @@ export const DashboardProvider = ({
   children: React.ReactNode;
 }) => {
   const { sessionId } = useSession();
+  const searchParams = useSearchParams();
   const createQuarterlyGoalMutation = useMutation(
     api.dashboard.createQuarterlyGoal
   );
@@ -158,10 +160,18 @@ export const DashboardProvider = ({
   const currentWeekNumber = currentDate.weekNumber;
   const currentQuarter = Math.ceil(currentDate.month / 3) as 1 | 2 | 3 | 4;
 
+  // Get year and quarter from URL or use current values
+  const selectedYear = searchParams.get('year')
+    ? parseInt(searchParams.get('year')!)
+    : currentYear;
+  const selectedQuarter = searchParams.get('quarter')
+    ? (parseInt(searchParams.get('quarter')!) as 1 | 2 | 3 | 4)
+    : currentQuarter;
+
   const weeksForQuarter = useQuery(api.dashboard.getQuarterOverview, {
     sessionId,
-    year: currentYear,
-    quarter: currentQuarter,
+    year: selectedYear,
+    quarter: selectedQuarter,
   });
 
   const weekData = useMemo(() => {
@@ -169,12 +179,12 @@ export const DashboardProvider = ({
       return undefined; //propagate the loading state
     }
     const data = generateWeeksForQuarter(
-      currentYear,
-      currentQuarter,
+      selectedYear,
+      selectedQuarter,
       weeksForQuarter
     );
     return data;
-  }, [weeksForQuarter, currentYear, currentQuarter]);
+  }, [weeksForQuarter, selectedYear, selectedQuarter]);
 
   // Transform data into week data
 
@@ -191,8 +201,8 @@ export const DashboardProvider = ({
   }) => {
     await createQuarterlyGoalMutation({
       sessionId,
-      year: currentYear,
-      quarter: currentQuarter,
+      year: selectedYear,
+      quarter: selectedQuarter,
       weekNumber,
       title,
       isPinned,
@@ -253,8 +263,8 @@ export const DashboardProvider = ({
   }) => {
     await updateQuarterlyGoalStatusMutation({
       sessionId,
-      year: currentYear,
-      quarter: currentQuarter,
+      year: selectedYear,
+      quarter: selectedQuarter,
       weekNumber,
       goalId,
       isStarred,

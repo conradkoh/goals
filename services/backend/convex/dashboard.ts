@@ -5,6 +5,7 @@ import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { joinPath } from '../src/util/path';
+import { DateTime } from 'luxon';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -18,19 +19,26 @@ export const getQuarterOverview = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Get details for all 13 weeks in the quarter
-    const weekPromises = Array.from({ length: 13 }, (_, i) => i + 1).map(
-      (weekNumber) =>
+    // Calculate the start and end dates of the quarter
+    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
+    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
+    const startWeek = startDate.weekNumber;
+    const endWeek = endDate.weekNumber;
+
+    // Get details for all weeks in the quarter
+    const weekPromises = [];
+    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+      weekPromises.push(
         getWeekGoalsTree(ctx, {
           userId,
           year,
           quarter,
-          weekNumber,
+          weekNumber: weekNum,
         })
-    );
+      );
+    }
 
     const weekResults = await Promise.all(weekPromises);
-
     const weekSummaries = weekResults.reduce((acc, week) => {
       acc[week.weekNumber] = week;
       return acc;
@@ -53,7 +61,6 @@ export const createQuarterlyGoal = mutation({
   handler: async (ctx, args) => {
     const { sessionId, year, quarter, title, weekNumber, isPinned, isStarred } =
       args;
-    console.log({ weekNumber });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -67,9 +74,14 @@ export const createQuarterlyGoal = mutation({
       depth: 0, // 0 for quarterly goals
     });
 
+    // Calculate all week numbers in this quarter
+    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
+    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
+    const startWeek = startDate.weekNumber;
+    const endWeek = endDate.weekNumber;
+
     // Create initial weekly states for this goal (for all weeks in the quarter)
-    // A quarter typically has 13 weeks
-    for (let weekNum = 1; weekNum <= 13; weekNum++) {
+    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
       await ctx.db.insert('goalsWeekly', {
         userId,
         year,

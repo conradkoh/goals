@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { YearQuarterSelector } from '@/components/design/quarterly-overview/YearQuarterSelector';
 
 export default function DashboardLayout({
   children,
@@ -46,6 +47,7 @@ const Header = () => {
       <div className="w-full flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-6">
           <h1 className="text-xl font-semibold">Goals Dashboard</h1>
+          <YearQuarterSelector />
         </div>
         <div className="flex items-center gap-4">
           <Popover>
