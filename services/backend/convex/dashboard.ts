@@ -328,3 +328,59 @@ export const createDailyGoal = mutation({
     return goalId;
   },
 });
+
+export const toggleGoalCompletion = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+    weekNumber: v.number(),
+    isComplete: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId, weekNumber, isComplete } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Find the goal and verify ownership
+    const goal = await ctx.db.get(goalId);
+    if (!goal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Goal not found',
+      });
+    }
+    if (goal.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to update this goal',
+      });
+    }
+
+    // Find the weekly goal record
+    const weeklyGoal = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('weekNumber', weekNumber)
+      )
+      .filter((q) => q.eq(q.field('goalId'), goalId))
+      .first();
+
+    if (!weeklyGoal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Weekly goal not found',
+      });
+    }
+
+    // Update the completion status
+    await ctx.db.patch(weeklyGoal._id, {
+      isComplete,
+    });
+
+    return weeklyGoal._id;
+  },
+});

@@ -146,15 +146,33 @@ const DailyGoalItem = ({
   goal,
   onUpdateTitle,
   onDelete,
-}: DailyGoalItemProps) => (
-  <div className="py-1 text-sm">
-    <EditableGoalTitle
-      title={goal.title}
-      onSubmit={(newTitle) => onUpdateTitle(goal._id, newTitle)}
-      onDelete={() => onDelete(goal._id)}
-    />
-  </div>
-);
+}: DailyGoalItemProps) => {
+  const { toggleGoalCompletion } = useDashboard();
+  const { weekNumber } = useWeek();
+  const isComplete = goal.state?.isComplete ?? false;
+
+  return (
+    <div className="py-1 text-sm flex items-center gap-2">
+      <input
+        type="checkbox"
+        checked={isComplete}
+        onChange={(e) =>
+          toggleGoalCompletion({
+            goalId: goal._id,
+            weekNumber,
+            isComplete: e.target.checked,
+          })
+        }
+        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+      />
+      <EditableGoalTitle
+        title={goal.title}
+        onSubmit={(newTitle) => onUpdateTitle(goal._id, newTitle)}
+        onDelete={() => onDelete(goal._id)}
+      />
+    </div>
+  );
+};
 
 interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
