@@ -15,10 +15,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
 export default function DashboardLayout({
   children,
 }: {
