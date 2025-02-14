@@ -1,9 +1,6 @@
-import { Input } from '@/components/ui/input';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
-import { GoalStarPin } from '../../goals-new/GoalStarPin';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { ChevronsUpDown } from 'lucide-react';

@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Check, Edit2, X } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface EditableGoalTitleProps {
@@ -51,16 +51,13 @@ export const EditableGoalTitle = ({
     }
   }, [isSelecting]);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      // Only start editing if we're not selecting text
-      if (!isSelecting) {
-        setIsEditing(true);
-      }
-      setIsSelecting(false);
-    },
-    [isSelecting]
-  );
+  const handleClick = useCallback(() => {
+    // Only start editing if we're not selecting text
+    if (!isSelecting) {
+      setIsEditing(true);
+    }
+    setIsSelecting(false);
+  }, [isSelecting]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

@@ -26,7 +26,7 @@ export const SessionProvider = ({
         localStorage.setItem(SESSION_ID_KEY, nextSessionId);
       }
     })();
-  }, []);
+  }, [enforceSession, sessionId]);
   return (
     <SessionContext.Provider value={{ sessionId }}>
       <ConditionalRender condition={sessionId !== undefined}>

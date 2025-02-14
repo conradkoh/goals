@@ -169,7 +169,7 @@ export const DashboardProvider = ({
       weeksForQuarter
     );
     return data;
-  }, [weeksForQuarter]);
+  }, [weeksForQuarter, currentYear, currentQuarter]);
 
   // Transform data into week data
 

@@ -138,7 +138,7 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(DayOfWeek).map(([name, value]) => (
+                  {Object.values(DayOfWeek).map((value) => (
                     <SelectItem key={value} value={value.toString()}>
                       {getDayName(value)}
                     </SelectItem>
@@ -190,10 +190,15 @@ const DaySection = () => {
     if (!title?.trim()) return;
 
     try {
+      const weekNumber = weeklyGoal.state?.weekNumber;
+      if (!weekNumber) {
+        console.error('Week number is not defined for goal');
+        return;
+      }
       await createDailyGoal({
         title: title.trim(),
         parentId: weeklyGoal._id,
-        weekNumber: weeklyGoal.state?.weekNumber!,
+        weekNumber,
         dayOfWeek,
         dateTimestamp,
       });
