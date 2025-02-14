@@ -10,10 +10,12 @@ export type WeekGoalsTree = {
 };
 
 type Goal = Doc<'goals'>;
-type GoalWithWeeklyGoal = Goal & {
+type GoalWithDetails = Goal & {
+  grandParentTitle?: string;
+  parentTitle?: string;
   state?: Doc<'goalsWeekly'>;
 };
-export type GoalWithDetailsAndChildren = TWithChildren<GoalWithWeeklyGoal>;
+export type GoalWithDetailsAndChildren = TWithChildren<GoalWithDetails>;
 /**
  * Represents a type that includes a path and children for a given type T.
  */
@@ -97,7 +99,7 @@ export function buildGoalTree(
 ) {
   const roots: GoalWithDetailsAndChildren[] = [];
 
-  //index the nodes by goalId
+  // First, index all nodes
   const nodeIndex = n.reduce((acc, n) => {
     const base: GoalWithDetailsAndChildren = {
       ...n,
@@ -109,6 +111,24 @@ export function buildGoalTree(
     return acc;
   }, {} as Record<Id<'goals'>, GoalWithDetailsAndChildren>);
 
+  // Then, populate parent and grandparent titles
+  for (const key in nodeIndex) {
+    const node = nodeIndex[key as Id<'goals'>];
+    if (node.parentId) {
+      const parent = nodeIndex[node.parentId];
+      if (parent) {
+        node.parentTitle = parent.title;
+        if (parent.parentId) {
+          const grandParent = nodeIndex[parent.parentId];
+          if (grandParent) {
+            node.grandParentTitle = grandParent.title;
+          }
+        }
+      }
+    }
+  }
+
+  // Finally, build the tree structure
   for (const key in nodeIndex) {
     const node = nodeIndex[key as Id<'goals'>];
     switch (node.depth) {

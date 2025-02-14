@@ -1,11 +1,18 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { useWeek } from '@/hooks/useWeek';
 import { DayProvider, useDay } from '@/hooks/useDay';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 // Day of week constants
 const DayOfWeek = {
@@ -37,21 +44,191 @@ interface WeekCardDailyGoalsProps {
   weekNumber: number;
 }
 
+interface DayData {
+  dayOfWeek: number;
+  date: string;
+  dateTimestamp: number;
+  dailyGoalsView?: {
+    weeklyGoals: Array<{
+      weeklyGoal: GoalWithDetailsAndChildren;
+      quarterlyGoal: GoalWithDetailsAndChildren;
+    }>;
+  };
+}
+
+interface WeeklyGoalOption {
+  id: Id<'goals'>;
+  title: string;
+  quarterlyGoalTitle: string;
+}
+
 export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
-  const { days } = useWeek();
+  const { days, weeklyGoals } = useWeek();
+  const { createDailyGoal } = useDashboard();
+  const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
+    const today = new Date().getDay();
+    return today === 0 ? DayOfWeek.SUNDAY : (today as DayOfWeek);
+  });
+  const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] = useState<string>('');
+
+  // Get the available weekly goals for the selected day
+  const availableWeeklyGoals = useMemo(() => {
+    const selectedDay = (days as DayData[]).find(
+      (d) => d.dayOfWeek === selectedDayOfWeek
+    );
+    if (!selectedDay) return [];
+
+    return (
+      weeklyGoals
+        .map((g) => ({
+          id: g._id,
+          title: g.title,
+          quarterlyGoalTitle: g.parentTitle ?? 'Unknown Quarterly Goal',
+        }))
+        .sort((a, b) => a.title.localeCompare(b.title)) ?? []
+    );
+  }, [days, selectedDayOfWeek, weeklyGoals]);
+
+  // Set the first available goal as default when the list changes
+  useEffect(() => {
+    if (availableWeeklyGoals.length > 0 && !selectedWeeklyGoalId) {
+      setSelectedWeeklyGoalId(availableWeeklyGoals[0].id);
+    }
+  }, [availableWeeklyGoals, selectedWeeklyGoalId]);
+
+  const handleCreateDailyGoal = async () => {
+    if (!newGoalTitle.trim() || !selectedWeeklyGoalId || !selectedDayOfWeek)
+      return;
+
+    const selectedDay = (days as DayData[]).find(
+      (d) => d.dayOfWeek === selectedDayOfWeek
+    );
+    if (!selectedDay) return;
+
+    try {
+      await createDailyGoal({
+        title: newGoalTitle.trim(),
+        parentId: selectedWeeklyGoalId as Id<'goals'>,
+        weekNumber,
+        dayOfWeek: selectedDayOfWeek,
+        dateTimestamp: selectedDay.dateTimestamp,
+      });
+      setNewGoalTitle('');
+      // Keep the selected day but reset the weekly goal
+      setSelectedWeeklyGoalId('');
+    } catch (error) {
+      console.error('Failed to create daily goal:', error);
+    }
+  };
 
   return (
-    <div className="space-y-2">
-      {days.map((day) => (
-        <DayProvider
-          key={day.dayOfWeek}
-          dayOfWeek={day.dayOfWeek}
-          date={day.date}
-          dateTimestamp={day.dateTimestamp}
+    <div className="space-y-4">
+      <div className="px-3">
+        <CreateGoalInput
+          placeholder="Add a daily goal..."
+          value={newGoalTitle}
+          onChange={setNewGoalTitle}
+          onSubmit={handleCreateDailyGoal}
         >
-          <DaySection />
-        </DayProvider>
-      ))}
+          <div className="flex gap-2 items-start">
+            <div className="w-1/3">
+              <Select
+                value={selectedDayOfWeek.toString()}
+                onValueChange={(value) =>
+                  setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                }
+              >
+                <SelectTrigger className="h-7 text-xs">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(DayOfWeek).map(([name, value]) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {getDayName(value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-2/3">
+              <Select
+                value={selectedWeeklyGoalId}
+                onValueChange={setSelectedWeeklyGoalId}
+              >
+                <SelectTrigger className="h-12 text-xs">
+                  <SelectValue>
+                    {selectedWeeklyGoalId ? (
+                      <div className="py-1">
+                        <div className="flex items-center gap-1">
+                          <span className="truncate">
+                            {
+                              availableWeeklyGoals.find(
+                                (g) => g.id === selectedWeeklyGoalId
+                              )?.title
+                            }
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 truncate mt-0.5">
+                          {
+                            availableWeeklyGoals.find(
+                              (g) => g.id === selectedWeeklyGoalId
+                            )?.quarterlyGoalTitle
+                          }
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-1">
+                        <span>Select weekly goal</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableWeeklyGoals.length > 0 ? (
+                    availableWeeklyGoals.map((goal: WeeklyGoalOption) => (
+                      <SelectItem
+                        key={goal.id}
+                        value={goal.id}
+                        className="h-12"
+                      >
+                        <div className="py-1">
+                          <div className="flex items-center gap-1">
+                            <span className="truncate">{goal.title}</span>
+                          </div>
+                          <div className="text-xs text-gray-500 truncate mt-0.5">
+                            {goal.quarterlyGoalTitle}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled className="h-12">
+                      <div className="py-1">
+                        <span className="text-gray-500">
+                          No starred or pinned goals
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CreateGoalInput>
+      </div>
+      <div className="space-y-2">
+        {(days as DayData[]).map((day) => (
+          <DayProvider
+            key={day.dayOfWeek}
+            dayOfWeek={day.dayOfWeek}
+            date={day.date}
+            dateTimestamp={day.dateTimestamp}
+          >
+            <DaySection />
+          </DayProvider>
+        ))}
+      </div>
     </div>
   );
 };
@@ -190,11 +367,8 @@ const DailyGoalGroup = ({
   weeklyGoal,
   quarterlyGoal,
   dayOfWeek,
-  onCreateGoal,
   onUpdateGoalTitle,
   onDeleteGoal,
-  newGoalTitle,
-  onNewGoalTitleChange,
 }: DailyGoalGroupProps) => {
   const dailyGoals = weeklyGoal.children.filter(
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
@@ -215,12 +389,6 @@ const DailyGoalGroup = ({
             onDelete={onDeleteGoal}
           />
         ))}
-        <CreateGoalInput
-          placeholder="Add goal..."
-          value={newGoalTitle}
-          onChange={onNewGoalTitleChange}
-          onSubmit={onCreateGoal}
-        />
       </div>
     </div>
   );
