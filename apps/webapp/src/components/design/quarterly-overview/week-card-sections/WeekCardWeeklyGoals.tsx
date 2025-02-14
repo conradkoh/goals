@@ -2,10 +2,11 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { useWeek } from '@/hooks/useWeek';
+import { GoalSelector } from '../../goals-new/GoalSelector';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -53,29 +54,45 @@ export const WeekCardWeeklyGoals = ({
   const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
     useDashboard();
   const { quarterlyGoals } = useWeek();
-  const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
-    {}
-  );
+  const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [selectedQuarterlyGoalId, setSelectedQuarterlyGoalId] = useState<
+    Id<'goals'> | undefined
+  >();
 
-  // Filter for important (starred/pinned) quarterly goals
-  const importantQuarterlyGoals = quarterlyGoals.filter((goal, index) => {
-    return goal.state?.isStarred || goal.state?.isPinned;
-  });
+  // Filter and sort important quarterly goals
+  const importantQuarterlyGoals = useMemo(() => {
+    return quarterlyGoals
+      .filter((goal) => goal.state?.isStarred || goal.state?.isPinned)
+      .sort((a, b) => {
+        // First by starred status
+        if (a.state?.isStarred && !b.state?.isStarred) return -1;
+        if (!a.state?.isStarred && b.state?.isStarred) return 1;
+        // Then by pinned status
+        if (a.state?.isPinned && !b.state?.isPinned) return -1;
+        if (!a.state?.isPinned && b.state?.isPinned) return 1;
+        // Finally alphabetically
+        return a.title.localeCompare(b.title);
+      });
+  }, [quarterlyGoals]);
 
-  const handleCreateWeeklyGoal = async (
-    quarterlyGoal: GoalWithDetailsAndChildren
-  ) => {
-    const title = newGoalTitles[quarterlyGoal._id];
-    if (!title?.trim()) return;
+  // Auto-select first goal when list changes and nothing is selected
+  useEffect(() => {
+    if (importantQuarterlyGoals.length > 0 && !selectedQuarterlyGoalId) {
+      setSelectedQuarterlyGoalId(importantQuarterlyGoals[0]._id);
+    }
+  }, [importantQuarterlyGoals, selectedQuarterlyGoalId]);
+
+  const handleCreateWeeklyGoal = async () => {
+    if (!newGoalTitle.trim() || !selectedQuarterlyGoalId) return;
 
     try {
       await createWeeklyGoal({
-        title: title.trim(),
-        parentId: quarterlyGoal._id as Id<'goals'>,
+        title: newGoalTitle.trim(),
+        parentId: selectedQuarterlyGoalId,
         weekNumber,
       });
       // Clear the input after successful creation
-      setNewGoalTitles((prev) => ({ ...prev, [quarterlyGoal._id]: '' }));
+      setNewGoalTitle('');
     } catch (error) {
       console.error('Failed to create weekly goal:', error);
     }
@@ -92,7 +109,7 @@ export const WeekCardWeeklyGoals = ({
       });
     } catch (error) {
       console.error('Failed to update weekly goal title:', error);
-      throw error; // Re-throw to let EditableGoalTitle handle the error state
+      throw error;
     }
   };
 
@@ -109,16 +126,32 @@ export const WeekCardWeeklyGoals = ({
 
   return (
     <div className="space-y-4">
+      <div className="px-3">
+        <CreateGoalInput
+          placeholder="Add a weekly goal..."
+          value={newGoalTitle}
+          onChange={setNewGoalTitle}
+          onSubmit={handleCreateWeeklyGoal}
+        >
+          <GoalSelector
+            goals={importantQuarterlyGoals}
+            value={selectedQuarterlyGoalId}
+            onChange={setSelectedQuarterlyGoalId}
+            placeholder="Select quarterly goal"
+          />
+        </CreateGoalInput>
+      </div>
+
       {importantQuarterlyGoals.length === 0 ? (
-        <div className="text-sm text-muted-foreground italic">
+        <div className="text-sm text-muted-foreground italic px-3">
           No starred or pinned quarterly goals
         </div>
       ) : (
-        importantQuarterlyGoals.map((goal, index) => {
+        importantQuarterlyGoals.map((goal) => {
           const weeklyGoals = goal.children;
 
           return (
-            <div key={goal._id} className="space-y-2">
+            <div key={goal._id} className="px-3 space-y-2">
               <QuarterlyGoalHeader goal={goal} />
               <div className="pl-6 space-y-1">
                 {weeklyGoals.map((weeklyGoal) => (
@@ -129,17 +162,6 @@ export const WeekCardWeeklyGoals = ({
                     onDelete={handleDeleteWeeklyGoal}
                   />
                 ))}
-                <CreateGoalInput
-                  placeholder="Add a weekly goal..."
-                  value={newGoalTitles[goal._id] || ''}
-                  onChange={(value) =>
-                    setNewGoalTitles((prev) => ({
-                      ...prev,
-                      [goal._id]: value,
-                    }))
-                  }
-                  onSubmit={() => handleCreateWeeklyGoal(goal)}
-                />
               </div>
             </div>
           );

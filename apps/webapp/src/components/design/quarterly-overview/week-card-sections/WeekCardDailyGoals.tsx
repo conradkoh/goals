@@ -6,12 +6,13 @@ import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { useWeek } from '@/hooks/useWeek';
 import { DayProvider, useDay } from '@/hooks/useDay';
+import { GoalSelector } from '../../goals-new/GoalSelector';
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 
 // Day of week constants
@@ -56,12 +57,6 @@ interface DayData {
   };
 }
 
-interface WeeklyGoalOption {
-  id: Id<'goals'>;
-  title: string;
-  quarterlyGoalTitle: string;
-}
-
 export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
   const { days, weeklyGoals } = useWeek();
   const { createDailyGoal } = useDashboard();
@@ -70,30 +65,32 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
     const today = new Date().getDay();
     return today === 0 ? DayOfWeek.SUNDAY : (today as DayOfWeek);
   });
-  const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] = useState<string>('');
+  const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
+    useState<Id<'goals'>>();
 
-  // Get the available weekly goals for the selected day
+  // Get the available weekly goals for the selected day, sorted appropriately
   const availableWeeklyGoals = useMemo(() => {
     const selectedDay = (days as DayData[]).find(
       (d) => d.dayOfWeek === selectedDayOfWeek
     );
     if (!selectedDay) return [];
 
-    return (
-      weeklyGoals
-        .map((g) => ({
-          id: g._id,
-          title: g.title,
-          quarterlyGoalTitle: g.parentTitle ?? 'Unknown Quarterly Goal',
-        }))
-        .sort((a, b) => a.title.localeCompare(b.title)) ?? []
-    );
+    return weeklyGoals.sort((a, b) => {
+      // First by starred status
+      if (a.state?.isStarred && !b.state?.isStarred) return -1;
+      if (!a.state?.isStarred && b.state?.isStarred) return 1;
+      // Then by pinned status
+      if (a.state?.isPinned && !b.state?.isPinned) return -1;
+      if (!a.state?.isPinned && b.state?.isPinned) return 1;
+      // Finally alphabetically
+      return a.title.localeCompare(b.title);
+    });
   }, [days, selectedDayOfWeek, weeklyGoals]);
 
-  // Set the first available goal as default when the list changes
+  // Auto-select first goal when list changes and nothing is selected
   useEffect(() => {
     if (availableWeeklyGoals.length > 0 && !selectedWeeklyGoalId) {
-      setSelectedWeeklyGoalId(availableWeeklyGoals[0].id);
+      setSelectedWeeklyGoalId(availableWeeklyGoals[0]._id);
     }
   }, [availableWeeklyGoals, selectedWeeklyGoalId]);
 
@@ -109,14 +106,12 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
     try {
       await createDailyGoal({
         title: newGoalTitle.trim(),
-        parentId: selectedWeeklyGoalId as Id<'goals'>,
+        parentId: selectedWeeklyGoalId,
         weekNumber,
         dayOfWeek: selectedDayOfWeek,
         dateTimestamp: selectedDay.dateTimestamp,
       });
       setNewGoalTitle('');
-      // Keep the selected day but reset the weekly goal
-      setSelectedWeeklyGoalId('');
     } catch (error) {
       console.error('Failed to create daily goal:', error);
     }
@@ -152,67 +147,12 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
               </Select>
             </div>
             <div className="w-2/3">
-              <Select
+              <GoalSelector
+                goals={availableWeeklyGoals}
                 value={selectedWeeklyGoalId}
-                onValueChange={setSelectedWeeklyGoalId}
-              >
-                <SelectTrigger className="h-12 text-xs">
-                  <SelectValue>
-                    {selectedWeeklyGoalId ? (
-                      <div className="py-1">
-                        <div className="flex items-center gap-1">
-                          <span className="truncate">
-                            {
-                              availableWeeklyGoals.find(
-                                (g) => g.id === selectedWeeklyGoalId
-                              )?.title
-                            }
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-500 truncate mt-0.5">
-                          {
-                            availableWeeklyGoals.find(
-                              (g) => g.id === selectedWeeklyGoalId
-                            )?.quarterlyGoalTitle
-                          }
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-1">
-                        <span>Select weekly goal</span>
-                      </div>
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {availableWeeklyGoals.length > 0 ? (
-                    availableWeeklyGoals.map((goal: WeeklyGoalOption) => (
-                      <SelectItem
-                        key={goal.id}
-                        value={goal.id}
-                        className="h-12"
-                      >
-                        <div className="py-1">
-                          <div className="flex items-center gap-1">
-                            <span className="truncate">{goal.title}</span>
-                          </div>
-                          <div className="text-xs text-gray-500 truncate mt-0.5">
-                            {goal.quarterlyGoalTitle}
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled className="h-12">
-                      <div className="py-1">
-                        <span className="text-gray-500">
-                          No starred or pinned goals
-                        </span>
-                      </div>
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+                onChange={setSelectedWeeklyGoalId}
+                placeholder="Select weekly goal"
+              />
             </div>
           </div>
         </CreateGoalInput>
