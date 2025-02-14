@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button';
 import { ChevronsUpDown } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { DraggableGoal } from '../../goals-new/DraggableGoal';
+import { useWeek } from '@/hooks/useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 // Helper function to sort goals by status and title
@@ -39,7 +39,6 @@ const sortGoals = (
 
 export const WeekCardQuarterlyGoals = ({
   weekNumber,
-  quarterlyGoals,
 }: WeekCardQuarterlyGoalsProps) => {
   const {
     createQuarterlyGoal,
@@ -47,6 +46,7 @@ export const WeekCardQuarterlyGoals = ({
     updateQuarterlyGoalTitle,
     deleteQuarterlyGoal,
   } = useDashboard();
+  const { quarterlyGoals } = useWeek();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -130,10 +130,16 @@ export const WeekCardQuarterlyGoals = ({
   return (
     <div
       ref={setNodeRef}
+      className={`space-y-2 ${isOver ? 'bg-gray-50 rounded-lg' : ''}`}
       onDragOver={handleDragOver}
-      className={`space-y-3 ${isOver ? 'bg-gray-50 rounded-md' : ''}`}
     >
-      {/* List of goals */}
+      <CreateGoalInput
+        placeholder="Add a quarterly goal..."
+        value={newGoalTitle}
+        onChange={setNewGoalTitle}
+        onSubmit={handleCreateGoal}
+      />
+
       <div className="space-y-1">
         {/* Important goals are always visible */}
         {importantGoals.map((goal) => (
@@ -183,20 +189,6 @@ export const WeekCardQuarterlyGoals = ({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Input for new goal */}
-      <div className="pt-1">
-        <CreateGoalInput
-          placeholder={
-            isExpanded
-              ? 'Add a quarterly goal...'
-              : 'Add a pinned quarterly goal...'
-          }
-          value={newGoalTitle}
-          onChange={setNewGoalTitle}
-          onSubmit={handleCreateGoal}
-        />
       </div>
     </div>
   );

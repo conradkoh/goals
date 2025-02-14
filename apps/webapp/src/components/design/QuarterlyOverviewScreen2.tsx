@@ -77,35 +77,24 @@ export const QuarterlyOverviewScreen2 = () => {
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
         {weekData.map((week, weekIndex) => {
-          const quarterlyGoals = week.tree.allGoals.filter(
-            (v) => v.depth === 0
-          );
           return (
             <WeekCard
               key={weekIndex}
               weekLabel={week.weekLabel}
               mondayDate={week.mondayDate}
+              weekNumber={week.weekNumber}
             >
               <div className="space-y-6">
                 <WeekCardSection title="Quarterly Goals">
-                  <WeekCardQuarterlyGoals
-                    weekNumber={week.weekNumber}
-                    quarterlyGoals={quarterlyGoals}
-                  />
+                  <WeekCardQuarterlyGoals weekNumber={week.weekNumber} />
                 </WeekCardSection>
 
                 <WeekCardSection title="Weekly Goals">
-                  <WeekCardWeeklyGoals
-                    weekNumber={week.weekNumber}
-                    quarterlyGoals={quarterlyGoals}
-                  />
+                  <WeekCardWeeklyGoals weekNumber={week.weekNumber} />
                 </WeekCardSection>
 
                 <WeekCardSection title="Daily Goals">
-                  <WeekCardDailyGoals
-                    weekNumber={week.weekNumber}
-                    quarterlyGoals={quarterlyGoals}
-                  />
+                  <WeekCardDailyGoals weekNumber={week.weekNumber} />
                 </WeekCardSection>
               </div>
             </WeekCard>

@@ -4,6 +4,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
+import { useWeek } from '@/hooks/useWeek';
 
 // Day of week constants
 const DayOfWeek = {
@@ -76,15 +77,6 @@ const WeeklyGoalSection = ({
       <div className="font-semibold text-gray-800">{weeklyGoal.title}</div>
       <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
     </div>
-    {(() => {
-      console.log(dayOfWeek, { weeklyGoal });
-      for (const child of weeklyGoal.children) {
-        if (child.daily?.dayOfWeek === 1) {
-          console.log({ child });
-        }
-      }
-      return null;
-    })()}
     {/* Daily Goals */}
     <div className="space-y-1">
       {weeklyGoal.children
@@ -159,7 +151,6 @@ const DaySection = ({
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 interface DayData {
@@ -168,25 +159,13 @@ interface DayData {
   dateTimestamp: number;
 }
 
-export const WeekCardDailyGoals = ({
-  weekNumber,
-  quarterlyGoals,
-}: WeekCardDailyGoalsProps) => {
-  const {
-    createDailyGoal,
-    updateQuarterlyGoalTitle,
-    deleteQuarterlyGoal,
-    weekData,
-  } = useDashboard();
+export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
+  const { createDailyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
+    useDashboard();
+  const { quarterlyGoals, days } = useWeek();
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
   );
-
-  // Get the current week's data
-  const currentWeekData = weekData.find(
-    (week) => week.weekNumber === weekNumber
-  );
-  if (!currentWeekData) return null;
 
   // Collect all weekly goals and their parent quarterly goals
   const allWeeklyGoals = quarterlyGoals.flatMap((quarterlyGoal) =>
@@ -250,7 +229,7 @@ export const WeekCardDailyGoals = ({
 
   return (
     <div className="space-y-2">
-      {currentWeekData.days.map((day: DayData) => (
+      {days.map((day: DayData) => (
         <DaySection
           key={day.dayOfWeek}
           day={day}

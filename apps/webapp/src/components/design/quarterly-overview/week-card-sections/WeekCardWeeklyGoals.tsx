@@ -5,10 +5,10 @@ import { Pin, Star } from 'lucide-react';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
+import { useWeek } from '@/hooks/useWeek';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 // Internal component for rendering a quarterly goal header with its status icons
@@ -51,10 +51,10 @@ const WeeklyGoal = ({
 
 export const WeekCardWeeklyGoals = ({
   weekNumber,
-  quarterlyGoals,
 }: WeekCardWeeklyGoalsProps) => {
   const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
     useDashboard();
+  const { quarterlyGoals } = useWeek();
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
   );
