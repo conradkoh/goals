@@ -1,6 +1,6 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetails';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
@@ -37,7 +37,7 @@ const DailyGoal = ({
   onUpdateTitle,
   onDelete,
 }: {
-  goal: QuarterlyGoalInWeek;
+  goal: GoalWithDetailsAndChildren;
   onUpdateTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }) => (
@@ -61,8 +61,8 @@ const WeeklyGoalSection = ({
   newGoalTitle,
   onNewGoalTitleChange,
 }: {
-  weeklyGoal: QuarterlyGoalInWeek;
-  quarterlyGoal: QuarterlyGoalInWeek;
+  weeklyGoal: GoalWithDetailsAndChildren;
+  quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: number;
   onCreateGoal: () => void;
   onUpdateGoalTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
@@ -76,7 +76,15 @@ const WeeklyGoalSection = ({
       <div className="font-semibold text-gray-800">{weeklyGoal.title}</div>
       <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
     </div>
-
+    {(() => {
+      console.log(dayOfWeek, { weeklyGoal });
+      for (const child of weeklyGoal.children) {
+        if (child.daily?.dayOfWeek === 1) {
+          console.log({ child });
+        }
+      }
+      return null;
+    })()}
     {/* Daily Goals */}
     <div className="space-y-1">
       {weeklyGoal.children
@@ -111,10 +119,10 @@ const DaySection = ({
 }: {
   day: DayData;
   weeklyGoalsData: Array<{
-    weeklyGoal: QuarterlyGoalInWeek;
-    quarterlyGoal: QuarterlyGoalInWeek;
+    weeklyGoal: GoalWithDetailsAndChildren;
+    quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
-  onCreateGoal: (weeklyGoal: QuarterlyGoalInWeek) => void;
+  onCreateGoal: (weeklyGoal: GoalWithDetailsAndChildren) => void;
   onUpdateGoalTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   newGoalTitles: Record<string, string>;
@@ -151,7 +159,7 @@ const DaySection = ({
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: QuarterlyGoalInWeek[];
+  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 interface DayData {
@@ -165,7 +173,7 @@ export const WeekCardDailyGoals = ({
   quarterlyGoals,
 }: WeekCardDailyGoalsProps) => {
   const {
-    createWeeklyGoal,
+    createDailyGoal,
     updateQuarterlyGoalTitle,
     deleteQuarterlyGoal,
     weekData,
@@ -189,7 +197,7 @@ export const WeekCardDailyGoals = ({
   );
 
   const handleCreateDailyGoal = async (
-    weeklyGoal: QuarterlyGoalInWeek,
+    weeklyGoal: GoalWithDetailsAndChildren,
     dayOfWeek: DayOfWeek,
     dateTimestamp: number
   ) => {
@@ -197,10 +205,12 @@ export const WeekCardDailyGoals = ({
     if (!title?.trim()) return;
 
     try {
-      await createWeeklyGoal({
+      await createDailyGoal({
         title: title.trim(),
         parentId: weeklyGoal._id,
         weekNumber,
+        dayOfWeek,
+        dateTimestamp,
       });
       // Clear the input after successful creation
       setNewGoalTitles((prev) => ({

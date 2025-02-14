@@ -5,11 +5,11 @@ import { EditableGoalTitle } from './EditableGoalTitle';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetails';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
 interface DraggableGoalProps {
-  goal: QuarterlyGoalInWeek;
-  weeklyGoal: QuarterlyGoalInWeek['weeklyGoal'];
+  goal: GoalWithDetailsAndChildren;
+  weeklyGoal: GoalWithDetailsAndChildren['weeklyGoal'];
   weekNumber: number;
   onToggleStatus: (
     goalId: Id<'goals'>,

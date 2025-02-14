@@ -88,6 +88,13 @@ interface DashboardContextValue {
     parentId: Id<'goals'>;
     weekNumber: number;
   }) => Promise<void>;
+  createDailyGoal: (args: {
+    title: string;
+    parentId: Id<'goals'>;
+    weekNumber: number;
+    dayOfWeek: number;
+    dateTimestamp: number;
+  }) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
     weekNumber: number;
     goalId: Id<'goals'>;
@@ -115,6 +122,7 @@ export const DashboardProvider = ({
     api.dashboard.createQuarterlyGoal
   );
   const createWeeklyGoalMutation = useMutation(api.dashboard.createWeeklyGoal);
+  const createDailyGoalMutation = useMutation(api.dashboard.createDailyGoal);
   const updateQuarterlyGoalStatusMutation = useMutation(
     api.dashboard.updateQuarterlyGoalStatus
   );
@@ -184,6 +192,29 @@ export const DashboardProvider = ({
     });
   };
 
+  const createDailyGoal = async ({
+    title,
+    parentId,
+    weekNumber,
+    dayOfWeek,
+    dateTimestamp,
+  }: {
+    title: string;
+    parentId: Id<'goals'>;
+    weekNumber: number;
+    dayOfWeek: number;
+    dateTimestamp: number;
+  }) => {
+    await createDailyGoalMutation({
+      sessionId,
+      title,
+      parentId,
+      weekNumber,
+      dayOfWeek,
+      dateTimestamp,
+    });
+  };
+
   const updateQuarterlyGoalStatus = async ({
     weekNumber,
     goalId,
@@ -243,6 +274,7 @@ export const DashboardProvider = ({
         weekData: weekData ?? [],
         createQuarterlyGoal,
         createWeeklyGoal,
+        createDailyGoal,
         updateQuarterlyGoalStatus,
         updateQuarterlyGoalTitle,
         deleteQuarterlyGoal,

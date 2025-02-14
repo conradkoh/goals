@@ -4,6 +4,7 @@ import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
+import { joinPath } from '../src/util/path';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -269,6 +270,59 @@ export const createWeeklyGoal = mutation({
       isStarred: false,
       isPinned: false,
       isComplete: false,
+    });
+
+    return goalId;
+  },
+});
+
+export const createDailyGoal = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    title: v.string(),
+    parentId: v.id('goals'),
+    weekNumber: v.number(),
+    dayOfWeek: v.number(),
+    dateTimestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+    const { userId } = session;
+
+    const parentGoal = await ctx.db.get(args.parentId);
+    if (!parentGoal) {
+      throw new Error('Parent goal not found');
+    }
+
+    // Create the goal
+    const goalId = await ctx.db.insert('goals', {
+      userId,
+      year: parentGoal.year,
+      quarter: parentGoal.quarter,
+      title: args.title,
+      parentId: args.parentId,
+      inPath: joinPath(parentGoal.inPath, parentGoal._id),
+      depth: 2, // Daily goals are depth 2
+    });
+
+    // Create the weekly goal data
+    await ctx.db.insert('goalsWeekly', {
+      userId,
+      year: parentGoal.year,
+      quarter: parentGoal.quarter,
+      weekNumber: args.weekNumber,
+      goalId,
+      progress: '',
+      isStarred: false,
+      isPinned: false,
+      isComplete: false,
+      daily: {
+        dayOfWeek: args.dayOfWeek,
+        dateTimestamp: args.dateTimestamp,
+      },
     });
 
     return goalId;

@@ -1,6 +1,6 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetails';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
@@ -8,11 +8,15 @@ import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: QuarterlyGoalInWeek[];
+  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 // Internal component for rendering a quarterly goal header with its status icons
-const QuarterlyGoalHeader = ({ goal }: { goal: QuarterlyGoalInWeek }) => (
+const QuarterlyGoalHeader = ({
+  goal,
+}: {
+  goal: GoalWithDetailsAndChildren;
+}) => (
   <div className="flex items-center gap-2 font-semibold text-sm">
     <div className="flex items-center gap-1">
       {goal.weeklyGoal?.isStarred && (
@@ -32,7 +36,7 @@ const WeeklyGoal = ({
   onUpdateTitle,
   onDelete,
 }: {
-  goal: QuarterlyGoalInWeek;
+  goal: GoalWithDetailsAndChildren;
   onUpdateTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }) => (
@@ -60,7 +64,9 @@ export const WeekCardWeeklyGoals = ({
     return goal.weeklyGoal?.isStarred || goal.weeklyGoal?.isPinned;
   });
 
-  const handleCreateWeeklyGoal = async (quarterlyGoal: QuarterlyGoalInWeek) => {
+  const handleCreateWeeklyGoal = async (
+    quarterlyGoal: GoalWithDetailsAndChildren
+  ) => {
     const title = newGoalTitles[quarterlyGoal._id];
     if (!title?.trim()) return;
 

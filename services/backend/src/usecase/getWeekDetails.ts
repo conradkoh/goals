@@ -4,9 +4,9 @@ import { joinPath } from '../util/path';
 
 // A tree of quarterly goals with their weekly goals and daily goals
 export type WeekGoalsTree = {
-  quarterlyGoals: QuarterlyGoalInWeek[];
+  quarterlyGoals: GoalWithDetailsAndChildren[];
   weekNumber: number;
-  allGoals: QuarterlyGoalInWeek[];
+  allGoals: GoalWithDetailsAndChildren[];
 };
 
 type Goal = Doc<'goals'>;
@@ -17,7 +17,7 @@ type GoalWithWeeklyGoal = Goal & {
     dateTimestamp: number;
   };
 };
-export type QuarterlyGoalInWeek = TWithChildren<GoalWithWeeklyGoal>;
+export type GoalWithDetailsAndChildren = TWithChildren<GoalWithWeeklyGoal>;
 /**
  * Represents a type that includes a path and children for a given type T.
  */
@@ -97,13 +97,13 @@ export const getWeekGoalsTree = async (
  */
 export function buildGoalTree(
   n: Goal[],
-  attach: (n: QuarterlyGoalInWeek) => QuarterlyGoalInWeek
+  attach: (n: GoalWithDetailsAndChildren) => GoalWithDetailsAndChildren
 ) {
-  const roots: QuarterlyGoalInWeek[] = [];
+  const roots: GoalWithDetailsAndChildren[] = [];
 
   //index the nodes by goalId
   const nodeIndex = n.reduce((acc, n) => {
-    const base: QuarterlyGoalInWeek = {
+    const base: GoalWithDetailsAndChildren = {
       ...n,
       path: joinPath(n.inPath, n._id),
       weeklyGoal: undefined,
@@ -111,7 +111,7 @@ export function buildGoalTree(
     };
     acc[n._id] = attach(base);
     return acc;
-  }, {} as Record<Id<'goals'>, QuarterlyGoalInWeek>);
+  }, {} as Record<Id<'goals'>, GoalWithDetailsAndChildren>);
 
   for (const key in nodeIndex) {
     const node = nodeIndex[key as Id<'goals'>];

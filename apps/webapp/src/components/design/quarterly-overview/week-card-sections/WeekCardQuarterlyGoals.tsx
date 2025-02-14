@@ -9,15 +9,17 @@ import { Button } from '@/components/ui/button';
 import { ChevronsUpDown } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
 import { DraggableGoal } from '../../goals-new/DraggableGoal';
-import { QuarterlyGoalInWeek } from '@services/backend/src/usecase/getWeekDetails';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
-  quarterlyGoals: QuarterlyGoalInWeek[];
+  quarterlyGoals: GoalWithDetailsAndChildren[];
 }
 
 // Helper function to sort goals by status and title
-const sortGoals = (goals: QuarterlyGoalInWeek[]): QuarterlyGoalInWeek[] => {
+const sortGoals = (
+  goals: GoalWithDetailsAndChildren[]
+): GoalWithDetailsAndChildren[] => {
   // Sort function that prioritizes starred -> pinned -> neither
   // Within each group, sort alphabetically by title
   return [...goals].sort((a, b) => {
