@@ -44,7 +44,7 @@ describe('buildGoalTree', () => {
 
     const { tree, index } = buildGoalTree(goals, (n) => ({
       ...n,
-      weeklyGoal: undefined,
+      state: undefined,
     }));
 
     // Verify tree structure
@@ -108,7 +108,7 @@ describe('buildGoalTree', () => {
 
     const { tree } = buildGoalTree(goals, (n) => ({
       ...n,
-      weeklyGoal: undefined,
+      state: undefined,
     }));
 
     expect(tree).toHaveLength(2);
@@ -133,7 +133,7 @@ describe('buildGoalTree', () => {
     expect(() =>
       buildGoalTree(goals, (n) => ({
         ...n,
-        weeklyGoal: undefined,
+        state: undefined,
       }))
     ).toThrow('depth 1 goal has no parent');
   });
@@ -156,7 +156,7 @@ describe('buildGoalTree', () => {
     expect(() =>
       buildGoalTree(goals, (n) => ({
         ...n,
-        weeklyGoal: undefined,
+        state: undefined,
       }))
     ).toThrow('depth 1 goal has no parent');
   });

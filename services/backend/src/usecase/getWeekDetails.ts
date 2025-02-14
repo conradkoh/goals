@@ -11,11 +11,7 @@ export type WeekGoalsTree = {
 
 type Goal = Doc<'goals'>;
 type GoalWithWeeklyGoal = Goal & {
-  weeklyGoal?: Doc<'goalsWeekly'>;
-  daily?: {
-    dayOfWeek: number;
-    dateTimestamp: number;
-  };
+  state?: Doc<'goalsWeekly'>;
 };
 export type GoalWithDetailsAndChildren = TWithChildren<GoalWithWeeklyGoal>;
 /**
@@ -75,7 +71,7 @@ export const getWeekGoalsTree = async (
     return {
       //add data from the weekly goals (timeseries)
       ...n,
-      weeklyGoal: weeklyGoalsMap.get(n._id),
+      state: weeklyGoalsMap.get(n._id),
     };
   });
 
@@ -106,7 +102,7 @@ export function buildGoalTree(
     const base: GoalWithDetailsAndChildren = {
       ...n,
       path: joinPath(n.inPath, n._id),
-      weeklyGoal: undefined,
+      state: undefined,
       children: [],
     };
     acc[n._id] = attach(base);

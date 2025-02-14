@@ -9,7 +9,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 
 interface DraggableGoalProps {
   goal: GoalWithDetailsAndChildren;
-  weeklyGoal: GoalWithDetailsAndChildren['weeklyGoal'];
+  state: GoalWithDetailsAndChildren['state'];
   weekNumber: number;
   onToggleStatus: (
     goalId: Id<'goals'>,
@@ -22,7 +22,7 @@ interface DraggableGoalProps {
 
 export const DraggableGoal = ({
   goal,
-  weeklyGoal,
+  state: goalState,
   weekNumber,
   onToggleStatus,
   onUpdateTitle,
@@ -52,7 +52,7 @@ export const DraggableGoal = ({
       id: `${goal._id}-week-${weekNumber}`,
       data: {
         goal,
-        weeklyGoal,
+        weeklyGoal: goalState,
         sourceWeekNumber: weekNumber,
         shiftKey,
       },
@@ -79,15 +79,13 @@ export const DraggableGoal = ({
       <div className="flex items-center gap-2 min-w-0 flex-grow">
         <GoalStarPin
           value={{
-            isStarred: weeklyGoal?.isStarred ?? false,
-            isPinned: weeklyGoal?.isPinned ?? false,
+            isStarred: goalState?.isStarred ?? false,
+            isPinned: goalState?.isPinned ?? false,
           }}
           onStarred={() =>
-            onToggleStatus(goal._id, !weeklyGoal?.isStarred, false)
+            onToggleStatus(goal._id, !goalState?.isStarred, false)
           }
-          onPinned={() =>
-            onToggleStatus(goal._id, false, !weeklyGoal?.isPinned)
-          }
+          onPinned={() => onToggleStatus(goal._id, false, !goalState?.isPinned)}
         />
         <EditableGoalTitle
           title={goal.title}
@@ -95,9 +93,9 @@ export const DraggableGoal = ({
           onDelete={() => onDelete(goal._id)}
         />
       </div>
-      {weeklyGoal?.progress && Number(weeklyGoal.progress) > 0 && (
+      {goalState?.progress && Number(goalState.progress) > 0 && (
         <span className="text-xs text-muted-foreground ml-2 tabular-nums">
-          {weeklyGoal.progress}%
+          {goalState.progress}%
         </span>
       )}
     </div>

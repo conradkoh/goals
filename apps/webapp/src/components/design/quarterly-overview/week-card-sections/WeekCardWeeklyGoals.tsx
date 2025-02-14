@@ -19,12 +19,10 @@ const QuarterlyGoalHeader = ({
 }) => (
   <div className="flex items-center gap-2 font-semibold text-sm">
     <div className="flex items-center gap-1">
-      {goal.weeklyGoal?.isStarred && (
+      {goal.state?.isStarred && (
         <Star className="h-3.5 w-3.5 text-yellow-500" />
       )}
-      {goal.weeklyGoal?.isPinned && (
-        <Pin className="h-3.5 w-3.5 text-blue-500" />
-      )}
+      {goal.state?.isPinned && <Pin className="h-3.5 w-3.5 text-blue-500" />}
     </div>
     {goal.title}
   </div>
@@ -61,7 +59,7 @@ export const WeekCardWeeklyGoals = ({
 
   // Filter for important (starred/pinned) quarterly goals
   const importantQuarterlyGoals = quarterlyGoals.filter((goal, index) => {
-    return goal.weeklyGoal?.isStarred || goal.weeklyGoal?.isPinned;
+    return goal.state?.isStarred || goal.state?.isPinned;
   });
 
   const handleCreateWeeklyGoal = async (

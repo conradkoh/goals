@@ -23,8 +23,8 @@ const sortGoals = (
   // Sort function that prioritizes starred -> pinned -> neither
   // Within each group, sort alphabetically by title
   return [...goals].sort((a, b) => {
-    const aWeekly = a.weeklyGoal;
-    const bWeekly = b.weeklyGoal;
+    const aWeekly = a.state;
+    const bWeekly = b.state;
 
     // First, group by status
     if (aWeekly?.isStarred && !bWeekly?.isStarred) return -1;
@@ -121,10 +121,10 @@ export const WeekCardQuarterlyGoals = ({
 
   // Split goals into important (starred/pinned) and other
   const importantGoals = sortedGoals.filter(
-    (goal) => goal.weeklyGoal?.isStarred || goal.weeklyGoal?.isPinned
+    (goal) => goal.state?.isStarred || goal.state?.isPinned
   );
   const otherGoals = sortedGoals.filter(
-    (goal) => !goal.weeklyGoal?.isStarred && !goal.weeklyGoal?.isPinned
+    (goal) => !goal.state?.isStarred && !goal.state?.isPinned
   );
 
   return (
@@ -146,7 +146,7 @@ export const WeekCardQuarterlyGoals = ({
           <DraggableGoal
             key={goal._id}
             goal={goal}
-            weeklyGoal={goal.weeklyGoal}
+            state={goal.state}
             weekNumber={weekNumber}
             onToggleStatus={handleToggleStatus}
             onUpdateTitle={handleUpdateTitle}
@@ -179,7 +179,7 @@ export const WeekCardQuarterlyGoals = ({
                 <DraggableGoal
                   key={goal._id}
                   goal={goal}
-                  weeklyGoal={goal.weeklyGoal}
+                  state={goal.state}
                   weekNumber={weekNumber}
                   onToggleStatus={handleToggleStatus}
                   onUpdateTitle={handleUpdateTitle}
