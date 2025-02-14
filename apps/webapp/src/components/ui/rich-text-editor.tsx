@@ -1,0 +1,175 @@
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Underline from '@tiptap/extension-underline';
+import { cn } from '@/lib/utils';
+import { ConditionalRender } from '@/components/util/ConditionalRender';
+
+// Helper function to check if HTML content is effectively empty
+const isHTMLEmpty = (html: string) => {
+  // Remove all HTML tags
+  const textContent = html.replace(/<[^>]*>/g, '');
+  // Remove all whitespace, including non-breaking spaces and other special characters
+  const cleanContent = textContent.replace(
+    /[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,
+    ''
+  );
+  return cleanContent === '';
+};
+
+interface RichTextEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+  placeholder?: string;
+}
+
+export function RichTextEditor({
+  value,
+  onChange,
+  className,
+  placeholder,
+}: RichTextEditorProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bulletList: {
+          HTMLAttributes: {
+            class: 'list-disc ml-4',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'list-decimal ml-4',
+          },
+        },
+        code: {
+          HTMLAttributes: {
+            class:
+              'rounded-md bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm',
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class: 'rounded-md bg-muted p-4 font-mono text-sm',
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: 'border-l-2 border-muted pl-4',
+          },
+        },
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline',
+        },
+      }),
+      Underline,
+    ],
+    content: value || '',
+    editorProps: {
+      attributes: {
+        class: cn(
+          'prose prose-sm max-w-none focus:outline-none min-h-[100px]',
+          className
+        ),
+      },
+    },
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      onChange(html);
+    },
+  });
+
+  // Handle keyboard shortcuts
+  if (editor) {
+    editor.setOptions({
+      editorProps: {
+        handleKeyDown: (view, event) => {
+          // Bold: Cmd/Ctrl + B
+          if ((event.metaKey || event.ctrlKey) && event.key === 'b') {
+            editor.commands.toggleBold();
+            return true;
+          }
+          // Italic: Cmd/Ctrl + I
+          if ((event.metaKey || event.ctrlKey) && event.key === 'i') {
+            editor.commands.toggleItalic();
+            return true;
+          }
+          // Underline: Cmd/Ctrl + U
+          if ((event.metaKey || event.ctrlKey) && event.key === 'u') {
+            editor.commands.toggleUnderline();
+            return true;
+          }
+          // Handle markdown shortcuts
+          if (event.key === ' ' && !event.metaKey && !event.ctrlKey) {
+            // Check for markdown syntax at the start of the line
+            const { from } = view.state.selection;
+            const line = view.state.doc.textBetween(
+              Math.max(0, from - 10),
+              from,
+              '\n'
+            );
+
+            // Handle basic markdown shortcuts
+            if (line.endsWith('# ')) {
+              editor.commands.setHeading({ level: 1 });
+              return true;
+            }
+            if (line.endsWith('## ')) {
+              editor.commands.setHeading({ level: 2 });
+              return true;
+            }
+            if (line.endsWith('### ')) {
+              editor.commands.setHeading({ level: 3 });
+              return true;
+            }
+            if (line.endsWith('* ') || line.endsWith('- ')) {
+              editor.commands.toggleBulletList();
+              return true;
+            }
+            if (line.endsWith('1. ')) {
+              editor.commands.toggleOrderedList();
+              return true;
+            }
+            if (line.endsWith('> ')) {
+              editor.commands.toggleBlockquote();
+              return true;
+            }
+            if (line.endsWith('``` ')) {
+              editor.commands.toggleCodeBlock();
+              return true;
+            }
+          }
+          return false;
+        },
+        handlePaste: (view, event) => {
+          // Handle link pasting over selected text
+          const clipboardText = event.clipboardData?.getData('text/plain');
+          if (
+            clipboardText &&
+            clipboardText.match(/^https?:\/\//) &&
+            editor.state.selection.content().size > 0
+          ) {
+            editor.commands.setLink({ href: clipboardText });
+            return true;
+          }
+          return false;
+        },
+      },
+    });
+  }
+  const isEmpty = value === '';
+  return (
+    <div className="relative">
+      <EditorContent editor={editor} />
+      <ConditionalRender condition={isEmpty && !!placeholder}>
+        <div className="absolute top-3 left-4 text-muted-foreground pointer-events-none">
+          {placeholder}
+        </div>
+      </ConditionalRender>
+    </div>
+  );
+}

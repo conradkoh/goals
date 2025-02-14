@@ -2,8 +2,6 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useDroppable } from '@dnd-kit/core';
-import { DraggableGoal } from '../../goals-new/DraggableGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import {
@@ -11,6 +9,7 @@ import {
   CollapsibleMinimalTrigger,
   CollapsibleMinimalContent,
 } from '@/components/ui/collapsible-minimal';
+import { QuarterlyGoal } from '../../goals-new/QuarterlyGoal';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
@@ -50,19 +49,6 @@ export const WeekCardQuarterlyGoals = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Setup droppable area
-  const { setNodeRef, isOver } = useDroppable({
-    id: `week-${weekNumber}`,
-    data: {
-      weekNumber,
-    },
-  });
-
-  const handleDragOver = (e: React.DragEvent) => {
-    // Prevent scrolling when dragging over
-    e.preventDefault();
-  };
-
   const handleCreateGoal = async () => {
     if (!newGoalTitle.trim()) return;
     try {
@@ -98,15 +84,20 @@ export const WeekCardQuarterlyGoals = ({
     }
   };
 
-  const handleUpdateTitle = async (goalId: Id<'goals'>, newTitle: string) => {
+  const handleUpdateTitle = async (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => {
     try {
       await updateQuarterlyGoalTitle({
         goalId,
-        title: newTitle,
+        title,
+        details,
       });
     } catch (error) {
       console.error('Failed to update goal title:', error);
-      throw error; // Re-throw to let EditableGoalTitle handle the error state
+      throw error;
     }
   };
 
@@ -133,11 +124,7 @@ export const WeekCardQuarterlyGoals = ({
   );
 
   return (
-    <div
-      ref={setNodeRef}
-      className={`space-y-2 ${isOver ? 'bg-gray-50 rounded-lg' : ''}`}
-      onDragOver={handleDragOver}
-    >
+    <div className="space-y-2">
       <CreateGoalInput
         placeholder="Add a quarterly goal..."
         value={newGoalTitle}
@@ -148,10 +135,9 @@ export const WeekCardQuarterlyGoals = ({
       <div className="space-y-1">
         {/* Important goals are always visible */}
         {importantGoals.map((goal) => (
-          <DraggableGoal
+          <QuarterlyGoal
             key={goal._id}
             goal={goal}
-            state={goal.state}
             weekNumber={weekNumber}
             onToggleStatus={handleToggleStatus}
             onUpdateTitle={handleUpdateTitle}
@@ -167,10 +153,9 @@ export const WeekCardQuarterlyGoals = ({
             </CollapsibleMinimalTrigger>
             <CollapsibleMinimalContent>
               {otherGoals.map((goal) => (
-                <DraggableGoal
+                <QuarterlyGoal
                   key={goal._id}
                   goal={goal}
-                  state={goal.state}
                   weekNumber={weekNumber}
                   onToggleStatus={handleToggleStatus}
                   onUpdateTitle={handleUpdateTitle}
