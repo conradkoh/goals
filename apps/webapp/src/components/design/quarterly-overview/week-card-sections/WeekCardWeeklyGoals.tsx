@@ -1,33 +1,25 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Pin, Star } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalSelector } from '../../goals-new/GoalSelector';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { SafeHTML } from '@/components/ui/safe-html';
+import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
+import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
+import { cn } from '@/lib/utils';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
 }
-
-// Internal component for rendering a quarterly goal header with its status icons
-const QuarterlyGoalHeader = ({
-  goal,
-}: {
-  goal: GoalWithDetailsAndChildren;
-}) => (
-  <div className="flex items-center gap-2 font-semibold text-sm">
-    <div className="flex items-center gap-1">
-      {goal.state?.isStarred && (
-        <Star className="h-3.5 w-3.5 text-yellow-500" />
-      )}
-      {goal.state?.isPinned && <Pin className="h-3.5 w-3.5 text-blue-500" />}
-    </div>
-    {goal.title}
-  </div>
-);
 
 // Internal component for rendering a weekly goal
 const WeeklyGoal = ({
@@ -36,17 +28,92 @@ const WeeklyGoal = ({
   onDelete,
 }: {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
-}) => (
-  <div className="px-2 py-1 text-sm hover:bg-gray-50 rounded-sm">
-    <EditableGoalTitle
-      title={goal.title}
-      onSubmit={(newTitle) => onUpdateTitle(goal._id as Id<'goals'>, newTitle)}
-      onDelete={() => onDelete(goal._id as Id<'goals'>)}
-    />
-  </div>
-);
+}) => {
+  const { toggleGoalCompletion } = useDashboard();
+  const { weekNumber } = useWeek();
+  const isComplete = goal.state?.isComplete ?? false;
+  const isStarred = goal.state?.isStarred ?? false;
+  const isPinned = goal.state?.isPinned ?? false;
+
+  return (
+    <div className="group px-2 py-1 hover:bg-gray-50/50 rounded-sm">
+      <div className="text-sm flex items-center gap-2 group/title">
+        <input
+          type="checkbox"
+          checked={isComplete}
+          onChange={(e) =>
+            toggleGoalCompletion({
+              goalId: goal._id,
+              weekNumber,
+              isComplete: e.target.checked,
+            })
+          }
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+
+        {/* View Mode */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
+            >
+              <span className="truncate">{goal.title}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-4">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <h3 className="font-semibold">{goal.title}</h3>
+                <GoalEditPopover
+                  title={goal.title}
+                  details={goal.details}
+                  onSave={async (title, details) => {
+                    await onUpdateTitle(goal._id, title, details);
+                  }}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </div>
+              {goal.details && (
+                <SafeHTML html={goal.details} className="mt-2 text-sm" />
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <div className="flex items-center gap-1">
+          <GoalEditPopover
+            title={goal.title}
+            details={goal.details}
+            onSave={async (title, details) => {
+              await onUpdateTitle(goal._id, title, details);
+            }}
+            trigger={
+              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                <Edit2 className="h-3.5 w-3.5" />
+              </button>
+            }
+          />
+          <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const WeekCardWeeklyGoals = ({
   weekNumber,
@@ -100,12 +167,14 @@ export const WeekCardWeeklyGoals = ({
 
   const handleUpdateWeeklyGoalTitle = async (
     goalId: Id<'goals'>,
-    newTitle: string
+    title: string,
+    details?: string
   ) => {
     try {
       await updateQuarterlyGoalTitle({
         goalId,
-        title: newTitle,
+        title,
+        details,
       });
     } catch (error) {
       console.error('Failed to update weekly goal title:', error);
@@ -149,11 +218,21 @@ export const WeekCardWeeklyGoals = ({
       ) : (
         importantQuarterlyGoals.map((goal) => {
           const weeklyGoals = goal.children;
+          const isStarred = goal.state?.isStarred ?? false;
+          const isPinned = goal.state?.isPinned ?? false;
 
           return (
             <div key={goal._id} className="px-3 space-y-2">
-              <QuarterlyGoalHeader goal={goal} />
-              <div className="pl-6 space-y-1">
+              <div
+                className={cn(
+                  'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
+                  isStarred && 'bg-yellow-50',
+                  isPinned && 'bg-blue-50'
+                )}
+              >
+                {goal.title}
+              </div>
+              <div className="space-y-1">
                 {weeklyGoals.map((weeklyGoal) => (
                   <WeeklyGoal
                     key={weeklyGoal._id}
