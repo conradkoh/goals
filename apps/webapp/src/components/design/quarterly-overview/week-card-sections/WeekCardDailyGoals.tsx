@@ -29,6 +29,7 @@ import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2 } from 'lucide-react';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
+import { cn } from '@/lib/utils';
 
 // Day of week constants
 const DayOfWeek = {
@@ -509,21 +510,32 @@ const DailyGoalGroup = ({
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
   );
 
+  // Calculate if all daily goals are complete
+  const isSoftComplete =
+    dailyGoals.length > 0 && dailyGoals.every((goal) => goal.state?.isComplete);
+
   return (
     <div className="mb-4 last:mb-0">
-      <div className="space-y-0.5 mb-2">
-        <div className="font-semibold text-gray-800">{weeklyGoal.title}</div>
-        <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
-      </div>
-      <div className="space-y-1">
-        {dailyGoals.map((dailyGoal) => (
-          <DailyGoalItem
-            key={dailyGoal._id}
-            goal={dailyGoal}
-            onUpdateTitle={onUpdateGoalTitle}
-            onDelete={onDeleteGoal}
-          />
-        ))}
+      <div
+        className={cn(
+          'rounded-md p-3 transition-colors',
+          isSoftComplete ? 'bg-green-50' : 'hover:bg-gray-50'
+        )}
+      >
+        <div className="space-y-0.5 mb-2">
+          <div className="font-semibold text-gray-800">{weeklyGoal.title}</div>
+          <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
+        </div>
+        <div className="space-y-1">
+          {dailyGoals.map((dailyGoal) => (
+            <DailyGoalItem
+              key={dailyGoal._id}
+              goal={dailyGoal}
+              onUpdateTitle={onUpdateGoalTitle}
+              onDelete={onDeleteGoal}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
