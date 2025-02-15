@@ -4,6 +4,10 @@ import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import { cn } from '@/lib/utils';
 import { ConditionalRender } from '@/components/util/ConditionalRender';
+import { Extension } from '@tiptap/core';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { EditorView } from '@tiptap/pm/view';
+import Placeholder from '@tiptap/extension-placeholder';
 
 // Helper function to check if HTML content is effectively empty
 const isHTMLEmpty = (html: string) => {
@@ -16,6 +20,38 @@ const isHTMLEmpty = (html: string) => {
   );
   return cleanContent === '';
 };
+
+/**
+ * Custom Tiptap extension that prevents new lines from being added when Cmd/Ctrl + Enter is pressed.
+ * This is used in conjunction with the form submission shortcut (useFormSubmitShortcut) to ensure
+ * that pressing Cmd/Ctrl + Enter only submits the form and doesn't add a new line in the editor.
+ *
+ * The extension works by:
+ * 1. Adding a ProseMirror plugin that intercepts keydown events
+ * 2. When Cmd/Ctrl + Enter is detected, it returns true to mark the event as handled
+ * 3. This prevents the default editor behavior (adding a new line)
+ *
+ * @see https://github.com/ueberdosis/tiptap/issues/313
+ */
+const NoNewLineOnSubmit = Extension.create({
+  name: 'no_new_line_on_submit',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('eventHandler'),
+        props: {
+          handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+            // Prevent new line on Cmd/Ctrl + Enter
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              return true; // Return true to mark the event as handled
+            }
+            return false; // Allow other key events to be handled normally
+          },
+        },
+      }),
+    ];
+  },
+});
 
 interface RichTextEditorProps {
   value: string;
@@ -67,6 +103,10 @@ export function RichTextEditor({
         },
       }),
       Underline,
+      Placeholder.configure({
+        placeholder,
+      }),
+      NoNewLineOnSubmit,
     ],
     content: value || '',
     editorProps: {

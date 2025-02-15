@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { Edit2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -49,6 +50,10 @@ export function GoalEditPopover({
     }
   };
 
+  const handleFormShortcut = useFormSubmitShortcut({
+    onSubmit: handleSave,
+  });
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -58,7 +63,10 @@ export function GoalEditPopover({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-4 space-y-4">
+      <PopoverContent
+        className="w-[400px] p-4 space-y-4"
+        onKeyDown={handleFormShortcut}
+      >
         <div className="space-y-2">
           <label
             htmlFor="title"

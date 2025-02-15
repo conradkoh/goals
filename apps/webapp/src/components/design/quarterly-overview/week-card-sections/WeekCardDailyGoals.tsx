@@ -19,6 +19,16 @@ import {
   CollapsibleMinimalTrigger,
   CollapsibleMinimalContent,
 } from '@/components/ui/collapsible-minimal';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { SafeHTML } from '@/components/ui/safe-html';
+import { Edit2 } from 'lucide-react';
+import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
+import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 
 // Day of week constants
 const DayOfWeek = {
@@ -331,10 +341,15 @@ const DaySection = () => {
     }
   };
 
-  const handleUpdateTitle = async (goalId: Id<'goals'>, newTitle: string) => {
+  const handleUpdateTitle = async (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => {
     await updateQuarterlyGoalTitle({
       goalId,
-      title: newTitle,
+      title,
+      details,
     });
   };
 
@@ -379,7 +394,11 @@ const DaySection = () => {
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }
 
@@ -394,24 +413,75 @@ const DailyGoalItem = ({
   const isComplete = goal.state?.isComplete ?? false;
 
   return (
-    <div className="py-1 text-sm flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={isComplete}
-        onChange={(e) =>
-          toggleGoalCompletion({
-            goalId: goal._id,
-            weekNumber,
-            isComplete: e.target.checked,
-          })
-        }
-        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-      />
-      <EditableGoalTitle
-        title={goal.title}
-        onSubmit={(newTitle) => onUpdateTitle(goal._id, newTitle)}
-        onDelete={() => onDelete(goal._id)}
-      />
+    <div className="group px-2 py-1 hover:bg-gray-50 rounded-sm">
+      <div className="text-sm flex items-center gap-2 group/title">
+        <input
+          type="checkbox"
+          checked={isComplete}
+          onChange={(e) =>
+            toggleGoalCompletion({
+              goalId: goal._id,
+              weekNumber,
+              isComplete: e.target.checked,
+            })
+          }
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+
+        {/* View Mode */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
+            >
+              <span className="truncate">{goal.title}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[400px] p-4">
+            <div className="space-y-4">
+              <div className="flex items-start justify-between">
+                <h3 className="font-semibold">{goal.title}</h3>
+                <GoalEditPopover
+                  title={goal.title}
+                  details={goal.details}
+                  onSave={async (title, details) => {
+                    await onUpdateTitle(goal._id, title, details);
+                  }}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </div>
+              {goal.details && (
+                <SafeHTML html={goal.details} className="mt-2 text-sm" />
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <div className="flex items-center gap-1">
+          <GoalEditPopover
+            title={goal.title}
+            details={goal.details}
+            onSave={async (title, details) => {
+              await onUpdateTitle(goal._id, title, details);
+            }}
+            trigger={
+              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                <Edit2 className="h-3.5 w-3.5" />
+              </button>
+            }
+          />
+          <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+        </div>
+      </div>
     </div>
   );
 };

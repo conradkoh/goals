@@ -22,6 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
+import { GoalEditPopover } from './GoalEditPopover';
 
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
@@ -118,7 +120,7 @@ export function QuarterlyGoal({
   return (
     <>
       <div className="group px-2 py-1 hover:bg-gray-50 rounded-sm">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group/title">
           <GoalStarPin
             value={{
               isStarred: goal.state?.isStarred || false,
@@ -133,7 +135,7 @@ export function QuarterlyGoal({
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1"
+                className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
               >
                 <span className="truncate">{goal.title}</span>
               </Button>
@@ -142,14 +144,6 @@ export function QuarterlyGoal({
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold">{goal.title}</h3>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
                 </div>
                 {goal.details && (
                   <SafeHTML html={goal.details} className="mt-2 text-sm" />
@@ -158,82 +152,24 @@ export function QuarterlyGoal({
             </PopoverContent>
           </Popover>
 
-          {/* Edit Button */}
-          <Popover open={isEditing} onOpenChange={setIsEditing}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-4" onKeyDown={handleKeyDown}>
-              <div className="space-y-4">
-                <h3 className="font-semibold">Edit Goal</h3>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="title"
-                    className="text-sm font-medium text-muted-foreground"
-                  >
-                    Title
-                  </label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="w-full"
-                    placeholder="Enter title..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label
-                    htmlFor="details"
-                    className="text-sm font-medium text-muted-foreground"
-                  >
-                    Details
-                  </label>
-                  <RichTextEditor
-                    value={details}
-                    onChange={setDetails}
-                    placeholder="Add details..."
-                    className="min-h-[150px] p-3 rounded-md border"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setTitle(goal.title);
-                      setDetails(goal.details || '');
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSubmitting || !title.trim()}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* Edit Mode */}
+          <GoalEditPopover
+            title={goal.title}
+            details={goal.details || ''}
+            onSave={async (title, details) => {
+              await onUpdateTitle(goal._id, title, details);
+            }}
+            trigger={
+              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                <Edit2 className="h-3.5 w-3.5" />
+              </button>
+            }
+          />
 
           {/* Delete Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => setIsDeleteDialogOpen(true)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <DeleteGoalIconButton
+            onDelete={() => onDelete(goal._id as Id<'goals'>)}
+          />
         </div>
       </div>
 
