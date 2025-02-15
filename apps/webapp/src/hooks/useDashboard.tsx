@@ -120,6 +120,7 @@ interface DashboardContextValue {
     goalId: Id<'goals'>;
     weekNumber: number;
     isComplete: boolean;
+    updateChildren?: boolean;
   }) => Promise<void>;
 }
 
@@ -313,16 +314,19 @@ export const DashboardProvider = ({
     goalId,
     weekNumber,
     isComplete,
+    updateChildren,
   }: {
     goalId: Id<'goals'>;
     weekNumber: number;
     isComplete: boolean;
+    updateChildren?: boolean;
   }) => {
     await toggleGoalCompletionMutation({
       sessionId,
       goalId,
       weekNumber,
       isComplete,
+      updateChildren,
     });
   };
 

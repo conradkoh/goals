@@ -367,9 +367,10 @@ export const toggleGoalCompletion = mutation({
     goalId: v.id('goals'),
     weekNumber: v.number(),
     isComplete: v.boolean(),
+    updateChildren: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, weekNumber, isComplete } = args;
+    const { sessionId, goalId, weekNumber, isComplete, updateChildren } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -412,6 +413,44 @@ export const toggleGoalCompletion = mutation({
     await ctx.db.patch(weeklyGoal._id, {
       isComplete,
     });
+
+    // If this is a weekly goal (depth 1) and updateChildren is true, update all child goals
+    if (goal.depth === 1 && updateChildren) {
+      // Find all child goals using the inPath
+      const childGoals = await ctx.db
+        .query('goals')
+        .withIndex('by_user_and_year_and_quarter', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('year', goal.year)
+            .eq('quarter', goal.quarter)
+        )
+        .filter((q) => q.eq(q.field('parentId'), goalId))
+        .collect();
+
+      // Update all child goals' weekly states in parallel
+      await Promise.all(
+        childGoals.map(async (childGoal) => {
+          const childWeeklyGoal = await ctx.db
+            .query('goalsWeekly')
+            .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+              q
+                .eq('userId', userId)
+                .eq('year', goal.year)
+                .eq('quarter', goal.quarter)
+                .eq('weekNumber', weekNumber)
+            )
+            .filter((q) => q.eq(q.field('goalId'), childGoal._id))
+            .first();
+
+          if (childWeeklyGoal) {
+            await ctx.db.patch(childWeeklyGoal._id, {
+              isComplete,
+            });
+          }
+        })
+      );
+    }
 
     return weeklyGoal._id;
   },
