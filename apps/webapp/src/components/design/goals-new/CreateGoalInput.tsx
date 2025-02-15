@@ -7,7 +7,11 @@ interface CreateGoalInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  onEscape?: () => void;
   children?: React.ReactNode;
+  autoFocus?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export const CreateGoalInput = ({
@@ -15,7 +19,11 @@ export const CreateGoalInput = ({
   value,
   onChange,
   onSubmit,
+  onEscape,
   children,
+  autoFocus,
+  onFocus,
+  onBlur,
 }: CreateGoalInputProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +38,7 @@ export const CreateGoalInput = ({
           onChange('');
           setIsEditing(false);
           inputRef.current?.blur();
+          onEscape?.(); // Call onEscape if provided
         }
       }
     };
@@ -41,7 +50,13 @@ export const CreateGoalInput = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isEditing, onChange]);
+  }, [isEditing, onChange, onEscape]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSubmit();
+    }
+  };
 
   return (
     <div ref={containerRef} className="relative">
@@ -53,12 +68,15 @@ export const CreateGoalInput = ({
           onChange={(e) => {
             onChange(e.target.value);
           }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              onSubmit();
-            }
+          onKeyDown={handleKeyDown}
+          onFocus={(e) => {
+            setIsEditing(true);
+            onFocus?.();
           }}
-          onFocus={() => setIsEditing(true)}
+          onBlur={(e) => {
+            onBlur?.();
+          }}
+          autoFocus={autoFocus}
           className="h-7 text-sm text-center bg-transparent border-none hover:bg-gray-50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">

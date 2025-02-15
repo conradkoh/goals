@@ -314,7 +314,7 @@ export const createDailyGoal = mutation({
     parentId: v.id('goals'),
     weekNumber: v.number(),
     dayOfWeek: v.number(),
-    dateTimestamp: v.number(),
+    dateTimestamp: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get(args.sessionId);
@@ -353,7 +353,7 @@ export const createDailyGoal = mutation({
       isComplete: false,
       daily: {
         dayOfWeek: args.dayOfWeek,
-        dateTimestamp: args.dateTimestamp,
+        ...(args.dateTimestamp ? { dateTimestamp: args.dateTimestamp } : {}),
       },
     });
 

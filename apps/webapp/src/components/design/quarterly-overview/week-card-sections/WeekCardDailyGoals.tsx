@@ -26,10 +26,11 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Plus } from 'lucide-react';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { cn } from '@/lib/utils';
+import { DateTime } from 'luxon';
 
 // Day of week constants
 const DayOfWeek = {
@@ -88,20 +89,16 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
-    const today = new Date();
-    const todayTimestamp = getStartOfDay(today);
+    const today = DateTime.now();
+    const todayWeekNumber = today.weekNumber;
+    const todayDayOfWeek = today.weekday as DayOfWeek;
 
-    // Check if any of the days in this week match today's date
-    const isCurrentWeek = days?.some(
-      (day) => getStartOfDay(new Date(day.dateTimestamp)) === todayTimestamp
-    );
+    // Check if we're in the current week
+    const isCurrentWeek = weekNumber === todayWeekNumber;
 
     // If we're in the current week, select today's day
     if (isCurrentWeek) {
-      const todayDayNumber = today.getDay();
-      return todayDayNumber === 0
-        ? DayOfWeek.SUNDAY
-        : (todayDayNumber as DayOfWeek);
+      return todayDayOfWeek;
     }
 
     // Otherwise, select Monday by default
@@ -112,29 +109,39 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
 
   // Sort and categorize days
   const { currentDay, futureDays, pastDays } = useMemo(() => {
-    const now = getStartOfDay(new Date());
+    const today = DateTime.now();
+    const todayWeekNumber = today.weekNumber;
+    const todayDayOfWeek = today.weekday;
     const sortedDays = [...(days as DayData[])];
 
     // Find current day
     const currentDayData = sortedDays.find(
-      (d) => getStartOfDay(new Date(d.dateTimestamp)) === now
+      (d) => weekNumber === todayWeekNumber && d.dayOfWeek === todayDayOfWeek
     );
 
     // Separate future and past days
     const future = sortedDays
-      .filter((d) => getStartOfDay(new Date(d.dateTimestamp)) > now)
-      .sort((a, b) => a.dateTimestamp - b.dateTimestamp); // Sort chronologically
+      .filter((d) => {
+        if (weekNumber > todayWeekNumber) return true;
+        if (weekNumber < todayWeekNumber) return false;
+        return d.dayOfWeek > todayDayOfWeek;
+      })
+      .sort((a, b) => a.dayOfWeek - b.dayOfWeek);
 
     const past = sortedDays
-      .filter((d) => getStartOfDay(new Date(d.dateTimestamp)) < now)
-      .sort((a, b) => b.dateTimestamp - a.dateTimestamp); // Sort reverse chronologically
+      .filter((d) => {
+        if (weekNumber < todayWeekNumber) return true;
+        if (weekNumber > todayWeekNumber) return false;
+        return d.dayOfWeek < todayDayOfWeek;
+      })
+      .sort((a, b) => b.dayOfWeek - a.dayOfWeek);
 
     return {
       currentDay: currentDayData,
       futureDays: future,
       pastDays: past,
     };
-  }, [days]);
+  }, [days, weekNumber]);
 
   // Calculate past days summary
   const pastDaysSummary = useMemo(() => {
@@ -183,13 +190,7 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
   }, [availableWeeklyGoals, selectedWeeklyGoalId]);
 
   const handleCreateDailyGoal = async () => {
-    if (!newGoalTitle.trim() || !selectedWeeklyGoalId || !selectedDayOfWeek)
-      return;
-
-    const selectedDay = (days as DayData[]).find(
-      (d) => d.dayOfWeek === selectedDayOfWeek
-    );
-    if (!selectedDay) return;
+    if (!newGoalTitle.trim() || !selectedWeeklyGoalId) return;
 
     try {
       await createDailyGoal({
@@ -197,7 +198,6 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
         parentId: selectedWeeklyGoalId,
         weekNumber,
         dayOfWeek: selectedDayOfWeek,
-        dateTimestamp: selectedDay.dateTimestamp,
       });
       setNewGoalTitle('');
     } catch (error) {
@@ -363,7 +363,7 @@ const DaySection = () => {
   return (
     <div className="space-y-2 pb-6 border-b border-gray-100 last:border-b-0">
       <DayHeader dayOfWeek={dayOfWeek} />
-      <div className="px-3">
+      <div>
         {dailyGoalsView.weeklyGoals.map(({ weeklyGoal, quarterlyGoal }) => (
           <DailyGoalGroup
             key={weeklyGoal._id}
@@ -492,7 +492,11 @@ interface DailyGoalGroupProps {
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: number;
   onCreateGoal: () => void;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, newTitle: string) => Promise<void>;
+  onUpdateGoalTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   newGoalTitle: string;
   onNewGoalTitleChange: (value: string) => void;
@@ -503,9 +507,14 @@ const DailyGoalGroup = ({
   weeklyGoal,
   quarterlyGoal,
   dayOfWeek,
+  onCreateGoal,
   onUpdateGoalTitle,
   onDeleteGoal,
+  newGoalTitle,
+  onNewGoalTitleChange,
 }: DailyGoalGroupProps) => {
+  const [isCreating, setIsCreating] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const dailyGoals = weeklyGoal.children.filter(
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
   );
@@ -514,16 +523,30 @@ const DailyGoalGroup = ({
   const isSoftComplete =
     dailyGoals.length > 0 && dailyGoals.every((goal) => goal.state?.isComplete);
 
+  const handleSubmit = () => {
+    onCreateGoal();
+    // Don't hide the input after submission to allow for multiple entries
+  };
+
+  const handleEscape = () => {
+    setIsCreating(false);
+    onNewGoalTitleChange(''); // Clear the input
+  };
+
   return (
     <div className="mb-4 last:mb-0">
       <div
         className={cn(
-          'rounded-md p-3 transition-colors',
-          isSoftComplete ? 'bg-green-50' : 'hover:bg-gray-50'
+          'rounded-md px-3 py-2 transition-colors',
+          isSoftComplete ? 'bg-green-50' : ''
         )}
       >
         <div className="space-y-0.5 mb-2">
-          <div className="font-semibold text-gray-800">{weeklyGoal.title}</div>
+          <div className="flex items-center justify-between">
+            <div className="font-semibold text-gray-800">
+              {weeklyGoal.title}
+            </div>
+          </div>
           <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
         </div>
         <div className="space-y-1">
@@ -535,21 +558,53 @@ const DailyGoalGroup = ({
               onDelete={onDeleteGoal}
             />
           ))}
+          <div
+            className="pt-1"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => !isCreating && setIsHovering(false)}
+          >
+            {(isHovering || isCreating) && (
+              <div
+                className={cn(
+                  'transition-opacity duration-150',
+                  isCreating ? 'opacity-100' : 'opacity-70 hover:opacity-100'
+                )}
+              >
+                <CreateGoalInput
+                  placeholder="Add a task..."
+                  value={newGoalTitle}
+                  onChange={onNewGoalTitleChange}
+                  onSubmit={handleSubmit}
+                  onEscape={handleEscape}
+                  onFocus={() => setIsCreating(true)}
+                  onBlur={() => {
+                    if (!newGoalTitle) {
+                      setIsCreating(false);
+                      setIsHovering(false);
+                    }
+                  }}
+                  autoFocus={isCreating}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-interface DayHeaderProps {
-  dayOfWeek: number;
-}
-
 // Simple presentational component for the day header
-const DayHeader = ({ dayOfWeek }: DayHeaderProps) => (
-  <div className="bg-gray-100 py-1 px-3 rounded-md mb-3">
-    <div className="text-sm font-bold text-gray-900">
-      {getDayName(dayOfWeek)}
+const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
+  return (
+    <div className="space-y-2">
+      <div className="bg-gray-100 py-1 px-3 rounded-md">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-bold text-gray-900">
+            {getDayName(dayOfWeek)}
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};

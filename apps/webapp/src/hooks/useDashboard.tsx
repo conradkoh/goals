@@ -102,7 +102,7 @@ interface DashboardContextValue {
     parentId: Id<'goals'>;
     weekNumber: number;
     dayOfWeek: number;
-    dateTimestamp: number;
+    dateTimestamp?: number;
   }) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
     weekNumber: number;
@@ -251,7 +251,7 @@ export const DashboardProvider = ({
     parentId: Id<'goals'>;
     weekNumber: number;
     dayOfWeek: number;
-    dateTimestamp: number;
+    dateTimestamp?: number;
   }) => {
     await createDailyGoalMutation({
       sessionId,

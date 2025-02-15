@@ -59,7 +59,7 @@ export default defineSchema({
     daily: v.optional(
       v.object({
         dayOfWeek: v.number(),
-        dateTimestamp: v.number(),
+        dateTimestamp: v.optional(v.number()),
       })
     ),
   }).index('by_user_and_year_and_quarter_and_week', [
