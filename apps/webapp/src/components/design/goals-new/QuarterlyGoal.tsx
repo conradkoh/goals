@@ -144,6 +144,22 @@ export function QuarterlyGoal({
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <h3 className="font-semibold">{goal.title}</h3>
+                  <GoalEditPopover
+                    title={goal.title}
+                    details={goal.details || ''}
+                    onSave={async (title, details) => {
+                      await onUpdateTitle(goal._id, title, details);
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
                 </div>
                 {goal.details && (
                   <SafeHTML html={goal.details} className="mt-2 text-sm" />
