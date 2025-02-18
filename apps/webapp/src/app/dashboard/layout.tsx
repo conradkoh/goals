@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/popover';
 import { YearQuarterSelector } from '@/components/design/quarterly-overview/YearQuarterSelector';
 import { SyncPassphrase } from '@/components/design/sync/SyncPassphrase';
+import { Separator } from '@/components/ui/separator';
 
 export default function DashboardLayout({
   children,
@@ -62,7 +63,7 @@ const Header = () => {
                 <h4 className="text-sm font-medium">Account</h4>
               </div>
               <div className="px-4 py-3">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3">
                   <div className="rounded-full bg-secondary p-2">
                     <User className="h-4 w-4" />
                   </div>
@@ -76,9 +77,12 @@ const Header = () => {
                   </div>
                 </div>
               </div>
+              <Separator />
+              <div className="py-2">
+                <SyncPassphrase />
+              </div>
             </PopoverContent>
           </Popover>
-          <SyncPassphrase />
         </div>
       </div>
     </header>

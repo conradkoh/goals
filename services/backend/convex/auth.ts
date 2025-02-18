@@ -13,6 +13,10 @@ export const useAnonymousSession = mutation({
       // check validity
       const prevSession = await ctx.db.get(prevSessionId as Id<'sessions'>);
       if (prevSession && prevSession.status === 'active') {
+        // Update lastActiveAt for existing session
+        await ctx.db.patch(prevSessionId as Id<'sessions'>, {
+          lastActiveAt: Date.now(),
+        });
         return prevSessionId as Id<'sessions'>; //return the same one already active
       }
     }
@@ -25,6 +29,7 @@ export const useAnonymousSession = mutation({
     const sessionId = await ctx.db.insert('sessions', {
       userId,
       status: 'active',
+      lastActiveAt: Date.now(),
     });
     return sessionId;
   },

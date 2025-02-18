@@ -40,15 +40,16 @@ export function SyncPassphrase() {
     sessionId: sessionId!,
   });
 
-  // Create initial sync session when component mounts
+  // Create initial sync session when component mounts or when current session is null/consumed
   useEffect(() => {
-    if (!sessionId || hasCreatedInitialSession.current) return;
-
-    hasCreatedInitialSession.current = true;
-    createSyncSession({
-      sessionId,
-    });
-  }, [sessionId, createSyncSession]);
+    if (!sessionId) return;
+    if (!currentSyncSession || currentSyncSession.status === 'consumed') {
+      hasCreatedInitialSession.current = true;
+      createSyncSession({
+        sessionId,
+      });
+    }
+  }, [sessionId, currentSyncSession, createSyncSession]);
 
   // Reset copy state when passphrase changes
   useEffect(() => {
@@ -77,14 +78,18 @@ export function SyncPassphrase() {
               sessionId,
             });
           }
-          return 60;
+          return Math.floor(
+            currentSyncSession?.durationMs
+              ? currentSyncSession.durationMs / 1000
+              : 60
+          );
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [sessionId, createSyncSession]);
+  }, [sessionId, createSyncSession, currentSyncSession?.durationMs]);
 
   const handleSyncAttempt = (code: string) => {
     setPendingSyncCode(code);
@@ -135,15 +140,29 @@ export function SyncPassphrase() {
     }
   };
 
+  const handleGenerateNewCode = () => {
+    if (!sessionId) return;
+    createSyncSession({
+      sessionId,
+    });
+    toast({
+      title: 'New Code Generated',
+      description: 'A new sync code has been generated.',
+    });
+  };
+
+  const isCodeConsumed = currentSyncSession?.status === 'consumed';
+
   return (
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <Laptop className="h-5 w-5" />
-          </Button>
+          <button className="relative flex w-full items-center px-4 py-2 text-sm hover:bg-muted">
+            <Laptop className="mr-2 h-4 w-4" />
+            <span>Sync Device</span>
+          </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80">
+        <PopoverContent className="w-80" align="end">
           <div className="space-y-4">
             <div>
               <h4 className="font-medium mb-1">Sync Code</h4>
@@ -153,30 +172,51 @@ export function SyncPassphrase() {
               </p>
             </div>
             <div className="space-y-2">
-              <button
-                onClick={handleCopy}
-                className="w-full bg-muted hover:bg-muted/80 p-3 rounded-md text-left relative group transition-colors"
-              >
-                <div className="pr-10 break-words">
-                  <code className="text-lg font-mono">
-                    {currentSyncSession?.passphrase || ''}
-                  </code>
+              {isCodeConsumed ? (
+                <div className="bg-yellow-50 p-3 rounded-md space-y-2">
+                  <p className="text-sm text-yellow-800">
+                    This code has been used by another device.
+                  </p>
+                  <Button onClick={handleGenerateNewCode} size="sm">
+                    Generate New Code
+                  </Button>
                 </div>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {hasCopied ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </div>
-              </button>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Time remaining</span>
-                  <span>{timeLeft}s</span>
-                </div>
-                <Progress value={(timeLeft / 60) * 100} />
-              </div>
+              ) : (
+                <>
+                  <button
+                    onClick={handleCopy}
+                    className="w-full bg-muted hover:bg-muted/80 p-3 rounded-md text-left relative group transition-colors"
+                  >
+                    <div className="pr-10 break-words">
+                      <code className="text-lg font-mono">
+                        {currentSyncSession?.passphrase || ''}
+                      </code>
+                    </div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {hasCopied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </button>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Time remaining</span>
+                      <span>{timeLeft}s</span>
+                    </div>
+                    <Progress
+                      value={
+                        (timeLeft /
+                          (currentSyncSession?.durationMs
+                            ? currentSyncSession.durationMs / 1000
+                            : 60)) *
+                        100
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <div className="space-y-2">
               <h4 className="font-medium">Sync with Another Device</h4>

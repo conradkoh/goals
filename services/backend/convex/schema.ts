@@ -7,6 +7,7 @@ export default defineSchema({
   sessions: defineTable({
     userId: v.id('users'),
     status: v.literal('active'),
+    lastActiveAt: v.optional(v.number()), // Unix timestamp
   }),
   users: defineTable(
     v.union(
@@ -73,5 +74,7 @@ export default defineSchema({
     userId: v.id('users'),
     passphrase: v.string(),
     expiresAt: v.number(), // Unix timestamp
+    status: v.union(v.literal('active'), v.literal('consumed')),
+    durationMs: v.optional(v.number()), // Duration of the sync session in milliseconds
   }).index('by_passphrase', ['passphrase']),
 });

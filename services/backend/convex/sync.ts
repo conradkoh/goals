@@ -9,7 +9,10 @@ const ErrorCode = {
   NOT_FOUND: 'NOT_FOUND',
   UNAUTHORIZED: 'UNAUTHORIZED',
   EXPIRED: 'EXPIRED',
+  CONSUMED: 'CONSUMED',
 } as const;
+
+const SYNC_DURATION_MS = 60 * 1000; // 1 minute in milliseconds
 
 // Consonant and vowel patterns for pronounceable words
 const CONSONANTS = 'bcdfghjklmnprstvwxz';
@@ -124,6 +127,11 @@ export const createSyncSession = mutation({
       throw new Error('Not authenticated');
     }
 
+    // Update session's lastActiveAt
+    await ctx.db.patch(args.sessionId, {
+      lastActiveAt: Date.now(),
+    });
+
     // Delete any existing sync sessions for this user
     const existingSessions = await ctx.db
       .query('syncSessions')
@@ -134,13 +142,15 @@ export const createSyncSession = mutation({
       existingSessions.map((session) => ctx.db.delete(session._id))
     );
 
-    // Create new sync session that expires in 2 minutes
-    const expiresAt = Date.now() + 2 * 60 * 1000;
+    // Create new sync session that expires in 1 minute
+    const expiresAt = Date.now() + SYNC_DURATION_MS;
     const passphrase = normalizePassphrase(generatePassphrase());
     return await ctx.db.insert('syncSessions', {
       userId: user._id,
       passphrase,
       expiresAt,
+      status: 'active',
+      durationMs: SYNC_DURATION_MS, // Add duration to the session data
     });
   },
 });
@@ -163,6 +173,8 @@ export const getCurrentSyncSession = query({
       .filter((q) => q.eq(q.field('userId'), user._id))
       .first();
 
+    // If no session exists or it's expired, return null
+    // The frontend will handle creating a new session
     if (!syncSession || syncSession.expiresAt < Date.now()) {
       return null;
     }
@@ -205,14 +217,27 @@ export const validatePassphrase = mutation({
       });
     }
 
+    // Check if the code has already been used
+    if (syncSession.status === 'consumed') {
+      throw new ConvexError({
+        code: ErrorCode.CONSUMED,
+        message:
+          'This sync code has already been used. Please request a new code.',
+      });
+    }
+
     // Create a new session for this user
     const newSession = await ctx.db.insert('sessions', {
       userId: syncSession.userId,
       status: 'active',
+      lastActiveAt: Date.now(),
     });
 
-    // Delete the sync session as it's been used
-    await ctx.db.delete(syncSession._id);
+    // Mark the sync session as consumed instead of deleting it
+    // This allows the original browser to see that their code was used
+    await ctx.db.patch(syncSession._id, {
+      status: 'consumed',
+    });
 
     return newSession;
   },
