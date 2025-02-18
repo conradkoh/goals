@@ -68,4 +68,10 @@ export default defineSchema({
     'quarter',
     'weekNumber',
   ]),
+
+  syncSessions: defineTable({
+    userId: v.id('users'),
+    passphrase: v.string(),
+    expiresAt: v.number(), // Unix timestamp
+  }).index('by_passphrase', ['passphrase']),
 });

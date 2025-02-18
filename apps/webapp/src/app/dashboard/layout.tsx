@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { YearQuarterSelector } from '@/components/design/quarterly-overview/YearQuarterSelector';
+import { SyncPassphrase } from '@/components/design/sync/SyncPassphrase';
 
 export default function DashboardLayout({
   children,
@@ -77,6 +78,7 @@ const Header = () => {
               </div>
             </PopoverContent>
           </Popover>
+          <SyncPassphrase />
         </div>
       </div>
     </header>
