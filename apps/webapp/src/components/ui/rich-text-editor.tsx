@@ -112,7 +112,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm max-w-none focus:outline-none min-h-[100px]',
+          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border',
           className
         ),
       },
@@ -206,7 +206,7 @@ export function RichTextEditor({
     <div className="relative">
       <EditorContent editor={editor} />
       <ConditionalRender condition={isEmpty && !!placeholder}>
-        <div className="absolute top-3 left-4 text-muted-foreground pointer-events-none">
+        <div className="absolute top-3 left-4 text-muted-foreground text-sm pointer-events-none">
           {placeholder}
         </div>
       </ConditionalRender>
