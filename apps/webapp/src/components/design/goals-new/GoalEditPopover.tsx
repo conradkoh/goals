@@ -28,6 +28,12 @@ export function GoalEditPopover({
   const [details, setDetails] = useState(initialDetails);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleCancel = () => {
+    setTitle(initialTitle);
+    setDetails(initialDetails);
+    setIsOpen(false);
+  };
+
   const handleSave = async () => {
     if (!title.trim()) return;
 
@@ -55,7 +61,16 @@ export function GoalEditPopover({
   });
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleCancel();
+        } else {
+          setIsOpen(true);
+        }
+      }}
+    >
       <PopoverTrigger asChild>
         {trigger || (
           <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -100,7 +115,7 @@ export function GoalEditPopover({
         <div className="flex justify-end space-x-2">
           <Button
             variant="outline"
-            onClick={() => setIsOpen(false)}
+            onClick={handleCancel}
             disabled={isSubmitting}
           >
             Cancel
