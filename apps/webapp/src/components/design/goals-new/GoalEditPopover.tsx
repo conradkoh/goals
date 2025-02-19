@@ -8,7 +8,7 @@ import {
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { Edit2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface GoalEditPopoverProps {
   title: string;
@@ -19,18 +19,32 @@ interface GoalEditPopoverProps {
 
 export function GoalEditPopover({
   title: initialTitle,
-  details: initialDetails = '',
+  details: initialDetails,
   onSave,
   trigger,
 }: GoalEditPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
-  const [details, setDetails] = useState(initialDetails);
+  const [details, setDetails] = useState(initialDetails ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync title with external data when it changes or popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(initialTitle);
+    }
+  }, [isOpen, initialTitle]);
+
+  // Sync details with external data when it changes or popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setDetails(initialDetails ?? '');
+    }
+  }, [isOpen, initialDetails]);
 
   const handleCancel = () => {
     setTitle(initialTitle);
-    setDetails(initialDetails);
+    setDetails(initialDetails ?? '');
     setIsOpen(false);
   };
 
