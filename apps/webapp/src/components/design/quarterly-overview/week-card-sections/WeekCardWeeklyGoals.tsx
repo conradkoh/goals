@@ -214,16 +214,89 @@ const WeeklyGoal = ({
   );
 };
 
+const WeeklyGoalGroup = ({
+  quarterlyGoal,
+  weeklyGoals,
+  onCreateGoal,
+  onUpdateTitle,
+  onDelete,
+}: {
+  quarterlyGoal: GoalWithDetailsAndChildren;
+  weeklyGoals: GoalWithDetailsAndChildren[];
+  onCreateGoal: (title: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => Promise<void>;
+  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+}) => {
+  const [isCreating, setIsCreating] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [newGoalTitle, setNewGoalTitle] = useState('');
+
+  const handleSubmit = async () => {
+    if (!newGoalTitle.trim()) return;
+    await onCreateGoal(newGoalTitle);
+    setNewGoalTitle('');
+    // Don't hide the input after submission to allow for multiple entries
+  };
+
+  const handleEscape = () => {
+    setIsCreating(false);
+    setNewGoalTitle(''); // Clear the input
+  };
+
+  return (
+    <div className="space-y-1">
+      {weeklyGoals.map((weeklyGoal) => (
+        <WeeklyGoal
+          key={weeklyGoal._id}
+          goal={weeklyGoal}
+          onUpdateTitle={onUpdateTitle}
+          onDelete={onDelete}
+        />
+      ))}
+      <div
+        className="pt-1"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => !isCreating && setIsHovering(false)}
+      >
+        {(isHovering || isCreating) && (
+          <div
+            className={cn(
+              'transition-opacity duration-150',
+              isCreating ? 'opacity-100' : 'opacity-70 hover:opacity-100'
+            )}
+          >
+            <CreateGoalInput
+              placeholder="Add a weekly goal..."
+              value={newGoalTitle}
+              onChange={setNewGoalTitle}
+              onSubmit={handleSubmit}
+              onEscape={handleEscape}
+              onFocus={() => setIsCreating(true)}
+              onBlur={() => {
+                if (!newGoalTitle) {
+                  setIsCreating(false);
+                  setIsHovering(false);
+                }
+              }}
+              autoFocus={isCreating}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const WeekCardWeeklyGoals = ({
   weekNumber,
 }: WeekCardWeeklyGoalsProps) => {
   const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
     useDashboard();
   const { quarterlyGoals } = useWeek();
-  const [newGoalTitle, setNewGoalTitle] = useState('');
-  const [selectedQuarterlyGoalId, setSelectedQuarterlyGoalId] = useState<
-    Id<'goals'> | undefined
-  >();
 
   // Filter and sort important quarterly goals
   const importantQuarterlyGoals = useMemo(() => {
@@ -241,24 +314,18 @@ export const WeekCardWeeklyGoals = ({
       });
   }, [quarterlyGoals]);
 
-  // Auto-select first goal when list changes and nothing is selected
-  useEffect(() => {
-    if (importantQuarterlyGoals.length > 0 && !selectedQuarterlyGoalId) {
-      setSelectedQuarterlyGoalId(importantQuarterlyGoals[0]._id);
-    }
-  }, [importantQuarterlyGoals, selectedQuarterlyGoalId]);
-
-  const handleCreateWeeklyGoal = async () => {
-    if (!newGoalTitle.trim() || !selectedQuarterlyGoalId) return;
+  const handleCreateWeeklyGoal = async (
+    quarterlyGoalId: Id<'goals'>,
+    title: string
+  ) => {
+    if (!title.trim()) return;
 
     try {
       await createWeeklyGoal({
-        title: newGoalTitle.trim(),
-        parentId: selectedQuarterlyGoalId,
+        title: title.trim(),
+        parentId: quarterlyGoalId,
         weekNumber,
       });
-      // Clear the input after successful creation
-      setNewGoalTitle('');
     } catch (error) {
       console.error('Failed to create weekly goal:', error);
     }
@@ -294,22 +361,6 @@ export const WeekCardWeeklyGoals = ({
 
   return (
     <div className="space-y-4">
-      <div>
-        <CreateGoalInput
-          placeholder="Add a weekly goal..."
-          value={newGoalTitle}
-          onChange={setNewGoalTitle}
-          onSubmit={handleCreateWeeklyGoal}
-        >
-          <GoalSelector
-            goals={importantQuarterlyGoals}
-            value={selectedQuarterlyGoalId}
-            onChange={setSelectedQuarterlyGoalId}
-            placeholder="Select quarterly goal"
-          />
-        </CreateGoalInput>
-      </div>
-
       {importantQuarterlyGoals.length === 0 ? (
         <div className="text-sm text-muted-foreground italic px-3">
           No starred or pinned quarterly goals
@@ -331,16 +382,15 @@ export const WeekCardWeeklyGoals = ({
               >
                 {goal.title}
               </div>
-              <div className="space-y-1">
-                {weeklyGoals.map((weeklyGoal) => (
-                  <WeeklyGoal
-                    key={weeklyGoal._id}
-                    goal={weeklyGoal}
-                    onUpdateTitle={handleUpdateWeeklyGoalTitle}
-                    onDelete={handleDeleteWeeklyGoal}
-                  />
-                ))}
-              </div>
+              <WeeklyGoalGroup
+                quarterlyGoal={goal}
+                weeklyGoals={weeklyGoals}
+                onCreateGoal={(title) =>
+                  handleCreateWeeklyGoal(goal._id, title)
+                }
+                onUpdateTitle={handleUpdateWeeklyGoalTitle}
+                onDelete={handleDeleteWeeklyGoal}
+              />
             </div>
           );
         })
