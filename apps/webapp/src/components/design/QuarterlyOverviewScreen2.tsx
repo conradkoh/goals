@@ -168,17 +168,7 @@ const WeekCardSection = ({
           >
             <h3 className="font-semibold">{title}</h3>
             {showFocusMode && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering dropdown
-                  onFocusClick?.();
-                }}
-              >
-                <Focus className="h-4 w-4 text-muted-foreground" />
-              </Button>
+              <Focus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             )}
           </div>
         </DropdownMenuTrigger>
