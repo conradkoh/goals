@@ -112,6 +112,9 @@ export const QuarterlyOverviewScreen2 = () => {
               mondayDate={week.mondayDate}
               weekNumber={week.weekNumber}
               isCurrentWeek={week.weekNumber === currentWeekNumber}
+              onFocusClick={() =>
+                dailyGoalsRefs.current[weekIndex]?.openFocusMode()
+              }
             >
               <div className="space-y-6">
                 <WeekCardSection title="Quarterly Goals">
@@ -126,13 +129,7 @@ export const QuarterlyOverviewScreen2 = () => {
 
                 <div className="border-t border-gray-100" />
 
-                <WeekCardSection
-                  title="Daily Goals"
-                  showFocusMode
-                  onFocusClick={() =>
-                    dailyGoalsRefs.current[weekIndex]?.openFocusMode()
-                  }
-                >
+                <WeekCardSection title="Daily Goals">
                   <WeekCardDailyGoals
                     ref={setDailyGoalRef(weekIndex)}
                     weekNumber={week.weekNumber}

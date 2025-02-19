@@ -1,5 +1,7 @@
 import { WeekProvider } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Focus } from 'lucide-react';
 
 interface WeekCardProps {
   weekLabel: string;
@@ -7,6 +9,7 @@ interface WeekCardProps {
   weekNumber: number;
   isCurrentWeek?: boolean;
   children?: React.ReactNode;
+  onFocusClick?: () => void;
 }
 
 export const WeekCard = ({
@@ -15,6 +18,7 @@ export const WeekCard = ({
   weekNumber,
   isCurrentWeek,
   children,
+  onFocusClick,
 }: WeekCardProps) => {
   return (
     <WeekProvider weekNumber={weekNumber}>
@@ -26,7 +30,20 @@ export const WeekCard = ({
       >
         <div className={cn('border-b p-4', isCurrentWeek && 'bg-blue-50')}>
           <div className="flex items-baseline justify-between">
-            <p className="text-sm text-muted-foreground">{mondayDate}</p>
+            <div className="flex items-center gap-4">
+              <p className="text-sm text-muted-foreground">{mondayDate}</p>
+              {onFocusClick && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={onFocusClick}
+                >
+                  <Focus className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Focus Mode</span>
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               {isCurrentWeek && (
                 <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
