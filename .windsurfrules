@@ -1,0 +1,17 @@
+
+# Package Management
+
+1. We use pnpm for this project
+2. Ensure to install @types/... for packages that needed it, we use typescript
+3. This is a monorepo, ensure that you install the packages in the right repo. These are the workspace packages
+    * @apps/webapp
+    * @services/backend
+
+# Shadcn
+
+Remember that the `shadcn-ui` cli has been replaced by `shadcn`.
+
+# Backend Queries / Mutations / Actions
+## Auth
+1. Assume the sessionId is passed in as a parameter to the function.
+2. Always do a look up against the session table to get the user id, rather than in-built convex functions
