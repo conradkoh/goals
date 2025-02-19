@@ -661,9 +661,46 @@ const DailyGoalGroup = ({
       >
         <div className="space-y-0.5 mb-2">
           <div className="flex items-center justify-between">
-            <div className="font-semibold text-gray-800">
-              {weeklyGoal.title}
-            </div>
+            {/* Weekly Goal Title with Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto hover:bg-transparent font-semibold text-gray-800 justify-start text-left focus-visible:ring-0"
+                >
+                  <span className="truncate">{weeklyGoal.title}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold">{weeklyGoal.title}</h3>
+                    <GoalEditPopover
+                      title={weeklyGoal.title}
+                      details={weeklyGoal.details}
+                      onSave={async (title, details) => {
+                        await onUpdateGoalTitle(weeklyGoal._id, title, details);
+                      }}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                  </div>
+                  {weeklyGoal.details && (
+                    <SafeHTML
+                      html={weeklyGoal.details}
+                      className="mt-2 text-sm"
+                    />
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex items-center gap-1.5 text-sm text-gray-500">
             {isStarred && (
@@ -672,7 +709,50 @@ const DailyGoalGroup = ({
             {isPinned && (
               <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
             )}
-            <span>{quarterlyGoal.title}</span>
+            {/* Quarterly Goal Title with Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="p-0 h-auto hover:bg-transparent text-gray-500 justify-start text-left focus-visible:ring-0"
+                >
+                  <span className="truncate">{quarterlyGoal.title}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold">{quarterlyGoal.title}</h3>
+                    <GoalEditPopover
+                      title={quarterlyGoal.title}
+                      details={quarterlyGoal.details}
+                      onSave={async (title, details) => {
+                        await onUpdateGoalTitle(
+                          quarterlyGoal._id,
+                          title,
+                          details
+                        );
+                      }}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                  </div>
+                  {quarterlyGoal.details && (
+                    <SafeHTML
+                      html={quarterlyGoal.details}
+                      className="mt-2 text-sm"
+                    />
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <div className="space-y-1">
