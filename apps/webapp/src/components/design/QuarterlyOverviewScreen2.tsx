@@ -12,8 +12,21 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
-import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import {
+  WeekCardDailyGoals,
+  WeekCardDailyGoalsRef,
+} from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Button } from '@/components/ui/button';
+import { Focus } from 'lucide-react';
+import { useRef } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export interface DragData {
   goal: GoalWithDetailsAndChildren;
@@ -37,6 +50,19 @@ export const QuarterlyOverviewScreen2 = () => {
   const currentIndex = weekData.findIndex(
     (week) => week.weekNumber === currentWeekNumber
   );
+
+  // Create an array of refs for each week
+  const dailyGoalsRefs = useRef<(WeekCardDailyGoalsRef | null)[]>([]);
+  // Initialize the refs array with the correct length
+  if (dailyGoalsRefs.current.length !== weekData.length) {
+    dailyGoalsRefs.current = Array(weekData.length).fill(null);
+  }
+
+  // Ref callback to store the ref at the correct index
+  const setDailyGoalRef =
+    (index: number) => (el: WeekCardDailyGoalsRef | null) => {
+      dailyGoalsRefs.current[index] = el;
+    };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -79,31 +105,38 @@ export const QuarterlyOverviewScreen2 = () => {
     <div className="flex flex-col h-full">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
-          {weekData.map((week, weekIndex) => {
-            return (
-              <WeekCard
-                key={weekIndex}
-                weekLabel={week.weekLabel}
-                mondayDate={week.mondayDate}
-                weekNumber={week.weekNumber}
-                isCurrentWeek={week.weekNumber === currentWeekNumber}
-              >
-                <div className="space-y-6">
-                  <WeekCardSection title="Quarterly Goals">
-                    <WeekCardQuarterlyGoals weekNumber={week.weekNumber} />
-                  </WeekCardSection>
+          {weekData.map((week, weekIndex) => (
+            <WeekCard
+              key={weekIndex}
+              weekLabel={week.weekLabel}
+              mondayDate={week.mondayDate}
+              weekNumber={week.weekNumber}
+              isCurrentWeek={week.weekNumber === currentWeekNumber}
+            >
+              <div className="space-y-6">
+                <WeekCardSection title="Quarterly Goals">
+                  <WeekCardQuarterlyGoals weekNumber={week.weekNumber} />
+                </WeekCardSection>
 
-                  <WeekCardSection title="Weekly Goals">
-                    <WeekCardWeeklyGoals weekNumber={week.weekNumber} />
-                  </WeekCardSection>
+                <WeekCardSection title="Weekly Goals">
+                  <WeekCardWeeklyGoals weekNumber={week.weekNumber} />
+                </WeekCardSection>
 
-                  <WeekCardSection title="Daily Goals">
-                    <WeekCardDailyGoals weekNumber={week.weekNumber} />
-                  </WeekCardSection>
-                </div>
-              </WeekCard>
-            );
-          })}
+                <WeekCardSection
+                  title="Daily Goals"
+                  showFocusMode
+                  onFocusClick={() =>
+                    dailyGoalsRefs.current[weekIndex]?.openFocusMode()
+                  }
+                >
+                  <WeekCardDailyGoals
+                    ref={setDailyGoalRef(weekIndex)}
+                    weekNumber={week.weekNumber}
+                  />
+                </WeekCardSection>
+              </div>
+            </WeekCard>
+          ))}
         </QuarterlyGrid>
       </DndContext>
     </div>
@@ -113,12 +146,51 @@ export const QuarterlyOverviewScreen2 = () => {
 interface WeekCardSectionProps {
   title: string;
   children?: React.ReactNode;
+  showFocusMode?: boolean;
+  onFocusClick?: () => void;
 }
 
-const WeekCardSection = ({ title, children }: WeekCardSectionProps) => {
+const WeekCardSection = ({
+  title,
+  children,
+  showFocusMode,
+  onFocusClick,
+}: WeekCardSectionProps) => {
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold">{title}</h3>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div
+            className={cn(
+              'group flex justify-between items-center px-2 py-1 rounded-md cursor-pointer',
+              showFocusMode && 'hover:bg-gray-50/50'
+            )}
+          >
+            <h3 className="font-semibold">{title}</h3>
+            {showFocusMode && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering dropdown
+                  onFocusClick?.();
+                }}
+              >
+                <Focus className="h-4 w-4 text-muted-foreground" />
+              </Button>
+            )}
+          </div>
+        </DropdownMenuTrigger>
+        {showFocusMode && (
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onFocusClick} className="gap-2">
+              <Focus className="h-4 w-4" />
+              <span>Focus Mode</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        )}
+      </DropdownMenu>
       <div className="space-y-2">{children}</div>
     </div>
   );

@@ -1,8 +1,14 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { Edit2, Focus } from 'lucide-react';
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalSelector } from '../../goals-new/GoalSelector';
@@ -26,9 +32,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { WeekCardDailyGoals } from './WeekCardDailyGoals';
+import { Dialog, DialogPortal, DialogTrigger } from '@/components/ui/dialog';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
+}
+
+export interface WeekCardWeeklyGoalsRef {
+  openFocusMode: () => void;
 }
 
 // Internal component for rendering a weekly goal
@@ -291,12 +303,101 @@ const WeeklyGoalGroup = ({
   );
 };
 
-export const WeekCardWeeklyGoals = ({
+// New FocusWeeklyGoalGroup component for focus mode
+const FocusWeeklyGoalGroup = ({
+  quarterlyGoal,
+  weeklyGoals,
+  onUpdateTitle,
+  onDelete,
+}: {
+  quarterlyGoal: GoalWithDetailsAndChildren;
+  weeklyGoals: GoalWithDetailsAndChildren[];
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string
+  ) => Promise<void>;
+  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+}) => {
+  return (
+    <div className="space-y-1">
+      <div className="font-medium text-sm text-gray-800 mb-2">
+        {quarterlyGoal.title}
+      </div>
+      {weeklyGoals.map((weeklyGoal) => (
+        <WeeklyGoal
+          key={weeklyGoal._id}
+          goal={weeklyGoal}
+          onUpdateTitle={onUpdateTitle}
+          onDelete={onDelete}
+        />
+      ))}
+    </div>
+  );
+};
+
+// WeeklyGoalsFocusMode component
+const WeeklyGoalsFocusMode = ({
   weekNumber,
-}: WeekCardWeeklyGoalsProps) => {
+  onClose,
+}: {
+  weekNumber: number;
+  onClose: () => void;
+}) => {
+  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useDashboard();
+  const { quarterlyGoals } = useWeek();
+
+  // Add keyboard event handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-white z-50 overflow-auto">
+      <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+            <h2 className="text-lg font-semibold">
+              Focus Mode - Today's Goals
+            </h2>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <WeekCardDailyGoals
+                weekNumber={weekNumber}
+                showOnlyToday={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const WeekCardWeeklyGoals = forwardRef<
+  WeekCardWeeklyGoalsRef,
+  WeekCardWeeklyGoalsProps
+>(({ weekNumber }, ref) => {
   const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
     useDashboard();
   const { quarterlyGoals } = useWeek();
+  const [isFocusMode, setIsFocusMode] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    openFocusMode: () => setIsFocusMode(true),
+  }));
 
   // Filter and sort important quarterly goals
   const importantQuarterlyGoals = useMemo(() => {
@@ -366,35 +467,46 @@ export const WeekCardWeeklyGoals = ({
           No starred or pinned quarterly goals
         </div>
       ) : (
-        importantQuarterlyGoals.map((goal) => {
-          const weeklyGoals = goal.children;
-          const isStarred = goal.state?.isStarred ?? false;
-          const isPinned = goal.state?.isPinned ?? false;
-
-          return (
-            <div key={goal._id} className="px-3 space-y-2">
-              <div
-                className={cn(
-                  'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
-                  isStarred && 'bg-yellow-50',
-                  isPinned && 'bg-blue-50'
-                )}
-              >
-                {goal.title}
-              </div>
-              <WeeklyGoalGroup
-                quarterlyGoal={goal}
-                weeklyGoals={weeklyGoals}
-                onCreateGoal={(title) =>
-                  handleCreateWeeklyGoal(goal._id, title)
-                }
-                onUpdateTitle={handleUpdateWeeklyGoalTitle}
-                onDelete={handleDeleteWeeklyGoal}
+        <div className="space-y-4">
+          <Dialog open={isFocusMode} onOpenChange={setIsFocusMode}>
+            <DialogPortal>
+              <WeeklyGoalsFocusMode
+                weekNumber={weekNumber}
+                onClose={() => setIsFocusMode(false)}
               />
-            </div>
-          );
-        })
+            </DialogPortal>
+          </Dialog>
+
+          {importantQuarterlyGoals.map((goal) => {
+            const weeklyGoals = goal.children;
+            const isStarred = goal.state?.isStarred ?? false;
+            const isPinned = goal.state?.isPinned ?? false;
+
+            return (
+              <div key={goal._id} className="px-3 space-y-2">
+                <div
+                  className={cn(
+                    'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
+                    isStarred && 'bg-yellow-50',
+                    isPinned && 'bg-blue-50'
+                  )}
+                >
+                  {goal.title}
+                </div>
+                <WeeklyGoalGroup
+                  quarterlyGoal={goal}
+                  weeklyGoals={weeklyGoals}
+                  onCreateGoal={(title) =>
+                    handleCreateWeeklyGoal(goal._id, title)
+                  }
+                  onUpdateTitle={handleUpdateWeeklyGoalTitle}
+                  onDelete={handleDeleteWeeklyGoal}
+                />
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
-};
+});

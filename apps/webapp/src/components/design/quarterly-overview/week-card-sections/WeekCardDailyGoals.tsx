@@ -1,7 +1,13 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useState, useMemo, useEffect } from 'react';
+import {
+  useState,
+  useMemo,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
 import { useWeek } from '@/hooks/useWeek';
@@ -26,11 +32,12 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Plus } from 'lucide-react';
+import { Edit2, Plus, Star, Pin, X } from 'lucide-react';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
+import { Dialog, DialogPortal } from '@/components/ui/dialog';
 
 // Day of week constants
 const DayOfWeek = {
@@ -60,6 +67,7 @@ const getDayName = (dayOfWeek: number): string => {
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
+  showOnlyToday?: boolean;
 }
 
 interface DayData {
@@ -83,11 +91,71 @@ const getStartOfDay = (date: Date) => {
   ).getTime();
 };
 
-export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
+export interface WeekCardDailyGoalsRef {
+  openFocusMode: () => void;
+}
+
+// Focus mode component
+const DailyGoalsFocusMode = ({
+  weekNumber,
+  onClose,
+}: {
+  weekNumber: number;
+  onClose: () => void;
+}) => {
+  // Add keyboard event handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-white z-50 overflow-auto">
+      <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="space-y-6">
+          <div className="flex justify-between items-center border-b pb-4">
+            <h2 className="text-lg font-semibold">
+              Focus Mode - Today's Goals
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <WeekCardDailyGoals
+                weekNumber={weekNumber}
+                showOnlyToday={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const WeekCardDailyGoals = forwardRef<
+  WeekCardDailyGoalsRef,
+  WeekCardDailyGoalsProps
+>(({ weekNumber, showOnlyToday }, ref) => {
   const { days, weeklyGoals } = useWeek();
   const { createDailyGoal } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
     const today = DateTime.now();
     const todayWeekNumber = today.weekNumber;
@@ -205,10 +273,23 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
     }
   };
 
+  useImperativeHandle(ref, () => ({
+    openFocusMode: () => setIsFocusMode(true),
+  }));
+
   return (
     <div className="space-y-4">
+      <Dialog open={isFocusMode} onOpenChange={setIsFocusMode}>
+        <DialogPortal>
+          <DailyGoalsFocusMode
+            weekNumber={weekNumber}
+            onClose={() => setIsFocusMode(false)}
+          />
+        </DialogPortal>
+      </Dialog>
+
       {/* Past Days Collapsible Section - Always First */}
-      {pastDays.length > 0 && (
+      {!showOnlyToday && pastDays.length > 0 && (
         <CollapsibleMinimal
           open={isPastDaysExpanded}
           onOpenChange={setIsPastDaysExpanded}
@@ -236,45 +317,47 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
           </CollapsibleMinimalContent>
         </CollapsibleMinimal>
       )}
-      <div>
-        <CreateGoalInput
-          placeholder="Add a daily goal..."
-          value={newGoalTitle}
-          onChange={setNewGoalTitle}
-          onSubmit={handleCreateDailyGoal}
-        >
-          <div className="flex gap-2 items-start">
-            <div className="w-1/3">
-              <Select
-                value={selectedDayOfWeek.toString()}
-                onValueChange={(value) =>
-                  setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
-                }
-              >
-                <SelectTrigger className="h-12 text-xs">
-                  <SelectValue placeholder="Select day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(DayOfWeek).map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {getDayName(value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {!showOnlyToday && (
+        <div>
+          <CreateGoalInput
+            placeholder="Add a daily goal..."
+            value={newGoalTitle}
+            onChange={setNewGoalTitle}
+            onSubmit={handleCreateDailyGoal}
+          >
+            <div className="flex gap-2 items-start">
+              <div className="w-1/3">
+                <Select
+                  value={selectedDayOfWeek.toString()}
+                  onValueChange={(value) =>
+                    setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                  }
+                >
+                  <SelectTrigger className="h-12 text-xs">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DayOfWeek).map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
+                        {getDayName(value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-2/3">
+                <GoalSelector
+                  goals={availableWeeklyGoals}
+                  value={selectedWeeklyGoalId}
+                  onChange={setSelectedWeeklyGoalId}
+                  placeholder="Select weekly goal"
+                  emptyStateMessage="No weekly goals available"
+                />
+              </div>
             </div>
-            <div className="w-2/3">
-              <GoalSelector
-                goals={availableWeeklyGoals}
-                value={selectedWeeklyGoalId}
-                onChange={setSelectedWeeklyGoalId}
-                placeholder="Select weekly goal"
-                emptyStateMessage="No weekly goals available"
-              />
-            </div>
-          </div>
-        </CreateGoalInput>
-      </div>
+          </CreateGoalInput>
+        </div>
+      )}
       <div className="space-y-2">
         {/* Current Day */}
         {currentDay && (
@@ -289,20 +372,21 @@ export const WeekCardDailyGoals = ({ weekNumber }: WeekCardDailyGoalsProps) => {
         )}
 
         {/* Future Days */}
-        {futureDays.map((day) => (
-          <DayProvider
-            key={day.dayOfWeek}
-            dayOfWeek={day.dayOfWeek}
-            date={day.date}
-            dateTimestamp={day.dateTimestamp}
-          >
-            <DaySection />
-          </DayProvider>
-        ))}
+        {!showOnlyToday &&
+          futureDays.map((day) => (
+            <DayProvider
+              key={day.dayOfWeek}
+              dayOfWeek={day.dayOfWeek}
+              date={day.date}
+              dateTimestamp={day.dateTimestamp}
+            >
+              <DaySection />
+            </DayProvider>
+          ))}
       </div>
     </div>
   );
-};
+});
 
 const DaySection = () => {
   const { createDailyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
@@ -311,6 +395,32 @@ const DaySection = () => {
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
   );
+
+  // Sort the weekly goals based on their quarterly goal's status and titles
+  const sortedWeeklyGoals = useMemo(() => {
+    return [...dailyGoalsView.weeklyGoals].sort((a, b) => {
+      const aQuarterly = a.quarterlyGoal;
+      const bQuarterly = b.quarterlyGoal;
+
+      // First by starred status
+      if (aQuarterly.state?.isStarred && !bQuarterly.state?.isStarred)
+        return -1;
+      if (!aQuarterly.state?.isStarred && bQuarterly.state?.isStarred) return 1;
+
+      // Then by pinned status
+      if (aQuarterly.state?.isPinned && !bQuarterly.state?.isPinned) return -1;
+      if (!aQuarterly.state?.isPinned && bQuarterly.state?.isPinned) return 1;
+
+      // Then by quarterly goal title
+      const quarterlyTitleCompare = aQuarterly.title.localeCompare(
+        bQuarterly.title
+      );
+      if (quarterlyTitleCompare !== 0) return quarterlyTitleCompare;
+
+      // Finally by weekly goal title
+      return a.weeklyGoal.title.localeCompare(b.weeklyGoal.title);
+    });
+  }, [dailyGoalsView.weeklyGoals]);
 
   const handleCreateDailyGoal = async (
     weeklyGoal: GoalWithDetailsAndChildren,
@@ -364,10 +474,15 @@ const DaySection = () => {
     <div className="space-y-2 pb-6 border-b border-gray-100 last:border-b-0">
       <DayHeader dayOfWeek={dayOfWeek} />
       <div>
-        {dailyGoalsView.weeklyGoals.map(({ weeklyGoal, quarterlyGoal }) => (
+        {sortedWeeklyGoals.map(({ weeklyGoal, quarterlyGoal }) => (
           <DailyGoalGroup
             key={weeklyGoal._id}
-            weeklyGoal={weeklyGoal}
+            weeklyGoal={{
+              ...weeklyGoal,
+              children: [...weeklyGoal.children].sort((a, b) =>
+                a.title.localeCompare(b.title)
+              ),
+            }}
             quarterlyGoal={quarterlyGoal}
             dayOfWeek={dayOfWeek}
             onCreateGoal={() =>
@@ -533,6 +648,9 @@ const DailyGoalGroup = ({
     onNewGoalTitleChange(''); // Clear the input
   };
 
+  const isStarred = quarterlyGoal.state?.isStarred ?? false;
+  const isPinned = quarterlyGoal.state?.isPinned ?? false;
+
   return (
     <div className="mb-4 last:mb-0">
       <div
@@ -547,7 +665,15 @@ const DailyGoalGroup = ({
               {weeklyGoal.title}
             </div>
           </div>
-          <div className="text-sm text-gray-500">{quarterlyGoal.title}</div>
+          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            {isStarred && (
+              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+            )}
+            {isPinned && (
+              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+            )}
+            <span>{quarterlyGoal.title}</span>
+          </div>
         </div>
         <div className="space-y-1">
           {dailyGoals.map((dailyGoal) => (
