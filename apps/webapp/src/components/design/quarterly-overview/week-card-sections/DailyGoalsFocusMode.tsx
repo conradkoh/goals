@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
+import { KeyboardShortcut } from '@/components/ui/keyboard-shortcut';
 import { X } from 'lucide-react';
-import { useEffect } from 'react';
 import { WeekCardDailyGoals } from './WeekCardDailyGoals';
 
 interface DailyGoalsFocusModeProps {
@@ -12,20 +12,9 @@ export const DailyGoalsFocusMode = ({
   weekNumber,
   onClose,
 }: DailyGoalsFocusModeProps) => {
-  // Add keyboard event handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   return (
     <div className="fixed inset-0 bg-gray-50 z-50 overflow-auto">
+      <KeyboardShortcut onEscPressed={onClose} />
       <div className="max-w-5xl mx-auto px-6 py-4">
         <div className="space-y-6">
           <div className="flex justify-between items-center border-b border-gray-200 pb-4">
