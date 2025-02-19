@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Goals App',
+  title: 'Goals',
   description: 'Track and accomplish your goals',
 };
 
