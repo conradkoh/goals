@@ -118,9 +118,13 @@ export const QuarterlyOverviewScreen2 = () => {
                   <WeekCardQuarterlyGoals weekNumber={week.weekNumber} />
                 </WeekCardSection>
 
+                <div className="border-t border-gray-100" />
+
                 <WeekCardSection title="Weekly Goals">
                   <WeekCardWeeklyGoals weekNumber={week.weekNumber} />
                 </WeekCardSection>
+
+                <div className="border-t border-gray-100" />
 
                 <WeekCardSection
                   title="Daily Goals"
@@ -158,29 +162,26 @@ const WeekCardSection = ({
 }: WeekCardSectionProps) => {
   return (
     <div className="space-y-4">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div
-            className={cn(
-              'group flex justify-between items-center px-2 py-1 rounded-md cursor-pointer',
-              showFocusMode && 'hover:bg-gray-50/50'
-            )}
-          >
-            <h3 className="font-semibold">{title}</h3>
-            {showFocusMode && (
-              <Focus className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-            )}
-          </div>
-        </DropdownMenuTrigger>
-        {showFocusMode && (
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onFocusClick} className="gap-2">
-              <Focus className="h-4 w-4" />
-              <span>Focus Mode</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
+      <div
+        className={cn(
+          'group flex justify-between items-center px-2 py-1 rounded-md',
+          showFocusMode && 'hover:bg-gray-50/50 cursor-pointer'
         )}
-      </DropdownMenu>
+      >
+        <h3 className="font-semibold">{title}</h3>
+        {showFocusMode && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={onFocusClick}
+            >
+              <Focus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
       <div className="space-y-2">{children}</div>
     </div>
   );
