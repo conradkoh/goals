@@ -38,6 +38,7 @@ import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
 import { Dialog, DialogPortal } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Day of week constants
 const DayOfWeek = {
@@ -116,10 +117,10 @@ const DailyGoalsFocusMode = ({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-auto">
+    <div className="fixed inset-0 bg-gray-50 z-50 overflow-auto">
       <div className="max-w-5xl mx-auto px-6 py-4">
         <div className="space-y-6">
-          <div className="flex justify-between items-center border-b pb-4">
+          <div className="flex justify-between items-center border-b border-gray-200 pb-4">
             <h2 className="text-lg font-semibold">
               Focus Mode - Today's Goals
             </h2>
@@ -134,7 +135,7 @@ const DailyGoalsFocusMode = ({
           </div>
 
           <div className="space-y-8">
-            <div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
               <WeekCardDailyGoals
                 weekNumber={weekNumber}
                 showOnlyToday={true}
@@ -529,19 +530,17 @@ const DailyGoalItem = ({
   const isComplete = goal.state?.isComplete ?? false;
 
   return (
-    <div className="group px-2 py-1 hover:bg-gray-50 rounded-sm">
+    <div className="group px-2 py-1 hover:bg-gray-50/50 rounded-sm">
       <div className="text-sm flex items-center gap-2 group/title">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={isComplete}
-          onChange={(e) =>
+          onCheckedChange={(checked) =>
             toggleGoalCompletion({
               goalId: goal._id,
               weekNumber,
-              isComplete: e.target.checked,
+              isComplete: checked === true,
             })
           }
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
 
         {/* View Mode */}
