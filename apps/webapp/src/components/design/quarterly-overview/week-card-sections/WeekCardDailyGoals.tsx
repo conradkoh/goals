@@ -421,7 +421,7 @@ const DaySection = () => {
   };
 
   return (
-    <div className="space-y-2 pb-6 border-b border-gray-100 last:border-b-0">
+    <div className="space-y-2 mb-1 border-b border-gray-100 last:border-b-0">
       <DayHeader dayOfWeek={dayOfWeek} />
       <div>
         {sortedWeeklyGoals.map(({ weeklyGoal, quarterlyGoal }) => (
@@ -600,14 +600,14 @@ const DailyGoalGroup = ({
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
 
   return (
-    <div className="mb-4 last:mb-0">
+    <div>
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
           isSoftComplete ? 'bg-green-50' : ''
         )}
       >
-        <div className="space-y-0.5 mb-2">
+        <div>
           <div className="flex items-center justify-between">
             {/* Weekly Goal Title with Popover */}
             <Popover>
@@ -717,30 +717,30 @@ const DailyGoalGroup = ({
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => !isCreating && setIsHovering(false)}
           >
-            {(isHovering || isCreating) && (
-              <div
-                className={cn(
-                  'transition-opacity duration-150',
-                  isCreating ? 'opacity-100' : 'opacity-70 hover:opacity-100'
-                )}
-              >
-                <CreateGoalInput
-                  placeholder="Add a task..."
-                  value={newGoalTitle}
-                  onChange={onNewGoalTitleChange}
-                  onSubmit={handleSubmit}
-                  onEscape={handleEscape}
-                  onFocus={() => setIsCreating(true)}
-                  onBlur={() => {
-                    if (!newGoalTitle) {
-                      setIsCreating(false);
-                      setIsHovering(false);
-                    }
-                  }}
-                  autoFocus={isCreating}
-                />
-              </div>
-            )}
+            <div
+              className={cn(
+                'transition-opacity duration-150',
+                isCreating || isHovering
+                  ? 'opacity-100 pointer-events-auto'
+                  : 'opacity-0 pointer-events-none'
+              )}
+            >
+              <CreateGoalInput
+                placeholder="Add a task..."
+                value={newGoalTitle}
+                onChange={onNewGoalTitleChange}
+                onSubmit={handleSubmit}
+                onEscape={handleEscape}
+                onFocus={() => setIsCreating(true)}
+                onBlur={() => {
+                  if (!newGoalTitle) {
+                    setIsCreating(false);
+                    setIsHovering(false);
+                  }
+                }}
+                autoFocus={isCreating}
+              />
+            </div>
           </div>
         </div>
       </div>

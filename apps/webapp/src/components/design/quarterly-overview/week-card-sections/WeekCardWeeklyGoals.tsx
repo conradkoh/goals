@@ -270,34 +270,34 @@ const WeeklyGoalGroup = ({
         />
       ))}
       <div
-        className="pt-1"
+        className="px-2 py-1"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isCreating && setIsHovering(false)}
       >
-        {(isHovering || isCreating) && (
-          <div
-            className={cn(
-              'transition-opacity duration-150',
-              isCreating ? 'opacity-100' : 'opacity-70 hover:opacity-100'
-            )}
-          >
-            <CreateGoalInput
-              placeholder="Add a weekly goal..."
-              value={newGoalTitle}
-              onChange={setNewGoalTitle}
-              onSubmit={handleSubmit}
-              onEscape={handleEscape}
-              onFocus={() => setIsCreating(true)}
-              onBlur={() => {
-                if (!newGoalTitle) {
-                  setIsCreating(false);
-                  setIsHovering(false);
-                }
-              }}
-              autoFocus={isCreating}
-            />
-          </div>
-        )}
+        <div
+          className={cn(
+            'transition-opacity duration-150',
+            isCreating || isHovering
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 pointer-events-none'
+          )}
+        >
+          <CreateGoalInput
+            placeholder="Add a weekly goal..."
+            value={newGoalTitle}
+            onChange={setNewGoalTitle}
+            onSubmit={handleSubmit}
+            onEscape={handleEscape}
+            onFocus={() => setIsCreating(true)}
+            onBlur={() => {
+              if (!newGoalTitle) {
+                setIsCreating(false);
+                setIsHovering(false);
+              }
+            }}
+            autoFocus={isCreating}
+          />
+        </div>
       </div>
     </div>
   );
@@ -467,7 +467,7 @@ export const WeekCardWeeklyGoals = forwardRef<
           No starred or pinned quarterly goals
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           <Dialog open={isFocusMode} onOpenChange={setIsFocusMode}>
             <DialogPortal>
               <WeeklyGoalsFocusMode
