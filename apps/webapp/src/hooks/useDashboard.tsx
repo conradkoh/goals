@@ -127,6 +127,10 @@ interface DashboardContextValue {
     weekNumber: number;
     newDayOfWeek: number;
   }) => Promise<void>;
+  moveIncompleteTasksFromPreviousDay: (args: {
+    weekNumber: number;
+    targetDayOfWeek: number;
+  }) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -159,6 +163,9 @@ export const DashboardProvider = ({
   );
   const updateDailyGoalDayMutation = useMutation(
     api.dashboard.updateDailyGoalDay
+  );
+  const moveIncompleteTasksFromPreviousDayMutation = useMutation(
+    api.dashboard.moveIncompleteTasksFromPreviousDay
   );
 
   // Use a single source of truth for current date
@@ -355,6 +362,22 @@ export const DashboardProvider = ({
     });
   };
 
+  const moveIncompleteTasksFromPreviousDay = async ({
+    weekNumber,
+    targetDayOfWeek,
+  }: {
+    weekNumber: number;
+    targetDayOfWeek: number;
+  }) => {
+    await moveIncompleteTasksFromPreviousDayMutation({
+      sessionId,
+      year: selectedYear,
+      quarter: selectedQuarter,
+      weekNumber,
+      targetDayOfWeek,
+    });
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -377,6 +400,7 @@ export const DashboardProvider = ({
         deleteQuarterlyGoal,
         toggleGoalCompletion,
         updateDailyGoalDay,
+        moveIncompleteTasksFromPreviousDay,
       }}
     >
       {children}

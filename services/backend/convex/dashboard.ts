@@ -514,3 +514,53 @@ export const updateDailyGoalDay = mutation({
     return weeklyGoal._id;
   },
 });
+
+export const moveIncompleteTasksFromPreviousDay = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    quarter: v.number(),
+    weekNumber: v.number(),
+    targetDayOfWeek: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, year, quarter, weekNumber, targetDayOfWeek } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Calculate the previous day
+    const previousDayOfWeek = targetDayOfWeek === 1 ? 7 : targetDayOfWeek - 1;
+
+    // Find all incomplete daily goals from the previous day
+    const weeklyGoals = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', year)
+          .eq('quarter', quarter)
+          .eq('weekNumber', weekNumber)
+      )
+      .filter(
+        (q) =>
+          q.eq(q.field('isComplete'), false) &&
+          q.neq(q.field('daily'), undefined) &&
+          q.eq(q.field('daily.dayOfWeek'), previousDayOfWeek)
+      )
+      .collect();
+
+    // Update each goal to the new day
+    await Promise.all(
+      weeklyGoals.map(async (weeklyGoal) => {
+        await ctx.db.patch(weeklyGoal._id, {
+          daily: {
+            ...weeklyGoal.daily,
+            dayOfWeek: targetDayOfWeek,
+          },
+        });
+      })
+    );
+
+    return weeklyGoals.length; // Return number of tasks moved
+  },
+});

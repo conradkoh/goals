@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Plus, Star, Pin, X } from 'lucide-react';
+import { Edit2, Plus, Star, Pin, X, History } from 'lucide-react';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { cn } from '@/lib/utils';
@@ -40,6 +40,12 @@ import { DateTime } from 'luxon';
 import { Dialog, DialogPortal } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 // Day of week constants
 const DayOfWeek = {
@@ -783,13 +789,48 @@ const DailyGoalGroup = ({
 
 // Simple presentational component for the day header
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
+  const { moveIncompleteTasksFromPreviousDay } = useDashboard();
+  const { weekNumber } = useWeek();
+  const [isMovingTasks, setIsMovingTasks] = useState(false);
+
+  const handleMoveTasksFromPreviousDay = async () => {
+    try {
+      setIsMovingTasks(true);
+      await moveIncompleteTasksFromPreviousDay({
+        weekNumber,
+        targetDayOfWeek: dayOfWeek,
+      });
+    } finally {
+      setIsMovingTasks(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <div className="bg-gray-100 py-1 px-3 rounded-md">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-bold text-gray-900">
-            {getDayName(dayOfWeek)}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer">
+                {getDayName(dayOfWeek)}
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={handleMoveTasksFromPreviousDay}
+                disabled={isMovingTasks}
+              >
+                <History className="mr-2 h-4 w-4" />
+                <div className="flex flex-col w-full items-center">
+                  <span>Pull Incomplete</span>
+                  <span className="text-gray-500 text-xs">
+                    from previous day
+                  </span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
