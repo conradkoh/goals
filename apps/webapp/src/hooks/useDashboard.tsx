@@ -122,6 +122,11 @@ interface DashboardContextValue {
     isComplete: boolean;
     updateChildren?: boolean;
   }) => Promise<void>;
+  updateDailyGoalDay: (args: {
+    goalId: Id<'goals'>;
+    weekNumber: number;
+    newDayOfWeek: number;
+  }) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -151,6 +156,9 @@ export const DashboardProvider = ({
   );
   const toggleGoalCompletionMutation = useMutation(
     api.dashboard.toggleGoalCompletion
+  );
+  const updateDailyGoalDayMutation = useMutation(
+    api.dashboard.updateDailyGoalDay
   );
 
   // Use a single source of truth for current date
@@ -330,6 +338,23 @@ export const DashboardProvider = ({
     });
   };
 
+  const updateDailyGoalDay = async ({
+    goalId,
+    weekNumber,
+    newDayOfWeek,
+  }: {
+    goalId: Id<'goals'>;
+    weekNumber: number;
+    newDayOfWeek: number;
+  }) => {
+    await updateDailyGoalDayMutation({
+      sessionId,
+      goalId,
+      weekNumber,
+      newDayOfWeek,
+    });
+  };
+
   return (
     <DashboardContext.Provider
       value={{
@@ -351,6 +376,7 @@ export const DashboardProvider = ({
         updateQuarterlyGoalTitle,
         deleteQuarterlyGoal,
         toggleGoalCompletion,
+        updateDailyGoalDay,
       }}
     >
       {children}

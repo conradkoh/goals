@@ -474,9 +474,19 @@ const DailyGoalItem = ({
   onUpdateTitle,
   onDelete,
 }: DailyGoalItemProps) => {
-  const { toggleGoalCompletion } = useDashboard();
+  const { toggleGoalCompletion, updateDailyGoalDay } = useDashboard();
   const { weekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
+  const currentDayOfWeek = goal.state?.daily?.dayOfWeek;
+
+  const handleMoveToDayOfWeek = async (newDayOfWeek: number) => {
+    if (!currentDayOfWeek || newDayOfWeek === currentDayOfWeek) return;
+    await updateDailyGoalDay({
+      goalId: goal._id,
+      weekNumber,
+      newDayOfWeek,
+    });
+  };
 
   return (
     <div className="group px-2 py-1 hover:bg-gray-50/50 rounded-sm">
@@ -506,22 +516,45 @@ const DailyGoalItem = ({
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <h3 className="font-semibold">{goal.title}</h3>
-                <GoalEditPopover
-                  title={goal.title}
-                  details={goal.details}
-                  onSave={async (title, details) => {
-                    await onUpdateTitle(goal._id, title, details);
-                  }}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  }
-                />
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={currentDayOfWeek?.toString()}
+                    onValueChange={(value) =>
+                      handleMoveToDayOfWeek(parseInt(value))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="Move to day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(DayOfWeek).map(([name, value]) => (
+                        <SelectItem
+                          key={value}
+                          value={value.toString()}
+                          disabled={value === currentDayOfWeek}
+                        >
+                          {name.charAt(0) + name.slice(1).toLowerCase()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <GoalEditPopover
+                    title={goal.title}
+                    details={goal.details}
+                    onSave={async (title, details) => {
+                      await onUpdateTitle(goal._id, title, details);
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
               {goal.details && (
                 <SafeHTML html={goal.details} className="mt-2 text-sm" />
