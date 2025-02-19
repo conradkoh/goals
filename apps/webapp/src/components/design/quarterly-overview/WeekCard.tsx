@@ -36,7 +36,10 @@ export const WeekCard = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground"
+                  className={cn(
+                    'text-muted-foreground hover:text-foreground',
+                    isCurrentWeek && 'hover:bg-blue-100'
+                  )}
                   onClick={onFocusClick}
                 >
                   <Focus className="h-4 w-4 mr-2" />
