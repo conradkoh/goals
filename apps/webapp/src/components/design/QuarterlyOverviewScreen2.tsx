@@ -151,33 +151,11 @@ interface WeekCardSectionProps {
   onFocusClick?: () => void;
 }
 
-const WeekCardSection = ({
-  title,
-  children,
-  showFocusMode,
-  onFocusClick,
-}: WeekCardSectionProps) => {
+const WeekCardSection = ({ title, children }: WeekCardSectionProps) => {
   return (
     <div className="space-y-4">
-      <div
-        className={cn(
-          'group flex justify-between items-center px-2 py-1 rounded-md',
-          showFocusMode && 'hover:bg-gray-50/50 cursor-pointer'
-        )}
-      >
+      <div className="flex justify-between items-center px-2 py-1 rounded-md">
         <h3 className="font-semibold">{title}</h3>
-        {showFocusMode && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={onFocusClick}
-            >
-              <Focus className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
       <div className="space-y-2">{children}</div>
     </div>
