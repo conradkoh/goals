@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
+import { useGoalActions } from '@/hooks/useGoalActions';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -38,7 +39,7 @@ export const DailyGoalItem = ({
   onUpdateTitle,
   onDelete,
 }: DailyGoalItemProps) => {
-  const { toggleGoalCompletion, updateDailyGoalDay } = useDashboard();
+  const { toggleGoalCompletion, updateDailyGoalDay } = useGoalActions();
   const { weekNumber } = useWeek();
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType

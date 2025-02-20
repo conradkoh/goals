@@ -347,7 +347,7 @@ export const WeekCardDailyGoals = forwardRef<
 
 const DaySection = () => {
   const { createDailyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
-    useDashboard();
+    useGoalActions();
   const { dayOfWeek, dateTimestamp, dailyGoalsView } = useDay();
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
@@ -661,7 +661,7 @@ const DailyGoalGroup = ({
 
 // Simple presentational component for the day header
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeekType }) => {
-  const { moveIncompleteTasksFromPreviousDay } = useDashboard();
+  const { moveIncompleteTasksFromPreviousDay } = useGoalActions();
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
@@ -681,6 +681,8 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeekType }) => {
       await moveIncompleteTasksFromPreviousDay({
         weekNumber,
         targetDayOfWeek: dayOfWeek,
+        year: DateTime.fromMillis(dateTimestamp).year,
+        quarter: Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3),
       });
     } catch (error) {
       console.error('Failed to move tasks:', error);

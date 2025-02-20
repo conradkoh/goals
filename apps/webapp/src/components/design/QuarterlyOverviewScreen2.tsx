@@ -1,6 +1,7 @@
 'use client';
 
 import { useDashboard } from '@/hooks/useDashboard';
+import { useGoalActions } from '@/hooks/useGoalActions';
 import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
 import { WeekCard } from './quarterly-overview/WeekCard';
 import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
@@ -36,13 +37,9 @@ export interface DragData {
 }
 
 export const QuarterlyOverviewScreen2 = () => {
-  const {
-    weekData,
-    selectedQuarter,
-    selectedYear,
-    currentWeekNumber,
-    updateQuarterlyGoalStatus,
-  } = useDashboard();
+  const { weekData, selectedQuarter, selectedYear, currentWeekNumber } =
+    useDashboard();
+  const { updateQuarterlyGoalStatus } = useGoalActions();
 
   const mouseSensor = useSensor(MouseSensor, {
     // Require the mouse to move by 10 pixels before activating
@@ -86,6 +83,8 @@ export const QuarterlyOverviewScreen2 = () => {
         goalId: sourceData.goal._id,
         isStarred: sourceData.state?.isStarred ?? false,
         isPinned: sourceData.state?.isPinned ?? false,
+        year: selectedYear,
+        quarter: selectedQuarter,
       });
 
       // If shift key is not pressed and the item was starred or pinned,
@@ -99,6 +98,8 @@ export const QuarterlyOverviewScreen2 = () => {
           goalId: sourceData.goal._id,
           isStarred: false,
           isPinned: false,
+          year: selectedYear,
+          quarter: selectedQuarter,
         });
       }
     } catch (error) {

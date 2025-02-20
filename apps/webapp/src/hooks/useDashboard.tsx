@@ -87,54 +87,6 @@ interface DashboardContextValue {
   weekData: WeekData[];
   selectedYear: number; // Exposed selectedYear
   selectedQuarter: 1 | 2 | 3 | 4; // Exposed selectedQuarter
-  createQuarterlyGoal: (args: {
-    title: string;
-    details?: string;
-    weekNumber: number;
-    isPinned?: boolean;
-    isStarred?: boolean;
-  }) => Promise<void>;
-  createWeeklyGoal: (args: {
-    title: string;
-    details?: string;
-    parentId: Id<'goals'>;
-    weekNumber: number;
-  }) => Promise<void>;
-  createDailyGoal: (args: {
-    title: string;
-    details?: string;
-    parentId: Id<'goals'>;
-    weekNumber: number;
-    dayOfWeek: DayOfWeek;
-    dateTimestamp?: number;
-  }) => Promise<void>;
-  updateQuarterlyGoalStatus: (args: {
-    weekNumber: number;
-    goalId: Id<'goals'>;
-    isStarred: boolean;
-    isPinned: boolean;
-  }) => Promise<void>;
-  updateQuarterlyGoalTitle: (args: {
-    goalId: Id<'goals'>;
-    title: string;
-    details?: string;
-  }) => Promise<void>;
-  deleteQuarterlyGoal: (args: { goalId: Id<'goals'> }) => Promise<void>;
-  toggleGoalCompletion: (args: {
-    goalId: Id<'goals'>;
-    weekNumber: number;
-    isComplete: boolean;
-    updateChildren?: boolean;
-  }) => Promise<void>;
-  updateDailyGoalDay: (args: {
-    goalId: Id<'goals'>;
-    weekNumber: number;
-    newDayOfWeek: DayOfWeek;
-  }) => Promise<void>;
-  moveIncompleteTasksFromPreviousDay: (args: {
-    weekNumber: number;
-    targetDayOfWeek: DayOfWeek;
-  }) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -148,29 +100,6 @@ export const DashboardProvider = ({
 }) => {
   const { sessionId } = useSession();
   const searchParams = useSearchParams();
-  const createQuarterlyGoalMutation = useMutation(
-    api.dashboard.createQuarterlyGoal
-  );
-  const createWeeklyGoalMutation = useMutation(api.dashboard.createWeeklyGoal);
-  const createDailyGoalMutation = useMutation(api.dashboard.createDailyGoal);
-  const updateQuarterlyGoalStatusMutation = useMutation(
-    api.dashboard.updateQuarterlyGoalStatus
-  );
-  const updateQuarterlyGoalTitleMutation = useMutation(
-    api.dashboard.updateQuarterlyGoalTitle
-  );
-  const deleteQuarterlyGoalMutation = useMutation(
-    api.dashboard.deleteQuarterlyGoal
-  );
-  const toggleGoalCompletionMutation = useMutation(
-    api.dashboard.toggleGoalCompletion
-  );
-  const updateDailyGoalDayMutation = useMutation(
-    api.dashboard.updateDailyGoalDay
-  );
-  const moveIncompleteTasksFromPreviousDayMutation = useMutation(
-    api.dashboard.moveIncompleteTasksFromPreviousDay
-  );
 
   // Use a single source of truth for current date
   const currentDate = DateTime.now();
@@ -210,205 +139,40 @@ export const DashboardProvider = ({
     return data;
   }, [weeksForQuarter, selectedYear, selectedQuarter]);
 
-  // Transform data into week data
-
-  const createQuarterlyGoal = async ({
-    title,
-    details,
-    weekNumber,
-    isPinned,
-    isStarred,
-  }: {
-    title: string;
-    details?: string;
-    weekNumber: number;
-    isPinned?: boolean;
-    isStarred?: boolean;
-  }) => {
-    await createQuarterlyGoalMutation({
-      sessionId,
-      year: selectedYear,
-      quarter: selectedQuarter,
-      weekNumber,
-      title,
-      details,
-      isPinned,
-      isStarred,
-    });
-  };
-
-  const createWeeklyGoal = async ({
-    title,
-    details,
-    parentId,
-    weekNumber,
-  }: {
-    title: string;
-    details?: string;
-    parentId: Id<'goals'>;
-    weekNumber: number;
-  }) => {
-    await createWeeklyGoalMutation({
-      sessionId,
-      title,
-      details,
-      parentId,
-      weekNumber,
-    });
-  };
-
-  const createDailyGoal = async ({
-    title,
-    details,
-    parentId,
-    weekNumber,
-    dayOfWeek,
-    dateTimestamp,
-  }: {
-    title: string;
-    details?: string;
-    parentId: Id<'goals'>;
-    weekNumber: number;
-    dayOfWeek: DayOfWeek;
-    dateTimestamp?: number;
-  }) => {
-    await createDailyGoalMutation({
-      sessionId,
-      title,
-      details,
-      parentId,
-      weekNumber,
-      dayOfWeek,
-      dateTimestamp,
-    });
-  };
-
-  const updateQuarterlyGoalStatus = async ({
-    weekNumber,
-    goalId,
-    isStarred,
-    isPinned,
-  }: {
-    weekNumber: number;
-    goalId: Id<'goals'>;
-    isStarred: boolean;
-    isPinned: boolean;
-  }) => {
-    await updateQuarterlyGoalStatusMutation({
-      sessionId,
-      year: selectedYear,
-      quarter: selectedQuarter,
-      weekNumber,
-      goalId,
-      isStarred,
-      isPinned,
-    });
-  };
-
-  const updateQuarterlyGoalTitle = async ({
-    goalId,
-    title,
-    details,
-  }: {
-    goalId: Id<'goals'>;
-    title: string;
-    details?: string;
-  }) => {
-    await updateQuarterlyGoalTitleMutation({
-      sessionId,
-      goalId,
-      title,
-      details,
-    });
-  };
-
-  const deleteQuarterlyGoal = async ({ goalId }: { goalId: Id<'goals'> }) => {
-    await deleteQuarterlyGoalMutation({
-      sessionId,
-      goalId,
-    });
-  };
-
-  const toggleGoalCompletion = async ({
-    goalId,
-    weekNumber,
-    isComplete,
-    updateChildren,
-  }: {
-    goalId: Id<'goals'>;
-    weekNumber: number;
-    isComplete: boolean;
-    updateChildren?: boolean;
-  }) => {
-    await toggleGoalCompletionMutation({
-      sessionId,
-      goalId,
-      weekNumber,
-      isComplete,
-      updateChildren,
-    });
-  };
-
-  const updateDailyGoalDay = async ({
-    goalId,
-    weekNumber,
-    newDayOfWeek,
-  }: {
-    goalId: Id<'goals'>;
-    weekNumber: number;
-    newDayOfWeek: DayOfWeek;
-  }) => {
-    await updateDailyGoalDayMutation({
-      sessionId,
-      goalId,
-      weekNumber,
-      newDayOfWeek,
-    });
-  };
-
-  const moveIncompleteTasksFromPreviousDay = async ({
-    weekNumber,
-    targetDayOfWeek,
-  }: {
-    weekNumber: number;
-    targetDayOfWeek: DayOfWeek;
-  }) => {
-    await moveIncompleteTasksFromPreviousDayMutation({
-      sessionId,
-      year: selectedYear,
-      quarter: selectedQuarter,
-      weekNumber,
-      targetDayOfWeek,
-    });
-  };
+  const value = useMemo(
+    () => ({
+      data: weeksForQuarter,
+      isLoading: weeksForQuarter === undefined,
+      currentDate,
+      currentYear,
+      currentQuarter,
+      currentWeekNumber,
+      currentMonth,
+      currentMonthName,
+      currentDayOfMonth,
+      currentDayName,
+      weekData: weekData ?? [],
+      selectedYear,
+      selectedQuarter,
+    }),
+    [
+      weeksForQuarter,
+      currentDate,
+      currentYear,
+      currentQuarter,
+      currentWeekNumber,
+      currentMonth,
+      currentMonthName,
+      currentDayOfMonth,
+      currentDayName,
+      weekData,
+      selectedYear,
+      selectedQuarter,
+    ]
+  );
 
   return (
-    <DashboardContext.Provider
-      value={{
-        data: weeksForQuarter,
-        isLoading: weeksForQuarter === undefined,
-        currentDate,
-        currentYear,
-        currentQuarter,
-        currentWeekNumber,
-        currentMonth,
-        currentMonthName,
-        currentDayOfMonth,
-        currentDayName,
-        weekData: weekData ?? [],
-        selectedYear, // Exposed selectedYear
-        selectedQuarter, // Exposed selectedQuarter
-        createQuarterlyGoal,
-        createWeeklyGoal,
-        createDailyGoal,
-        updateQuarterlyGoalStatus,
-        updateQuarterlyGoalTitle,
-        deleteQuarterlyGoal,
-        toggleGoalCompletion,
-        updateDailyGoalDay,
-        moveIncompleteTasksFromPreviousDay,
-      }}
-    >
+    <DashboardContext.Provider value={value}>
       {children}
     </DashboardContext.Provider>
   );
