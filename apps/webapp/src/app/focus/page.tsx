@@ -1,5 +1,8 @@
 'use client';
-import { useWeek2, WeekProvider2 } from '@/hooks/useWeek';
+import {
+  useWeekWithoutDashboard,
+  WeekProviderWithoutDashboard,
+} from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
@@ -33,7 +36,11 @@ export const FocusPage = () => {
 
   const { weeks, startWeek, endWeek, currentWeekNumber, isCurrentQuarter } =
     useQuarterWeekInfo(year, quarter);
-  const weekDetails = useWeek2({ year, quarter, week: selectedWeek });
+  const weekDetails = useWeekWithoutDashboard({
+    year,
+    quarter,
+    week: selectedWeek,
+  });
 
   // Find the current week's data
   const currentWeekInfo = weeks.find((w) => w.weekNumber === selectedWeek);
@@ -176,29 +183,29 @@ export const FocusPage = () => {
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="font-semibold mb-4">💭 Quarterly Goals</div>
-            <WeekProvider2 weekData={weekDetails}>
+            <WeekProviderWithoutDashboard weekData={weekDetails}>
               <WeekCardQuarterlyGoals
                 weekNumber={selectedWeek}
                 year={year}
                 quarter={quarter}
               />
-            </WeekProvider2>
+            </WeekProviderWithoutDashboard>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="font-semibold mb-4">🚀 Weekly Goals</div>
-            <WeekProvider2 weekData={weekDetails}>
+            <WeekProviderWithoutDashboard weekData={weekDetails}>
               <WeekCardWeeklyGoals
                 weekNumber={selectedWeek}
                 year={year}
                 quarter={quarter}
               />
-            </WeekProvider2>
+            </WeekProviderWithoutDashboard>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="font-semibold mb-4">🔍 Daily Goals</div>
-            <WeekProvider2 weekData={weekDetails}>
+            <WeekProviderWithoutDashboard weekData={weekDetails}>
               <WeekCardDailyGoals
                 weekNumber={selectedWeek}
                 year={year}
@@ -208,7 +215,7 @@ export const FocusPage = () => {
                   viewMode === 'daily' ? selectedDay : undefined
                 }
               />
-            </WeekProvider2>
+            </WeekProviderWithoutDashboard>
           </div>
         </div>
       </div>

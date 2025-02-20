@@ -7,25 +7,13 @@ import { useSession } from '@/modules/auth/useSession';
 import { DayOfWeek } from '@services/backend/src/constants';
 import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
 
-interface WeekContextValue {
-  quarterlyGoals: GoalWithDetailsAndChildren[];
-  weeklyGoals: GoalWithDetailsAndChildren[];
-  dailyGoals: GoalWithDetailsAndChildren[];
-  weekNumber: number;
-  days: Array<{
-    dayOfWeek: number;
-    date: string;
-    dateTimestamp: number;
-  }>;
-}
-
-const WeekContext = createContext<WeekContextValue | undefined>(undefined);
-
+// Deprecated: WeekProviderProps is no longer recommended for use.
 interface WeekProviderProps {
   weekNumber: number;
   children: React.ReactNode;
 }
 
+// Deprecated: WeekProvider is no longer recommended for use.
 export const WeekProvider = ({ weekNumber, children }: WeekProviderProps) => {
   const { weekData } = useDashboard();
 
@@ -59,12 +47,15 @@ export const WeekProvider = ({ weekNumber, children }: WeekProviderProps) => {
   );
 };
 
-interface WeekProvider2Props {
+interface WeekProviderWithoutDashboardProps {
   weekData: WeekData;
   children: React.ReactNode;
 }
 
-export const WeekProvider2 = ({ weekData, children }: WeekProvider2Props) => {
+export const WeekProviderWithoutDashboard = ({
+  weekData,
+  children,
+}: WeekProviderWithoutDashboardProps) => {
   const weekContextValue = useMemo(() => {
     const allGoals = weekData.tree.allGoals;
     return {
@@ -91,6 +82,19 @@ export const useWeek = () => {
   return context;
 };
 
+interface WeekContextValue {
+  quarterlyGoals: GoalWithDetailsAndChildren[];
+  weeklyGoals: GoalWithDetailsAndChildren[];
+  dailyGoals: GoalWithDetailsAndChildren[];
+  weekNumber: number;
+  days: Array<{
+    dayOfWeek: number;
+    date: string;
+    dateTimestamp: number;
+  }>;
+}
+
+const WeekContext = createContext<WeekContextValue | undefined>(undefined);
 export interface WeekData {
   weekLabel: string;
   weekNumber: number;
@@ -109,7 +113,7 @@ interface Week2Params {
   week: number;
 }
 
-export const useWeek2 = ({
+export const useWeekWithoutDashboard = ({
   year,
   quarter,
   week,
