@@ -13,10 +13,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
-import {
-  WeekCardDailyGoals,
-  WeekCardDailyGoalsRef,
-} from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Button } from '@/components/ui/button';
 import { Focus } from 'lucide-react';
@@ -28,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 export interface DragData {
   goal: GoalWithDetailsAndChildren;
@@ -40,6 +38,7 @@ export const QuarterlyOverviewScreen2 = () => {
   const { weekData, selectedQuarter, selectedYear, currentWeekNumber } =
     useDashboard();
   const { updateQuarterlyGoalStatus } = useGoalActions();
+  const router = useRouter();
 
   const mouseSensor = useSensor(MouseSensor, {
     // Require the mouse to move by 10 pixels before activating
@@ -53,18 +52,11 @@ export const QuarterlyOverviewScreen2 = () => {
     (week) => week.weekNumber === currentWeekNumber
   );
 
-  // Create an array of refs for each week
-  const dailyGoalsRefs = useRef<(WeekCardDailyGoalsRef | null)[]>([]);
-  // Initialize the refs array with the correct length
-  if (dailyGoalsRefs.current.length !== weekData.length) {
-    dailyGoalsRefs.current = Array(weekData.length).fill(null);
-  }
-
-  // Ref callback to store the ref at the correct index
-  const setDailyGoalRef =
-    (index: number) => (el: WeekCardDailyGoalsRef | null) => {
-      dailyGoalsRefs.current[index] = el;
-    };
+  const handleFocusClick = (weekNumber: number) => {
+    router.push(
+      `/focus?year=${selectedYear}&quarter=${selectedQuarter}&week=${weekNumber}`
+    );
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -118,9 +110,7 @@ export const QuarterlyOverviewScreen2 = () => {
               mondayDate={week.mondayDate}
               weekNumber={week.weekNumber}
               isCurrentWeek={week.weekNumber === currentWeekNumber}
-              onFocusClick={() =>
-                dailyGoalsRefs.current[weekIndex]?.openFocusMode()
-              }
+              onFocusClick={() => handleFocusClick(week.weekNumber)}
             >
               <div className="space-y-2">
                 <WeekCardSection title="💭 Quarterly Goals">
@@ -141,7 +131,6 @@ export const QuarterlyOverviewScreen2 = () => {
 
                 <WeekCardSection title="🔍 Daily Goals">
                   <WeekCardDailyGoals
-                    ref={setDailyGoalRef(weekIndex)}
                     weekNumber={week.weekNumber}
                     year={selectedYear}
                     quarter={selectedQuarter}

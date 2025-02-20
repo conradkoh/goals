@@ -53,12 +53,12 @@ import { GoalSelector } from '../../goals-new/GoalSelector';
 import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
 import { useGoalActions } from '@/hooks/useGoalActions';
 
-interface WeekCardDailyGoalsProps {
+export interface WeekCardDailyGoalsProps {
   weekNumber: number;
   year: number;
   quarter: number;
   showOnlyToday?: boolean;
-  selectedDayOverride?: DayOfWeekType;
+  selectedDayOverride?: DayOfWeek;
 }
 
 interface DayData {
@@ -84,30 +84,27 @@ export const WeekCardDailyGoals = forwardRef<
   const { createDailyGoal } = useGoalActions();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
-  const [isFocusMode, setIsFocusMode] = useState(false);
-  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeekType>(
-    () => {
-      const today = DateTime.now();
-      const todayWeekNumber = today.weekNumber;
-      const todayDayOfWeek = today.weekday as DayOfWeekType;
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
+    const today = DateTime.now();
+    const todayWeekNumber = today.weekNumber;
+    const todayDayOfWeek = today.weekday as DayOfWeek;
 
-      // If there's a selectedDayOverride, use that
-      if (selectedDayOverride) {
-        return selectedDayOverride;
-      }
-
-      // Check if we're in the current week
-      const isCurrentWeek = weekNumber === todayWeekNumber;
-
-      // If we're in the current week, select today's day
-      if (isCurrentWeek) {
-        return todayDayOfWeek;
-      }
-
-      // Otherwise, select Monday by default
-      return DayOfWeek.MONDAY;
+    // If there's a selectedDayOverride, use that
+    if (selectedDayOverride) {
+      return selectedDayOverride;
     }
-  );
+
+    // Check if we're in the current week
+    const isCurrentWeek = weekNumber === todayWeekNumber;
+
+    // If we're in the current week, select today's day
+    if (isCurrentWeek) {
+      return todayDayOfWeek;
+    }
+
+    // Otherwise, select Monday by default
+    return DayOfWeek.MONDAY;
+  });
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
     useState<Id<'goals'>>();
 
@@ -228,23 +225,15 @@ export const WeekCardDailyGoals = forwardRef<
     }
   };
 
+  // Implement the openFocusMode ref method
   useImperativeHandle(ref, () => ({
-    openFocusMode: () => setIsFocusMode(true),
+    openFocusMode: () => {
+      // This is now a no-op since we're using direct navigation
+    },
   }));
 
   return (
     <div className="space-y-4">
-      <Dialog open={isFocusMode} onOpenChange={setIsFocusMode}>
-        <DialogPortal>
-          <DailyGoalsFocusMode
-            weekNumber={weekNumber}
-            year={year}
-            quarter={quarter}
-            onClose={() => setIsFocusMode(false)}
-          />
-        </DialogPortal>
-      </Dialog>
-
       {/* Past Days Collapsible Section - Always First */}
       {!showOnlyToday && pastDays.length > 0 && (
         <CollapsibleMinimal
@@ -287,7 +276,7 @@ export const WeekCardDailyGoals = forwardRef<
                 <Select
                   value={selectedDayOfWeek.toString()}
                   onValueChange={(value) =>
-                    setSelectedDayOfWeek(parseInt(value) as DayOfWeekType)
+                    setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
                   }
                 >
                   <SelectTrigger className="h-12 text-xs">
@@ -381,7 +370,7 @@ const DaySection = () => {
 
   const handleCreateDailyGoal = async (
     weeklyGoal: GoalWithDetailsAndChildren,
-    dayOfWeek: DayOfWeekType,
+    dayOfWeek: DayOfWeek,
     dateTimestamp: number
   ) => {
     const title = newGoalTitles[weeklyGoal._id];
@@ -464,7 +453,7 @@ const DaySection = () => {
 interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  dayOfWeek: DayOfWeekType;
+  dayOfWeek: DayOfWeek;
   onCreateGoal: () => void;
   onUpdateGoalTitle: (
     goalId: Id<'goals'>,
@@ -660,7 +649,7 @@ const DailyGoalGroup = ({
 };
 
 // Simple presentational component for the day header
-const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeekType }) => {
+const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const { moveIncompleteTasksFromPreviousDay } = useGoalActions();
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();

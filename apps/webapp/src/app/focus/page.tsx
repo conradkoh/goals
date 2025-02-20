@@ -7,7 +7,7 @@ import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-
 import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { X, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
 import {
@@ -26,11 +26,14 @@ import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const FocusPage = () => {
-  const year = 2025;
-  const quarter = 1;
+  const searchParams = useSearchParams();
+  const year = parseInt(searchParams.get('year') ?? '2025');
+  const quarter = parseInt(searchParams.get('quarter') ?? '1') as 1 | 2 | 3 | 4;
+  const initialWeek = parseInt(searchParams.get('week') ?? '8');
+
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
-  const [selectedWeek, setSelectedWeek] = useState(8);
+  const [selectedWeek, setSelectedWeek] = useState(initialWeek);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
     const today = DateTime.now();
     return today.weekday as DayOfWeek;
@@ -101,6 +104,10 @@ export const FocusPage = () => {
     } else {
       setSelectedWeek(currentWeekNumber);
     }
+  };
+
+  const handleClose = () => {
+    router.push(`/dashboard?year=${year}&quarter=${quarter}`);
   };
 
   const renderLoadingSkeleton = () => (
@@ -223,7 +230,7 @@ export const FocusPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => router.push('/dashboard')}
+              onClick={handleClose}
               className="h-8 w-8 text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />
