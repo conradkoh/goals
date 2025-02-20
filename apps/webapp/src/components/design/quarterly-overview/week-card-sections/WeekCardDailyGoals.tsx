@@ -50,7 +50,6 @@ import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
-import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
 import { useGoalActions } from '@/hooks/useGoalActions';
 
 export interface WeekCardDailyGoalsProps {

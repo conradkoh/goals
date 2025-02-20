@@ -1,5 +1,5 @@
 import { WeekProvider } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from './WeekCardDailyGoals';
+import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
 
 // Day of week constants
 const DayOfWeek = {

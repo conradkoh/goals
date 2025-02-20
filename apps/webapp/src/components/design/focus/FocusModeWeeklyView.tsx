@@ -1,7 +1,7 @@
 import { WeekProvider } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from './WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from './WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from './WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '../quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '../quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { useDashboard } from '@/hooks/useDashboard';
 
 interface FocusModeWeeklyViewProps {

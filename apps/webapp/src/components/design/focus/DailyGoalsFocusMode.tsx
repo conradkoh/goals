@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { KeyboardShortcut } from '@/components/ui/keyboard-shortcut';
 import { X, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
-import { WeekCardDailyGoals } from './WeekCardDailyGoals';
+import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { useState } from 'react';
 import { DateTime } from 'luxon';
 import { cn } from '@/lib/utils';
