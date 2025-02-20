@@ -36,8 +36,13 @@ export interface DragData {
 }
 
 export const QuarterlyOverviewScreen2 = () => {
-  const { weekData, currentWeekNumber, updateQuarterlyGoalStatus } =
-    useDashboard();
+  const {
+    weekData,
+    selectedQuarter,
+    selectedYear,
+    currentWeekNumber,
+    updateQuarterlyGoalStatus,
+  } = useDashboard();
 
   const mouseSensor = useSensor(MouseSensor, {
     // Require the mouse to move by 10 pixels before activating
@@ -118,17 +123,27 @@ export const QuarterlyOverviewScreen2 = () => {
             >
               <div className="space-y-2">
                 <WeekCardSection title="💭 Quarterly Goals">
-                  <WeekCardQuarterlyGoals weekNumber={week.weekNumber} />
+                  <WeekCardQuarterlyGoals
+                    weekNumber={week.weekNumber}
+                    year={selectedYear}
+                    quarter={selectedQuarter}
+                  />
                 </WeekCardSection>
 
                 <WeekCardSection title="🚀 Weekly Goals">
-                  <WeekCardWeeklyGoals weekNumber={week.weekNumber} />
+                  <WeekCardWeeklyGoals
+                    weekNumber={week.weekNumber}
+                    year={selectedYear}
+                    quarter={selectedQuarter}
+                  />
                 </WeekCardSection>
 
                 <WeekCardSection title="🔍 Daily Goals">
                   <WeekCardDailyGoals
                     ref={setDailyGoalRef(weekIndex)}
                     weekNumber={week.weekNumber}
+                    year={selectedYear}
+                    quarter={selectedQuarter}
                   />
                 </WeekCardSection>
               </div>

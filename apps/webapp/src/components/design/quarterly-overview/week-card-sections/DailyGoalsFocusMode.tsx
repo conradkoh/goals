@@ -47,11 +47,15 @@ type ViewMode = 'daily' | 'weekly';
 
 interface DailyGoalsFocusModeProps {
   weekNumber: number;
+  year: number;
+  quarter: number;
   onClose: () => void;
 }
 
 export const DailyGoalsFocusMode = ({
   weekNumber: initialWeekNumber,
+  year,
+  quarter,
   onClose,
 }: DailyGoalsFocusModeProps) => {
   const { weekData } = useDashboard();
@@ -220,6 +224,8 @@ export const DailyGoalsFocusMode = ({
             {viewMode === 'daily' ? (
               <FocusModeDailyView
                 weekNumber={weekNumber}
+                year={year}
+                quarter={quarter}
                 selectedDayOfWeek={selectedDay}
                 onNavigate={handleNavigateToDay}
               />

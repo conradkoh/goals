@@ -85,6 +85,8 @@ interface DashboardContextValue {
   currentDayOfMonth: number;
   currentDayName: string;
   weekData: WeekData[];
+  selectedYear: number; // Exposed selectedYear
+  selectedQuarter: 1 | 2 | 3 | 4; // Exposed selectedQuarter
   createQuarterlyGoal: (args: {
     title: string;
     details?: string;
@@ -394,6 +396,8 @@ export const DashboardProvider = ({
         currentDayOfMonth,
         currentDayName,
         weekData: weekData ?? [],
+        selectedYear, // Exposed selectedYear
+        selectedQuarter, // Exposed selectedQuarter
         createQuarterlyGoal,
         createWeeklyGoal,
         createDailyGoal,

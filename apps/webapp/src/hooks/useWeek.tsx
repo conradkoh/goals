@@ -1,6 +1,11 @@
 import { createContext, useContext, useMemo } from 'react';
 import { useDashboard } from './useDashboard';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { useQuery } from 'convex/react';
+import { api } from '@services/backend/convex/_generated/api';
+import { useSession } from '@/modules/auth/useSession';
+import { DayOfWeek } from '@services/backend/src/constants';
+import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
 
 interface WeekContextValue {
   quarterlyGoals: GoalWithDetailsAndChildren[];
@@ -54,10 +59,68 @@ export const WeekProvider = ({ weekNumber, children }: WeekProviderProps) => {
   );
 };
 
+interface WeekProvider2Props {
+  weekData: WeekData;
+  children: React.ReactNode;
+}
+
+export const WeekProvider2 = ({ weekData, children }: WeekProvider2Props) => {
+  const weekContextValue = useMemo(() => {
+    const allGoals = weekData.tree.allGoals;
+    return {
+      quarterlyGoals: allGoals.filter((goal) => goal.depth === 0),
+      weeklyGoals: allGoals.filter((goal) => goal.depth === 1),
+      dailyGoals: allGoals.filter((goal) => goal.depth === 2),
+      weekNumber: weekData.weekNumber,
+      days: weekData.days,
+    };
+  }, [weekData]);
+
+  return (
+    <WeekContext.Provider value={weekContextValue}>
+      {children}
+    </WeekContext.Provider>
+  );
+};
+
 export const useWeek = () => {
   const context = useContext(WeekContext);
   if (!context) {
     throw new Error('useWeek must be used within a WeekProvider');
   }
   return context;
+};
+
+export interface WeekData {
+  weekLabel: string;
+  weekNumber: number;
+  mondayDate: string;
+  days: Array<{
+    dayOfWeek: DayOfWeek;
+    date: string;
+    dateTimestamp: number;
+  }>;
+  tree: WeekGoalsTree;
+}
+
+interface Week2Params {
+  year: number;
+  quarter: number;
+  week: number;
+}
+
+export const useWeek2 = ({
+  year,
+  quarter,
+  week,
+}: Week2Params): WeekData | undefined => {
+  const { sessionId } = useSession();
+  const weekDetails = useQuery(api.dashboard.getWeek, {
+    sessionId,
+    year,
+    quarter,
+    weekNumber: week,
+  });
+
+  return weekDetails;
 };

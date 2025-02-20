@@ -1,4 +1,3 @@
-import { useDashboard } from '@/hooks/useDashboard';
 import { useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -10,9 +9,12 @@ import {
   CollapsibleMinimalContent,
 } from '@/components/ui/collapsible-minimal';
 import { QuarterlyGoal } from '../../goals-new/QuarterlyGoal';
+import { useGoalActions } from '@/hooks/useGoalActions';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
+  year: number;
+  quarter: number;
 }
 
 // Helper function to sort goals by status and title
@@ -38,13 +40,15 @@ const sortGoals = (
 
 export const WeekCardQuarterlyGoals = ({
   weekNumber,
+  year,
+  quarter,
 }: WeekCardQuarterlyGoalsProps) => {
   const {
     createQuarterlyGoal,
     updateQuarterlyGoalStatus,
     updateQuarterlyGoalTitle,
     deleteQuarterlyGoal,
-  } = useDashboard();
+  } = useGoalActions();
   const { quarterlyGoals } = useWeek();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,6 +60,8 @@ export const WeekCardQuarterlyGoals = ({
       await createQuarterlyGoal({
         title: newGoalTitle.trim(),
         weekNumber,
+        year,
+        quarter,
         isPinned: !isExpanded,
         isStarred: false,
       });
@@ -74,6 +80,8 @@ export const WeekCardQuarterlyGoals = ({
     try {
       await updateQuarterlyGoalStatus({
         weekNumber,
+        year,
+        quarter,
         goalId,
         isStarred,
         isPinned,

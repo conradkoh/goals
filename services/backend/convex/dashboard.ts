@@ -670,3 +670,46 @@ export const useDailyGoal = query({
     };
   },
 });
+
+// Get details for a specific week
+export const getWeek = query({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    quarter: v.number(),
+    weekNumber: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, year, quarter, weekNumber } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the week details directly
+    const weekTree = await getWeekGoalsTree(ctx, {
+      userId,
+      year,
+      quarter,
+      weekNumber,
+    });
+
+    // Calculate the days for this week
+    const weekStart = DateTime.fromObject({
+      weekNumber,
+      weekYear: year,
+    }).startOf('week');
+
+    const days = Array.from({ length: 7 }, (_, i) => ({
+      dayOfWeek: (i + 1) as DayOfWeek,
+      date: weekStart.plus({ days: i }).toFormat('LLL d'),
+      dateTimestamp: weekStart.plus({ days: i }).toMillis(),
+    }));
+
+    return {
+      weekLabel: `Week ${weekNumber}`,
+      weekNumber,
+      mondayDate: weekStart.toFormat('LLL d'),
+      days,
+      tree: weekTree,
+    };
+  },
+});

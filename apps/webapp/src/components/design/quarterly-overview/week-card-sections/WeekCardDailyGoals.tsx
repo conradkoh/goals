@@ -51,9 +51,12 @@ import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
 import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
+import { useGoalActions } from '@/hooks/useGoalActions';
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
+  year: number;
+  quarter: number;
   showOnlyToday?: boolean;
   selectedDayOverride?: DayOfWeekType;
 }
@@ -76,9 +79,9 @@ export interface WeekCardDailyGoalsRef {
 export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
->(({ weekNumber, showOnlyToday, selectedDayOverride }, ref) => {
+>(({ weekNumber, year, quarter, showOnlyToday, selectedDayOverride }, ref) => {
   const { days, weeklyGoals } = useWeek();
-  const { createDailyGoal } = useDashboard();
+  const { createDailyGoal } = useGoalActions();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
@@ -211,6 +214,13 @@ export const WeekCardDailyGoals = forwardRef<
         parentId: selectedWeeklyGoalId,
         weekNumber,
         dayOfWeek: selectedDayOfWeek,
+        dateTimestamp: DateTime.fromObject({
+          weekNumber,
+          weekYear: year,
+        })
+          .startOf('week')
+          .plus({ days: selectedDayOfWeek - 1 })
+          .toMillis(),
       });
       setNewGoalTitle('');
     } catch (error) {
@@ -228,6 +238,8 @@ export const WeekCardDailyGoals = forwardRef<
         <DialogPortal>
           <DailyGoalsFocusMode
             weekNumber={weekNumber}
+            year={year}
+            quarter={quarter}
             onClose={() => setIsFocusMode(false)}
           />
         </DialogPortal>

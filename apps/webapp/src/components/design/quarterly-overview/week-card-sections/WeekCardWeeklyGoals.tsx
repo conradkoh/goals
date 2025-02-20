@@ -1,4 +1,3 @@
-import { useDashboard } from '@/hooks/useDashboard';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2, Focus } from 'lucide-react';
@@ -34,9 +33,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { WeekCardDailyGoals } from './WeekCardDailyGoals';
 import { Dialog, DialogPortal, DialogTrigger } from '@/components/ui/dialog';
+import { useGoalActions } from '@/hooks/useGoalActions';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
+  year: number;
+  quarter: number;
 }
 
 export interface WeekCardWeeklyGoalsRef {
@@ -57,7 +59,7 @@ const WeeklyGoal = ({
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }) => {
-  const { toggleGoalCompletion } = useDashboard();
+  const { toggleGoalCompletion } = useGoalActions();
   const { weekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
   const isStarred = goal.state?.isStarred ?? false;
@@ -339,12 +341,16 @@ const FocusWeeklyGoalGroup = ({
 // WeeklyGoalsFocusMode component
 const WeeklyGoalsFocusMode = ({
   weekNumber,
+  year,
+  quarter,
   onClose,
 }: {
   weekNumber: number;
+  year: number;
+  quarter: number;
   onClose: () => void;
 }) => {
-  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useDashboard();
+  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
   const { quarterlyGoals } = useWeek();
 
   // Add keyboard event handler
@@ -376,6 +382,8 @@ const WeeklyGoalsFocusMode = ({
             <div>
               <WeekCardDailyGoals
                 weekNumber={weekNumber}
+                year={year}
+                quarter={quarter}
                 showOnlyToday={true}
               />
             </div>
@@ -389,9 +397,9 @@ const WeeklyGoalsFocusMode = ({
 export const WeekCardWeeklyGoals = forwardRef<
   WeekCardWeeklyGoalsRef,
   WeekCardWeeklyGoalsProps
->(({ weekNumber }, ref) => {
+>(({ weekNumber, year, quarter }, ref) => {
   const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
-    useDashboard();
+    useGoalActions();
   const { quarterlyGoals } = useWeek();
   const [isFocusMode, setIsFocusMode] = useState(false);
 
@@ -472,6 +480,8 @@ export const WeekCardWeeklyGoals = forwardRef<
             <DialogPortal>
               <WeeklyGoalsFocusMode
                 weekNumber={weekNumber}
+                year={year}
+                quarter={quarter}
                 onClose={() => setIsFocusMode(false)}
               />
             </DialogPortal>

@@ -15,12 +15,16 @@ const DayOfWeek = {
 type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
 
 interface FocusModeDailyViewProps {
+  year: number;
+  quarter: number;
   weekNumber: number;
   selectedDayOfWeek: DayOfWeek;
   onNavigate: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
 export const FocusModeDailyView = ({
+  year,
+  quarter,
   weekNumber,
   selectedDayOfWeek,
   onNavigate,
@@ -30,6 +34,8 @@ export const FocusModeDailyView = ({
       <WeekProvider weekNumber={weekNumber}>
         <WeekCardDailyGoals
           weekNumber={weekNumber}
+          year={year}
+          quarter={quarter}
           showOnlyToday={true}
           selectedDayOverride={selectedDayOfWeek}
         />
