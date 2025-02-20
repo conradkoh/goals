@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
 import { zodToConvex } from 'convex-helpers/server/zod';
+import { DayOfWeek } from '../src/constants';
 
 export default defineSchema({
   sessions: defineTable({
@@ -59,16 +60,32 @@ export default defineSchema({
     // daily goals
     daily: v.optional(
       v.object({
-        dayOfWeek: v.number(),
+        dayOfWeek: v.union(
+          v.literal(DayOfWeek.MONDAY),
+          v.literal(DayOfWeek.TUESDAY),
+          v.literal(DayOfWeek.WEDNESDAY),
+          v.literal(DayOfWeek.THURSDAY),
+          v.literal(DayOfWeek.FRIDAY),
+          v.literal(DayOfWeek.SATURDAY),
+          v.literal(DayOfWeek.SUNDAY)
+        ),
         dateTimestamp: v.optional(v.number()),
       })
     ),
-  }).index('by_user_and_year_and_quarter_and_week', [
-    'userId',
-    'year',
-    'quarter',
-    'weekNumber',
-  ]),
+  })
+    .index('by_user_and_year_and_quarter_and_week', [
+      'userId',
+      'year',
+      'quarter',
+      'weekNumber',
+    ])
+    // Index specifically for daily goals lookup
+    .index('by_daily_goal_lookup', [
+      'userId',
+      'weekNumber',
+      'daily.dayOfWeek',
+      'goalId',
+    ]),
 
   syncSessions: defineTable({
     userId: v.id('users'),

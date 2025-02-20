@@ -1,4 +1,5 @@
 import { useDashboard } from '@/hooks/useDashboard';
+import { useDailyGoal } from '@/hooks/useGoal';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import {
@@ -52,44 +53,32 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-// Day of week constants
-const DayOfWeek = {
-  MONDAY: 1,
-  TUESDAY: 2,
-  WEDNESDAY: 3,
-  THURSDAY: 4,
-  FRIDAY: 5,
-  SATURDAY: 6,
-  SUNDAY: 7,
-} as const;
-
-type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
-
-const getDayName = (dayOfWeek: number): string => {
-  const names = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  return names[dayOfWeek - 1];
-};
+import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
+import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
   showOnlyToday?: boolean;
-  selectedDayOverride?: DayOfWeek;
+  selectedDayOverride?: DayOfWeekType;
 }
 
 interface DayData {
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeekType;
   date: string;
   dateTimestamp: number;
   dailyGoalsView?: {
+    weeklyGoals: Array<{
+      weeklyGoal: GoalWithDetailsAndChildren;
+      quarterlyGoal: GoalWithDetailsAndChildren;
+    }>;
+  };
+}
+
+interface DaySectionProps {
+  dayOfWeek: DayOfWeekType;
+  date: string;
+  dateTimestamp: number;
+  dailyGoalsView: {
     weeklyGoals: Array<{
       weeklyGoal: GoalWithDetailsAndChildren;
       quarterlyGoal: GoalWithDetailsAndChildren;
@@ -119,27 +108,29 @@ export const WeekCardDailyGoals = forwardRef<
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
-  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
-    const today = DateTime.now();
-    const todayWeekNumber = today.weekNumber;
-    const todayDayOfWeek = today.weekday as DayOfWeek;
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeekType>(
+    () => {
+      const today = DateTime.now();
+      const todayWeekNumber = today.weekNumber;
+      const todayDayOfWeek = today.weekday as DayOfWeekType;
 
-    // If there's a selectedDayOverride, use that
-    if (selectedDayOverride) {
-      return selectedDayOverride;
+      // If there's a selectedDayOverride, use that
+      if (selectedDayOverride) {
+        return selectedDayOverride;
+      }
+
+      // Check if we're in the current week
+      const isCurrentWeek = weekNumber === todayWeekNumber;
+
+      // If we're in the current week, select today's day
+      if (isCurrentWeek) {
+        return todayDayOfWeek;
+      }
+
+      // Otherwise, select Monday by default
+      return DayOfWeek.MONDAY;
     }
-
-    // Check if we're in the current week
-    const isCurrentWeek = weekNumber === todayWeekNumber;
-
-    // If we're in the current week, select today's day
-    if (isCurrentWeek) {
-      return todayDayOfWeek;
-    }
-
-    // Otherwise, select Monday by default
-    return DayOfWeek.MONDAY;
-  });
+  );
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
     useState<Id<'goals'>>();
 
@@ -147,7 +138,7 @@ export const WeekCardDailyGoals = forwardRef<
   const { currentDay, futureDays, pastDays } = useMemo(() => {
     const today = DateTime.now();
     const todayWeekNumber = today.weekNumber;
-    const todayDayOfWeek = today.weekday;
+    const todayDayOfWeek = today.weekday as DayOfWeekType;
     const sortedDays = [...(days as DayData[])];
 
     // If we have a selectedDayOverride and showOnlyToday is true, show that day as current
@@ -310,7 +301,7 @@ export const WeekCardDailyGoals = forwardRef<
                 <Select
                   value={selectedDayOfWeek.toString()}
                   onValueChange={(value) =>
-                    setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                    setSelectedDayOfWeek(parseInt(value) as DayOfWeekType)
                   }
                 >
                   <SelectTrigger className="h-12 text-xs">
@@ -404,7 +395,7 @@ const DaySection = () => {
 
   const handleCreateDailyGoal = async (
     weeklyGoal: GoalWithDetailsAndChildren,
-    dayOfWeek: DayOfWeek,
+    dayOfWeek: DayOfWeekType,
     dateTimestamp: number
   ) => {
     const title = newGoalTitles[weeklyGoal._id];
@@ -466,11 +457,7 @@ const DaySection = () => {
             quarterlyGoal={quarterlyGoal}
             dayOfWeek={dayOfWeek}
             onCreateGoal={() =>
-              handleCreateDailyGoal(
-                weeklyGoal,
-                dayOfWeek as DayOfWeek,
-                dateTimestamp
-              )
+              handleCreateDailyGoal(weeklyGoal, dayOfWeek, dateTimestamp)
             }
             onUpdateGoalTitle={handleUpdateTitle}
             onDeleteGoal={handleDeleteGoal}
@@ -488,135 +475,10 @@ const DaySection = () => {
   );
 };
 
-interface DailyGoalItemProps {
-  goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
-}
-
-// Simple presentational component for a daily goal
-const DailyGoalItem = ({
-  goal,
-  onUpdateTitle,
-  onDelete,
-}: DailyGoalItemProps) => {
-  const { toggleGoalCompletion, updateDailyGoalDay } = useDashboard();
-  const { weekNumber } = useWeek();
-  const isComplete = goal.state?.isComplete ?? false;
-  const currentDayOfWeek = goal.state?.daily?.dayOfWeek;
-
-  const handleMoveToDayOfWeek = async (newDayOfWeek: number) => {
-    if (!currentDayOfWeek || newDayOfWeek === currentDayOfWeek) return;
-    await updateDailyGoalDay({
-      goalId: goal._id,
-      weekNumber,
-      newDayOfWeek,
-    });
-  };
-
-  return (
-    <div className="group px-2 py-1 hover:bg-gray-50/50 rounded-sm">
-      <div className="text-sm flex items-center gap-2 group/title">
-        <Checkbox
-          checked={isComplete}
-          onCheckedChange={(checked) =>
-            toggleGoalCompletion({
-              goalId: goal._id,
-              weekNumber,
-              isComplete: checked === true,
-            })
-          }
-        />
-
-        {/* View Mode */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
-            >
-              <span className="truncate">{goal.title}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold">{goal.title}</h3>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={currentDayOfWeek?.toString()}
-                    onValueChange={(value) =>
-                      handleMoveToDayOfWeek(parseInt(value))
-                    }
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Move to day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(DayOfWeek).map(([name, value]) => (
-                        <SelectItem
-                          key={value}
-                          value={value.toString()}
-                          disabled={value === currentDayOfWeek}
-                        >
-                          {name.charAt(0) + name.slice(1).toLowerCase()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <GoalEditPopover
-                    title={goal.title}
-                    details={goal.details}
-                    onSave={async (title, details) => {
-                      await onUpdateTitle(goal._id, title, details);
-                    }}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    }
-                  />
-                </div>
-              </div>
-              {goal.details && (
-                <SafeHTML html={goal.details} className="mt-2 text-sm" />
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <div className="flex items-center gap-1">
-          <GoalEditPopover
-            title={goal.title}
-            details={goal.details}
-            onSave={async (title, details) => {
-              await onUpdateTitle(goal._id, title, details);
-            }}
-            trigger={
-              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
-                <Edit2 className="h-3.5 w-3.5" />
-              </button>
-            }
-          />
-          <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
 interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeekType;
   onCreateGoal: () => void;
   onUpdateGoalTitle: (
     goalId: Id<'goals'>,
@@ -812,7 +674,7 @@ const DailyGoalGroup = ({
 };
 
 // Simple presentational component for the day header
-const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
+const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeekType }) => {
   const { moveIncompleteTasksFromPreviousDay } = useDashboard();
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();

@@ -6,6 +6,7 @@ import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { joinPath } from '../src/util/path';
 import { DateTime } from 'luxon';
+import { DayOfWeek } from '../src/constants';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -313,7 +314,15 @@ export const createDailyGoal = mutation({
     details: v.optional(v.string()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
-    dayOfWeek: v.number(),
+    dayOfWeek: v.union(
+      v.literal(DayOfWeek.MONDAY),
+      v.literal(DayOfWeek.TUESDAY),
+      v.literal(DayOfWeek.WEDNESDAY),
+      v.literal(DayOfWeek.THURSDAY),
+      v.literal(DayOfWeek.FRIDAY),
+      v.literal(DayOfWeek.SATURDAY),
+      v.literal(DayOfWeek.SUNDAY)
+    ),
     dateTimestamp: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -461,7 +470,15 @@ export const updateDailyGoalDay = mutation({
     sessionId: v.id('sessions'),
     goalId: v.id('goals'),
     weekNumber: v.number(),
-    newDayOfWeek: v.number(),
+    newDayOfWeek: v.union(
+      v.literal(DayOfWeek.MONDAY),
+      v.literal(DayOfWeek.TUESDAY),
+      v.literal(DayOfWeek.WEDNESDAY),
+      v.literal(DayOfWeek.THURSDAY),
+      v.literal(DayOfWeek.FRIDAY),
+      v.literal(DayOfWeek.SATURDAY),
+      v.literal(DayOfWeek.SUNDAY)
+    ),
   },
   handler: async (ctx, args) => {
     const { sessionId, goalId, weekNumber, newDayOfWeek } = args;
@@ -521,7 +538,15 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     year: v.number(),
     quarter: v.number(),
     weekNumber: v.number(),
-    targetDayOfWeek: v.number(),
+    targetDayOfWeek: v.union(
+      v.literal(DayOfWeek.MONDAY),
+      v.literal(DayOfWeek.TUESDAY),
+      v.literal(DayOfWeek.WEDNESDAY),
+      v.literal(DayOfWeek.THURSDAY),
+      v.literal(DayOfWeek.FRIDAY),
+      v.literal(DayOfWeek.SATURDAY),
+      v.literal(DayOfWeek.SUNDAY)
+    ),
   },
   handler: async (ctx, args) => {
     const { sessionId, year, quarter, weekNumber, targetDayOfWeek } = args;
@@ -529,7 +554,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     const userId = user._id;
 
     // Validate that we're not trying to pull tasks to Monday (day 1)
-    if (targetDayOfWeek === 1) {
+    if (targetDayOfWeek === DayOfWeek.MONDAY) {
       throw new ConvexError({
         code: 'INVALID_ARGUMENT',
         message:
@@ -538,7 +563,29 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     }
 
     // Calculate the previous day
-    const previousDayOfWeek = targetDayOfWeek === 1 ? 7 : targetDayOfWeek - 1;
+    let previousDayOfWeek: DayOfWeek;
+    switch (targetDayOfWeek) {
+      case DayOfWeek.TUESDAY:
+        previousDayOfWeek = DayOfWeek.MONDAY;
+        break;
+      case DayOfWeek.WEDNESDAY:
+        previousDayOfWeek = DayOfWeek.TUESDAY;
+        break;
+      case DayOfWeek.THURSDAY:
+        previousDayOfWeek = DayOfWeek.WEDNESDAY;
+        break;
+      case DayOfWeek.FRIDAY:
+        previousDayOfWeek = DayOfWeek.THURSDAY;
+        break;
+      case DayOfWeek.SATURDAY:
+        previousDayOfWeek = DayOfWeek.FRIDAY;
+        break;
+      case DayOfWeek.SUNDAY:
+        previousDayOfWeek = DayOfWeek.SATURDAY;
+        break;
+      default:
+        previousDayOfWeek = DayOfWeek.SUNDAY;
+    }
 
     // Find all incomplete daily goals from the previous day
     const weeklyGoals = await ctx.db
@@ -571,5 +618,55 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     );
 
     return weeklyGoals.length; // Return number of tasks moved
+  },
+});
+
+export const useDailyGoal = query({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+    weekNumber: v.number(),
+    dayOfWeek: v.union(
+      v.literal(DayOfWeek.MONDAY),
+      v.literal(DayOfWeek.TUESDAY),
+      v.literal(DayOfWeek.WEDNESDAY),
+      v.literal(DayOfWeek.THURSDAY),
+      v.literal(DayOfWeek.FRIDAY),
+      v.literal(DayOfWeek.SATURDAY),
+      v.literal(DayOfWeek.SUNDAY)
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId, weekNumber, dayOfWeek } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the goal details
+    const goal = await ctx.db.get(goalId);
+    if (!goal || goal.userId !== userId) {
+      return null;
+    }
+
+    // Get the weekly state for this goal using the optimized index
+    const weeklyGoal = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_daily_goal_lookup', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('weekNumber', weekNumber)
+          .eq('daily.dayOfWeek', dayOfWeek)
+          .eq('goalId', goalId)
+      )
+      .first();
+
+    return {
+      title: goal.title,
+      details: goal.details,
+      isComplete: weeklyGoal?.isComplete ?? false,
+      isPinned: weeklyGoal?.isPinned ?? false,
+      isStarred: weeklyGoal?.isStarred ?? false,
+      weekNumber: weeklyGoal?.weekNumber,
+      dayOfWeek: weeklyGoal?.daily?.dayOfWeek,
+    };
   },
 });

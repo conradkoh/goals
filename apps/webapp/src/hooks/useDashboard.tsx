@@ -9,13 +9,15 @@ import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
 import React, { createContext, useContext, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { DayOfWeek } from '@services/backend/src/constants';
+import { useWeek } from './useWeek';
 
 interface WeekData {
   weekLabel: string;
   weekNumber: number;
   mondayDate: string;
   days: Array<{
-    dayOfWeek: number;
+    dayOfWeek: DayOfWeek;
     date: string;
     dateTimestamp: number;
   }>;
@@ -49,7 +51,7 @@ const generateWeeksForQuarter = (
       weekNumber: weekNum,
       mondayDate: weekStart.toFormat('LLL d'),
       days: Array.from({ length: 7 }, (_, i) => ({
-        dayOfWeek: i + 1,
+        dayOfWeek: (i + 1) as DayOfWeek,
         date: weekStart.plus({ days: i }).toFormat('LLL d'),
         dateTimestamp: weekStart.plus({ days: i }).toMillis(),
       })),
@@ -101,7 +103,7 @@ interface DashboardContextValue {
     details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
-    dayOfWeek: number;
+    dayOfWeek: DayOfWeek;
     dateTimestamp?: number;
   }) => Promise<void>;
   updateQuarterlyGoalStatus: (args: {
@@ -125,11 +127,11 @@ interface DashboardContextValue {
   updateDailyGoalDay: (args: {
     goalId: Id<'goals'>;
     weekNumber: number;
-    newDayOfWeek: number;
+    newDayOfWeek: DayOfWeek;
   }) => Promise<void>;
   moveIncompleteTasksFromPreviousDay: (args: {
     weekNumber: number;
-    targetDayOfWeek: number;
+    targetDayOfWeek: DayOfWeek;
   }) => Promise<void>;
 }
 
@@ -265,7 +267,7 @@ export const DashboardProvider = ({
     details?: string;
     parentId: Id<'goals'>;
     weekNumber: number;
-    dayOfWeek: number;
+    dayOfWeek: DayOfWeek;
     dateTimestamp?: number;
   }) => {
     await createDailyGoalMutation({
@@ -352,7 +354,7 @@ export const DashboardProvider = ({
   }: {
     goalId: Id<'goals'>;
     weekNumber: number;
-    newDayOfWeek: number;
+    newDayOfWeek: DayOfWeek;
   }) => {
     await updateDailyGoalDayMutation({
       sessionId,
@@ -367,7 +369,7 @@ export const DashboardProvider = ({
     targetDayOfWeek,
   }: {
     weekNumber: number;
-    targetDayOfWeek: number;
+    targetDayOfWeek: DayOfWeek;
   }) => {
     await moveIncompleteTasksFromPreviousDayMutation({
       sessionId,

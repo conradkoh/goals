@@ -1,21 +1,21 @@
 import { createContext, useContext, useMemo } from 'react';
 import { useWeek } from './useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import React from 'react';
+import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 
 type DailyGoalsViewModel = {
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeekType;
   date: string;
   dateTimestamp: number;
-  weeklyGoals: {
+  weeklyGoals: Array<{
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
-    dailyGoals: GoalWithDetailsAndChildren[];
-  }[];
+    dailyGoals: Array<GoalWithDetailsAndChildren>;
+  }>;
 };
 
 interface DayContextValue {
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeekType;
   date: string;
   dateTimestamp: number;
   dailyGoalsView: DailyGoalsViewModel;
@@ -24,7 +24,7 @@ interface DayContextValue {
 const DayContext = createContext<DayContextValue | undefined>(undefined);
 
 interface DayProviderProps {
-  dayOfWeek: number;
+  dayOfWeek: DayOfWeekType;
   date: string;
   dateTimestamp: number;
   children: React.ReactNode;
