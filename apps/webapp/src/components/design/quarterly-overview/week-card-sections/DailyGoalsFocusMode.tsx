@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { KeyboardShortcut } from '@/components/ui/keyboard-shortcut';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
 import { WeekCardDailyGoals } from './WeekCardDailyGoals';
 import { useState } from 'react';
 import { DateTime } from 'luxon';
@@ -112,12 +112,33 @@ export const DailyGoalsFocusMode = ({
     }
   };
 
+  const handleNavigateToDay = (
+    newWeekNumber: number,
+    newDayOfWeek: DayOfWeek
+  ) => {
+    setWeekNumber(newWeekNumber);
+    setSelectedDay(newDayOfWeek);
+  };
+
+  const handleNavigateToWeek = (newWeekNumber: number) => {
+    setWeekNumber(newWeekNumber);
+  };
+
+  // Get current week and day for jump button visibility
+  const today = DateTime.now();
+  const currentWeekNumber = today.weekNumber;
+  const currentDayOfWeek = today.weekday as DayOfWeek;
+  const isCurrentView =
+    viewMode === 'daily'
+      ? weekNumber === currentWeekNumber && selectedDay === currentDayOfWeek
+      : weekNumber === currentWeekNumber;
+
   return (
     <div className="fixed inset-0 bg-gray-50 z-50 overflow-auto">
       <KeyboardShortcut onEscPressed={onClose} />
-      <div className="max-w-5xl mx-auto px-6 py-4">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center border-b border-gray-200 pb-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="sticky top-0 bg-gray-50 z-10 px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold">Focus Mode</h2>
               <div className="flex items-center gap-2">
@@ -163,6 +184,25 @@ export const DailyGoalsFocusMode = ({
                   <SelectItem value="weekly">Weekly View</SelectItem>
                 </SelectContent>
               </Select>
+              {!isCurrentView && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (viewMode === 'daily') {
+                      handleNavigateToDay(currentWeekNumber, currentDayOfWeek);
+                    } else {
+                      handleNavigateToWeek(currentWeekNumber);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  {viewMode === 'daily'
+                    ? 'Jump to Today'
+                    : 'Jump to Current Week'}
+                </Button>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -173,15 +213,21 @@ export const DailyGoalsFocusMode = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
+        </div>
 
+        <div className="px-6 py-4">
           <div className="space-y-8">
             {viewMode === 'daily' ? (
               <FocusModeDailyView
                 weekNumber={weekNumber}
                 selectedDayOfWeek={selectedDay}
+                onNavigate={handleNavigateToDay}
               />
             ) : (
-              <FocusModeWeeklyView weekNumber={weekNumber} />
+              <FocusModeWeeklyView
+                weekNumber={weekNumber}
+                onNavigate={handleNavigateToWeek}
+              />
             )}
           </div>
         </div>

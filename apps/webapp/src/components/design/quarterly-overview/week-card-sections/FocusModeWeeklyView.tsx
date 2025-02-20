@@ -5,10 +5,12 @@ import { WeekCardWeeklyGoals } from './WeekCardWeeklyGoals';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
+  onNavigate: (weekNumber: number) => void;
 }
 
 export const FocusModeWeeklyView = ({
   weekNumber,
+  onNavigate,
 }: FocusModeWeeklyViewProps) => {
   return (
     <div className="space-y-6">
