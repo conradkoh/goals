@@ -39,10 +39,7 @@ export const GoalStarPin = ({
         <div className="w-0 group-hover:w-4 overflow-hidden transition-all duration-200">
           <ActionButton
             icon={<Pin className="h-3.5 w-3.5" />}
-            onClick={() => {
-              onStarred();
-              onPinned();
-            }}
+            onClick={onPinned}
             className="text-gray-400 hover:text-blue-500"
           />
         </div>
@@ -61,10 +58,7 @@ export const GoalStarPin = ({
         <div className="w-0 group-hover:w-4 overflow-hidden transition-all duration-200">
           <ActionButton
             icon={<Star className="h-3.5 w-3.5" />}
-            onClick={() => {
-              onPinned();
-              onStarred();
-            }}
+            onClick={onStarred}
             className="text-gray-400 hover:text-yellow-500"
           />
         </div>

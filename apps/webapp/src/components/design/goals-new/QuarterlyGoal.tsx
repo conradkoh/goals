@@ -105,17 +105,17 @@ export function QuarterlyGoal({
     onToggleStatus(
       goal._id as Id<'goals'>,
       !goal.state?.isStarred,
-      goal.state?.isPinned || false
+      false // Always set pinned to false when starring
     );
-  }, [goal._id, goal.state?.isStarred, goal.state?.isPinned, onToggleStatus]);
+  }, [goal._id, goal.state?.isStarred, onToggleStatus]);
 
   const handleTogglePin = useCallback(() => {
     onToggleStatus(
       goal._id as Id<'goals'>,
-      goal.state?.isStarred || false,
+      false, // Always set starred to false when pinning
       !goal.state?.isPinned
     );
-  }, [goal._id, goal.state?.isStarred, goal.state?.isPinned, onToggleStatus]);
+  }, [goal._id, goal.state?.isPinned, onToggleStatus]);
 
   return (
     <>
