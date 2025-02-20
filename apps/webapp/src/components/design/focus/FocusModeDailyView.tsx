@@ -1,5 +1,5 @@
-import { WeekProvider } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 
 // Day of week constants
 const DayOfWeek = {
@@ -18,6 +18,7 @@ interface FocusModeDailyViewProps {
   year: number;
   quarter: number;
   weekNumber: number;
+  weekData: WeekData;
   selectedDayOfWeek: DayOfWeek;
   onNavigate: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
@@ -26,12 +27,13 @@ export const FocusModeDailyView = ({
   year,
   quarter,
   weekNumber,
+  weekData,
   selectedDayOfWeek,
   onNavigate,
 }: FocusModeDailyViewProps) => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      <WeekProvider weekNumber={weekNumber}>
+      <WeekProviderWithoutDashboard weekData={weekData}>
         <WeekCardDailyGoals
           weekNumber={weekNumber}
           year={year}
@@ -39,7 +41,7 @@ export const FocusModeDailyView = ({
           showOnlyToday={true}
           selectedDayOverride={selectedDayOfWeek}
         />
-      </WeekProvider>
+      </WeekProviderWithoutDashboard>
     </div>
   );
 };

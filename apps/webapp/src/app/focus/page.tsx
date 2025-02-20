@@ -1,15 +1,8 @@
 'use client';
-import {
-  useWeekWithoutDashboard,
-  WeekProviderWithoutDashboard,
-} from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { X, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -24,6 +17,9 @@ import { ViewMode } from '@/app/focus/page.constants';
 import { DayOfWeek } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FocusModeDailyView } from '@/components/design/focus/FocusModeDailyView';
+import { FocusModeWeeklyView } from '@/components/design/focus/FocusModeWeeklyView';
+import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 
 export const FocusPage = () => {
   const searchParams = useSearchParams();
@@ -108,6 +104,15 @@ export const FocusPage = () => {
 
   const handleClose = () => {
     router.push(`/dashboard?year=${year}&quarter=${quarter}`);
+  };
+
+  const handleNavigateToDay = (weekNumber: number, dayOfWeek: DayOfWeek) => {
+    setSelectedWeek(weekNumber);
+    setSelectedDay(dayOfWeek);
+  };
+
+  const handleNavigateToWeek = (weekNumber: number) => {
+    setSelectedWeek(weekNumber);
   };
 
   const renderLoadingSkeleton = () => (
@@ -243,45 +248,25 @@ export const FocusPage = () => {
       {!weekDetails || !currentWeekInfo ? (
         renderLoadingSkeleton()
       ) : (
-        <div className="container mx-auto py-8 space-y-6">
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="font-semibold mb-4">💭 Quarterly Goals</div>
-              <WeekProviderWithoutDashboard weekData={weekDetails}>
-                <WeekCardQuarterlyGoals
-                  weekNumber={selectedWeek}
-                  year={year}
-                  quarter={quarter}
-                />
-              </WeekProviderWithoutDashboard>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="font-semibold mb-4">🚀 Weekly Goals</div>
-              <WeekProviderWithoutDashboard weekData={weekDetails}>
-                <WeekCardWeeklyGoals
-                  weekNumber={selectedWeek}
-                  year={year}
-                  quarter={quarter}
-                />
-              </WeekProviderWithoutDashboard>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="font-semibold mb-4">🔍 Daily Goals</div>
-              <WeekProviderWithoutDashboard weekData={weekDetails}>
-                <WeekCardDailyGoals
-                  weekNumber={selectedWeek}
-                  year={year}
-                  quarter={quarter}
-                  showOnlyToday={viewMode === 'daily'}
-                  selectedDayOverride={
-                    viewMode === 'daily' ? selectedDay : undefined
-                  }
-                />
-              </WeekProviderWithoutDashboard>
-            </div>
-          </div>
+        <div className="container mx-auto py-8">
+          {viewMode === 'daily' ? (
+            <FocusModeDailyView
+              weekNumber={selectedWeek}
+              year={year}
+              quarter={quarter}
+              weekData={weekDetails}
+              selectedDayOfWeek={selectedDay}
+              onNavigate={handleNavigateToDay}
+            />
+          ) : (
+            <FocusModeWeeklyView
+              weekNumber={selectedWeek}
+              year={year}
+              quarter={quarter}
+              weekData={weekDetails}
+              onNavigate={handleNavigateToWeek}
+            />
+          )}
         </div>
       )}
     </div>
