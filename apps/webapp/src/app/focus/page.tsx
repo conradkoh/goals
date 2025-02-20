@@ -3,6 +3,20 @@ import { useWeek2, WeekProvider2 } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { cn } from '@/lib/utils';
+import { DateTime } from 'luxon';
 
 // Day of week constants
 const DayOfWeek = {
@@ -17,56 +31,200 @@ const DayOfWeek = {
 
 type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
 
+type ViewMode = 'daily' | 'weekly';
+
 export const FocusPage = () => {
   const year = 2025;
   const quarter = 1;
-  const week = 8;
+  const router = useRouter();
+  const [viewMode, setViewMode] = useState<ViewMode>('daily');
+  const [selectedWeek, setSelectedWeek] = useState(8);
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
+    const today = DateTime.now();
+    return today.weekday as DayOfWeek;
+  });
 
-  const weekDetails = useWeek2({ year, quarter, week });
+  const { weeks, startWeek, endWeek, currentWeekNumber } = useQuarterWeekInfo(
+    year,
+    quarter
+  );
+  const weekDetails = useWeek2({ year, quarter, week: selectedWeek });
 
-  if (!weekDetails) {
+  // Find the current week's data
+  const currentWeekInfo = weeks.find((w) => w.weekNumber === selectedWeek);
+
+  // Calculate navigation bounds
+  const isAtMinBound =
+    viewMode === 'daily'
+      ? selectedWeek === startWeek && selectedDay === DayOfWeek.MONDAY
+      : selectedWeek === startWeek;
+  const isAtMaxBound =
+    viewMode === 'daily'
+      ? selectedWeek === endWeek && selectedDay === DayOfWeek.SUNDAY
+      : selectedWeek === endWeek;
+
+  const handlePrevious = () => {
+    if (isAtMinBound) return;
+
+    if (viewMode === 'weekly') {
+      setSelectedWeek(selectedWeek - 1);
+      return;
+    }
+
+    if (selectedDay === DayOfWeek.MONDAY) {
+      // If we're on Monday and not at min week, go to previous week's Sunday
+      setSelectedWeek(selectedWeek - 1);
+      setSelectedDay(DayOfWeek.SUNDAY);
+    } else {
+      // Otherwise just go to previous day
+      setSelectedDay((selectedDay - 1) as DayOfWeek);
+    }
+  };
+
+  const handleNext = () => {
+    if (isAtMaxBound) return;
+
+    if (viewMode === 'weekly') {
+      setSelectedWeek(selectedWeek + 1);
+      return;
+    }
+
+    if (selectedDay === DayOfWeek.SUNDAY) {
+      // If we're on Sunday and not at max week, go to next week's Monday
+      setSelectedWeek(selectedWeek + 1);
+      setSelectedDay(DayOfWeek.MONDAY);
+    } else {
+      // Otherwise just go to next day
+      setSelectedDay((selectedDay + 1) as DayOfWeek);
+    }
+  };
+
+  if (!weekDetails || !currentWeekInfo) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Weekly View */}
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">💭 Quarterly Goals</div>
-          <WeekProvider2 weekData={weekDetails}>
-            <WeekCardQuarterlyGoals
-              weekNumber={weekDetails.weekNumber}
-              year={year}
-              quarter={quarter}
-            />
-          </WeekProvider2>
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Bar */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold">Focus Mode</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePrevious}
+                  disabled={isAtMinBound}
+                  className={cn(
+                    'h-8 w-8 text-muted-foreground hover:text-foreground',
+                    isAtMinBound && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium min-w-[140px] text-center">
+                  {viewMode === 'daily'
+                    ? `${getDayName(selectedDay)} [Week ${selectedWeek}]`
+                    : `Week ${selectedWeek}`}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNext}
+                  disabled={isAtMaxBound}
+                  className={cn(
+                    'h-8 w-8 text-muted-foreground hover:text-foreground',
+                    isAtMaxBound && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <Select
+                value={viewMode}
+                onValueChange={(value: ViewMode) => setViewMode(value)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select view" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily View</SelectItem>
+                  <SelectItem value="weekly">Weekly View</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push('/dashboard')}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">🚀 Weekly Goals</div>
-          <WeekProvider2 weekData={weekDetails}>
-            <WeekCardWeeklyGoals
-              weekNumber={weekDetails.weekNumber}
-              year={year}
-              quarter={quarter}
-            />
-          </WeekProvider2>
-        </div>
+      {/* Content */}
+      <div className="container mx-auto py-8 space-y-6">
+        {/* Weekly View */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="font-semibold mb-4">💭 Quarterly Goals</div>
+            <WeekProvider2 weekData={weekDetails}>
+              <WeekCardQuarterlyGoals
+                weekNumber={selectedWeek}
+                year={year}
+                quarter={quarter}
+              />
+            </WeekProvider2>
+          </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">🔍 Daily Goals</div>
-          <WeekProvider2 weekData={weekDetails}>
-            <WeekCardDailyGoals
-              weekNumber={weekDetails.weekNumber}
-              year={year}
-              quarter={quarter}
-            />
-          </WeekProvider2>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="font-semibold mb-4">🚀 Weekly Goals</div>
+            <WeekProvider2 weekData={weekDetails}>
+              <WeekCardWeeklyGoals
+                weekNumber={selectedWeek}
+                year={year}
+                quarter={quarter}
+              />
+            </WeekProvider2>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="font-semibold mb-4">🔍 Daily Goals</div>
+            <WeekProvider2 weekData={weekDetails}>
+              <WeekCardDailyGoals
+                weekNumber={selectedWeek}
+                year={year}
+                quarter={quarter}
+                showOnlyToday={viewMode === 'daily'}
+                selectedDayOverride={
+                  viewMode === 'daily' ? selectedDay : undefined
+                }
+              />
+            </WeekProvider2>
+          </div>
         </div>
       </div>
     </div>
   );
+};
+
+// Helper function to get day name
+const getDayName = (dayOfWeek: number): string => {
+  const names = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  return names[dayOfWeek - 1];
 };
 
 export default FocusPage;
