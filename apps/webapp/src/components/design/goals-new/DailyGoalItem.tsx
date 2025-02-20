@@ -50,7 +50,7 @@ export const DailyGoalItem = ({
     dayOfWeek: currentDayOfWeek ?? DayOfWeek.MONDAY,
   });
 
-  // Use the most up-to-date data from the hook if available, otherwise fall back to context data
+  // Use the most up-to-date data, falling back to context data if subscription isn't ready
   const {
     title = goal.title,
     details = goal.details,
