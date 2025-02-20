@@ -76,6 +76,7 @@ const getDayName = (dayOfWeek: number): string => {
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
   showOnlyToday?: boolean;
+  selectedDayOverride?: DayOfWeek;
 }
 
 interface DayData {
@@ -106,7 +107,7 @@ export interface WeekCardDailyGoalsRef {
 export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
->(({ weekNumber, showOnlyToday }, ref) => {
+>(({ weekNumber, showOnlyToday, selectedDayOverride }, ref) => {
   const { days, weeklyGoals } = useWeek();
   const { createDailyGoal } = useDashboard();
   const [newGoalTitle, setNewGoalTitle] = useState('');
@@ -116,6 +117,11 @@ export const WeekCardDailyGoals = forwardRef<
     const today = DateTime.now();
     const todayWeekNumber = today.weekNumber;
     const todayDayOfWeek = today.weekday as DayOfWeek;
+
+    // If there's a selectedDayOverride, use that
+    if (selectedDayOverride) {
+      return selectedDayOverride;
+    }
 
     // Check if we're in the current week
     const isCurrentWeek = weekNumber === todayWeekNumber;
@@ -137,6 +143,18 @@ export const WeekCardDailyGoals = forwardRef<
     const todayWeekNumber = today.weekNumber;
     const todayDayOfWeek = today.weekday;
     const sortedDays = [...(days as DayData[])];
+
+    // If we have a selectedDayOverride and showOnlyToday is true, show that day as current
+    if (selectedDayOverride && showOnlyToday) {
+      const selectedDayData = sortedDays.find(
+        (d) => d.dayOfWeek === selectedDayOverride
+      );
+      return {
+        currentDay: selectedDayData,
+        futureDays: [],
+        pastDays: [],
+      };
+    }
 
     // Find current day
     const currentDayData = sortedDays.find(
@@ -165,7 +183,7 @@ export const WeekCardDailyGoals = forwardRef<
       futureDays: future,
       pastDays: past,
     };
-  }, [days, weekNumber]);
+  }, [days, weekNumber, selectedDayOverride, showOnlyToday]);
 
   // Calculate past days summary
   const pastDaysSummary = useMemo(() => {
