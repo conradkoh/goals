@@ -23,6 +23,8 @@ import { DateTime } from 'luxon';
 import { ViewMode } from '@/app/focus/page.constants';
 import { DayOfWeek } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
+import { Skeleton } from '@/components/ui/skeleton';
+
 export const FocusPage = () => {
   const year = 2025;
   const quarter = 1;
@@ -101,9 +103,62 @@ export const FocusPage = () => {
     }
   };
 
-  if (!weekDetails || !currentWeekInfo) {
-    return <div>Loading...</div>;
-  }
+  const renderLoadingSkeleton = () => (
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="space-y-6">
+        {/* Quarterly Goals Skeleton */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="font-semibold mb-4">💭 Quarterly Goals</div>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-10 w-5/6" />
+          </div>
+        </div>
+
+        {/* Weekly Goals Skeleton */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="font-semibold mb-4">🚀 Weekly Goals</div>
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-4/5" />
+            <Skeleton className="h-10 w-2/3" />
+          </div>
+        </div>
+
+        {/* Daily Goals Skeleton */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="font-semibold mb-4">🔍 Daily Goals</div>
+          <div className="space-y-3">
+            {/* Day Header Skeleton */}
+            <div className="bg-gray-100 py-1 px-3 rounded-md">
+              <Skeleton className="h-6 w-32" />
+            </div>
+            {/* Goals Skeleton */}
+            <div className="space-y-4 mt-4">
+              {/* Goal Group */}
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-48" />
+                <div className="space-y-2 pl-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-5/6" />
+                  <Skeleton className="h-8 w-4/5" />
+                </div>
+              </div>
+              {/* Another Goal Group */}
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-56" />
+                <div className="space-y-2 pl-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-3/4" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,47 +233,50 @@ export const FocusPage = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto py-8 space-y-6">
-        {/* Weekly View */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="font-semibold mb-4">💭 Quarterly Goals</div>
-            <WeekProviderWithoutDashboard weekData={weekDetails}>
-              <WeekCardQuarterlyGoals
-                weekNumber={selectedWeek}
-                year={year}
-                quarter={quarter}
-              />
-            </WeekProviderWithoutDashboard>
-          </div>
+      {!weekDetails || !currentWeekInfo ? (
+        renderLoadingSkeleton()
+      ) : (
+        <div className="container mx-auto py-8 space-y-6">
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="font-semibold mb-4">💭 Quarterly Goals</div>
+              <WeekProviderWithoutDashboard weekData={weekDetails}>
+                <WeekCardQuarterlyGoals
+                  weekNumber={selectedWeek}
+                  year={year}
+                  quarter={quarter}
+                />
+              </WeekProviderWithoutDashboard>
+            </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="font-semibold mb-4">🚀 Weekly Goals</div>
-            <WeekProviderWithoutDashboard weekData={weekDetails}>
-              <WeekCardWeeklyGoals
-                weekNumber={selectedWeek}
-                year={year}
-                quarter={quarter}
-              />
-            </WeekProviderWithoutDashboard>
-          </div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="font-semibold mb-4">🚀 Weekly Goals</div>
+              <WeekProviderWithoutDashboard weekData={weekDetails}>
+                <WeekCardWeeklyGoals
+                  weekNumber={selectedWeek}
+                  year={year}
+                  quarter={quarter}
+                />
+              </WeekProviderWithoutDashboard>
+            </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="font-semibold mb-4">🔍 Daily Goals</div>
-            <WeekProviderWithoutDashboard weekData={weekDetails}>
-              <WeekCardDailyGoals
-                weekNumber={selectedWeek}
-                year={year}
-                quarter={quarter}
-                showOnlyToday={viewMode === 'daily'}
-                selectedDayOverride={
-                  viewMode === 'daily' ? selectedDay : undefined
-                }
-              />
-            </WeekProviderWithoutDashboard>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="font-semibold mb-4">🔍 Daily Goals</div>
+              <WeekProviderWithoutDashboard weekData={weekDetails}>
+                <WeekCardDailyGoals
+                  weekNumber={selectedWeek}
+                  year={year}
+                  quarter={quarter}
+                  showOnlyToday={viewMode === 'daily'}
+                  selectedDayOverride={
+                    viewMode === 'daily' ? selectedDay : undefined
+                  }
+                />
+              </WeekProviderWithoutDashboard>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
