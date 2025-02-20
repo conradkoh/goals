@@ -7,6 +7,15 @@ import { DateTime } from 'luxon';
 import { cn } from '@/lib/utils';
 import { WeekProvider } from '@/hooks/useWeek';
 import { useDashboard } from '@/hooks/useDashboard';
+import { FocusModeDailyView } from './FocusModeDailyView';
+import { FocusModeWeeklyView } from './FocusModeWeeklyView';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Day of week constants
 const DayOfWeek = {
@@ -34,6 +43,8 @@ const getDayName = (dayOfWeek: number): string => {
   return names[dayOfWeek - 1];
 };
 
+type ViewMode = 'daily' | 'weekly';
+
 interface DailyGoalsFocusModeProps {
   weekNumber: number;
   onClose: () => void;
@@ -49,6 +60,7 @@ export const DailyGoalsFocusMode = ({
     const today = DateTime.now();
     return today.weekday as DayOfWeek;
   });
+  const [viewMode, setViewMode] = useState<ViewMode>('daily');
 
   // Get the min and max week numbers from the quarter's week data
   const minWeek = weekData[0]?.weekNumber ?? initialWeekNumber;
@@ -56,12 +68,21 @@ export const DailyGoalsFocusMode = ({
     weekData[weekData.length - 1]?.weekNumber ?? initialWeekNumber;
 
   const isAtMinBound =
-    weekNumber === minWeek && selectedDay === DayOfWeek.MONDAY;
+    viewMode === 'daily'
+      ? weekNumber === minWeek && selectedDay === DayOfWeek.MONDAY
+      : weekNumber === minWeek;
   const isAtMaxBound =
-    weekNumber === maxWeek && selectedDay === DayOfWeek.SUNDAY;
+    viewMode === 'daily'
+      ? weekNumber === maxWeek && selectedDay === DayOfWeek.SUNDAY
+      : weekNumber === maxWeek;
 
   const handlePreviousDay = () => {
     if (isAtMinBound) return;
+
+    if (viewMode === 'weekly') {
+      setWeekNumber(weekNumber - 1);
+      return;
+    }
 
     if (selectedDay === DayOfWeek.MONDAY) {
       // If we're on Monday and not at min week, go to previous week's Sunday
@@ -75,6 +96,11 @@ export const DailyGoalsFocusMode = ({
 
   const handleNextDay = () => {
     if (isAtMaxBound) return;
+
+    if (viewMode === 'weekly') {
+      setWeekNumber(weekNumber + 1);
+      return;
+    }
 
     if (selectedDay === DayOfWeek.SUNDAY) {
       // If we're on Sunday and not at max week, go to next week's Monday
@@ -108,7 +134,9 @@ export const DailyGoalsFocusMode = ({
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-sm font-medium min-w-[140px] text-center">
-                  {getDayName(selectedDay)} [Week {weekNumber}]
+                  {viewMode === 'daily'
+                    ? `${getDayName(selectedDay)} [Week ${weekNumber}]`
+                    : `Week ${weekNumber}`}
                 </span>
                 <Button
                   variant="ghost"
@@ -123,6 +151,18 @@ export const DailyGoalsFocusMode = ({
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
+              <Select
+                value={viewMode}
+                onValueChange={(value: ViewMode) => setViewMode(value)}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select view" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily View</SelectItem>
+                  <SelectItem value="weekly">Weekly View</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button
               variant="ghost"
@@ -135,15 +175,14 @@ export const DailyGoalsFocusMode = ({
           </div>
 
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <WeekProvider weekNumber={weekNumber}>
-                <WeekCardDailyGoals
-                  weekNumber={weekNumber}
-                  showOnlyToday={true}
-                  selectedDayOverride={selectedDay}
-                />
-              </WeekProvider>
-            </div>
+            {viewMode === 'daily' ? (
+              <FocusModeDailyView
+                weekNumber={weekNumber}
+                selectedDayOfWeek={selectedDay}
+              />
+            ) : (
+              <FocusModeWeeklyView weekNumber={weekNumber} />
+            )}
           </div>
         </div>
       </div>
