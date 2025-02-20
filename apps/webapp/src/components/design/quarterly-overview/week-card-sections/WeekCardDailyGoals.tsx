@@ -815,9 +815,16 @@ const DailyGoalGroup = ({
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
   const { moveIncompleteTasksFromPreviousDay } = useDashboard();
   const { weekNumber } = useWeek();
+  const { dateTimestamp } = useDay();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
+
+  // Format the date string
+  const formattedDate = useMemo(() => {
+    if (!dateTimestamp) return '';
+    return DateTime.fromMillis(dateTimestamp).toFormat('MMM d');
+  }, [dateTimestamp]);
 
   const handleMoveTasksFromPreviousDay = async () => {
     if (isMonday) return;
@@ -852,8 +859,11 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
         <div className="flex items-center justify-between">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer">
-                {getDayName(dayOfWeek)}
+              <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer flex items-center gap-2">
+                <span>{getDayName(dayOfWeek)}</span>
+                <span className="text-gray-500 font-normal">
+                  {formattedDate}
+                </span>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
