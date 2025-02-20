@@ -487,8 +487,7 @@ export const WeekCardWeeklyGoals = forwardRef<
                 <div
                   className={cn(
                     'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
-                    isStarred && 'bg-yellow-50',
-                    isPinned && 'bg-blue-50'
+                    isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50'
                   )}
                 >
                   {goal.title}
