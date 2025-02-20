@@ -528,6 +528,15 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
+    // Validate that we're not trying to pull tasks to Monday (day 1)
+    if (targetDayOfWeek === 1) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message:
+          'Cannot pull tasks to Monday as it is the first day of the week',
+      });
+    }
+
     // Calculate the previous day
     const previousDayOfWeek = targetDayOfWeek === 1 ? 7 : targetDayOfWeek - 1;
 

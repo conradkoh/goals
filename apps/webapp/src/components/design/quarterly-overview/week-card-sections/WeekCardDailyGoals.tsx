@@ -46,6 +46,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // Day of week constants
 const DayOfWeek = {
@@ -810,18 +816,35 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
   const { moveIncompleteTasksFromPreviousDay } = useDashboard();
   const { weekNumber } = useWeek();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
+  const isMonday = dayOfWeek === DayOfWeek.MONDAY;
+  const isDisabled = isMovingTasks || isMonday;
 
   const handleMoveTasksFromPreviousDay = async () => {
+    if (isMonday) return;
     try {
       setIsMovingTasks(true);
       await moveIncompleteTasksFromPreviousDay({
         weekNumber,
         targetDayOfWeek: dayOfWeek,
       });
+    } catch (error) {
+      console.error('Failed to move tasks:', error);
     } finally {
       setIsMovingTasks(false);
     }
   };
+
+  const getTooltipContent = () => {
+    if (isMonday) {
+      return 'Cannot pull tasks to Monday as it is the first day of the week';
+    }
+    if (isMovingTasks) {
+      return 'Moving tasks...';
+    }
+    return null;
+  };
+
+  const tooltipContent = getTooltipContent();
 
   return (
     <div className="space-y-2">
@@ -834,19 +857,44 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: number }) => {
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onClick={handleMoveTasksFromPreviousDay}
-                disabled={isMovingTasks}
-              >
-                <History className="mr-2 h-4 w-4" />
-                <div className="flex flex-col w-full items-center">
-                  <span>Pull Incomplete</span>
-                  <span className="text-gray-500 text-xs">
-                    from previous day
-                  </span>
-                </div>
-              </DropdownMenuItem>
+              {isDisabled ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="w-full cursor-not-allowed">
+                        <DropdownMenuItem
+                          className="cursor-not-allowed opacity-50"
+                          disabled
+                        >
+                          <History className="mr-2 h-4 w-4" />
+                          <div className="flex flex-col w-full items-center">
+                            <span>Pull Incomplete</span>
+                            <span className="text-gray-500 text-xs">
+                              from previous day
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{tooltipContent}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={handleMoveTasksFromPreviousDay}
+                >
+                  <History className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col w-full items-center">
+                    <span>Pull Incomplete</span>
+                    <span className="text-gray-500 text-xs">
+                      from previous day
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
