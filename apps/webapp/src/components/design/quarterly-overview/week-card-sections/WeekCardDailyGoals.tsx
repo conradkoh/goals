@@ -1,19 +1,22 @@
-import { useDashboard } from '@/hooks/useDashboard';
-import { useDailyGoal } from '@/hooks/useGoal';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Button } from '@/components/ui/button';
 import {
-  useState,
-  useMemo,
-  useEffect,
-  useImperativeHandle,
-  forwardRef,
-} from 'react';
-import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { EditableGoalTitle } from '../../goals-new/EditableGoalTitle';
-import { useWeek } from '@/hooks/useWeek';
-import { DayProvider, useDay } from '@/hooks/useDay';
-import { GoalSelector } from '../../goals-new/GoalSelector';
+  CollapsibleMinimal,
+  CollapsibleMinimalContent,
+  CollapsibleMinimalTrigger,
+} from '@/components/ui/collapsible-minimal';
+import { Dialog, DialogPortal } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { SafeHTML } from '@/components/ui/safe-html';
 import {
   Select,
   SelectContent,
@@ -22,39 +25,32 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  CollapsibleMinimal,
-  CollapsibleMinimalTrigger,
-  CollapsibleMinimalContent,
-} from '@/components/ui/collapsible-minimal';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Plus, Star, Pin, X, History } from 'lucide-react';
-import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
-import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
-import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
-import { Dialog, DialogPortal } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
+import { useDashboard } from '@/hooks/useDashboard';
+import { DayProvider, useDay } from '@/hooks/useDay';
+import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2, History, Pin, Star } from 'lucide-react';
+import { DateTime } from 'luxon';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
+import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
+import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
+import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
+import { GoalSelector } from '../../goals-new/GoalSelector';
+import { DailyGoalsFocusMode } from './DailyGoalsFocusMode';
 
 interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -73,28 +69,6 @@ interface DayData {
     }>;
   };
 }
-
-interface DaySectionProps {
-  dayOfWeek: DayOfWeekType;
-  date: string;
-  dateTimestamp: number;
-  dailyGoalsView: {
-    weeklyGoals: Array<{
-      weeklyGoal: GoalWithDetailsAndChildren;
-      quarterlyGoal: GoalWithDetailsAndChildren;
-    }>;
-  };
-}
-
-// Helper to get the start of day timestamp
-const getStartOfDay = (date: Date) => {
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
-  ).getTime();
-};
-
 export interface WeekCardDailyGoalsRef {
   openFocusMode: () => void;
 }
