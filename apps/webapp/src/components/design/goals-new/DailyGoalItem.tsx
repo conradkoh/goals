@@ -1,5 +1,5 @@
 import { useDashboard } from '@/hooks/useDashboard';
-import { useDailyGoal } from '@/hooks/useGoal';
+import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useWeek } from '@/hooks/useWeek';
