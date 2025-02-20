@@ -6,7 +6,7 @@ import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -17,22 +17,9 @@ import {
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
-
-// Day of week constants
-const DayOfWeek = {
-  MONDAY: 1,
-  TUESDAY: 2,
-  WEDNESDAY: 3,
-  THURSDAY: 4,
-  FRIDAY: 5,
-  SATURDAY: 6,
-  SUNDAY: 7,
-} as const;
-
-type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
-
-type ViewMode = 'daily' | 'weekly';
-
+import { ViewMode } from '@/app/focus/page.constants';
+import { DayOfWeek } from '@/lib/constants';
+import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
 export const FocusPage = () => {
   const year = 2025;
   const quarter = 1;
@@ -44,10 +31,8 @@ export const FocusPage = () => {
     return today.weekday as DayOfWeek;
   });
 
-  const { weeks, startWeek, endWeek, currentWeekNumber } = useQuarterWeekInfo(
-    year,
-    quarter
-  );
+  const { weeks, startWeek, endWeek, currentWeekNumber, isCurrentQuarter } =
+    useQuarterWeekInfo(year, quarter);
   const weekDetails = useWeek2({ year, quarter, week: selectedWeek });
 
   // Find the current week's data
@@ -96,6 +81,16 @@ export const FocusPage = () => {
     } else {
       // Otherwise just go to next day
       setSelectedDay((selectedDay + 1) as DayOfWeek);
+    }
+  };
+
+  const handleJumpToCurrent = () => {
+    const today = DateTime.now();
+    if (viewMode === 'daily') {
+      setSelectedWeek(currentWeekNumber);
+      setSelectedDay(today.weekday as DayOfWeek);
+    } else {
+      setSelectedWeek(currentWeekNumber);
     }
   };
 
@@ -154,6 +149,14 @@ export const FocusPage = () => {
                   <SelectItem value="weekly">Weekly View</SelectItem>
                 </SelectContent>
               </Select>
+              <JumpToCurrentButton
+                viewMode={viewMode}
+                selectedWeek={selectedWeek}
+                selectedDay={selectedDay}
+                currentWeekNumber={currentWeekNumber}
+                isCurrentQuarter={isCurrentQuarter}
+                onJumpToCurrent={handleJumpToCurrent}
+              />
             </div>
             <Button
               variant="ghost"
