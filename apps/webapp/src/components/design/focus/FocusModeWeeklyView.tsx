@@ -1,4 +1,4 @@
-import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { WeekProviderWithoutDashboard, WeekData } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '../quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
@@ -7,7 +7,7 @@ interface FocusModeWeeklyViewProps {
   weekNumber: number;
   year: number;
   quarter: number;
-  weekData: any; // TODO: Add proper type
+  weekData: WeekData;
   onNavigate: (weekNumber: number) => void;
 }
 

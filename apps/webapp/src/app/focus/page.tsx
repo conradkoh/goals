@@ -14,7 +14,7 @@ import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
 import { ViewMode } from '@/app/focus/page.constants';
-import { DayOfWeek } from '@/lib/constants';
+import { DayOfWeek, getDayName } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FocusModeDailyView } from '@/components/design/focus/FocusModeDailyView';
@@ -271,20 +271,6 @@ export const FocusPage = () => {
       )}
     </div>
   );
-};
-
-// Helper function to get day name
-const getDayName = (dayOfWeek: number): string => {
-  const names = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  return names[dayOfWeek - 1];
 };
 
 export default FocusPage;
