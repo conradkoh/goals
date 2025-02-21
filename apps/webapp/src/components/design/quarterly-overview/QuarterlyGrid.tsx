@@ -170,7 +170,10 @@ export const QuarterlyGrid = ({
         Jump to current week
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
-      <div id="quarterly-grid-container" className={`flex-1 px-8 py-2`}>
+      <div
+        id="quarterly-grid-container"
+        className={`min-h-full flex-1 px-8 py-2`}
+      >
         <div
           className="grid grid-flow-col gap-4 h-full pb-4"
           style={{
