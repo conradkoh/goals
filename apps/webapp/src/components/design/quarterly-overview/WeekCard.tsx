@@ -62,9 +62,7 @@ export const WeekCard = ({
             </div>
           </div>
         </div>
-        <div className="flex-1 p-4 space-y-6 overflow-y-auto min-h-0">
-          {children}
-        </div>
+        <div className="flex-1 p-4 space-y-6 min-h-0">{children}</div>
       </div>
     </WeekProvider>
   );
