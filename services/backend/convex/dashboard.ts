@@ -609,13 +609,28 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       .collect();
 
     // Get the full details of each task for the preview
-    const tasks = await Promise.all(
+    const tasksWithGoals = await Promise.all(
       weeklyGoals.map(async (weeklyGoal) => {
-        const goal = await ctx.db.get(weeklyGoal.goalId);
+        const dailyGoal = await ctx.db.get(weeklyGoal.goalId);
+        const weeklyParent = await ctx.db.get(
+          dailyGoal?.parentId as Id<'goals'>
+        );
+        const quarterlyParent = await ctx.db.get(
+          weeklyParent?.parentId as Id<'goals'>
+        );
+
         return {
           id: weeklyGoal._id,
-          title: goal?.title ?? '',
-          details: goal?.details,
+          title: dailyGoal?.title ?? '',
+          details: dailyGoal?.details,
+          weeklyGoal: {
+            id: weeklyParent?._id ?? '',
+            title: weeklyParent?.title ?? '',
+          },
+          quarterlyGoal: {
+            id: quarterlyParent?._id ?? '',
+            title: quarterlyParent?.title ?? '',
+          },
         };
       })
     );
@@ -626,7 +641,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
         canPull: true as const,
         previousDay: getDayName(previousDayOfWeek),
         targetDay: getDayName(targetDayOfWeek),
-        tasks,
+        tasks: tasksWithGoals,
       };
     }
 

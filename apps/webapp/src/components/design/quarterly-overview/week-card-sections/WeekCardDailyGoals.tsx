@@ -658,7 +658,20 @@ const DailyGoalGroup = ({
   );
 };
 
-// Simple presentational component for the day header
+interface PreviewTask {
+  id: string;
+  title: string;
+  details?: string;
+  quarterlyGoal: {
+    id: string;
+    title: string;
+  };
+  weeklyGoal: {
+    id: string;
+    title: string;
+  };
+}
+
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const { moveIncompleteTasksFromPreviousDay } = useGoalActions();
   const { weekNumber } = useWeek();
@@ -668,7 +681,7 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const [preview, setPreview] = useState<{
     previousDay: string;
     targetDay: string;
-    tasks: Array<{ id: string; title: string; details?: string }>;
+    tasks: Array<PreviewTask>;
   } | null>(null);
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
@@ -767,6 +780,50 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
 
   const tooltipContent = getTooltipContent();
 
+  // Group tasks by quarterly and weekly goals
+  const groupedTasks = useMemo(() => {
+    if (!preview?.tasks) return [];
+
+    const grouped = preview.tasks.reduce(
+      (acc, task) => {
+        const quarterlyId = task.quarterlyGoal.id;
+        const weeklyId = task.weeklyGoal.id;
+
+        if (!acc[quarterlyId]) {
+          acc[quarterlyId] = {
+            quarterlyGoal: task.quarterlyGoal,
+            weeklyGoals: {},
+          };
+        }
+
+        if (!acc[quarterlyId].weeklyGoals[weeklyId]) {
+          acc[quarterlyId].weeklyGoals[weeklyId] = {
+            weeklyGoal: task.weeklyGoal,
+            tasks: [],
+          };
+        }
+
+        acc[quarterlyId].weeklyGoals[weeklyId].tasks.push(task);
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          quarterlyGoal: { id: string; title: string };
+          weeklyGoals: Record<
+            string,
+            {
+              weeklyGoal: { id: string; title: string };
+              tasks: Array<PreviewTask>;
+            }
+          >;
+        }
+      >
+    );
+
+    return Object.values(grouped);
+  }, [preview?.tasks]);
+
   return (
     <>
       <div className="space-y-2">
@@ -837,14 +894,41 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                   will be moved to {preview?.targetDay}. Note that tasks will be
                   moved, not copied.
                 </p>
-                <ul className="space-y-2">
-                  {preview?.tasks.map((task) => (
-                    <li key={task.id} className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-blue-500" />
-                      <span>{task.title}</span>
-                    </li>
+                <div className="space-y-4">
+                  {groupedTasks.map((quarterlyGroup) => (
+                    <div
+                      key={quarterlyGroup.quarterlyGoal.id}
+                      className="space-y-2"
+                    >
+                      <h4 className="font-medium text-sm">
+                        {quarterlyGroup.quarterlyGoal.title}
+                      </h4>
+                      {Object.values(quarterlyGroup.weeklyGoals).map(
+                        (weeklyGroup) => (
+                          <div
+                            key={weeklyGroup.weeklyGoal.id}
+                            className="pl-4 space-y-1"
+                          >
+                            <h5 className="text-sm text-muted-foreground">
+                              {weeklyGroup.weeklyGoal.title}
+                            </h5>
+                            <ul className="space-y-1">
+                              {weeklyGroup.tasks.map((task) => (
+                                <li
+                                  key={task.id}
+                                  className="flex items-center gap-2 pl-4"
+                                >
+                                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                  <span className="text-sm">{task.title}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      )}
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
