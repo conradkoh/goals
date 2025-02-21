@@ -28,7 +28,12 @@ export const WeekCard = ({
           isCurrentWeek && 'ring-2 ring-blue-500'
         )}
       >
-        <div className={cn('border-b p-4', isCurrentWeek && 'bg-blue-50')}>
+        <div
+          className={cn(
+            'border-b p-4 flex-shrink-0',
+            isCurrentWeek && 'bg-blue-50'
+          )}
+        >
           <div className="flex items-baseline justify-between">
             <div className="flex items-center gap-4">
               <p className="text-sm text-muted-foreground">{mondayDate}</p>
@@ -57,7 +62,9 @@ export const WeekCard = ({
             </div>
           </div>
         </div>
-        <div className="flex-1 p-4 space-y-6 overflow-y-auto">{children}</div>
+        <div className="flex-1 p-4 space-y-6 overflow-y-auto min-h-0">
+          {children}
+        </div>
       </div>
     </WeekProvider>
   );

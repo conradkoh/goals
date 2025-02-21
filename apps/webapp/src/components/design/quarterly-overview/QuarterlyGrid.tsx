@@ -148,7 +148,11 @@ export const QuarterlyGrid = ({
   }, [numItems, currentIndex]);
 
   return (
-    <div className="relative flex-1">
+    <div
+      id="quarterly-grid"
+      ref={containerRef}
+      className="relative flex-1 h-full overflow-auto"
+    >
       <button
         onClick={scrollToCurrentWeek}
         style={{
@@ -166,10 +170,7 @@ export const QuarterlyGrid = ({
         Jump to current week
         <ArrowRight className="w-3.5 h-3.5" />
       </button>
-      <div
-        ref={containerRef}
-        className={`flex-1 overflow-x-auto overflow-y-hidden px-8 py-2`}
-      >
+      <div id="quarterly-grid-container" className={`flex-1 px-8 py-2`}>
         <div
           className="grid grid-flow-col gap-4 h-full pb-4"
           style={{

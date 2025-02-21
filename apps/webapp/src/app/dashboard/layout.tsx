@@ -27,11 +27,12 @@ export default function DashboardLayout({
     <ClientOnly>
       <SessionProvider>
         <DashboardProvider>
-          <div className="min-h-screen bg-background">
+          <div
+            id="dashboard-layout"
+            className="h-screen bg-background flex flex-col overflow-auto"
+          >
             <Header />
-            <main className="flex flex-col h-[calc(100vh-4rem)] mt-2">
-              {children}
-            </main>
+            <main className="flex-1 max-h-[calc(100vh-4rem)]">{children}</main>
           </div>
           <Toaster />
         </DashboardProvider>

@@ -100,7 +100,7 @@ export const QuarterlyOverviewScreen2 = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pt-2">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
           {weekData.map((week, weekIndex) => (
