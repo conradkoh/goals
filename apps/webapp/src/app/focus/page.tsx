@@ -21,7 +21,7 @@ import { FocusModeDailyView } from '@/components/design/focus/FocusModeDailyView
 import { FocusModeWeeklyView } from '@/components/design/focus/FocusModeWeeklyView';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 
-export const FocusPage = () => {
+const FocusPage = () => {
   const searchParams = useSearchParams();
   const year = parseInt(searchParams.get('year') ?? '2025');
   const quarter = parseInt(searchParams.get('quarter') ?? '1') as 1 | 2 | 3 | 4;
