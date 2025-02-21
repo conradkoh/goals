@@ -665,6 +665,8 @@ interface PreviewTask {
   quarterlyGoal: {
     id: string;
     title: string;
+    isStarred?: boolean;
+    isPinned?: boolean;
   };
   weeklyGoal: {
     id: string;
@@ -809,7 +811,12 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
       {} as Record<
         string,
         {
-          quarterlyGoal: { id: string; title: string };
+          quarterlyGoal: {
+            id: string;
+            title: string;
+            isStarred?: boolean;
+            isPinned?: boolean;
+          };
           weeklyGoals: Record<
             string,
             {
@@ -900,32 +907,51 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                       key={quarterlyGroup.quarterlyGoal.id}
                       className="space-y-2"
                     >
-                      <h4 className="font-medium text-sm">
+                      <h4 className="font-medium text-sm flex items-center gap-1.5">
+                        {quarterlyGroup.quarterlyGoal.isStarred && (
+                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                        )}
+                        {quarterlyGroup.quarterlyGoal.isPinned && (
+                          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                        )}
                         {quarterlyGroup.quarterlyGoal.title}
                       </h4>
-                      {Object.values(quarterlyGroup.weeklyGoals).map(
-                        (weeklyGroup) => (
-                          <div
-                            key={weeklyGroup.weeklyGoal.id}
-                            className="pl-4 space-y-1"
-                          >
-                            <h5 className="text-sm text-muted-foreground">
-                              {weeklyGroup.weeklyGoal.title}
-                            </h5>
-                            <ul className="space-y-1">
-                              {weeklyGroup.tasks.map((task) => (
-                                <li
-                                  key={task.id}
-                                  className="flex items-center gap-2 pl-4"
-                                >
-                                  <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                  <span className="text-sm">{task.title}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )
-                      )}
+                      <div
+                        className={cn(
+                          'rounded-md overflow-hidden',
+                          quarterlyGroup.quarterlyGoal.isStarred
+                            ? 'bg-yellow-50 border border-yellow-200'
+                            : quarterlyGroup.quarterlyGoal.isPinned
+                            ? 'bg-blue-50 border border-blue-200'
+                            : ''
+                        )}
+                      >
+                        {Object.values(quarterlyGroup.weeklyGoals).map(
+                          (weeklyGroup) => (
+                            <div
+                              key={weeklyGroup.weeklyGoal.id}
+                              className="pl-4 space-y-1 py-2"
+                            >
+                              <h5 className="text-sm text-muted-foreground">
+                                {weeklyGroup.weeklyGoal.title}
+                              </h5>
+                              <ul className="space-y-1">
+                                {weeklyGroup.tasks.map((task) => (
+                                  <li
+                                    key={task.id}
+                                    className="flex items-center gap-2 pl-4"
+                                  >
+                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                    <span className="text-sm">
+                                      {task.title}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

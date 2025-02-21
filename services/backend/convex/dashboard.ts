@@ -619,6 +619,19 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
           weeklyParent?.parentId as Id<'goals'>
         );
 
+        // Get the quarterly goal's weekly state for starred/pinned status
+        const quarterlyGoalWeekly = await ctx.db
+          .query('goalsWeekly')
+          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+            q
+              .eq('userId', userId)
+              .eq('year', year)
+              .eq('quarter', quarter)
+              .eq('weekNumber', weekNumber)
+          )
+          .filter((q) => q.eq(q.field('goalId'), quarterlyParent?._id))
+          .first();
+
         return {
           id: weeklyGoal._id,
           title: dailyGoal?.title ?? '',
@@ -630,6 +643,8 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
           quarterlyGoal: {
             id: quarterlyParent?._id ?? '',
             title: quarterlyParent?.title ?? '',
+            isStarred: quarterlyGoalWeekly?.isStarred ?? false,
+            isPinned: quarterlyGoalWeekly?.isPinned ?? false,
           },
         };
       })
