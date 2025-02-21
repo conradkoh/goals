@@ -591,7 +591,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     }
 
     // Find all incomplete daily goals from the previous day
-    const weeklyGoals = await ctx.db
+    const goalStates = await ctx.db
       .query('goalsWeekly')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
@@ -600,24 +600,32 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
           .eq('quarter', quarter)
           .eq('weekNumber', weekNumber)
       )
-      .filter(
-        (q) =>
-          q.eq(q.field('isComplete'), false) &&
-          q.neq(q.field('daily'), undefined) &&
+      .filter((q) =>
+        q.and(
+          q.neq(q.field('daily'), undefined),
           q.eq(q.field('daily.dayOfWeek'), previousDayOfWeek)
+        )
       )
       .collect();
 
-    // Get the full details of each task for the preview
+    // Get the full details of each task for the preview, filtering out completed ones
     const tasksWithGoals = await Promise.all(
-      weeklyGoals.map(async (weeklyGoal) => {
+      goalStates.map(async (weeklyGoal) => {
         const dailyGoal = await ctx.db.get(weeklyGoal.goalId);
+        if (!dailyGoal || dailyGoal.userId !== userId) return null;
+
+        // Skip if this daily goal is complete
+        if (weeklyGoal.isComplete) return null;
+
         const weeklyParent = await ctx.db.get(
           dailyGoal?.parentId as Id<'goals'>
         );
+        if (!weeklyParent || weeklyParent.userId !== userId) return null;
+
         const quarterlyParent = await ctx.db.get(
           weeklyParent?.parentId as Id<'goals'>
         );
+        if (!quarterlyParent || quarterlyParent.userId !== userId) return null;
 
         // Get the quarterly goal's weekly state for starred/pinned status
         const quarterlyGoalWeekly = await ctx.db
@@ -650,19 +658,24 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       })
     );
 
+    // Filter out any null values from the tasks array
+    const validTasks = tasksWithGoals.filter(
+      (task): task is NonNullable<typeof task> => task !== null
+    );
+
     // If this is a dry run, return the preview data
     if (dryRun) {
       return {
         canPull: true as const,
         previousDay: getDayName(previousDayOfWeek),
         targetDay: getDayName(targetDayOfWeek),
-        tasks: tasksWithGoals,
+        tasks: validTasks,
       };
     }
 
     // Update each goal to the new day
     await Promise.all(
-      weeklyGoals.map(async (weeklyGoal) => {
+      goalStates.map(async (weeklyGoal) => {
         await ctx.db.patch(weeklyGoal._id, {
           daily: {
             ...weeklyGoal.daily,
@@ -672,7 +685,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       })
     );
 
-    return { tasksMovedCount: weeklyGoals.length }; // Return number of tasks moved
+    return { tasksMovedCount: goalStates.length }; // Return number of tasks moved
   },
 });
 
