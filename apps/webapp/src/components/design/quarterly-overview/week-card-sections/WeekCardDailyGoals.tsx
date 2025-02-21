@@ -706,25 +706,13 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
       });
 
       // Type guard to check if we have preview data
-      if (
-        'canPull' in previewData &&
-        previewData.canPull &&
-        'tasks' in previewData
-      ) {
-        if (previewData.tasks.length > 0) {
-          setPreview({
-            previousDay: previewData.previousDay,
-            targetDay: previewData.targetDay,
-            tasks: previewData.tasks,
-          });
-          setShowConfirmDialog(true);
-        } else {
-          toast({
-            title: 'No tasks to move',
-            description: 'There are no incomplete tasks from the previous day.',
-            variant: 'default',
-          });
-        }
+      if ('canPull' in previewData && previewData.canPull) {
+        setPreview({
+          previousDay: previewData.previousDay,
+          targetDay: previewData.targetDay,
+          tasks: previewData.tasks,
+        });
+        setShowConfirmDialog(true);
       } else if ('canPull' in previewData && !previewData.canPull) {
         toast({
           title: 'Cannot move tasks',
@@ -897,72 +885,81 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <p>
-                  The following incomplete tasks from {preview?.previousDay}{' '}
-                  will be moved to {preview?.targetDay}. Note that tasks will be
-                  moved, not copied.
+                  {preview?.tasks.length === 0
+                    ? `There are no incomplete tasks from ${preview?.previousDay} to move to ${preview?.targetDay}.`
+                    : `The following incomplete tasks from ${preview?.previousDay} will be moved to ${preview?.targetDay}. Note that tasks will be moved, not copied.`}
                 </p>
-                <div className="space-y-4">
-                  {groupedTasks.map((quarterlyGroup) => (
-                    <div
-                      key={quarterlyGroup.quarterlyGoal.id}
-                      className="space-y-2"
-                    >
-                      <h4 className="font-medium text-sm flex items-center gap-1.5">
-                        {quarterlyGroup.quarterlyGoal.isStarred && (
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        )}
-                        {quarterlyGroup.quarterlyGoal.isPinned && (
-                          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-                        )}
-                        {quarterlyGroup.quarterlyGoal.title}
-                      </h4>
+                {preview?.tasks.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>All tasks from the previous day are complete!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupedTasks.map((quarterlyGroup) => (
                       <div
-                        className={cn(
-                          'rounded-md overflow-hidden',
-                          quarterlyGroup.quarterlyGoal.isStarred
-                            ? 'bg-yellow-50 border border-yellow-200'
-                            : quarterlyGroup.quarterlyGoal.isPinned
-                            ? 'bg-blue-50 border border-blue-200'
-                            : ''
-                        )}
+                        key={quarterlyGroup.quarterlyGoal.id}
+                        className="space-y-2"
                       >
-                        {Object.values(quarterlyGroup.weeklyGoals).map(
-                          (weeklyGroup) => (
-                            <div
-                              key={weeklyGroup.weeklyGoal.id}
-                              className="pl-4 space-y-1 py-2"
-                            >
-                              <h5 className="text-sm text-muted-foreground">
-                                {weeklyGroup.weeklyGoal.title}
-                              </h5>
-                              <ul className="space-y-1">
-                                {weeklyGroup.tasks.map((task) => (
-                                  <li
-                                    key={task.id}
-                                    className="flex items-center gap-2 pl-4"
-                                  >
-                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                    <span className="text-sm">
-                                      {task.title}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )
-                        )}
+                        <h4 className="font-medium text-sm flex items-center gap-1.5">
+                          {quarterlyGroup.quarterlyGoal.isStarred && (
+                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                          )}
+                          {quarterlyGroup.quarterlyGoal.isPinned && (
+                            <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                          )}
+                          {quarterlyGroup.quarterlyGoal.title}
+                        </h4>
+                        <div
+                          className={cn(
+                            'rounded-md overflow-hidden',
+                            quarterlyGroup.quarterlyGoal.isStarred
+                              ? 'bg-yellow-50 border border-yellow-200'
+                              : quarterlyGroup.quarterlyGoal.isPinned
+                              ? 'bg-blue-50 border border-blue-200'
+                              : ''
+                          )}
+                        >
+                          {Object.values(quarterlyGroup.weeklyGoals).map(
+                            (weeklyGroup) => (
+                              <div
+                                key={weeklyGroup.weeklyGoal.id}
+                                className="pl-4 space-y-1 py-2"
+                              >
+                                <h5 className="text-sm text-muted-foreground">
+                                  {weeklyGroup.weeklyGoal.title}
+                                </h5>
+                                <ul className="space-y-1">
+                                  {weeklyGroup.tasks.map((task) => (
+                                    <li
+                                      key={task.id}
+                                      className="flex items-center gap-2 pl-4"
+                                    >
+                                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                      <span className="text-sm">
+                                        {task.title}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMoveTasksFromPreviousDay}>
-              Move Tasks
-            </AlertDialogAction>
+            <AlertDialogCancel>Close</AlertDialogCancel>
+            {preview && preview.tasks.length > 0 && (
+              <AlertDialogAction onClick={handleMoveTasksFromPreviousDay}>
+                Move Tasks
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
