@@ -6,7 +6,7 @@ import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { joinPath } from '../src/util/path';
 import { DateTime } from 'luxon';
-import { DayOfWeek } from '../src/constants';
+import { DayOfWeek, getDayName } from '../src/constants';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -547,19 +547,22 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       v.literal(DayOfWeek.SATURDAY),
       v.literal(DayOfWeek.SUNDAY)
     ),
+    dryRun: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, weekNumber, targetDayOfWeek } = args;
+    const { sessionId, year, quarter, weekNumber, targetDayOfWeek, dryRun } =
+      args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
     // Validate that we're not trying to pull tasks to Monday (day 1)
     if (targetDayOfWeek === DayOfWeek.MONDAY) {
-      throw new ConvexError({
-        code: 'INVALID_ARGUMENT',
-        message:
+      return {
+        canPull: false as const,
+        reason:
           'Cannot pull tasks to Monday as it is the first day of the week',
-      });
+        tasks: [],
+      };
     }
 
     // Calculate the previous day
@@ -605,6 +608,28 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       )
       .collect();
 
+    // Get the full details of each task for the preview
+    const tasks = await Promise.all(
+      weeklyGoals.map(async (weeklyGoal) => {
+        const goal = await ctx.db.get(weeklyGoal.goalId);
+        return {
+          id: weeklyGoal._id,
+          title: goal?.title ?? '',
+          details: goal?.details,
+        };
+      })
+    );
+
+    // If this is a dry run, return the preview data
+    if (dryRun) {
+      return {
+        canPull: true as const,
+        previousDay: getDayName(previousDayOfWeek),
+        targetDay: getDayName(targetDayOfWeek),
+        tasks,
+      };
+    }
+
     // Update each goal to the new day
     await Promise.all(
       weeklyGoals.map(async (weeklyGoal) => {
@@ -617,7 +642,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       })
     );
 
-    return weeklyGoals.length; // Return number of tasks moved
+    return { tasksMovedCount: weeklyGoals.length }; // Return number of tasks moved
   },
 });
 

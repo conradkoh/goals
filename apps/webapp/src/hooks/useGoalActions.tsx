@@ -200,19 +200,24 @@ export const useGoalActions = () => {
         targetDayOfWeek,
         year,
         quarter,
+        dryRun,
       }: {
         weekNumber: number;
         targetDayOfWeek: DayOfWeek;
         year: number;
         quarter: number;
+        dryRun?: boolean;
       }) => {
-        await moveIncompleteTasksFromPreviousDayMutation({
+        const result = await moveIncompleteTasksFromPreviousDayMutation({
           sessionId,
           year,
           quarter,
           weekNumber,
           targetDayOfWeek,
+          dryRun,
         });
+
+        return result;
       },
     }),
     [

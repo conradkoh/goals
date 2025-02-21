@@ -51,6 +51,17 @@ import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
+import { toast } from '@/components/ui/use-toast';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -653,6 +664,12 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [preview, setPreview] = useState<{
+    previousDay: string;
+    targetDay: string;
+    tasks: Array<{ id: string; title: string; details?: string }>;
+  } | null>(null);
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
 
@@ -661,6 +678,54 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
     if (!dateTimestamp) return '';
     return DateTime.fromMillis(dateTimestamp).toFormat('MMM d');
   }, [dateTimestamp]);
+
+  const handlePreviewTasks = async () => {
+    if (isMonday) return;
+    try {
+      const previewData = await moveIncompleteTasksFromPreviousDay({
+        weekNumber,
+        targetDayOfWeek: dayOfWeek,
+        year: DateTime.fromMillis(dateTimestamp).year,
+        quarter: Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3),
+        dryRun: true,
+      });
+
+      // Type guard to check if we have preview data
+      if (
+        'canPull' in previewData &&
+        previewData.canPull &&
+        'tasks' in previewData
+      ) {
+        if (previewData.tasks.length > 0) {
+          setPreview({
+            previousDay: previewData.previousDay,
+            targetDay: previewData.targetDay,
+            tasks: previewData.tasks,
+          });
+          setShowConfirmDialog(true);
+        } else {
+          toast({
+            title: 'No tasks to move',
+            description: 'There are no incomplete tasks from the previous day.',
+            variant: 'default',
+          });
+        }
+      } else if ('canPull' in previewData && !previewData.canPull) {
+        toast({
+          title: 'Cannot move tasks',
+          description: previewData.reason,
+          variant: 'default',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to preview tasks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to preview tasks to move.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleMoveTasksFromPreviousDay = async () => {
     if (isMonday) return;
@@ -672,8 +737,19 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
         year: DateTime.fromMillis(dateTimestamp).year,
         quarter: Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3),
       });
+      setShowConfirmDialog(false);
+      toast({
+        title: 'Tasks moved',
+        description: 'Successfully moved tasks from previous day.',
+        variant: 'default',
+      });
     } catch (error) {
       console.error('Failed to move tasks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to move tasks from previous day.',
+        variant: 'destructive',
+      });
     } finally {
       setIsMovingTasks(false);
     }
@@ -692,61 +768,94 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const tooltipContent = getTooltipContent();
 
   return (
-    <div className="space-y-2">
-      <div className="bg-gray-100 py-1 px-3 rounded-md">
-        <div className="flex items-center justify-between">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer flex items-center gap-2">
-                <span>{getDayName(dayOfWeek)}</span>
-                <span className="text-gray-500 font-normal">
-                  {formattedDate}
-                </span>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {isDisabled ? (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-full cursor-not-allowed">
-                        <DropdownMenuItem
-                          className="cursor-not-allowed opacity-50"
-                          disabled
-                        >
-                          <History className="mr-2 h-4 w-4" />
-                          <div className="flex flex-col w-full items-center">
-                            <span>Pull Incomplete</span>
-                            <span className="text-gray-500 text-xs">
-                              from previous day
-                            </span>
-                          </div>
-                        </DropdownMenuItem>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{tooltipContent}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={handleMoveTasksFromPreviousDay}
-                >
-                  <History className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col w-full items-center">
-                    <span>Pull Incomplete</span>
-                    <span className="text-gray-500 text-xs">
-                      from previous day
-                    </span>
-                  </div>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <>
+      <div className="space-y-2">
+        <div className="bg-gray-100 py-1 px-3 rounded-md">
+          <div className="flex items-center justify-between">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer flex items-center gap-2">
+                  <span>{getDayName(dayOfWeek)}</span>
+                  <span className="text-gray-500 font-normal">
+                    {formattedDate}
+                  </span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {isDisabled ? (
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-full cursor-not-allowed">
+                          <DropdownMenuItem
+                            className="cursor-not-allowed opacity-50"
+                            disabled
+                          >
+                            <History className="mr-2 h-4 w-4" />
+                            <div className="flex flex-col w-full items-center">
+                              <span>Pull Incomplete</span>
+                              <span className="text-gray-500 text-xs">
+                                from previous day
+                              </span>
+                            </div>
+                          </DropdownMenuItem>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{tooltipContent}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handlePreviewTasks}
+                  >
+                    <History className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col w-full items-center">
+                      <span>Pull Incomplete</span>
+                      <span className="text-gray-500 text-xs">
+                        from previous day
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
-    </div>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move Tasks from Previous Day</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  The following incomplete tasks from {preview?.previousDay}{' '}
+                  will be moved to {preview?.targetDay}. Note that tasks will be
+                  moved, not copied.
+                </p>
+                <ul className="space-y-2">
+                  {preview?.tasks.map((task) => (
+                    <li key={task.id} className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                      <span>{task.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMoveTasksFromPreviousDay}>
+              Move Tasks
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
