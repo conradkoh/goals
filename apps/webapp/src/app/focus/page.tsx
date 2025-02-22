@@ -116,54 +116,43 @@ const FocusPage = () => {
   };
 
   const renderLoadingSkeleton = () => (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="space-y-6">
-        {/* Quarterly Goals Skeleton */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">💭 Quarterly Goals</div>
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-10 w-5/6" />
-          </div>
-        </div>
-
-        {/* Weekly Goals Skeleton */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">🚀 Weekly Goals</div>
-          <div className="space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-4/5" />
-            <Skeleton className="h-10 w-2/3" />
-          </div>
-        </div>
-
-        {/* Daily Goals Skeleton */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="font-semibold mb-4">🔍 Daily Goals</div>
-          <div className="space-y-3">
-            {/* Day Header Skeleton */}
-            <div className="bg-gray-100 py-1 px-3 rounded-md">
-              <Skeleton className="h-6 w-32" />
+    <div className="container mx-auto py-8">
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="space-y-6">
+          {/* Day Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-32" /> {/* Day name */}
             </div>
-            {/* Goals Skeleton */}
-            <div className="space-y-4 mt-4">
-              {/* Goal Group */}
+          </div>
+
+          {/* Tasks Section */}
+          <div className="space-y-6">
+            {/* Morning Section */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-24" /> {/* Section title */}
               <div className="space-y-2">
-                <Skeleton className="h-6 w-48" />
-                <div className="space-y-2 pl-2">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-5/6" />
-                  <Skeleton className="h-8 w-4/5" />
-                </div>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-5/6" />
+                <Skeleton className="h-10 w-4/5" />
               </div>
-              {/* Another Goal Group */}
+            </div>
+
+            {/* Afternoon Section */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-24" /> {/* Section title */}
               <div className="space-y-2">
-                <Skeleton className="h-6 w-56" />
-                <div className="space-y-2 pl-2">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-3/4" />
-                </div>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-5/6" />
+              </div>
+            </div>
+
+            {/* Evening Section */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-24" /> {/* Section title */}
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-4/5" />
               </div>
             </div>
           </div>
