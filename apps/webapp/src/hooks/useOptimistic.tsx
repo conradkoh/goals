@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+// Add this utility function to check if an ID is optimistic
+export const isOptimisticId = (id: string): boolean => {
+  return id.startsWith('optimistic_');
+};
+
 // Define the possible actions that can be performed on the optimistic array
 type OptimisticArrayAction<ArrayValue> =
   | {

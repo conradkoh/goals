@@ -6,9 +6,14 @@ import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
 import { DayOfWeek } from '@services/backend/src/constants';
 import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
-import { useOptimisticArray } from './useOptimistic';
+import { useOptimisticArray, isOptimisticId } from './useOptimistic';
 import { useGoalActions } from './useGoalActions';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+
+// Update the type to include isOptimistic flag
+export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
+  isOptimistic?: boolean;
+};
 
 // Deprecated: WeekProviderProps is no longer recommended for use.
 interface WeekProviderProps {
@@ -103,8 +108,8 @@ export const WeekProviderWithoutDashboard = ({
 
   // Create optimistic arrays for each goal type
   const [optimisticWeeklyGoals, doWeeklyGoalAction] = useOptimisticArray<
-    GoalWithDetailsAndChildren[],
-    GoalWithDetailsAndChildren
+    GoalWithOptimisticStatus[],
+    GoalWithOptimisticStatus
   >(allGoals.filter((goal) => goal.depth === 1));
 
   const weekContextValue = useMemo(() => {
@@ -112,7 +117,7 @@ export const WeekProviderWithoutDashboard = ({
     const baseQuarterlyGoals = allGoals.filter((goal) => goal.depth === 0);
 
     // Create a map of quarterly goals by ID for faster lookup
-    const quarterlyGoalsMap = new Map<Id<'goals'>, GoalWithDetailsAndChildren>(
+    const quarterlyGoalsMap = new Map<Id<'goals'>, GoalWithOptimisticStatus>(
       baseQuarterlyGoals.map((goal) => [goal._id, { ...goal, children: [] }])
     );
 
@@ -120,8 +125,14 @@ export const WeekProviderWithoutDashboard = ({
     const allWeeklyGoals =
       optimisticWeeklyGoals ?? allGoals.filter((goal) => goal.depth === 1);
 
+    // Add isOptimistic flag based on ID
+    const weeklyGoalsWithStatus = allWeeklyGoals.map((goal) => ({
+      ...goal,
+      isOptimistic: isOptimisticId(goal._id),
+    }));
+
     // Distribute weekly goals to their parent quarterly goals
-    allWeeklyGoals.forEach((weeklyGoal) => {
+    weeklyGoalsWithStatus.forEach((weeklyGoal) => {
       if (weeklyGoal.parentId) {
         const parentGoal = quarterlyGoalsMap.get(weeklyGoal.parentId);
         if (parentGoal) {
@@ -135,7 +146,7 @@ export const WeekProviderWithoutDashboard = ({
 
     return {
       quarterlyGoals,
-      weeklyGoals: allWeeklyGoals,
+      weeklyGoals: weeklyGoalsWithStatus,
       dailyGoals: allGoals.filter((goal) => goal.depth === 2),
       weekNumber: weekData.weekNumber,
       days: weekData.days,
@@ -144,11 +155,12 @@ export const WeekProviderWithoutDashboard = ({
         title: string,
         details?: string
       ) => {
-        // Generate simple temporary IDs using a counter
-        const tempId = `temp_${optimisticCounter.current++}` as Id<'goals'>;
+        // Generate optimistic IDs using the new prefix
+        const tempId =
+          `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
 
         // Create a minimal optimistic goal with only the fields we need for UI rendering
-        const optimisticGoal: GoalWithDetailsAndChildren = {
+        const optimisticGoal: GoalWithOptimisticStatus = {
           _id: tempId,
           _creationTime: Date.now(),
           userId: 'temp_user' as Id<'users'>,
@@ -161,8 +173,9 @@ export const WeekProviderWithoutDashboard = ({
           depth: 1,
           children: [],
           path: '',
+          isOptimistic: true,
           state: {
-            _id: `temp_weekly_${tempId}` as Id<'goalsWeekly'>,
+            _id: `optimistic_weekly_${tempId}` as Id<'goalsWeekly'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
             year: weekData.weekNumber,

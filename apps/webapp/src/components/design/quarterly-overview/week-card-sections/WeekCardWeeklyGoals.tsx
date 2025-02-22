@@ -16,11 +16,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
+import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/components/ui/use-toast';
 import { useGoalActions } from '@/hooks/useGoalActions';
-import { useWeek } from '@/hooks/useWeek';
+import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import {
   forwardRef,
@@ -50,7 +51,7 @@ const WeeklyGoal = ({
   onUpdateTitle,
   onDelete,
 }: {
-  goal: GoalWithDetailsAndChildren;
+  goal: GoalWithOptimisticStatus;
   onUpdateTitle: (
     goalId: Id<'goals'>,
     title: string,
@@ -151,22 +152,24 @@ const WeeklyGoal = ({
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <h3 className="font-semibold">{goal.title}</h3>
-                    <GoalEditPopover
-                      title={goal.title}
-                      details={goal.details}
-                      onSave={async (title, details) => {
-                        await onUpdateTitle(goal._id, title, details);
-                      }}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
+                    {!goal.isOptimistic && (
+                      <GoalEditPopover
+                        title={goal.title}
+                        details={goal.details}
+                        onSave={async (title, details) => {
+                          await onUpdateTitle(goal._id, title, details);
+                        }}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                    )}
                   </div>
                   {goal.details && (
                     <SafeHTML html={goal.details} className="mt-2 text-sm" />
@@ -176,19 +179,25 @@ const WeeklyGoal = ({
             </Popover>
 
             <div className="flex items-center gap-1">
-              <GoalEditPopover
-                title={goal.title}
-                details={goal.details}
-                onSave={async (title, details) => {
-                  await onUpdateTitle(goal._id, title, details);
-                }}
-                trigger={
-                  <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </button>
-                }
-              />
-              <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+              {goal.isOptimistic ? (
+                <Spinner className="h-4 w-4" />
+              ) : (
+                <>
+                  <GoalEditPopover
+                    title={goal.title}
+                    details={goal.details}
+                    onSave={async (title, details) => {
+                      await onUpdateTitle(goal._id, title, details);
+                    }}
+                    trigger={
+                      <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                    }
+                  />
+                  <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -231,8 +240,8 @@ const WeeklyGoalGroup = ({
   onUpdateTitle,
   onDelete,
 }: {
-  quarterlyGoal: GoalWithDetailsAndChildren;
-  weeklyGoals: GoalWithDetailsAndChildren[];
+  quarterlyGoal: GoalWithOptimisticStatus;
+  weeklyGoals: GoalWithOptimisticStatus[];
   onUpdateTitle: (
     goalId: Id<'goals'>,
     title: string,
@@ -243,15 +252,31 @@ const WeeklyGoalGroup = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
   const { createWeeklyGoalOptimistic } = useWeek();
+  const { toast } = useToast();
 
   const handleSubmit = async () => {
-    if (!newGoalTitle.trim()) return;
+    const trimmedTitle = newGoalTitle.trim();
+    if (!trimmedTitle) return;
+
+    // Store the current title for potential error recovery
+    setPreviousTitle(trimmedTitle);
+    // Clear input immediately
+    setNewGoalTitle('');
+
     try {
-      await createWeeklyGoalOptimistic(quarterlyGoal._id, newGoalTitle.trim());
-      setNewGoalTitle('');
-      // Don't hide the input after submission to allow for multiple entries
+      await createWeeklyGoalOptimistic(quarterlyGoal._id, trimmedTitle);
+      // Success - input is already cleared
     } catch (error) {
+      // Restore the previous title
+      setNewGoalTitle(previousTitle);
+      // Show error toast
+      toast({
+        variant: 'destructive',
+        title: 'Failed to create goal',
+        description: 'There was an error creating your goal. Please try again.',
+      });
       console.error('Failed to create weekly goal:', error);
     }
   };
@@ -259,6 +284,7 @@ const WeeklyGoalGroup = ({
   const handleEscape = () => {
     setIsCreating(false);
     setNewGoalTitle(''); // Clear the input
+    setPreviousTitle(''); // Clear the stored title
   };
 
   return (

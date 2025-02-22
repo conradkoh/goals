@@ -26,19 +26,75 @@ function useOptimisticArray<T>(
 ): [T[] | undefined, (action: OptimisticArrayAction<T>) => () => void];
 ```
 
-#### 2.2 Temporary Storage
+#### 2.2 Identifying Optimistic Items
 
 ```typescript
-// Use refs for temporary storage to avoid unnecessary re-renders
-const tempStorage = useRef<OptimisticArrayAction<T>[]>([]);
+// Utility function to check if an ID is optimistic
+export const isOptimisticId = (id: string): boolean => {
+  return id.startsWith('optimistic_');
+};
 
-// Use state to force re-renders when needed
-const [actionCount, setActionCount] = useState(0);
+// Type for items that can be optimistic
+type ItemWithOptimisticStatus = T & {
+  isOptimistic?: boolean;
+};
 ```
 
 ## Implementation Patterns
 
-### 1. Basic Structure
+### 1. Form Input Handling
+
+When handling form inputs with optimistic updates, it's important to manage the input state carefully:
+
+```typescript
+const FormComponent = () => {
+  const [inputValue, setInputValue] = useState('');
+  const [previousValue, setPreviousValue] = useState(''); // For error recovery
+  const { toast } = useToast();
+
+  const handleSubmit = async () => {
+    const trimmedValue = inputValue.trim();
+    if (!trimmedValue) return;
+
+    // Store current value for error recovery
+    setPreviousValue(trimmedValue);
+    // Clear input immediately for better UX
+    setInputValue('');
+
+    try {
+      // Perform optimistic update
+      await optimisticOperation(trimmedValue);
+      // Success - input is already cleared
+    } catch (error) {
+      // Restore previous value on error
+      setInputValue(previousValue);
+      // Show error feedback
+      toast({
+        variant: 'destructive',
+        title: 'Operation failed',
+        description: 'There was an error. Please try again.',
+      });
+    }
+  };
+
+  return (
+    <input
+      value={inputValue}
+      onChange={(e) => setInputValue(e.target.value)}
+      onSubmit={handleSubmit}
+    />
+  );
+};
+```
+
+Key patterns:
+
+1. Clear input immediately after submission for responsive UX
+2. Store previous value for error recovery
+3. Restore previous value if operation fails
+4. Provide clear error feedback via toast notifications
+
+### 2. Basic Structure
 
 ```typescript
 // 1. Create the optimistic hook
@@ -46,11 +102,15 @@ const [optimisticValue, doAction] = useOptimisticArray(actualValue);
 
 // 2. Define optimistic operations
 const handleCreate = async (data: T) => {
-  // Generate unique temporary IDs
-  const tempId = generateTempId('section_name');
+  // Generate optimistic ID
+  const tempId = `optimistic_${optimisticCounter.current++}`;
 
-  // Create optimistic version with the temp ID
-  const optimisticItem = createOptimisticVersion(data, tempId);
+  // Create optimistic version
+  const optimisticItem = {
+    ...createOptimisticVersion(data),
+    _id: tempId,
+    isOptimistic: true,
+  };
 
   // Add to optimistic state
   const removeOptimistic = doAction({
@@ -87,7 +147,96 @@ const handleDelete = async (id: string) => {
 };
 ```
 
-### 2. Handling Complex Data Structures
+### 3. UI Feedback During Optimistic Updates
+
+When an item is in an optimistic state, provide clear visual feedback:
+
+```typescript
+const ItemComponent = ({ item }: { item: ItemWithOptimisticStatus }) => {
+  return (
+    <div className="flex items-center gap-2">
+      <span>{item.title}</span>
+      <div className="flex items-center gap-1">
+        {item.isOptimistic ? (
+          // Show spinner during optimistic state
+          <Spinner className="h-4 w-4" />
+        ) : (
+          // Show normal actions when not optimistic
+          <>
+            <EditButton onClick={handleEdit} />
+            <DeleteButton onClick={handleDelete} />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+```
+
+The Spinner component provides subtle loading feedback:
+
+```typescript
+export function Spinner({ className, ...props }: SpinnerProps) {
+  return (
+    <div
+      className={cn(
+        'animate-spin rounded-full border-2 border-gray-300 border-t-transparent',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+```
+
+### 4. Error Handling
+
+Comprehensive error handling for optimistic updates:
+
+```typescript
+try {
+  // Store state for recovery
+  setPreviousState(currentState);
+
+  // Apply optimistic update
+  const removeOptimistic = doOptimisticUpdate();
+
+  // Attempt server operation
+  await serverOperation();
+
+  // Clean up on success
+  removeOptimistic();
+} catch (error) {
+  // 1. Revert optimistic update
+  removeOptimistic();
+
+  // 2. Restore previous state if needed
+  restorePreviousState();
+
+  // 3. Show error feedback
+  toast({
+    variant: 'destructive',
+    title: 'Operation failed',
+    description: 'There was an error. Please try again.',
+  });
+
+  // 4. Log error for debugging
+  console.error('Operation failed:', error);
+
+  // 5. Re-throw if needed
+  throw error;
+}
+```
+
+Best practices:
+
+1. Always clean up optimistic state
+2. Restore previous UI state when needed
+3. Provide clear error feedback
+4. Log errors for debugging
+5. Consider retry mechanisms
+
+### 5. Handling Complex Data Structures
 
 When dealing with nested data:
 
@@ -97,8 +246,14 @@ const dataMap = new Map(
   baseItems.map((item) => [item.id, { ...item, children: [] }])
 );
 
-// 2. Distribute child items
-allItems.forEach((item) => {
+// 2. Add isOptimistic flag based on ID
+const itemsWithStatus = items.map((item) => ({
+  ...item,
+  isOptimistic: isOptimisticId(item._id),
+}));
+
+// 3. Distribute child items
+itemsWithStatus.forEach((item) => {
   if (item.parentId) {
     const parent = dataMap.get(item.parentId);
     if (parent) {
@@ -107,57 +262,33 @@ allItems.forEach((item) => {
   }
 });
 
-// 3. Convert back to array when needed
+// 4. Convert back to array when needed
 const items = Array.from(dataMap.values());
 ```
 
 ## Best Practices
 
-### 1. Temporary IDs
+### 1. Optimistic ID Generation
 
-Generate unique, section-specific temporary IDs to avoid collisions:
-
-```typescript
-const generateTempIds = (section: 'weekly' | 'daily') => {
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(2, 15);
-  return {
-    goalId: `temp_${section}_goal_${timestamp}_${randomString}`,
-    weeklyId: `temp_${section}_weekly_${timestamp}_${randomString}`,
-    userId: `temp_${section}_user_${timestamp}_${randomString}`,
-  };
-};
-```
-
-### 2. ID-Based Removal
-
-Use ID-based removal instead of index-based for more reliable updates:
+Use a consistent prefix for optimistic IDs:
 
 ```typescript
-// In the optimistic hook
-const optimisticValue = useMemo(() => {
-  if (!actualValue) return undefined;
-  const result = [...actualValue];
-
-  tempStorage.current.forEach((action) => {
-    switch (action.type) {
-      case 'append':
-        result.push({ ...action.value, isOptimistic: true });
-        break;
-      case 'remove': {
-        const idField = action.idField || '_id';
-        const index = result.findIndex((item) => item[idField] === action.id);
-        if (index !== -1) {
-          result.splice(index, 1);
-        }
-        break;
-      }
-    }
-  });
-
-  return result;
-}, [actualValue]);
+const optimisticCounter = useRef(0);
+const tempId = `optimistic_${optimisticCounter.current++}`;
 ```
+
+Benefits:
+
+- Easy to identify optimistic items
+- Simple counter is sufficient for temporary IDs
+- Clear distinction from server-generated IDs
+
+### 2. UI Considerations
+
+1. Show loading indicators in place of actions (edit/delete buttons)
+2. Disable interactions that shouldn't be available during optimistic state
+3. Use subtle, non-distracting loading animations
+4. Maintain layout stability when switching between optimistic and normal states
 
 ### 3. Error Handling
 
@@ -188,7 +319,7 @@ try {
 
 ```typescript
 type OptimisticItem<T> = T & {
-  isOptimistic: true;
+  isOptimistic: boolean;
 };
 
 type OptimisticArray<T> = (T | OptimisticItem<T>)[];
