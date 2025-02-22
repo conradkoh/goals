@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo, useRef } from 'react';
 import { useDashboard } from './useDashboard';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
@@ -98,6 +98,9 @@ export const WeekProviderWithoutDashboard = ({
   const { createWeeklyGoal, deleteQuarterlyGoal } = useGoalActions();
   const allGoals = weekData.tree.allGoals;
 
+  // Simple counter for optimistic items
+  const optimisticCounter = useRef(0);
+
   // Create optimistic arrays for each goal type
   const [optimisticWeeklyGoals, doWeeklyGoalAction] = useOptimisticArray<
     GoalWithDetailsAndChildren[],
@@ -141,27 +144,30 @@ export const WeekProviderWithoutDashboard = ({
         title: string,
         details?: string
       ) => {
+        // Generate simple temporary IDs using a counter
+        const tempId = `temp_${optimisticCounter.current++}` as Id<'goals'>;
+
         // Create a minimal optimistic goal with only the fields we need for UI rendering
         const optimisticGoal: GoalWithDetailsAndChildren = {
-          _id: 'temp_id' as Id<'goals'>,
+          _id: tempId,
           _creationTime: Date.now(),
-          userId: 'temp_user' as Id<'users'>, // This is fine since it's temporary
-          year: weekData.weekNumber, // These values don't matter for optimistic UI
+          userId: 'temp_user' as Id<'users'>,
+          year: weekData.weekNumber,
           quarter: 1,
           title,
           details,
           parentId,
-          inPath: '', // This is fine since it's temporary
+          inPath: '',
           depth: 1,
           children: [],
-          path: '', // This is fine since it's temporary
+          path: '',
           state: {
-            _id: 'temp_weekly_id' as Id<'goalsWeekly'>,
+            _id: `temp_weekly_${tempId}` as Id<'goalsWeekly'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
             year: weekData.weekNumber,
             quarter: 1,
-            goalId: 'temp_id' as Id<'goals'>,
+            goalId: tempId,
             weekNumber: weekData.weekNumber,
             progress: '',
             isComplete: false,
@@ -195,16 +201,10 @@ export const WeekProviderWithoutDashboard = ({
         }
       },
       deleteWeeklyGoalOptimistic: async (goalId: Id<'goals'>) => {
-        // Find the index of the goal to remove
-        const goalIndex = allWeeklyGoals.findIndex(
-          (goal) => goal._id === goalId
-        );
-        if (goalIndex === -1) return;
-
         // Add optimistic removal
         const removeOptimistic = doWeeklyGoalAction({
           type: 'remove',
-          index: goalIndex,
+          id: goalId,
         });
 
         try {

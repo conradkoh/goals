@@ -362,8 +362,8 @@ export const WeekCardWeeklyGoals = forwardRef<
   WeekCardWeeklyGoalsRef,
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter }, ref) => {
-  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
-  const { quarterlyGoals } = useWeek();
+  const { updateQuarterlyGoalTitle } = useGoalActions();
+  const { quarterlyGoals, deleteWeeklyGoalOptimistic } = useWeek();
   const [isFocusMode, setIsFocusMode] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -405,9 +405,7 @@ export const WeekCardWeeklyGoals = forwardRef<
 
   const handleDeleteWeeklyGoal = async (goalId: Id<'goals'>) => {
     try {
-      await deleteQuarterlyGoal({
-        goalId,
-      });
+      await deleteWeeklyGoalOptimistic(goalId);
     } catch (error) {
       console.error('Failed to delete weekly goal:', error);
       throw error;

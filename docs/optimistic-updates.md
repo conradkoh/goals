@@ -19,7 +19,7 @@ The optimistic update pattern involves three key states:
 ```typescript
 type OptimisticArrayAction<T> =
   | { type: 'append'; value: T }
-  | { type: 'remove'; index: number };
+  | { type: 'remove'; id: string; idField?: string };
 
 function useOptimisticArray<T>(
   actualValue: T[] | undefined
@@ -46,8 +46,11 @@ const [optimisticValue, doAction] = useOptimisticArray(actualValue);
 
 // 2. Define optimistic operations
 const handleCreate = async (data: T) => {
-  // Create optimistic version
-  const optimisticItem = createOptimisticVersion(data);
+  // Generate unique temporary IDs
+  const tempId = generateTempId('section_name');
+
+  // Create optimistic version with the temp ID
+  const optimisticItem = createOptimisticVersion(data, tempId);
 
   // Add to optimistic state
   const removeOptimistic = doAction({
@@ -62,6 +65,22 @@ const handleCreate = async (data: T) => {
     removeOptimistic();
   } catch (error) {
     // Revert on error
+    removeOptimistic();
+    throw error;
+  }
+};
+
+// 3. Define optimistic removal
+const handleDelete = async (id: string) => {
+  const removeOptimistic = doAction({
+    type: 'remove',
+    id,
+  });
+
+  try {
+    await serverOperation(id);
+    removeOptimistic();
+  } catch (error) {
     removeOptimistic();
     throw error;
   }
@@ -96,18 +115,51 @@ const items = Array.from(dataMap.values());
 
 ### 1. Temporary IDs
 
-- Use predictable temporary IDs for optimistic items
-- Prefix or mark temporary IDs to distinguish them
-- Replace with real IDs once server responds
+Generate unique, section-specific temporary IDs to avoid collisions:
 
 ```typescript
-const optimisticItem = {
-  _id: 'temp_id' as Id<'items'>,
-  // ... other fields
+const generateTempIds = (section: 'weekly' | 'daily') => {
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  return {
+    goalId: `temp_${section}_goal_${timestamp}_${randomString}`,
+    weeklyId: `temp_${section}_weekly_${timestamp}_${randomString}`,
+    userId: `temp_${section}_user_${timestamp}_${randomString}`,
+  };
 };
 ```
 
-### 2. Error Handling
+### 2. ID-Based Removal
+
+Use ID-based removal instead of index-based for more reliable updates:
+
+```typescript
+// In the optimistic hook
+const optimisticValue = useMemo(() => {
+  if (!actualValue) return undefined;
+  const result = [...actualValue];
+
+  tempStorage.current.forEach((action) => {
+    switch (action.type) {
+      case 'append':
+        result.push({ ...action.value, isOptimistic: true });
+        break;
+      case 'remove': {
+        const idField = action.idField || '_id';
+        const index = result.findIndex((item) => item[idField] === action.id);
+        if (index !== -1) {
+          result.splice(index, 1);
+        }
+        break;
+      }
+    }
+  });
+
+  return result;
+}, [actualValue]);
+```
+
+### 3. Error Handling
 
 - Always clean up optimistic state in both success and error cases
 - Provide clear error feedback to users
@@ -123,7 +175,7 @@ try {
 }
 ```
 
-### 3. State Reconciliation
+### 4. State Reconciliation
 
 - Keep optimistic updates minimal
 - Only include fields needed for UI rendering
@@ -166,7 +218,7 @@ const isOptimistic = <T>(
 // 1. Define the hook
 export function useOptimisticArray<T>(actualValue: T[] | undefined) {
   const tempStorage = useRef<OptimisticArrayAction<T>[]>([]);
-  const [actionCount, setActionCount] = useState(0);
+  const [, setActionCount] = useState(0);
 
   const doAction = useCallback((action: OptimisticArrayAction<T>) => {
     tempStorage.current = [...tempStorage.current, action];
@@ -183,19 +235,28 @@ export function useOptimisticArray<T>(actualValue: T[] | undefined) {
 
   const optimisticValue = useMemo(() => {
     if (!actualValue) return undefined;
+    const result = [...actualValue];
 
-    return [
-      ...actualValue,
-      ...tempStorage.current.map(action => {
-        switch (action.type) {
-          case 'append':
-            return { ...action.value, isOptimistic: true };
-          case 'remove':
-            return { ...actualValue[action.index], isOptimistic: true };
+    tempStorage.current.forEach(action => {
+      switch (action.type) {
+        case 'append':
+          result.push({ ...action.value, isOptimistic: true });
+          break;
+        case 'remove': {
+          const idField = action.idField || '_id';
+          const index = result.findIndex(
+            item => item[idField] === action.id
+          );
+          if (index !== -1) {
+            result.splice(index, 1);
+          }
+          break;
         }
-      }),
-    ];
-  }, [actualValue, actionCount]);
+      }
+    });
+
+    return result;
+  }, [actualValue]);
 
   return [optimisticValue, doAction];
 }
@@ -205,13 +266,31 @@ function MyComponent() {
   const [items, doAction] = useOptimisticArray(actualItems);
 
   const handleCreate = async (data: T) => {
+    const { goalId: tempId } = generateTempIds('section');
+    const optimisticItem = createOptimisticVersion(data, tempId);
+
     const removeOptimistic = doAction({
       type: 'append',
-      value: createOptimisticVersion(data)
+      value: optimisticItem
     });
 
     try {
       await createItem(data);
+      removeOptimistic();
+    } catch (error) {
+      removeOptimistic();
+      handleError(error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const removeOptimistic = doAction({
+      type: 'remove',
+      id
+    });
+
+    try {
+      await deleteItem(id);
       removeOptimistic();
     } catch (error) {
       removeOptimistic();
@@ -226,6 +305,7 @@ function MyComponent() {
           key={item.id}
           data={item}
           isOptimistic={'isOptimistic' in item}
+          onDelete={() => handleDelete(item.id)}
         />
       ))}
     </div>

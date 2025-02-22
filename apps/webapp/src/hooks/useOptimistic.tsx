@@ -8,7 +8,8 @@ type OptimisticArrayAction<ArrayValue> =
     }
   | {
       type: 'remove'; // Action type for removing a value
-      index: number; // The index of the value to remove
+      id: string; // The ID of the value to remove
+      idField?: string; // The field to use as ID (defaults to '_id')
     };
 
 // Define the structure of the optimistic array, which can contain optimistic values
@@ -61,24 +62,34 @@ export function useOptimisticArray<
   // Calculate the optimistic value based on actual value and pending actions
   const optimisticValue = useMemo(() => {
     if (!actualValue) return undefined; // Return undefined if actual value is not provided
-    return [
-      ...actualValue, // Spread the actual values
-      ...tempStorage.current.map((action) => {
-        // Map over the pending actions
-        switch (action.type) {
-          case 'append':
-            return { ...action.value, isOptimistic: true as const }; // Append optimistic value
-          case 'remove':
-            return {
-              ...actualValue[action.index], // Return the value at the specified index
-              isOptimistic: true as const, // Mark it as optimistic
-            };
-          default:
-            return action; // Return the action if it doesn't match any case
+
+    // Start with the actual values
+    const result = [...actualValue];
+
+    // Apply each action in sequence
+    tempStorage.current.forEach((action) => {
+      switch (action.type) {
+        case 'append':
+          result.push({ ...action.value, isOptimistic: true as const });
+          break;
+        case 'remove': {
+          const idField = action.idField || '_id';
+          const index = result.findIndex(
+            (item) =>
+              // We know the item must have an ID field since we're using it for removal
+              (item as unknown as { [key: string]: string })[idField] ===
+              action.id
+          );
+          if (index !== -1) {
+            result.splice(index, 1);
+          }
+          break;
         }
-      }),
-    ];
-  }, [actualValue]) satisfies OptimisticArray<ArrayValue> | undefined; // Add actionCount as dependency
+      }
+    });
+
+    return result;
+  }, [actualValue]) satisfies OptimisticArray<ArrayValue> | undefined;
 
   useEffect(() => {}, [optimisticValue]);
 
