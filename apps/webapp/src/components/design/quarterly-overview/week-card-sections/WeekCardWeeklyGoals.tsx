@@ -1,26 +1,3 @@
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2, Focus } from 'lucide-react';
-import {
-  useState,
-  useMemo,
-  useEffect,
-  useImperativeHandle,
-  forwardRef,
-} from 'react';
-import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { useWeek } from '@/hooks/useWeek';
-import { GoalSelector } from '../../goals-new/GoalSelector';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
-import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
-import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +8,31 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { WeekCardDailyGoals } from './WeekCardDailyGoals';
-import { Dialog, DialogPortal, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogPortal } from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { SafeHTML } from '@/components/ui/safe-html';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useWeek } from '@/hooks/useWeek';
+import { cn } from '@/lib/utils';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2 } from 'lucide-react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
+import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
+import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
+import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
+import { WeekCardDailyGoals } from './WeekCardDailyGoals';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -62,8 +61,6 @@ const WeeklyGoal = ({
   const { toggleGoalCompletion } = useGoalActions();
   const { weekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
-  const isStarred = goal.state?.isStarred ?? false;
-  const isPinned = goal.state?.isPinned ?? false;
   const [showUpdateChildrenDialog, setShowUpdateChildrenDialog] =
     useState(false);
   const [pendingCompletionState, setPendingCompletionState] = useState<
@@ -305,39 +302,6 @@ const WeeklyGoalGroup = ({
   );
 };
 
-// New FocusWeeklyGoalGroup component for focus mode
-const FocusWeeklyGoalGroup = ({
-  quarterlyGoal,
-  weeklyGoals,
-  onUpdateTitle,
-  onDelete,
-}: {
-  quarterlyGoal: GoalWithDetailsAndChildren;
-  weeklyGoals: GoalWithDetailsAndChildren[];
-  onUpdateTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
-}) => {
-  return (
-    <div className="space-y-1">
-      <div className="font-medium text-sm text-gray-800 mb-2">
-        {quarterlyGoal.title}
-      </div>
-      {weeklyGoals.map((weeklyGoal) => (
-        <WeeklyGoal
-          key={weeklyGoal._id}
-          goal={weeklyGoal}
-          onUpdateTitle={onUpdateTitle}
-          onDelete={onDelete}
-        />
-      ))}
-    </div>
-  );
-};
-
 // WeeklyGoalsFocusMode component
 const WeeklyGoalsFocusMode = ({
   weekNumber,
@@ -350,9 +314,6 @@ const WeeklyGoalsFocusMode = ({
   quarter: number;
   onClose: () => void;
 }) => {
-  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
-  const { quarterlyGoals } = useWeek();
-
   // Add keyboard event handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -529,3 +490,4 @@ export const WeekCardWeeklyGoals = forwardRef<
     </div>
   );
 });
+WeekCardWeeklyGoals.displayName = 'WeekCardWeeklyGoals';

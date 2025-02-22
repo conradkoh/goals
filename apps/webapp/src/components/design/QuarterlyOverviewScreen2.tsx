@@ -1,10 +1,9 @@
 'use client';
 
+import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useGoalActions } from '@/hooks/useGoalActions';
-import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
-import { WeekCard } from './quarterly-overview/WeekCard';
-import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import {
   DndContext,
   DragEndEvent,
@@ -12,20 +11,11 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
-import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Button } from '@/components/ui/button';
-import { Focus } from 'lucide-react';
-import { useRef } from 'react';
-import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
+import { WeekCard } from './quarterly-overview/WeekCard';
+import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 
 export interface DragData {
   goal: GoalWithDetailsAndChildren;

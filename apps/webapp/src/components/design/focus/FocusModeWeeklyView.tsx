@@ -1,4 +1,4 @@
-import { WeekProviderWithoutDashboard, WeekData } from '@/hooks/useWeek';
+import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '../quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
@@ -16,7 +16,6 @@ export const FocusModeWeeklyView = ({
   year,
   quarter,
   weekData,
-  onNavigate,
 }: FocusModeWeeklyViewProps) => {
   return (
     <div className="space-y-6">
