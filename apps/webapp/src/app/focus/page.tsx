@@ -166,9 +166,33 @@ const FocusPage = () => {
       {/* Top Bar */}
       <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold">Focus Mode</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-lg font-semibold">Focus Mode</h2>
+                  <Select
+                    value={viewMode}
+                    onValueChange={(value: ViewMode) => setViewMode(value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily View</SelectItem>
+                      <SelectItem value="weekly">Weekly View</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClose}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground sm:hidden"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -200,18 +224,6 @@ const FocusPage = () => {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <Select
-                value={viewMode}
-                onValueChange={(value: ViewMode) => setViewMode(value)}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Select view" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily View</SelectItem>
-                  <SelectItem value="weekly">Weekly View</SelectItem>
-                </SelectContent>
-              </Select>
               <JumpToCurrentButton
                 viewMode={viewMode}
                 selectedWeek={selectedWeek}
@@ -225,7 +237,7 @@ const FocusPage = () => {
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground hidden sm:flex"
             >
               <X className="h-4 w-4" />
             </Button>
