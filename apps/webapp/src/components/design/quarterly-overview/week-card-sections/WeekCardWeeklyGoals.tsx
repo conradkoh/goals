@@ -491,13 +491,23 @@ export const WeekCardWeeklyGoals = forwardRef<
             const weeklyGoals = goal.children;
             const isStarred = goal.state?.isStarred ?? false;
             const isPinned = goal.state?.isPinned ?? false;
+            const isAllWeeklyGoalsComplete =
+              weeklyGoals.length > 0 &&
+              weeklyGoals.every((goal) => goal.state?.isComplete);
 
             return (
-              <div key={goal._id} className="px-3 space-y-2">
+              <div
+                key={goal._id}
+                className={cn(
+                  'px-3 space-y-2 rounded-md',
+                  isAllWeeklyGoalsComplete ? 'bg-green-50' : ''
+                )}
+              >
                 <div
                   className={cn(
                     'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
-                    isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50'
+                    !isAllWeeklyGoalsComplete &&
+                      (isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50')
                   )}
                 >
                   {goal.title}

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { GoalEditPopover } from './GoalEditPopover';
+import { cn } from '@/lib/utils';
 
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
@@ -53,6 +54,10 @@ export function QuarterlyGoal({
   const [title, setTitle] = useState(goal.title);
   const [details, setDetails] = useState(goal.details || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isAllWeeklyGoalsComplete =
+    goal.children.length > 0 &&
+    goal.children.every((child) => child.state?.isComplete);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -119,7 +124,12 @@ export function QuarterlyGoal({
 
   return (
     <>
-      <div className="group px-2 py-1 hover:bg-gray-50 rounded-sm">
+      <div
+        className={cn(
+          'group px-2 py-1 rounded-sm',
+          isAllWeeklyGoalsComplete ? 'bg-green-50' : 'hover:bg-gray-50'
+        )}
+      >
         <div className="flex items-center gap-2 group/title">
           <GoalStarPin
             value={{
