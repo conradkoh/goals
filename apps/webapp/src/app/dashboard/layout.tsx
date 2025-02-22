@@ -29,7 +29,7 @@ export default function DashboardLayout({
         <DashboardProvider>
           <div
             id="dashboard-layout"
-            className="h-screen bg-background flex flex-col overflow-auto"
+            className="h-screen bg-background flex flex-col overflow-y-hidden"
           >
             <Header />
             <main className="flex-1 max-h-[calc(100vh-4rem)]">{children}</main>
