@@ -228,13 +228,11 @@ const WeeklyGoal = ({
 const WeeklyGoalGroup = ({
   quarterlyGoal,
   weeklyGoals,
-  onCreateGoal,
   onUpdateTitle,
   onDelete,
 }: {
   quarterlyGoal: GoalWithDetailsAndChildren;
   weeklyGoals: GoalWithDetailsAndChildren[];
-  onCreateGoal: (title: string) => Promise<void>;
   onUpdateTitle: (
     goalId: Id<'goals'>,
     title: string,
@@ -245,12 +243,17 @@ const WeeklyGoalGroup = ({
   const [isCreating, setIsCreating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
+  const { createWeeklyGoalOptimistic } = useWeek();
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
-    await onCreateGoal(newGoalTitle);
-    setNewGoalTitle('');
-    // Don't hide the input after submission to allow for multiple entries
+    try {
+      await createWeeklyGoalOptimistic(quarterlyGoal._id, newGoalTitle.trim());
+      setNewGoalTitle('');
+      // Don't hide the input after submission to allow for multiple entries
+    } catch (error) {
+      console.error('Failed to create weekly goal:', error);
+    }
   };
 
   const handleEscape = () => {
@@ -332,7 +335,7 @@ const WeeklyGoalsFocusMode = ({
         <div className="space-y-6">
           <div className="flex justify-between items-center border-b pb-4">
             <h2 className="text-lg font-semibold">
-              Focus Mode - Today's Goals
+              Focus Mode - Today&apos;s Goals
             </h2>
             <Button variant="ghost" size="sm" onClick={onClose}>
               Close
@@ -359,8 +362,7 @@ export const WeekCardWeeklyGoals = forwardRef<
   WeekCardWeeklyGoalsRef,
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter }, ref) => {
-  const { createWeeklyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
-    useGoalActions();
+  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
   const { quarterlyGoals } = useWeek();
   const [isFocusMode, setIsFocusMode] = useState(false);
 
@@ -383,23 +385,6 @@ export const WeekCardWeeklyGoals = forwardRef<
         return a.title.localeCompare(b.title);
       });
   }, [quarterlyGoals]);
-
-  const handleCreateWeeklyGoal = async (
-    quarterlyGoalId: Id<'goals'>,
-    title: string
-  ) => {
-    if (!title.trim()) return;
-
-    try {
-      await createWeeklyGoal({
-        title: title.trim(),
-        parentId: quarterlyGoalId,
-        weekNumber,
-      });
-    } catch (error) {
-      console.error('Failed to create weekly goal:', error);
-    }
-  };
 
   const handleUpdateWeeklyGoalTitle = async (
     goalId: Id<'goals'>,
@@ -476,9 +461,6 @@ export const WeekCardWeeklyGoals = forwardRef<
                 <WeeklyGoalGroup
                   quarterlyGoal={goal}
                   weeklyGoals={weeklyGoals}
-                  onCreateGoal={(title) =>
-                    handleCreateWeeklyGoal(goal._id, title)
-                  }
                   onUpdateTitle={handleUpdateWeeklyGoalTitle}
                   onDelete={handleDeleteWeeklyGoal}
                 />
