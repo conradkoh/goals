@@ -58,7 +58,10 @@ export function SafeHTML({
 
   return (
     <div
-      className={cn('prose prose-sm max-w-none', className)}
+      className={cn(
+        'prose prose-sm max-w-none [&_a]:break-words [&_a]:overflow-wrap-anywhere',
+        className
+      )}
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
       {...props}
     />
