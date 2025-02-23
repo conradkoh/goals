@@ -1,10 +1,19 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   CollapsibleMinimal,
   CollapsibleMinimalContent,
   CollapsibleMinimalTrigger,
 } from '@/components/ui/collapsible-minimal';
-import { Dialog, DialogPortal } from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,8 +39,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useDashboard } from '@/hooks/useDashboard';
+import { toast } from '@/components/ui/use-toast';
 import { DayProvider, useDay } from '@/hooks/useDay';
+import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -50,18 +60,6 @@ import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
-import { useGoalActions } from '@/hooks/useGoalActions';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
-import { toast } from '@/components/ui/use-toast';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -343,6 +341,7 @@ export const WeekCardDailyGoals = forwardRef<
     </div>
   );
 });
+WeekCardDailyGoals.displayName = 'WeekCardDailyGoals';
 
 const DaySection = () => {
   const { createDailyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
@@ -916,8 +915,8 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                             quarterlyGroup.quarterlyGoal.isStarred
                               ? 'bg-yellow-50 border border-yellow-200'
                               : quarterlyGroup.quarterlyGoal.isPinned
-                              ? 'bg-blue-50 border border-blue-200'
-                              : ''
+                                ? 'bg-blue-50 border border-blue-200'
+                                : ''
                           )}
                         >
                           {Object.values(quarterlyGroup.weeklyGoals).map(
