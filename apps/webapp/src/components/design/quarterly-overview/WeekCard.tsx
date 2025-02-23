@@ -1,4 +1,4 @@
-import { WeekProvider } from '@/hooks/useWeek';
+import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Focus } from 'lucide-react';
@@ -10,6 +10,7 @@ interface WeekCardProps {
   isCurrentWeek?: boolean;
   children?: React.ReactNode;
   onFocusClick?: () => void;
+  weekData: WeekData;
 }
 
 export const WeekCard = ({
@@ -19,9 +20,10 @@ export const WeekCard = ({
   isCurrentWeek,
   children,
   onFocusClick,
+  weekData,
 }: WeekCardProps) => {
   return (
-    <WeekProvider weekNumber={weekNumber}>
+    <WeekProviderWithoutDashboard weekData={weekData}>
       <div
         className={cn(
           'h-full flex flex-col border rounded-lg shadow bg-white',
@@ -64,6 +66,6 @@ export const WeekCard = ({
         </div>
         <div className="flex-1 p-4 space-y-6 min-h-0">{children}</div>
       </div>
-    </WeekProvider>
+    </WeekProviderWithoutDashboard>
   );
 };

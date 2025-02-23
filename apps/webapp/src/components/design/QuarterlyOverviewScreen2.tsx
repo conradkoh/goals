@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
 import { WeekCard } from './quarterly-overview/WeekCard';
 import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
+import { DayOfWeek } from '@/lib/constants';
 
 export interface DragData {
   goal: GoalWithDetailsAndChildren;
@@ -93,42 +94,54 @@ export const QuarterlyOverviewScreen2 = () => {
     <div className="flex flex-col h-full pt-2">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
-          {weekData.map((week, weekIndex) => (
-            <WeekCard
-              key={weekIndex}
-              weekLabel={week.weekLabel}
-              mondayDate={week.mondayDate}
-              weekNumber={week.weekNumber}
-              isCurrentWeek={week.weekNumber === currentWeekNumber}
-              onFocusClick={() => handleFocusClick(week.weekNumber)}
-            >
-              <div className="space-y-2">
-                <WeekCardSection title="💭 Quarterly Goals">
-                  <WeekCardQuarterlyGoals
-                    weekNumber={week.weekNumber}
-                    year={selectedYear}
-                    quarter={selectedQuarter}
-                  />
-                </WeekCardSection>
+          {weekData.map((week, weekIndex) => {
+            // Cast dayOfWeek to DayOfWeek type
+            const weekDataWithTypedDays = {
+              ...week,
+              days: week.days.map((day) => ({
+                ...day,
+                dayOfWeek: day.dayOfWeek as DayOfWeek,
+              })),
+            };
 
-                <WeekCardSection title="🚀 Weekly Goals">
-                  <WeekCardWeeklyGoals
-                    weekNumber={week.weekNumber}
-                    year={selectedYear}
-                    quarter={selectedQuarter}
-                  />
-                </WeekCardSection>
+            return (
+              <WeekCard
+                key={weekIndex}
+                weekLabel={week.weekLabel}
+                mondayDate={week.mondayDate}
+                weekNumber={week.weekNumber}
+                isCurrentWeek={week.weekNumber === currentWeekNumber}
+                onFocusClick={() => handleFocusClick(week.weekNumber)}
+                weekData={weekDataWithTypedDays}
+              >
+                <div className="space-y-2">
+                  <WeekCardSection title="💭 Quarterly Goals">
+                    <WeekCardQuarterlyGoals
+                      weekNumber={week.weekNumber}
+                      year={selectedYear}
+                      quarter={selectedQuarter}
+                    />
+                  </WeekCardSection>
 
-                <WeekCardSection title="🔍 Daily Goals">
-                  <WeekCardDailyGoals
-                    weekNumber={week.weekNumber}
-                    year={selectedYear}
-                    quarter={selectedQuarter}
-                  />
-                </WeekCardSection>
-              </div>
-            </WeekCard>
-          ))}
+                  <WeekCardSection title="🚀 Weekly Goals">
+                    <WeekCardWeeklyGoals
+                      weekNumber={week.weekNumber}
+                      year={selectedYear}
+                      quarter={selectedQuarter}
+                    />
+                  </WeekCardSection>
+
+                  <WeekCardSection title="🔍 Daily Goals">
+                    <WeekCardDailyGoals
+                      weekNumber={week.weekNumber}
+                      year={selectedYear}
+                      quarter={selectedQuarter}
+                    />
+                  </WeekCardSection>
+                </div>
+              </WeekCard>
+            );
+          })}
         </QuarterlyGrid>
       </DndContext>
     </div>
