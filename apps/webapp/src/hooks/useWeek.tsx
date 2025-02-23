@@ -1,5 +1,4 @@
 import { createContext, useContext, useMemo, useRef } from 'react';
-import { useDashboard } from './useDashboard';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
@@ -14,12 +13,6 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
   isOptimistic?: boolean;
 };
-
-// Deprecated: WeekProviderProps is no longer recommended for use.
-interface WeekProviderProps {
-  weekNumber: number;
-  children: React.ReactNode;
-}
 
 interface WeekContextValue {
   quarterlyGoals: GoalWithDetailsAndChildren[];
@@ -38,59 +31,6 @@ interface WeekContextValue {
   ) => Promise<void>;
   deleteWeeklyGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
 }
-
-// Deprecated: WeekProvider is no longer recommended for use.
-export const WeekProvider = ({ weekNumber, children }: WeekProviderProps) => {
-  const { weekData } = useDashboard();
-  const { createWeeklyGoal, deleteQuarterlyGoal } = useGoalActions();
-
-  const weekContextValue = useMemo(() => {
-    const currentWeek = weekData.find((week) => week.weekNumber === weekNumber);
-    if (!currentWeek) {
-      throw new Error(`Week ${weekNumber} not found in weekData`);
-    }
-
-    // Get all goals for this week
-    const allGoals = currentWeek.tree.allGoals;
-
-    // Organize goals by depth
-    const quarterlyGoals = allGoals.filter((goal) => goal.depth === 0);
-    const weeklyGoals = allGoals.filter((goal) => goal.depth === 1);
-    const dailyGoals = allGoals.filter((goal) => goal.depth === 2);
-
-    return {
-      quarterlyGoals,
-      weeklyGoals,
-      dailyGoals,
-      weekNumber,
-      days: currentWeek.days,
-      createWeeklyGoalOptimistic: async (
-        parentId: Id<'goals'>,
-        title: string,
-        details?: string
-      ) => {
-        await createWeeklyGoal({
-          title,
-          details,
-          parentId,
-          weekNumber,
-        });
-      },
-      deleteWeeklyGoalOptimistic: async (goalId: Id<'goals'>) => {
-        await deleteQuarterlyGoal({
-          goalId,
-        });
-      },
-    };
-  }, [weekData, weekNumber, createWeeklyGoal, deleteQuarterlyGoal]);
-
-  return (
-    <WeekContext.Provider value={weekContextValue}>
-      {children}
-    </WeekContext.Provider>
-  );
-};
-
 interface WeekProviderWithoutDashboardProps {
   weekData: WeekData;
   children: React.ReactNode;
