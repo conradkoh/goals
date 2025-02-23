@@ -82,6 +82,7 @@ export const DailyGoalItem = ({
               isComplete: checked === true,
             })
           }
+          className="flex-shrink-0"
         />
 
         {/* View Mode */}
@@ -89,15 +90,19 @@ export const DailyGoalItem = ({
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
+              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             >
-              <span className="truncate">{title}</span>
+              <span className="break-words w-full whitespace-pre-wrap">
+                {title}
+              </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[400px] p-4">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <h3 className="font-semibold">{title}</h3>
+                <h3 className="font-semibold break-words flex-1 mr-2">
+                  {title}
+                </h3>
                 <div className="flex items-center gap-2">
                   <Select
                     value={currentDayOfWeek?.toString()}

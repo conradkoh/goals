@@ -43,7 +43,7 @@ export const GoalSelector = ({
             <SelectItem key={goal._id} value={goal._id} className="h-12">
               <div className="py-1">
                 <div className="flex items-center gap-1">
-                  <span className="truncate">{goal.title}</span>
+                  <span className="break-words flex-1">{goal.title}</span>
                   {goal.state?.isPinned && (
                     <Pin className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
                   )}

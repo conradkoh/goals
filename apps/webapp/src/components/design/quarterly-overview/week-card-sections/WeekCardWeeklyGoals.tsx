@@ -143,15 +143,19 @@ const WeeklyGoal = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0"
+                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
                 >
-                  <span className="truncate">{goal.title}</span>
+                  <span className="break-words w-full whitespace-pre-wrap">
+                    {goal.title}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-4">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-semibold">{goal.title}</h3>
+                    <h3 className="font-semibold break-words flex-1 mr-2">
+                      {goal.title}
+                    </h3>
                     {!goal.isOptimistic && (
                       <GoalEditPopover
                         title={goal.title}

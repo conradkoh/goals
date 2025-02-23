@@ -601,15 +601,19 @@ const DailyGoalGroup = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="p-0 h-auto hover:bg-transparent font-semibold text-gray-800 justify-start text-left focus-visible:ring-0"
+                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
                 >
-                  <span className="truncate">{weeklyGoal.title}</span>
+                  <span className="break-words w-full whitespace-pre-wrap">
+                    {weeklyGoal.title}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-4">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-semibold">{weeklyGoal.title}</h3>
+                    <h3 className="font-semibold break-words flex-1 mr-2">
+                      {weeklyGoal.title}
+                    </h3>
                     <GoalEditPopover
                       title={weeklyGoal.title}
                       details={weeklyGoal.details}
@@ -649,15 +653,19 @@ const DailyGoalGroup = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="p-0 h-auto hover:bg-transparent text-gray-500 justify-start text-left focus-visible:ring-0"
+                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
                 >
-                  <span className="truncate">{quarterlyGoal.title}</span>
+                  <span className="break-words w-full whitespace-pre-wrap">
+                    {quarterlyGoal.title}
+                  </span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-4">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
-                    <h3 className="font-semibold">{quarterlyGoal.title}</h3>
+                    <h3 className="font-semibold break-words flex-1 mr-2">
+                      {quarterlyGoal.title}
+                    </h3>
                     <GoalEditPopover
                       title={quarterlyGoal.title}
                       details={quarterlyGoal.details}
@@ -988,7 +996,9 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                           {quarterlyGroup.quarterlyGoal.isPinned && (
                             <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
                           )}
-                          {quarterlyGroup.quarterlyGoal.title}
+                          <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                            {quarterlyGroup.quarterlyGoal.title}
+                          </div>
                         </h4>
                         <div
                           className={cn(
@@ -1007,7 +1017,9 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                                 className="pl-4 space-y-1 py-2"
                               >
                                 <h5 className="text-sm text-muted-foreground">
-                                  {weeklyGroup.weeklyGoal.title}
+                                  <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                                    {weeklyGroup.weeklyGoal.title}
+                                  </div>
                                 </h5>
                                 <ul className="space-y-1">
                                   {weeklyGroup.tasks.map((task) => (
@@ -1016,9 +1028,9 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                                       className="flex items-center gap-2 pl-4"
                                     >
                                       <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                      <span className="text-sm">
+                                      <div className="text-sm break-words">
                                         {task.title}
-                                      </span>
+                                      </div>
                                     </li>
                                   ))}
                                 </ul>
