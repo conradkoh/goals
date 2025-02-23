@@ -160,7 +160,10 @@ export const DailyGoalItem = ({
                   </button>
                 }
               />
-              <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+              <DeleteGoalIconButton
+                onDelete={() => onDelete(goal._id)}
+                requireConfirmation={false}
+              />
             </>
           )}
         </div>

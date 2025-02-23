@@ -15,10 +15,12 @@ import {
 
 interface DeleteGoalIconButtonProps {
   onDelete: () => Promise<void>;
+  requireConfirmation?: boolean;
 }
 
 export const DeleteGoalIconButton = ({
   onDelete,
+  requireConfirmation = true,
 }: DeleteGoalIconButtonProps) => {
   const { toast } = useToast();
 
@@ -36,13 +38,26 @@ export const DeleteGoalIconButton = ({
     }
   };
 
+  const DeleteButton = (
+    <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600">
+      <Trash2 className="h-3.5 w-3.5" />
+    </button>
+  );
+
+  if (!requireConfirmation) {
+    return (
+      <button
+        onClick={handleDelete}
+        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    );
+  }
+
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600">
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{DeleteButton}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Goal</AlertDialogTitle>
