@@ -162,7 +162,7 @@ const FocusPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen w-screen bg-gray-50 overflow-clip">
       {/* Top Bar */}
       <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
         <div className="container mx-auto px-6 py-4">
