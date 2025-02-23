@@ -1,4 +1,3 @@
-import { useDashboard } from '@/hooks/useDashboard';
 import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
@@ -23,6 +22,8 @@ import {
 } from '@/components/ui/select';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { Spinner } from '@/components/ui/spinner';
+import { isOptimisticId } from '@/hooks/useOptimistic';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -57,6 +58,8 @@ export const DailyGoalItem = ({
     details = goal.details,
     isComplete = goal.state?.isComplete ?? false,
   } = liveGoalDetails ?? {};
+
+  const isOptimistic = isOptimisticId(goal._id);
 
   const handleMoveToDayOfWeek = async (newDayOfWeek: DayOfWeekType) => {
     if (!currentDayOfWeek || newDayOfWeek === currentDayOfWeek) return;
@@ -106,11 +109,7 @@ export const DailyGoalItem = ({
                       <SelectValue placeholder="Move to day" />
                     </SelectTrigger>
                     <SelectContent>
-                      {(
-                        Object.entries(DayOfWeek) as Array<
-                          [string, DayOfWeekType]
-                        >
-                      ).map(([name, value]) => (
+                      {Object.values(DayOfWeek).map((value) => (
                         <SelectItem
                           key={value}
                           value={value.toString()}
@@ -145,19 +144,25 @@ export const DailyGoalItem = ({
         </Popover>
 
         <div className="flex items-center gap-1">
-          <GoalEditPopover
-            title={title}
-            details={details}
-            onSave={async (newTitle: string, newDetails?: string) => {
-              await onUpdateTitle(goal._id, newTitle, newDetails);
-            }}
-            trigger={
-              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
-                <Edit2 className="h-3.5 w-3.5" />
-              </button>
-            }
-          />
-          <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+          {isOptimistic ? (
+            <Spinner className="h-3.5 w-3.5" />
+          ) : (
+            <>
+              <GoalEditPopover
+                title={title}
+                details={details}
+                onSave={async (newTitle: string, newDetails?: string) => {
+                  await onUpdateTitle(goal._id, newTitle, newDetails);
+                }}
+                trigger={
+                  <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </button>
+                }
+              />
+              <DeleteGoalIconButton onDelete={() => onDelete(goal._id)} />
+            </>
+          )}
         </div>
       </div>
     </div>

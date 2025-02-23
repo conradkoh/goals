@@ -12,6 +12,7 @@ interface CreateGoalInputProps {
   autoFocus?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
+  disabled?: boolean;
 }
 
 export const CreateGoalInput = ({
@@ -24,6 +25,7 @@ export const CreateGoalInput = ({
   autoFocus,
   onFocus,
   onBlur,
+  disabled,
 }: CreateGoalInputProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,14 +71,15 @@ export const CreateGoalInput = ({
             onChange(e.target.value);
           }}
           onKeyDown={handleKeyDown}
-          onFocus={(e) => {
+          onFocus={() => {
             setIsEditing(true);
             onFocus?.();
           }}
-          onBlur={(e) => {
+          onBlur={() => {
             onBlur?.();
           }}
           autoFocus={autoFocus}
+          disabled={disabled}
           className="h-7 text-sm text-center bg-transparent border-none hover:bg-gray-50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">

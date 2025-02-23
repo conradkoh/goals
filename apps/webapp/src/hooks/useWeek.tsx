@@ -30,6 +30,14 @@ interface WeekContextValue {
     details?: string
   ) => Promise<void>;
   deleteWeeklyGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
+  createDailyGoalOptimistic: (
+    parentId: Id<'goals'>,
+    title: string,
+    dayOfWeek: DayOfWeek,
+    dateTimestamp: number,
+    details?: string
+  ) => Promise<void>;
+  deleteDailyGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
 }
 interface WeekProviderWithoutDashboardProps {
   weekData: WeekData;
@@ -40,7 +48,8 @@ export const WeekProviderWithoutDashboard = ({
   weekData,
   children,
 }: WeekProviderWithoutDashboardProps) => {
-  const { createWeeklyGoal, deleteQuarterlyGoal } = useGoalActions();
+  const { createWeeklyGoal, deleteQuarterlyGoal, createDailyGoal } =
+    useGoalActions();
   const allGoals = weekData.tree.allGoals;
 
   // Simple counter for optimistic items
@@ -51,6 +60,11 @@ export const WeekProviderWithoutDashboard = ({
     GoalWithOptimisticStatus[],
     GoalWithOptimisticStatus
   >(allGoals.filter((goal) => goal.depth === 1));
+
+  const [optimisticDailyGoals, doDailyGoalAction] = useOptimisticArray<
+    GoalWithOptimisticStatus[],
+    GoalWithOptimisticStatus
+  >(allGoals.filter((goal) => goal.depth === 2));
 
   const weekContextValue = useMemo(() => {
     // Get base quarterly goals
@@ -71,6 +85,16 @@ export const WeekProviderWithoutDashboard = ({
       isOptimistic: isOptimisticId(goal._id),
     }));
 
+    // Get all daily goals (both real and optimistic)
+    const allDailyGoals =
+      optimisticDailyGoals ?? allGoals.filter((goal) => goal.depth === 2);
+
+    // Add isOptimistic flag based on ID
+    const dailyGoalsWithStatus = allDailyGoals.map((goal) => ({
+      ...goal,
+      isOptimistic: isOptimisticId(goal._id),
+    }));
+
     // Distribute weekly goals to their parent quarterly goals
     weeklyGoalsWithStatus.forEach((weeklyGoal) => {
       if (weeklyGoal.parentId) {
@@ -81,13 +105,20 @@ export const WeekProviderWithoutDashboard = ({
       }
     });
 
+    // Distribute daily goals to their parent weekly goals
+    weeklyGoalsWithStatus.forEach((weeklyGoal) => {
+      weeklyGoal.children = dailyGoalsWithStatus.filter(
+        (dailyGoal) => dailyGoal.parentId === weeklyGoal._id
+      );
+    });
+
     // Convert map back to array
     const quarterlyGoals = Array.from(quarterlyGoalsMap.values());
 
     return {
       quarterlyGoals,
       weeklyGoals: weeklyGoalsWithStatus,
-      dailyGoals: allGoals.filter((goal) => goal.depth === 2),
+      dailyGoals: dailyGoalsWithStatus,
       weekNumber: weekData.weekNumber,
       days: weekData.days,
       createWeeklyGoalOptimistic: async (
@@ -136,7 +167,6 @@ export const WeekProviderWithoutDashboard = ({
         });
 
         try {
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
           // Perform actual creation
           await createWeeklyGoal({
             title,
@@ -161,7 +191,6 @@ export const WeekProviderWithoutDashboard = ({
         });
 
         try {
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for 2 seconds
           // Perform actual deletion
           await deleteQuarterlyGoal({
             goalId,
@@ -175,15 +204,109 @@ export const WeekProviderWithoutDashboard = ({
           throw error;
         }
       },
+      createDailyGoalOptimistic: async (
+        parentId: Id<'goals'>,
+        title: string,
+        dayOfWeek: DayOfWeek,
+        dateTimestamp: number,
+        details?: string
+      ) => {
+        // Generate optimistic IDs
+        const tempId =
+          `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
+
+        // Create optimistic daily goal
+        const optimisticGoal: GoalWithOptimisticStatus = {
+          _id: tempId,
+          _creationTime: Date.now(),
+          userId: 'temp_user' as Id<'users'>,
+          year: weekData.weekNumber,
+          quarter: 1,
+          title,
+          details,
+          parentId,
+          inPath: '',
+          depth: 2,
+          children: [],
+          path: '',
+          isOptimistic: true,
+          state: {
+            _id: `optimistic_daily_${tempId}` as Id<'goalsWeekly'>,
+            _creationTime: Date.now(),
+            userId: 'temp_user' as Id<'users'>,
+            year: weekData.weekNumber,
+            quarter: 1,
+            goalId: tempId,
+            weekNumber: weekData.weekNumber,
+            progress: '',
+            isComplete: false,
+            isStarred: false,
+            isPinned: false,
+            daily: {
+              dayOfWeek,
+              dateTimestamp,
+            },
+          },
+        };
+
+        // Add to optimistic state
+        const removeOptimistic = doDailyGoalAction({
+          type: 'append',
+          value: optimisticGoal,
+        });
+
+        try {
+          // Perform actual creation
+          await createDailyGoal({
+            title,
+            details,
+            parentId,
+            weekNumber: weekData.weekNumber,
+            dayOfWeek,
+            dateTimestamp,
+          });
+
+          // Remove optimistic update after success
+          removeOptimistic();
+        } catch (error) {
+          // Remove optimistic update on error
+          removeOptimistic();
+          throw error;
+        }
+      },
+      deleteDailyGoalOptimistic: async (goalId: Id<'goals'>) => {
+        // Add optimistic removal
+        const removeOptimistic = doDailyGoalAction({
+          type: 'remove',
+          id: goalId,
+        });
+
+        try {
+          // Perform actual deletion
+          await deleteQuarterlyGoal({
+            goalId,
+          });
+
+          // Remove optimistic update after success
+          removeOptimistic();
+        } catch (error) {
+          // Remove optimistic update on error
+          removeOptimistic();
+          throw error;
+        }
+      },
     };
   }, [
     allGoals,
     optimisticWeeklyGoals,
+    optimisticDailyGoals,
     weekData.weekNumber,
     weekData.days,
     createWeeklyGoal,
     deleteQuarterlyGoal,
+    createDailyGoal,
     doWeeklyGoalAction,
+    doDailyGoalAction,
   ]);
 
   return (

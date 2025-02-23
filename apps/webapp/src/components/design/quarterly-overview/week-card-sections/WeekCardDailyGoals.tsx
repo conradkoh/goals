@@ -60,6 +60,7 @@ import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
+import { Spinner } from '@/components/ui/spinner';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -87,9 +88,8 @@ export interface WeekCardDailyGoalsRef {
 export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
->(({ weekNumber, year, quarter, showOnlyToday, selectedDayOverride }, ref) => {
-  const { days, weeklyGoals } = useWeek();
-  const { createDailyGoal } = useGoalActions();
+>(({ weekNumber, year, showOnlyToday, selectedDayOverride }, ref) => {
+  const { days, weeklyGoals, createDailyGoalOptimistic } = useWeek();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
@@ -115,6 +115,8 @@ export const WeekCardDailyGoals = forwardRef<
   });
   const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
     useState<Id<'goals'>>();
+  const [isCreating, setIsCreating] = useState(false);
+  const [previousTitle, setPreviousTitle] = useState('');
 
   // Sort and categorize days
   const { currentDay, futureDays, pastDays } = useMemo(() => {
@@ -214,22 +216,37 @@ export const WeekCardDailyGoals = forwardRef<
     if (!newGoalTitle.trim() || !selectedWeeklyGoalId) return;
 
     try {
-      await createDailyGoal({
-        title: newGoalTitle.trim(),
-        parentId: selectedWeeklyGoalId,
-        weekNumber,
-        dayOfWeek: selectedDayOfWeek,
-        dateTimestamp: DateTime.fromObject({
-          weekNumber,
-          weekYear: year,
-        })
-          .startOf('week')
-          .plus({ days: selectedDayOfWeek - 1 })
-          .toMillis(),
-      });
+      // Store previous value for error recovery
+      setPreviousTitle(newGoalTitle);
+      // Clear input immediately for better UX
       setNewGoalTitle('');
+      setIsCreating(true);
+
+      const dateTimestamp = DateTime.fromObject({
+        weekNumber,
+        weekYear: year,
+      })
+        .startOf('week')
+        .plus({ days: selectedDayOfWeek - 1 })
+        .toMillis();
+
+      await createDailyGoalOptimistic(
+        selectedWeeklyGoalId,
+        newGoalTitle.trim(),
+        selectedDayOfWeek,
+        dateTimestamp
+      );
     } catch (error) {
       console.error('Failed to create daily goal:', error);
+      // Restore previous value on error
+      setNewGoalTitle(previousTitle);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to create goal',
+        description: 'There was an error creating your goal. Please try again.',
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -278,6 +295,7 @@ export const WeekCardDailyGoals = forwardRef<
             value={newGoalTitle}
             onChange={setNewGoalTitle}
             onSubmit={handleCreateDailyGoal}
+            disabled={isCreating}
           >
             <div className="flex gap-2 items-start">
               <div className="w-1/3">
@@ -286,6 +304,7 @@ export const WeekCardDailyGoals = forwardRef<
                   onValueChange={(value) =>
                     setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
                   }
+                  disabled={isCreating}
                 >
                   <SelectTrigger className="h-12 text-xs">
                     <SelectValue placeholder="Select day" />
@@ -299,14 +318,20 @@ export const WeekCardDailyGoals = forwardRef<
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-2/3">
+              <div className="w-2/3 relative">
                 <GoalSelector
                   goals={availableWeeklyGoals}
                   value={selectedWeeklyGoalId}
-                  onChange={setSelectedWeeklyGoalId}
+                  onChange={(value) => setSelectedWeeklyGoalId(value)}
                   placeholder="Select weekly goal"
                   emptyStateMessage="No weekly goals available"
+                  disabled={isCreating}
                 />
+                {isCreating && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Spinner className="h-4 w-4" />
+                  </div>
+                )}
               </div>
             </div>
           </CreateGoalInput>
@@ -344,10 +369,14 @@ export const WeekCardDailyGoals = forwardRef<
 WeekCardDailyGoals.displayName = 'WeekCardDailyGoals';
 
 const DaySection = () => {
-  const { createDailyGoal, updateQuarterlyGoalTitle, deleteQuarterlyGoal } =
-    useGoalActions();
+  const { createDailyGoalOptimistic, deleteDailyGoalOptimistic } = useWeek();
+  const { updateQuarterlyGoalTitle } = useGoalActions();
   const { dayOfWeek, dateTimestamp, dailyGoalsView } = useDay();
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
+    {}
+  );
+  const [isCreating, setIsCreating] = useState<Record<string, boolean>>({});
+  const [previousTitles, setPreviousTitles] = useState<Record<string, string>>(
     {}
   );
 
@@ -391,19 +420,45 @@ const DaySection = () => {
         console.error('Week number is not defined for goal');
         return;
       }
-      await createDailyGoal({
-        title: title.trim(),
-        parentId: weeklyGoal._id,
-        weekNumber,
-        dayOfWeek,
-        dateTimestamp,
-      });
+
+      // Store previous value for error recovery
+      setPreviousTitles((prev) => ({
+        ...prev,
+        [weeklyGoal._id]: title,
+      }));
+      // Clear input immediately for better UX
       setNewGoalTitles((prev) => ({
         ...prev,
         [weeklyGoal._id]: '',
       }));
+      setIsCreating((prev) => ({
+        ...prev,
+        [weeklyGoal._id]: true,
+      }));
+
+      await createDailyGoalOptimistic(
+        weeklyGoal._id,
+        title.trim(),
+        dayOfWeek,
+        dateTimestamp
+      );
     } catch (error) {
       console.error('Failed to create daily goal:', error);
+      // Restore previous value on error
+      setNewGoalTitles((prev) => ({
+        ...prev,
+        [weeklyGoal._id]: previousTitles[weeklyGoal._id] || '',
+      }));
+      toast({
+        variant: 'destructive',
+        title: 'Failed to create goal',
+        description: 'There was an error creating your goal. Please try again.',
+      });
+    } finally {
+      setIsCreating((prev) => ({
+        ...prev,
+        [weeklyGoal._id]: false,
+      }));
     }
   };
 
@@ -420,9 +475,7 @@ const DaySection = () => {
   };
 
   const handleDeleteGoal = async (goalId: Id<'goals'>) => {
-    await deleteQuarterlyGoal({
-      goalId,
-    });
+    await deleteDailyGoalOptimistic(goalId);
   };
 
   return (
@@ -452,6 +505,7 @@ const DaySection = () => {
                 [weeklyGoal._id]: value,
               }))
             }
+            isCreating={isCreating[weeklyGoal._id] || false}
           />
         ))}
       </div>
@@ -459,10 +513,32 @@ const DaySection = () => {
   );
 };
 
+export interface CreateGoalInputProps {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  onEscape?: () => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  autoFocus?: boolean;
+  disabled?: boolean;
+  children?: React.ReactNode;
+}
+
+export interface GoalSelectorProps {
+  goals: GoalWithDetailsAndChildren[];
+  value: Id<'goals'> | undefined;
+  onChange: (value: Id<'goals'> | undefined) => void;
+  placeholder: string;
+  emptyStateMessage: string;
+  disabled?: boolean;
+}
+
 interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  dayOfWeek: DayOfWeek;
+  dayOfWeek: DayOfWeekType;
   onCreateGoal: () => void;
   onUpdateGoalTitle: (
     goalId: Id<'goals'>,
@@ -472,6 +548,7 @@ interface DailyGoalGroupProps {
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   newGoalTitle: string;
   onNewGoalTitleChange: (value: string) => void;
+  isCreating: boolean;
 }
 
 // Component for a group of daily goals under a weekly goal
@@ -484,9 +561,10 @@ const DailyGoalGroup = ({
   onDeleteGoal,
   newGoalTitle,
   onNewGoalTitleChange,
+  isCreating,
 }: DailyGoalGroupProps) => {
-  const [isCreating, setIsCreating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const dailyGoals = weeklyGoal.children.filter(
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
   );
@@ -501,7 +579,7 @@ const DailyGoalGroup = ({
   };
 
   const handleEscape = () => {
-    setIsCreating(false);
+    setIsInputFocused(false);
     onNewGoalTitleChange(''); // Clear the input
   };
 
@@ -624,31 +702,34 @@ const DailyGoalGroup = ({
           <div
             className="pt-1"
             onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => !isCreating && setIsHovering(false)}
+            onMouseLeave={() => !isInputFocused && setIsHovering(false)}
           >
             <div
               className={cn(
                 'transition-opacity duration-150',
-                isCreating || isHovering
+                isInputFocused || isHovering
                   ? 'opacity-100 pointer-events-auto'
                   : 'opacity-0 pointer-events-none'
               )}
             >
-              <CreateGoalInput
-                placeholder="Add a task..."
-                value={newGoalTitle}
-                onChange={onNewGoalTitleChange}
-                onSubmit={handleSubmit}
-                onEscape={handleEscape}
-                onFocus={() => setIsCreating(true)}
-                onBlur={() => {
-                  if (!newGoalTitle) {
-                    setIsCreating(false);
-                    setIsHovering(false);
-                  }
-                }}
-                autoFocus={isCreating}
-              />
+              <div className="relative">
+                <CreateGoalInput
+                  placeholder="Add a task..."
+                  value={newGoalTitle}
+                  onChange={onNewGoalTitleChange}
+                  onSubmit={handleSubmit}
+                  onEscape={handleEscape}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => {
+                    if (!newGoalTitle) {
+                      setIsInputFocused(false);
+                      setIsHovering(false);
+                    }
+                  }}
+                  autoFocus={isInputFocused}
+                  disabled={isCreating}
+                />
+              </div>
             </div>
           </div>
         </div>

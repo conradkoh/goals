@@ -15,6 +15,7 @@ interface GoalSelectorProps {
   onChange: (goalId: Id<'goals'>) => void;
   placeholder?: string;
   emptyStateMessage?: string;
+  disabled?: boolean;
 }
 
 export const GoalSelector = ({
@@ -23,6 +24,7 @@ export const GoalSelector = ({
   onChange,
   placeholder = 'Select goal',
   emptyStateMessage = 'No goals available',
+  disabled,
 }: GoalSelectorProps) => {
   const hasGoals = goals.length > 0;
 
@@ -30,7 +32,7 @@ export const GoalSelector = ({
     <Select
       value={value?.toString()}
       onValueChange={(value) => onChange(value as Id<'goals'>)}
-      disabled={!hasGoals}
+      disabled={disabled || !hasGoals}
     >
       <SelectTrigger className="h-12 text-xs">
         <SelectValue placeholder={hasGoals ? placeholder : emptyStateMessage} />
