@@ -183,7 +183,7 @@ export const WeekCardPreviewDialog = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Move Tasks from Previous Week</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[50vh] overflow-y-auto">
               {/* Explanation section */}
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">What will happen:</h3>
