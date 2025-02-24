@@ -20,19 +20,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FocusModeDailyView } from '@/components/design/focus/FocusModeDailyView';
 import { FocusModeWeeklyView } from '@/components/design/focus/FocusModeWeeklyView';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
+import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 
 const FocusPage = () => {
   const searchParams = useSearchParams();
   const year = parseInt(searchParams.get('year') ?? '2025');
   const quarter = parseInt(searchParams.get('quarter') ?? '1') as 1 | 2 | 3 | 4;
   const initialWeek = parseInt(searchParams.get('week') ?? '8');
+  const currentDateTime = useCurrentDateTime();
 
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('daily');
   const [selectedWeek, setSelectedWeek] = useState(initialWeek);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
-    const today = DateTime.now();
-    return today.weekday as DayOfWeek;
+    return currentDateTime.weekday as DayOfWeek;
   });
 
   const { weeks, startWeek, endWeek, currentWeekNumber, isCurrentQuarter } =
@@ -93,10 +94,9 @@ const FocusPage = () => {
   };
 
   const handleJumpToCurrent = () => {
-    const today = DateTime.now();
     if (viewMode === 'daily') {
       setSelectedWeek(currentWeekNumber);
-      setSelectedDay(today.weekday as DayOfWeek);
+      setSelectedDay(currentDateTime.weekday as DayOfWeek);
     } else {
       setSelectedWeek(currentWeekNumber);
     }

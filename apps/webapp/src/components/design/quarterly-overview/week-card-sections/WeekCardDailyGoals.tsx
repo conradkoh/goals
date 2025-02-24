@@ -61,6 +61,7 @@ import { DailyGoalItem } from '../../goals-new/DailyGoalItem';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
 import { Spinner } from '@/components/ui/spinner';
+import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -90,12 +91,12 @@ export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsProps
 >(({ weekNumber, year, showOnlyToday, selectedDayOverride }, ref) => {
   const { days, weeklyGoals, createDailyGoalOptimistic } = useWeek();
+  const currentDateTime = useCurrentDateTime();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
-    const today = DateTime.now();
-    const todayWeekNumber = today.weekNumber;
-    const todayDayOfWeek = today.weekday as DayOfWeek;
+    const todayWeekNumber = currentDateTime.weekNumber;
+    const todayDayOfWeek = currentDateTime.weekday as DayOfWeek;
 
     // If there's a selectedDayOverride, use that
     if (selectedDayOverride) {
@@ -120,9 +121,8 @@ export const WeekCardDailyGoals = forwardRef<
 
   // Sort and categorize days
   const { currentDay, futureDays, pastDays } = useMemo(() => {
-    const today = DateTime.now();
-    const todayWeekNumber = today.weekNumber;
-    const todayDayOfWeek = today.weekday as DayOfWeekType;
+    const todayWeekNumber = currentDateTime.weekNumber;
+    const todayDayOfWeek = currentDateTime.weekday as DayOfWeekType;
     const sortedDays = [...(days as DayData[])];
 
     // If we have a selectedDayOverride and showOnlyToday is true, show that day as current
@@ -1006,8 +1006,8 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
                             quarterlyGroup.quarterlyGoal.isStarred
                               ? 'bg-yellow-50 border border-yellow-200'
                               : quarterlyGroup.quarterlyGoal.isPinned
-                                ? 'bg-blue-50 border border-blue-200'
-                                : ''
+                              ? 'bg-blue-50 border border-blue-200'
+                              : ''
                           )}
                         >
                           {Object.values(quarterlyGroup.weeklyGoals).map(

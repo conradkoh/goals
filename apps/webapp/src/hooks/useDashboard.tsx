@@ -9,6 +9,7 @@ import { DateTime } from 'luxon';
 import React, { createContext, useContext, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
+import { useCurrentDateTime } from './useCurrentDateTime';
 
 interface WeekData {
   weekLabel: string;
@@ -61,8 +62,8 @@ export const DashboardProvider = ({
   const { sessionId } = useSession();
   const searchParams = useSearchParams();
 
-  // Use a single source of truth for current date
-  const currentDate = DateTime.now();
+  // Use reactive current date
+  const currentDate = useCurrentDateTime();
 
   // Derive all date-related values from currentDate
   const currentYear = currentDate.year;
