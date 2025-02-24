@@ -4,6 +4,12 @@ import { z } from 'zod';
 import { zodToConvex } from 'convex-helpers/server/zod';
 import { DayOfWeek } from '../src/constants';
 
+const carryOverSchema = v.object({
+  type: v.literal('week'),
+  numWeeks: v.number(),
+  fromGoal: v.id('goals'),
+});
+
 export default defineSchema({
   sessions: defineTable({
     userId: v.id('users'),
@@ -39,6 +45,7 @@ export default defineSchema({
     parentId: v.optional(v.id('goals')),
     inPath: v.string(), //recursive structure
     depth: v.number(), // 0 for quarterly, 1 for weekly, 2 for daily
+    carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
   }).index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter']),
 
   // timeseries data for snapshotting
@@ -72,6 +79,7 @@ export default defineSchema({
         dateTimestamp: v.optional(v.number()),
       })
     ),
+    carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
   })
     .index('by_user_and_year_and_quarter_and_week', [
       'userId',
