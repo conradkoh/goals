@@ -83,7 +83,7 @@ export const WeekCardPreviewDialog = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move Tasks from Previous Week</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <span className="block">
                   There are no incomplete tasks from the previous week to move
