@@ -18,6 +18,8 @@ export type WeeklyGoalToCopy = {
   originalGoal: Doc<'goals'>; // The original goal document
   weeklyState: Doc<'goalsWeekly'>; // The weekly state document of the goal
   carryOver: CarryOver; // Carry-over information for the goal
+  quarterlyGoalId?: Id<'goals'>; // Link to parent quarterly goal, can be null
+  dailyGoalsToMove: DailyGoalToMove[]; // Daily goals that need to be moved with this weekly goal
 };
 
 // Type representing a daily goal that needs to be moved
@@ -25,6 +27,7 @@ export type DailyGoalToMove = {
   goal: Doc<'goals'>; // The goal document to be moved
   weeklyState: Doc<'goalsWeekly'>; // The weekly state document of the goal
   parentWeeklyGoal: Doc<'goals'>; // The parent weekly goal document
+  parentQuarterlyGoal?: Doc<'goals'>; // Added: Link to parent quarterly goal, can be null
 };
 
 // Type representing a quarterly goal that needs to be updated

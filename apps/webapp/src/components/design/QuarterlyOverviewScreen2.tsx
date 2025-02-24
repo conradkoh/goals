@@ -106,6 +106,8 @@ export const QuarterlyOverviewScreen2 = () => {
 
             return (
               <WeekCard
+                year={selectedYear}
+                quarter={selectedQuarter}
                 key={weekIndex}
                 weekLabel={week.weekLabel}
                 mondayDate={week.mondayDate}

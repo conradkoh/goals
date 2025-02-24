@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as auth from "../auth.js";
 import type * as dashboard from "../dashboard.js";
+import type * as goal from "../goal.js";
 import type * as sync from "../sync.js";
 
 /**
@@ -28,6 +29,7 @@ import type * as sync from "../sync.js";
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   dashboard: typeof dashboard;
+  goal: typeof goal;
   sync: typeof sync;
 }>;
 export declare const api: FilterApi<
