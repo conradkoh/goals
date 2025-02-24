@@ -357,7 +357,7 @@ export async function processWeeklyGoal(
 
   if (
     !weeklyState.isComplete ||
-    dailyGoals.length === 0 ||
+    (dailyGoals.length === 0 && !weeklyState.isComplete) ||
     hasIncompleteDailyGoals
   ) {
     // For carry over:
