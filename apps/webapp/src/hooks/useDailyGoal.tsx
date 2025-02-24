@@ -3,6 +3,7 @@ import { api } from '@services/backend/convex/_generated/api';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
+import { isOptimisticId } from '@/hooks/useOptimistic';
 
 export interface DailyGoalDetails {
   title: string;
@@ -25,13 +26,19 @@ export function useDailyGoal(
 ): DailyGoalDetails | null {
   const { sessionId } = useSession();
   const { weekNumber, dayOfWeek } = options;
+  const isOptimistic = isOptimisticId(goalId);
 
-  const goalDetails = useQuery(api.dashboard.useDailyGoal, {
-    sessionId,
-    goalId,
-    weekNumber,
-    dayOfWeek,
-  });
+  const goalDetails = useQuery(
+    api.dashboard.useDailyGoal,
+    isOptimistic
+      ? 'skip'
+      : {
+          sessionId,
+          goalId,
+          weekNumber,
+          dayOfWeek,
+        }
+  );
 
   if (!goalDetails) return null;
 
