@@ -262,11 +262,13 @@ async function processQuarterlyGoal(
 
     // Only update if there are incomplete weekly goals
     if (hasIncompleteWeeklyGoals) {
+      // If the goal is starred, it cannot be pinned
+      const isStarred = weeklyState.isStarred;
       return [
         {
           goalId: goal._id,
-          isStarred: weeklyState.isStarred,
-          isPinned: weeklyState.isPinned,
+          isStarred,
+          isPinned: isStarred ? false : weeklyState.isPinned,
         },
       ];
     }
@@ -452,10 +454,29 @@ export async function updateQuarterlyGoals(
         to,
         item.goalId
       );
+
+      // Determine the new state:
+      // 1. If the goal is already starred in the target week, keep it starred and not pinned
+      // 2. If the goal is not starred in the target week but is starred in the source week, make it starred and not pinned
+      // 3. If neither week has it starred, use the pinned state from the source week
+      const newState = {
+        isStarred: existingState?.isStarred || item.isStarred,
+        isPinned:
+          existingState?.isStarred || item.isStarred ? false : item.isPinned,
+      };
+
       if (existingState) {
-        await ctx.db.patch(existingState._id, {
-          isStarred: item.isStarred,
-          isPinned: item.isPinned,
+        await ctx.db.patch(existingState._id, newState);
+      } else {
+        await ctx.db.insert('goalsWeekly', {
+          userId,
+          year: to.year,
+          quarter: to.quarter,
+          weekNumber: to.weekNumber,
+          goalId: item.goalId,
+          progress: '',
+          isComplete: false,
+          ...newState,
         });
       }
     })
