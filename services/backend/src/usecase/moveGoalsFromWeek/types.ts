@@ -10,7 +10,10 @@ export enum GoalDepth {
 export type CarryOver = {
   type: 'week'; // Type of carry-over, currently only supports 'week'
   numWeeks: number; // Number of weeks to carry over
-  fromGoal: Id<'goals'>; // ID of the goal from which to carry over
+  fromGoal: {
+    previousGoalId: Id<'goals'>;
+    rootGoalId: Id<'goals'>;
+  }; // ID of the goal from which to carry over
 };
 
 // Type representing a weekly goal that needs to be copied

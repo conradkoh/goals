@@ -23,7 +23,10 @@ export type BaseGoalMoveResult = {
     carryOver: {
       type: 'week';
       numWeeks: number;
-      fromGoal: Id<'goals'>;
+      fromGoal: {
+        previousGoalId: Id<'goals'>;
+        rootGoalId: Id<'goals'>;
+      };
     };
     dailyGoalsCount: number;
     quarterlyGoalId?: Id<'goals'>;
@@ -143,7 +146,9 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   );
 
   return {
-    ...previewData,
+    weeklyGoalsToCopy: previewData.weeklyGoalsToCopy,
+    dailyGoalsToMove: previewData.dailyGoalsToMove,
+    quarterlyGoalsToUpdate: previewData.quarterlyGoalsToUpdate,
     weeklyGoalsCopied: copiedWeeklyGoals.length,
     dailyGoalsMoved: result.dailyGoalsToMove.length,
     quarterlyGoalsUpdated: result.quarterlyGoalsToUpdate.length,
@@ -332,8 +337,8 @@ export async function processWeeklyGoal(
 
   const dailyGoals = await getChildGoals(ctx, userId, goal);
 
-  const hasIncompleteDailyGoals = await dailyGoals.some(
-    async (dailyGoal: Doc<'goals'>) => {
+  const hasIncompleteDailyGoals = await Promise.all(
+    dailyGoals.map(async (dailyGoal: Doc<'goals'>) => {
       const dailyState = await getDailyGoalState(
         ctx,
         userId,
@@ -341,17 +346,25 @@ export async function processWeeklyGoal(
         dailyGoal._id
       );
       return !dailyState?.isComplete;
-    }
-  );
+    })
+  ).then((results) => results.some((isIncomplete) => isIncomplete));
 
   if (!weeklyState.isComplete || hasIncompleteDailyGoals) {
+    // For carry over:
+    // - If the goal was not previously carried over (carryOver undefined), both rootGoalId and previousGoalId should be the current goal's ID
+    // - If the goal was carried over, preserve the rootGoalId from the previous carry over, and set previousGoalId to the current goal's ID
+    const rootGoalId = weeklyState.carryOver?.fromGoal.rootGoalId ?? goal._id;
+
     const weeklyGoalToCopy: WeeklyGoalToCopy = {
       originalGoal: goal,
       weeklyState,
       carryOver: {
         type: 'week',
         numWeeks: (weeklyState.carryOver?.numWeeks ?? 0) + 1,
-        fromGoal: goal._id,
+        fromGoal: {
+          previousGoalId: goal._id,
+          rootGoalId: rootGoalId,
+        },
       },
       quarterlyGoalId: quarterlyGoal?._id,
       dailyGoalsToMove: [],

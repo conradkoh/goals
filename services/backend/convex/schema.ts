@@ -5,7 +5,10 @@ import { DayOfWeek } from '../src/constants';
 const carryOverSchema = v.object({
   type: v.literal('week'),
   numWeeks: v.number(),
-  fromGoal: v.id('goals'),
+  fromGoal: v.object({
+    previousGoalId: v.id('goals'),
+    rootGoalId: v.id('goals'),
+  }),
 });
 
 export default defineSchema({
