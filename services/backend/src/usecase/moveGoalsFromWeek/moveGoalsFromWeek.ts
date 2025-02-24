@@ -8,6 +8,7 @@ import {
   DailyGoalToMove,
   GoalDepth,
   ProcessGoalResult,
+  CarryOver,
 } from './types';
 
 // Type representing a time period with year, quarter, and week number
@@ -135,7 +136,6 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     result.weeklyGoalsToCopy,
     to
   );
-  await moveDailyGoals(ctx, result.dailyGoalsToMove, to);
 
   // Generate the preview data for the commit case
   const previewData = await generateDryRunPreview(
@@ -339,19 +339,27 @@ export async function processWeeklyGoal(
 
   const dailyGoals = await getChildGoals(ctx, userId, goal);
 
-  const hasIncompleteDailyGoals = await Promise.all(
-    dailyGoals.map(async (dailyGoal: Doc<'goals'>) => {
-      const dailyState = await getDailyGoalState(
-        ctx,
-        userId,
-        from,
-        dailyGoal._id
-      );
-      return !dailyState?.isComplete;
-    })
-  ).then((results) => results.some((isIncomplete) => isIncomplete));
+  // If the weekly goal is incomplete and has no daily goals, or if it has incomplete daily goals,
+  // we should carry it over
+  const hasIncompleteDailyGoals =
+    dailyGoals.length > 0 &&
+    (await Promise.all(
+      dailyGoals.map(async (dailyGoal: Doc<'goals'>) => {
+        const dailyState = await getDailyGoalState(
+          ctx,
+          userId,
+          from,
+          dailyGoal._id
+        );
+        return !dailyState?.isComplete;
+      })
+    ).then((results) => results.some((isIncomplete) => isIncomplete)));
 
-  if (!weeklyState.isComplete || hasIncompleteDailyGoals) {
+  if (
+    !weeklyState.isComplete ||
+    dailyGoals.length === 0 ||
+    hasIncompleteDailyGoals
+  ) {
     // For carry over:
     // - If the goal was not previously carried over (carryOver undefined), both rootGoalId and previousGoalId should be the current goal's ID
     // - If the goal was carried over, preserve the rootGoalId from the previous carry over, and set previousGoalId to the current goal's ID
@@ -491,116 +499,106 @@ export async function copyWeeklyGoals(
 ) {
   return await Promise.all(
     weeklyGoalsToCopy.map(async (item) => {
-      // Check if this weekly goal was already carried over to the target week
-      const existingWeeklyGoal = await ctx.db.get(item.originalGoal._id);
-
-      // If we found an existing weekly goal, check if it has a weekly state in the target week
-      if (existingWeeklyGoal && existingWeeklyGoal.depth === GoalDepth.Weekly) {
-        const existingWeeklyState = await ctx.db
-          .query('goalsWeekly')
-          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-            q
-              .eq('userId', userId)
-              .eq('year', to.year)
-              .eq('quarter', to.quarter)
-              .eq('weekNumber', to.weekNumber)
-          )
-          .filter((q) => q.eq(q.field('goalId'), existingWeeklyGoal._id))
-          .first();
-
-        // If the weekly state exists, reuse the existing goal
-        if (existingWeeklyState) {
-          // Update the daily goals to point to the existing weekly goal
-          await Promise.all(
-            item.dailyGoalsToMove.map(async (dailyGoal) => {
-              await ctx.db.patch(dailyGoal.goal._id, {
-                parentId: existingWeeklyGoal._id,
-                inPath: item.quarterlyGoalId
-                  ? `/${item.quarterlyGoalId}/${existingWeeklyGoal._id}`
-                  : `/${existingWeeklyGoal._id}`,
-              });
-            })
-          );
-          return existingWeeklyGoal._id;
-        }
-
-        // If weekly state doesn't exist, create it for the existing goal
-        await ctx.db.insert('goalsWeekly', {
-          userId,
-          year: to.year,
-          quarter: to.quarter,
-          weekNumber: to.weekNumber,
-          goalId: existingWeeklyGoal._id,
-          progress: '',
-          isStarred: false,
-          isPinned: false,
-          isComplete: false,
-          carryOver: item.carryOver,
-        });
-
-        // Update the daily goals to point to the existing weekly goal
-        await Promise.all(
-          item.dailyGoalsToMove.map(async (dailyGoal) => {
-            await ctx.db.patch(dailyGoal.goal._id, {
-              parentId: existingWeeklyGoal._id,
-              inPath: item.quarterlyGoalId
-                ? `/${item.quarterlyGoalId}/${existingWeeklyGoal._id}`
-                : `/${existingWeeklyGoal._id}`,
-            });
-          })
-        );
-
-        return existingWeeklyGoal._id;
-      }
-
-      // If no existing weekly goal found, create a new one
-      const { _id, _creationTime, ...goalData } = item.originalGoal;
-      const newGoalId = await ctx.db.insert('goals', {
-        ...goalData,
-        carryOver: item.carryOver,
-        parentId: item.quarterlyGoalId,
-        inPath: item.quarterlyGoalId ? `/${item.quarterlyGoalId}` : '/',
-      });
-
-      // Create the weekly state
-      await ctx.db.insert('goalsWeekly', {
+      const { weeklyGoal, weeklyGoalState } = await copyWeeklyGoal(
+        ctx,
         userId,
-        year: to.year,
-        quarter: to.quarter,
-        weekNumber: to.weekNumber,
-        goalId: newGoalId,
-        progress: '',
-        isStarred: false,
-        isPinned: false,
-        isComplete: false,
-        carryOver: item.carryOver,
-      });
-
-      // Update the daily goals to point to the new weekly goal
-      await Promise.all(
-        item.dailyGoalsToMove.map(async (dailyGoal) => {
-          await ctx.db.patch(dailyGoal.goal._id, {
-            parentId: newGoalId,
-            inPath: item.quarterlyGoalId
-              ? `/${item.quarterlyGoalId}/${newGoalId}`
-              : `/${newGoalId}`,
-          });
-        })
+        item,
+        to
       );
 
-      return newGoalId;
+      await migrateDailyGoals(ctx, item.dailyGoalsToMove, weeklyGoal, to);
     })
   );
 }
 
-export async function moveDailyGoals(
+export async function copyWeeklyGoal(
   ctx: MutationCtx,
-  dailyGoalsToMove: DailyGoalToMove[],
+  userId: Id<'users'>,
+  weeklyGoalToCopy: WeeklyGoalToCopy,
   to: TimePeriod
 ) {
+  const carryOver: CarryOver = {
+    type: 'week',
+    numWeeks: (weeklyGoalToCopy.weeklyState.carryOver?.numWeeks ?? 0) + 1,
+    fromGoal: {
+      previousGoalId: weeklyGoalToCopy.originalGoal._id,
+      rootGoalId:
+        weeklyGoalToCopy.weeklyState.carryOver?.fromGoal.rootGoalId ??
+        weeklyGoalToCopy.originalGoal._id,
+    },
+  };
+
+  // Extract only the fields we want to copy
+  const { _id, _creationTime, ...goalFieldsToCopy } =
+    weeklyGoalToCopy.originalGoal;
+
+  // Check if this goal was already cloned based on the carry over information
+  const goalsForTargetWeek = await getGoalsForWeek(ctx, userId, to);
+  let targetWeekGoalId = goalsForTargetWeek.find(
+    (goal) =>
+      goal.carryOver?.fromGoal.rootGoalId === weeklyGoalToCopy.originalGoal._id
+  )?.goalId;
+
+  if (!targetWeekGoalId) {
+    // Create new goal with carry over information
+    targetWeekGoalId = await ctx.db.insert('goals', {
+      ...goalFieldsToCopy,
+      carryOver,
+      parentId: weeklyGoalToCopy.quarterlyGoalId,
+      inPath: weeklyGoalToCopy.quarterlyGoalId
+        ? `/${weeklyGoalToCopy.quarterlyGoalId}`
+        : '/',
+    });
+  }
+
+  // Create weekly state that points to the new goal
+  const newWeeklyStateId = await ctx.db.insert('goalsWeekly', {
+    userId,
+    year: to.year,
+    quarter: to.quarter,
+    weekNumber: to.weekNumber,
+    goalId: targetWeekGoalId, // Point to the new goal
+    progress: '',
+    isStarred: false,
+    isPinned: false,
+    isComplete: false,
+    carryOver,
+  });
+
+  const [weeklyGoal, weeklyGoalState] = await Promise.all([
+    ctx.db.get(targetWeekGoalId),
+    ctx.db.get(newWeeklyStateId),
+  ]);
+
+  if (!weeklyGoal || !weeklyGoalState) {
+    throw new Error('Failed to copy weekly goal or weekly state');
+  }
+
+  return {
+    weeklyGoal,
+    weeklyGoalState,
+  };
+}
+
+export async function migrateDailyGoals(
+  ctx: MutationCtx,
+  dailyGoalsToMove: DailyGoalToMove[],
+  toWeeklyGoal: Doc<'goals'>,
+  to: TimePeriod
+) {
+  // Update the daily goals to point to the new weekly goal
   await Promise.all(
-    dailyGoalsToMove.map(async (item) => {
-      await ctx.db.patch(item.weeklyState._id, {
+    dailyGoalsToMove.map(async (dailyGoal) => {
+      // Update the daily goal's parent and path
+      await ctx.db.patch(dailyGoal.goal._id, {
+        parentId: toWeeklyGoal._id,
+        inPath: toWeeklyGoal.parentId
+          ? `/${toWeeklyGoal.parentId}/${toWeeklyGoal._id}`
+          : `/${toWeeklyGoal._id}`,
+      });
+
+      // Update the weekly state to point to the original daily goal
+      await ctx.db.patch(dailyGoal.weeklyState._id, {
         weekNumber: to.weekNumber,
       });
     })

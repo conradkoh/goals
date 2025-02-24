@@ -10,8 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Id } from '@services/backend/convex/_generated/dataModel';
 
-interface PreviewTask {
+interface DailyGoalToCopy {
   id: string;
   title: string;
   details?: string;
@@ -27,11 +28,26 @@ interface PreviewTask {
   };
 }
 
+interface WeeklyGoalToCopy {
+  title: string;
+  carryOver: {
+    type: 'week';
+    numWeeks: number;
+    fromGoal: {
+      previousGoalId: Id<'goals'>;
+      rootGoalId: Id<'goals'>;
+    };
+  };
+  dailyGoalsCount: number;
+  quarterlyGoalId?: Id<'goals'>;
+}
+
 interface WeekCardPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preview: {
-    tasks: Array<PreviewTask>;
+    tasks: Array<DailyGoalToCopy>;
+    weeklyGoals: Array<WeeklyGoalToCopy>;
   } | null;
   onMoveTasks: () => void;
 }
@@ -48,7 +64,7 @@ interface TasksByGoalId {
     weeklyGoals: {
       [weeklyId: string]: {
         goal: IndexedGoal;
-        tasks: PreviewTask[];
+        tasks: DailyGoalToCopy[];
       };
     };
     goal: IndexedGoal;
@@ -61,7 +77,7 @@ export const WeekCardPreviewDialog = ({
   preview,
   onMoveTasks,
 }: WeekCardPreviewDialogProps) => {
-  if (!preview?.tasks.length) {
+  if (!preview?.tasks.length && !preview?.weeklyGoals.length) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
@@ -108,6 +124,17 @@ export const WeekCardPreviewDialog = ({
       weeklyGoals.set(task.weeklyGoal.id, {
         id: task.weeklyGoal.id,
         title: task.weeklyGoal.title || 'Unknown Weekly Goal',
+      });
+    }
+  });
+
+  // Add weekly goals from weeklyGoalsToCopy
+  preview.weeklyGoals.forEach((weeklyGoal) => {
+    const id = weeklyGoal.carryOver.fromGoal.previousGoalId;
+    if (!weeklyGoals.has(id)) {
+      weeklyGoals.set(id, {
+        id,
+        title: weeklyGoal.title,
       });
     }
   });
@@ -161,87 +188,148 @@ export const WeekCardPreviewDialog = ({
                 The following incomplete tasks from the previous week will be
                 moved to this week. Note that tasks will be moved, not copied.
               </span>
-              <div className="space-y-4">
-                {Object.entries(tasksByGoalId).map(
-                  ([quarterlyId, quarterlyGroup]) => {
-                    // Extra safety check
-                    if (!quarterlyGroup?.goal) {
-                      console.warn('Missing quarterly group or goal:', {
-                        quarterlyId,
-                        quarterlyGroup,
-                      });
-                      return null;
-                    }
+
+              {/* Quarterly Goals Section */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Quarterly Goals</h3>
+                <div className="space-y-2">
+                  {Array.from(quarterlyGoals.values()).map((goal) => (
+                    <div
+                      key={`quarterly-${goal.id}`}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50"
+                    >
+                      {goal.isStarred && (
+                        <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                      )}
+                      {goal.isPinned && (
+                        <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                      )}
+                      <div className="font-medium text-sm text-gray-800 break-words">
+                        {goal.title}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Weekly Goals Section */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Weekly Goals</h3>
+                <div className="space-y-2">
+                  {Array.from(weeklyGoals.values()).map((goal) => {
+                    // Find the corresponding weekly goal in weeklyGoalsToCopy
+                    const weeklyGoalToCopy = preview.weeklyGoals.find(
+                      (wg) => wg.carryOver.fromGoal.previousGoalId === goal.id
+                    );
 
                     return (
                       <div
-                        key={`quarterly-preview-${quarterlyId}`}
-                        className="space-y-2"
+                        key={`weekly-${goal.id}`}
+                        className="px-2 py-1 rounded-md bg-gray-50"
                       >
-                        <h4 className="font-medium text-sm flex items-center gap-1.5">
-                          {quarterlyGroup.goal.isStarred && (
-                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                          )}
-                          {quarterlyGroup.goal.isPinned && (
-                            <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-                          )}
-                          <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                            {quarterlyGroup.goal.title}
-                          </div>
-                        </h4>
-                        <div
-                          className={cn(
-                            'rounded-md overflow-hidden',
-                            quarterlyGroup.goal.isStarred
-                              ? 'bg-yellow-50 border border-yellow-200'
-                              : quarterlyGroup.goal.isPinned
-                              ? 'bg-blue-50 border border-blue-200'
-                              : ''
-                          )}
-                        >
-                          {Object.entries(quarterlyGroup.weeklyGoals).map(
-                            ([weeklyId, weeklyGroup]) => {
-                              // Extra safety check
-                              if (!weeklyGroup?.goal) {
-                                console.warn('Missing weekly group or goal:', {
-                                  weeklyId,
-                                  weeklyGroup,
-                                });
-                                return null;
-                              }
-
-                              return (
-                                <div
-                                  key={`weekly-preview-${weeklyId}`}
-                                  className="pl-4 space-y-1 py-2"
-                                >
-                                  <h5 className="text-sm text-muted-foreground">
-                                    <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                                      {weeklyGroup.goal.title}
-                                    </div>
-                                  </h5>
-                                  <ul className="space-y-1">
-                                    {weeklyGroup.tasks.map((task, index) => (
-                                      <li
-                                        key={`daily-preview-${task.id}-${index}`}
-                                        className="flex items-center gap-2 pl-4"
-                                      >
-                                        <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                        <div className="text-sm break-words">
-                                          {task.title}
-                                        </div>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              );
-                            }
+                        <div className="font-medium text-sm text-gray-800 break-words">
+                          {goal.title}
+                          {weeklyGoalToCopy && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              (Week {weeklyGoalToCopy.carryOver.numWeeks})
+                            </span>
                           )}
                         </div>
                       </div>
                     );
-                  }
-                )}
+                  })}
+                </div>
+              </div>
+
+              {/* Daily Goals Section (Nested under Quarterly and Weekly) */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Daily Goals</h3>
+                <div className="space-y-4">
+                  {Object.entries(tasksByGoalId).map(
+                    ([quarterlyId, quarterlyGroup]) => {
+                      if (!quarterlyGroup?.goal) return null;
+
+                      return (
+                        <div
+                          key={`quarterly-preview-${quarterlyId}`}
+                          className="space-y-2"
+                        >
+                          <h4 className="font-medium text-sm flex items-center gap-1.5">
+                            {quarterlyGroup.goal.isStarred && (
+                              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                            )}
+                            {quarterlyGroup.goal.isPinned && (
+                              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                            )}
+                            <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                              {quarterlyGroup.goal.title}
+                            </div>
+                          </h4>
+                          <div
+                            className={cn(
+                              'rounded-md overflow-hidden',
+                              quarterlyGroup.goal.isStarred
+                                ? 'bg-yellow-50 border border-yellow-200'
+                                : quarterlyGroup.goal.isPinned
+                                ? 'bg-blue-50 border border-blue-200'
+                                : 'bg-gray-50 border border-gray-200'
+                            )}
+                          >
+                            {Object.entries(quarterlyGroup.weeklyGoals).map(
+                              ([weeklyId, weeklyGroup]) => {
+                                if (!weeklyGroup?.goal) return null;
+
+                                // Find the corresponding weekly goal in weeklyGoalsToCopy
+                                const weeklyGoalToCopy =
+                                  preview.weeklyGoals.find(
+                                    (wg) =>
+                                      wg.carryOver.fromGoal.previousGoalId ===
+                                      weeklyId
+                                  );
+
+                                return (
+                                  <div
+                                    key={`weekly-preview-${weeklyId}`}
+                                    className="pl-4 space-y-1 py-2"
+                                  >
+                                    <h5 className="text-sm text-muted-foreground">
+                                      <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                                        {weeklyGroup.goal.title}
+                                        {weeklyGoalToCopy && (
+                                          <span className="text-xs text-gray-500 ml-2">
+                                            (Week{' '}
+                                            {
+                                              weeklyGoalToCopy.carryOver
+                                                .numWeeks
+                                            }
+                                            )
+                                          </span>
+                                        )}
+                                      </div>
+                                    </h5>
+                                    <ul className="space-y-1">
+                                      {weeklyGroup.tasks.map((task, index) => (
+                                        <li
+                                          key={`daily-preview-${task.id}-${index}`}
+                                          className="flex items-center gap-2 pl-4"
+                                        >
+                                          <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                          <div className="text-sm break-words">
+                                            {task.title}
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
               </div>
             </div>
           </AlertDialogDescription>
