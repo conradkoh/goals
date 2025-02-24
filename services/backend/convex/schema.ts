@@ -1,7 +1,5 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
-import { z } from 'zod';
-import { zodToConvex } from 'convex-helpers/server/zod';
 import { DayOfWeek } from '../src/constants';
 
 const carryOverSchema = v.object({
