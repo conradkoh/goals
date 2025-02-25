@@ -69,6 +69,11 @@ export function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
+        paragraph: {
+          HTMLAttributes: {
+            class: 'min-h-[1.5em] leading-normal',
+          },
+        },
         bulletList: {
           HTMLAttributes: {
             class: 'list-disc ml-4',
