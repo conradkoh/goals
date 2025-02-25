@@ -47,7 +47,7 @@ import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2, History, Pin, Star } from 'lucide-react';
+import { Edit2, History, Pin, Star, Check } from 'lucide-react';
 import { DateTime } from 'luxon';
 import {
   forwardRef,
@@ -286,12 +286,14 @@ export const WeekCardDailyGoals = forwardRef<
           onOpenChange={setIsPastDaysExpanded}
         >
           <CollapsibleMinimalTrigger>
-            <div className="flex justify-between w-full">
+            <div className="flex justify-between w-full items-center">
               <span className="font-medium">Past Days</span>
-              <span className="text-gray-600">
-                {pastDaysSummary.completedTasks}/{pastDaysSummary.totalTasks}{' '}
-                tasks completed
-              </span>
+              <div className="flex items-center text-gray-600 text-sm whitespace-nowrap ml-2">
+                <Check className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                <span>
+                  {pastDaysSummary.completedTasks}/{pastDaysSummary.totalTasks}
+                </span>
+              </div>
             </div>
           </CollapsibleMinimalTrigger>
           <CollapsibleMinimalContent>
