@@ -590,8 +590,10 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
         previousDayOfWeek = DayOfWeek.SUNDAY;
     }
 
-    // Find all incomplete daily goals from the previous day
-    const goalStates = await ctx.db
+    // === STAGE 1: Identify goals to move ===
+
+    // Find all daily goals from the previous day
+    const allGoalStates = await ctx.db
       .query('goalsWeekly')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
@@ -608,14 +610,17 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
       )
       .collect();
 
-    // Get the full details of each task for the preview, filtering out completed ones
-    const tasksWithGoals = await Promise.all(
-      goalStates.map(async (weeklyGoal) => {
+    // Filter to only include incomplete goals
+    const incompleteGoalStates = allGoalStates.filter(
+      (weeklyGoal) => !weeklyGoal.isComplete
+    );
+
+    // Get full details for each incomplete goal
+    const tasksWithFullDetails = await Promise.all(
+      incompleteGoalStates.map(async (weeklyGoal) => {
+        console.log('Incomplete goal state:', weeklyGoal);
         const dailyGoal = await ctx.db.get(weeklyGoal.goalId);
         if (!dailyGoal || dailyGoal.userId !== userId) return null;
-
-        // Skip if this daily goal is complete
-        if (weeklyGoal.isComplete) return null;
 
         const weeklyParent = await ctx.db.get(
           dailyGoal?.parentId as Id<'goals'>
@@ -641,51 +646,58 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
           .first();
 
         return {
-          id: weeklyGoal._id,
-          title: dailyGoal?.title ?? '',
-          details: dailyGoal?.details,
-          weeklyGoal: {
-            id: weeklyParent?._id ?? '',
-            title: weeklyParent?.title ?? '',
-          },
-          quarterlyGoal: {
-            id: quarterlyParent?._id ?? '',
-            title: quarterlyParent?.title ?? '',
-            isStarred: quarterlyGoalWeekly?.isStarred ?? false,
-            isPinned: quarterlyGoalWeekly?.isPinned ?? false,
+          weeklyGoalState: weeklyGoal,
+          details: {
+            id: weeklyGoal._id,
+            title: dailyGoal?.title ?? '',
+            details: dailyGoal?.details,
+            weeklyGoal: {
+              id: weeklyParent?._id ?? '',
+              title: weeklyParent?.title ?? '',
+            },
+            quarterlyGoal: {
+              id: quarterlyParent?._id ?? '',
+              title: quarterlyParent?.title ?? '',
+              isStarred: quarterlyGoalWeekly?.isStarred ?? false,
+              isPinned: quarterlyGoalWeekly?.isPinned ?? false,
+            },
           },
         };
       })
     );
 
-    // Filter out any null values from the tasks array
-    const validTasks = tasksWithGoals.filter(
+    // Filter out any null values
+    const validTasks = tasksWithFullDetails.filter(
       (task): task is NonNullable<typeof task> => task !== null
     );
 
+    // === STAGE 2: Take Action (Preview or Update) ===
+
     // If this is a dry run, return the preview data
     if (dryRun) {
-      return {
+      const dryRunResult = {
         canPull: true as const,
         previousDay: getDayName(previousDayOfWeek),
         targetDay: getDayName(targetDayOfWeek),
-        tasks: validTasks,
+        tasks: validTasks.map((task) => task.details),
       };
+      console.log('Dry run result:', dryRunResult);
+      return dryRunResult;
     }
 
-    // Update each goal to the new day
+    // Not a dry run, perform the actual updates
     await Promise.all(
-      goalStates.map(async (weeklyGoal) => {
-        await ctx.db.patch(weeklyGoal._id, {
+      validTasks.map(async (task) => {
+        await ctx.db.patch(task.weeklyGoalState._id, {
           daily: {
-            ...weeklyGoal.daily,
+            ...task.weeklyGoalState.daily,
             dayOfWeek: targetDayOfWeek,
           },
         });
       })
     );
 
-    return { tasksMovedCount: goalStates.length }; // Return number of tasks moved
+    return { tasksMovedCount: validTasks.length };
   },
 });
 
