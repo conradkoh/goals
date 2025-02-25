@@ -317,7 +317,6 @@ export const WeekCardDailyGoals = forwardRef<
             value={newGoalTitle}
             onChange={setNewGoalTitle}
             onSubmit={handleCreateDailyGoal}
-            disabled={isCreating}
           >
             <div className="flex gap-2 items-start">
               <div className="w-1/3">
@@ -326,7 +325,6 @@ export const WeekCardDailyGoals = forwardRef<
                   onValueChange={(value) =>
                     setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
                   }
-                  disabled={isCreating}
                 >
                   <SelectTrigger className="h-12 text-xs">
                     <SelectValue placeholder="Select day" />
@@ -347,7 +345,6 @@ export const WeekCardDailyGoals = forwardRef<
                   onChange={(value) => setSelectedWeeklyGoalId(value)}
                   placeholder="Select weekly goal"
                   emptyStateMessage="No weekly goals available"
-                  disabled={isCreating}
                 />
                 {isCreating && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -757,7 +754,6 @@ const DailyGoalGroup = ({
                     }
                   }}
                   autoFocus={isInputFocused}
-                  disabled={isCreating}
                 />
               </div>
             </div>
