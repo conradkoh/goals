@@ -27,9 +27,6 @@ export const useGoalActions = () => {
   const updateDailyGoalDayMutation = useMutation(
     api.dashboard.updateDailyGoalDay
   );
-  const moveIncompleteTasksFromPreviousDayMutation = useMutation(
-    api.dashboard.moveIncompleteTasksFromPreviousDay
-  );
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
 
   return useMemo(
@@ -196,31 +193,6 @@ export const useGoalActions = () => {
         });
       },
 
-      moveIncompleteTasksFromPreviousDay: async ({
-        weekNumber,
-        targetDayOfWeek,
-        year,
-        quarter,
-        dryRun,
-      }: {
-        weekNumber: number;
-        targetDayOfWeek: DayOfWeek;
-        year: number;
-        quarter: number;
-        dryRun?: boolean;
-      }) => {
-        const result = await moveIncompleteTasksFromPreviousDayMutation({
-          sessionId,
-          year,
-          quarter,
-          weekNumber,
-          targetDayOfWeek,
-          dryRun,
-        });
-
-        return result;
-      },
-
       moveGoalsFromDay: async ({
         from,
         to,
@@ -263,7 +235,6 @@ export const useGoalActions = () => {
       deleteQuarterlyGoalMutation,
       toggleGoalCompletionMutation,
       updateDailyGoalDayMutation,
-      moveIncompleteTasksFromPreviousDayMutation,
       moveGoalsFromDayMutation,
     ]
   );

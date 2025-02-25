@@ -4,6 +4,10 @@ import { api } from './_generated/api';
 import { Id } from './_generated/dataModel';
 import { DayOfWeek } from '../src/constants';
 import schema from './schema';
+import { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
+
+// Define the test context type based on the return value of convexTest
+type TestCtx = ReturnType<typeof convexTest>;
 
 // Assuming these are the correct depth values based on the original test
 enum GoalDepth {
@@ -14,7 +18,7 @@ enum GoalDepth {
 
 // Helper to create a mock goal based on depth
 const createMockGoal = async (
-  ctx: any,
+  ctx: TestCtx,
   sessionId: Id<'sessions'>,
   depth: GoalDepth,
   parentId?: Id<'goals'>,
@@ -156,7 +160,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Verify the moved goals are in the correct state
     const movedQuarterlyGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g: any) => g._id === quarterlyGoalId
+      (g: GoalWithDetailsAndChildren) => g._id === quarterlyGoalId
     );
     expect(movedQuarterlyGoal?.state).toEqual(
       expect.objectContaining({
@@ -248,7 +252,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Test Case 1: Verify pinned goal state
     const movedPinnedGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g: any) => g._id === pinnedQuarterlyGoalId
+      (g: GoalWithDetailsAndChildren) => g._id === pinnedQuarterlyGoalId
     );
     // Should retain starred state from week 2, ignoring pinned state from week 1
     expect(movedPinnedGoal?.state).toEqual(
@@ -261,7 +265,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Test Case 2: Verify starred goal state
     const movedStarredGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g: any) => g._id === starredQuarterlyGoalId
+      (g: GoalWithDetailsAndChildren) => g._id === starredQuarterlyGoalId
     );
     expect(movedStarredGoal?.state).toEqual(
       expect.objectContaining({

@@ -785,8 +785,7 @@ interface PreviewTask {
 }
 
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
-  const { moveIncompleteTasksFromPreviousDay, moveGoalsFromDay } =
-    useGoalActions();
+  const { moveGoalsFromDay } = useGoalActions();
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
