@@ -785,7 +785,8 @@ interface PreviewTask {
 }
 
 const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
-  const { moveIncompleteTasksFromPreviousDay } = useGoalActions();
+  const { moveIncompleteTasksFromPreviousDay, moveGoalsFromDay } =
+    useGoalActions();
   const { weekNumber } = useWeek();
   const { dateTimestamp } = useDay();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
@@ -798,6 +799,26 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
 
+  // Get previous day of week
+  const getPreviousDayOfWeek = (currentDay: DayOfWeek): DayOfWeek => {
+    switch (currentDay) {
+      case DayOfWeek.TUESDAY:
+        return DayOfWeek.MONDAY;
+      case DayOfWeek.WEDNESDAY:
+        return DayOfWeek.TUESDAY;
+      case DayOfWeek.THURSDAY:
+        return DayOfWeek.WEDNESDAY;
+      case DayOfWeek.FRIDAY:
+        return DayOfWeek.THURSDAY;
+      case DayOfWeek.SATURDAY:
+        return DayOfWeek.FRIDAY;
+      case DayOfWeek.SUNDAY:
+        return DayOfWeek.SATURDAY;
+      default:
+        return DayOfWeek.SUNDAY; // This shouldn't happen for Monday
+    }
+  };
+
   // Format the date string
   const formattedDate = useMemo(() => {
     if (!dateTimestamp) return '';
@@ -807,26 +828,40 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
   const handlePreviewTasks = async () => {
     if (isMonday) return;
     try {
-      const previewData = await moveIncompleteTasksFromPreviousDay({
-        weekNumber,
-        targetDayOfWeek: dayOfWeek,
-        year: DateTime.fromMillis(dateTimestamp).year,
-        quarter: Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3),
+      const year = DateTime.fromMillis(dateTimestamp).year;
+      const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
+      const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
+
+      // Use the new moveGoalsFromDay function
+      const previewData = await moveGoalsFromDay({
+        from: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: previousDayOfWeek,
+        },
+        to: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek,
+        },
         dryRun: true,
+        moveOnlyIncomplete: true,
       });
 
-      // Type guard to check if we have preview data
-      if ('canPull' in previewData && previewData.canPull) {
+      // Check if we have preview data
+      if ('canMove' in previewData && previewData.canMove) {
         setPreview({
-          previousDay: previewData.previousDay,
-          targetDay: previewData.targetDay,
+          previousDay: previewData.sourceDay.name,
+          targetDay: previewData.targetDay.name,
           tasks: previewData.tasks,
         });
         setShowConfirmDialog(true);
-      } else if ('canPull' in previewData && !previewData.canPull) {
+      } else if (!('canMove' in previewData) || !previewData.canMove) {
         toast({
           title: 'Cannot move tasks',
-          description: previewData.reason,
+          description: 'No incomplete tasks to move',
           variant: 'default',
         });
       }
@@ -844,23 +879,41 @@ const DayHeader = ({ dayOfWeek }: { dayOfWeek: DayOfWeek }) => {
     if (isMonday) return;
     try {
       setIsMovingTasks(true);
-      await moveIncompleteTasksFromPreviousDay({
-        weekNumber,
-        targetDayOfWeek: dayOfWeek,
-        year: DateTime.fromMillis(dateTimestamp).year,
-        quarter: Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3),
+      const year = DateTime.fromMillis(dateTimestamp).year;
+      const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
+      const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
+
+      // Use the new moveGoalsFromDay function for the actual move operation
+      await moveGoalsFromDay({
+        from: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: previousDayOfWeek,
+        },
+        to: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek,
+        },
+        dryRun: false,
+        moveOnlyIncomplete: true,
       });
+
       setShowConfirmDialog(false);
       toast({
         title: 'Tasks moved',
-        description: 'Successfully moved tasks from previous day.',
+        description: `Moved incomplete tasks from ${getDayName(
+          previousDayOfWeek
+        )} to ${getDayName(dayOfWeek)}.`,
         variant: 'default',
       });
     } catch (error) {
       console.error('Failed to move tasks:', error);
       toast({
         title: 'Error',
-        description: 'Failed to move tasks from previous day.',
+        description: 'Failed to move tasks.',
         variant: 'destructive',
       });
     } finally {

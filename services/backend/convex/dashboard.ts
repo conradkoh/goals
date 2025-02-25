@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { query, mutation } from './_generated/server';
+import { query, mutation, internalMutation } from './_generated/server';
 import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
@@ -7,6 +7,7 @@ import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { joinPath } from '../src/util/path';
 import { DateTime } from 'luxon';
 import { DayOfWeek, getDayName } from '../src/constants';
+import { api } from './_generated/api';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -532,6 +533,18 @@ export const updateDailyGoalDay = mutation({
   },
 });
 
+type MoveIncompleteTasksPreviewResult = {
+  canPull: boolean;
+  previousDay?: string;
+  targetDay?: string;
+  reason?: string;
+  tasks: any[];
+};
+
+type MoveIncompleteTasksResult = {
+  tasksMovedCount: number;
+};
+
 export const moveIncompleteTasksFromPreviousDay = mutation({
   args: {
     sessionId: v.id('sessions'),
@@ -549,7 +562,10 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     ),
     dryRun: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (
+    ctx,
+    args
+  ): Promise<MoveIncompleteTasksPreviewResult | MoveIncompleteTasksResult> => {
     const { sessionId, year, quarter, weekNumber, targetDayOfWeek, dryRun } =
       args;
     const user = await requireLogin(ctx, sessionId);
@@ -558,7 +574,7 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
     // Validate that we're not trying to pull tasks to Monday (day 1)
     if (targetDayOfWeek === DayOfWeek.MONDAY) {
       return {
-        canPull: false as const,
+        canPull: false,
         reason:
           'Cannot pull tasks to Monday as it is the first day of the week',
         tasks: [],
@@ -590,114 +606,54 @@ export const moveIncompleteTasksFromPreviousDay = mutation({
         previousDayOfWeek = DayOfWeek.SUNDAY;
     }
 
-    // === STAGE 1: Identify goals to move ===
-
-    // Find all daily goals from the previous day
-    const allGoalStates = await ctx.db
-      .query('goalsWeekly')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', year)
-          .eq('quarter', quarter)
-          .eq('weekNumber', weekNumber)
-      )
-      .filter((q) =>
-        q.and(
-          q.neq(q.field('daily'), undefined),
-          q.eq(q.field('daily.dayOfWeek'), previousDayOfWeek)
-        )
-      )
-      .collect();
-
-    // Filter to only include incomplete goals
-    const incompleteGoalStates = allGoalStates.filter(
-      (weeklyGoal) => !weeklyGoal.isComplete
-    );
-
-    // Get full details for each incomplete goal
-    const tasksWithFullDetails = await Promise.all(
-      incompleteGoalStates.map(async (weeklyGoal) => {
-        console.log('Incomplete goal state:', weeklyGoal);
-        const dailyGoal = await ctx.db.get(weeklyGoal.goalId);
-        if (!dailyGoal || dailyGoal.userId !== userId) return null;
-
-        const weeklyParent = await ctx.db.get(
-          dailyGoal?.parentId as Id<'goals'>
-        );
-        if (!weeklyParent || weeklyParent.userId !== userId) return null;
-
-        const quarterlyParent = await ctx.db.get(
-          weeklyParent?.parentId as Id<'goals'>
-        );
-        if (!quarterlyParent || quarterlyParent.userId !== userId) return null;
-
-        // Get the quarterly goal's weekly state for starred/pinned status
-        const quarterlyGoalWeekly = await ctx.db
-          .query('goalsWeekly')
-          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-            q
-              .eq('userId', userId)
-              .eq('year', year)
-              .eq('quarter', quarter)
-              .eq('weekNumber', weekNumber)
-          )
-          .filter((q) => q.eq(q.field('goalId'), quarterlyParent?._id))
-          .first();
-
-        return {
-          weeklyGoalState: weeklyGoal,
-          details: {
-            id: weeklyGoal._id,
-            title: dailyGoal?.title ?? '',
-            details: dailyGoal?.details,
-            weeklyGoal: {
-              id: weeklyParent?._id ?? '',
-              title: weeklyParent?.title ?? '',
-            },
-            quarterlyGoal: {
-              id: quarterlyParent?._id ?? '',
-              title: quarterlyParent?.title ?? '',
-              isStarred: quarterlyGoalWeekly?.isStarred ?? false,
-              isPinned: quarterlyGoalWeekly?.isPinned ?? false,
-            },
-          },
-        };
-      })
-    );
-
-    // Filter out any null values
-    const validTasks = tasksWithFullDetails.filter(
-      (task): task is NonNullable<typeof task> => task !== null
-    );
-
-    // === STAGE 2: Take Action (Preview or Update) ===
-
-    // If this is a dry run, return the preview data
+    // Call the moveGoalsFromDay mutation directly
     if (dryRun) {
-      const dryRunResult = {
-        canPull: true as const,
-        previousDay: getDayName(previousDayOfWeek),
-        targetDay: getDayName(targetDayOfWeek),
-        tasks: validTasks.map((task) => task.details),
+      const moveResult: any = await ctx.runMutation(api.goal.moveGoalsFromDay, {
+        sessionId,
+        from: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: previousDayOfWeek,
+        },
+        to: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: targetDayOfWeek,
+        },
+        dryRun: true,
+        moveOnlyIncomplete: true,
+      });
+
+      // Return in the format expected by existing clients
+      return {
+        canPull: moveResult.canMove,
+        previousDay: moveResult.sourceDay.name,
+        targetDay: moveResult.targetDay.name,
+        tasks: moveResult.tasks || [],
       };
-      console.log('Dry run result:', dryRunResult);
-      return dryRunResult;
+    } else {
+      const moveResult: any = await ctx.runMutation(api.goal.moveGoalsFromDay, {
+        sessionId,
+        from: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: previousDayOfWeek,
+        },
+        to: {
+          year,
+          quarter,
+          weekNumber,
+          dayOfWeek: targetDayOfWeek,
+        },
+        dryRun: false,
+        moveOnlyIncomplete: true,
+      });
+
+      return { tasksMovedCount: moveResult.tasksMoved };
     }
-
-    // Not a dry run, perform the actual updates
-    await Promise.all(
-      validTasks.map(async (task) => {
-        await ctx.db.patch(task.weeklyGoalState._id, {
-          daily: {
-            ...task.weeklyGoalState.daily,
-            dayOfWeek: targetDayOfWeek,
-          },
-        });
-      })
-    );
-
-    return { tasksMovedCount: validTasks.length };
   },
 });
 

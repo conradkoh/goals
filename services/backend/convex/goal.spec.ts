@@ -156,7 +156,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Verify the moved goals are in the correct state
     const movedQuarterlyGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g) => g._id === quarterlyGoalId
+      (g: any) => g._id === quarterlyGoalId
     );
     expect(movedQuarterlyGoal?.state).toEqual(
       expect.objectContaining({
@@ -248,7 +248,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Test Case 1: Verify pinned goal state
     const movedPinnedGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g) => g._id === pinnedQuarterlyGoalId
+      (g: any) => g._id === pinnedQuarterlyGoalId
     );
     // Should retain starred state from week 2, ignoring pinned state from week 1
     expect(movedPinnedGoal?.state).toEqual(
@@ -261,7 +261,7 @@ describe('moveGoalsFromWeek', () => {
 
     // Test Case 2: Verify starred goal state
     const movedStarredGoal = weekTwoGoals.tree.quarterlyGoals.find(
-      (g) => g._id === starredQuarterlyGoalId
+      (g: any) => g._id === starredQuarterlyGoalId
     );
     expect(movedStarredGoal?.state).toEqual(
       expect.objectContaining({
@@ -270,5 +270,268 @@ describe('moveGoalsFromWeek', () => {
         isPinned: false,
       })
     );
+  });
+});
+
+describe('moveGoalsFromDay', () => {
+  test('moving incomplete daily goals from one day to another', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+
+    // Create test data
+    const quarterlyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Quarterly
+    );
+    const weeklyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Weekly,
+      quarterlyGoalId
+    );
+
+    // Create a daily goal for Monday
+    const mondayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Monday task',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    // Create a completed daily goal for Monday
+    const completedMondayGoalId = await ctx.mutation(
+      api.dashboard.createDailyGoal,
+      {
+        sessionId,
+        title: 'Completed Monday task',
+        parentId: weeklyGoalId,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.MONDAY,
+      }
+    );
+
+    // Mark the second goal as complete
+    await ctx.mutation(api.dashboard.toggleGoalCompletion, {
+      sessionId,
+      goalId: completedMondayGoalId,
+      weekNumber: 1,
+      isComplete: true,
+    });
+
+    // Test dry run preview
+    const previewResult = await ctx.mutation(api.goal.moveGoalsFromDay, {
+      sessionId,
+      from: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      to: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.TUESDAY,
+      },
+      dryRun: true,
+    });
+
+    // Verify that only the incomplete goal is in the preview
+    expect(previewResult.canMove).toBe(true);
+    expect(previewResult.tasks?.length).toBe(1);
+    expect(previewResult.tasks?.[0].title).toBe('Monday task');
+
+    // Test the actual move
+    const moveResult = await ctx.mutation(api.goal.moveGoalsFromDay, {
+      sessionId,
+      from: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      to: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.TUESDAY,
+      },
+      dryRun: false,
+    });
+
+    expect(moveResult.tasksMoved).toBe(1);
+
+    // Verify the task was moved to Tuesday
+    const movedTask = await ctx.query(api.dashboard.useDailyGoal, {
+      sessionId,
+      goalId: mondayGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.TUESDAY,
+    });
+
+    expect(movedTask).not.toBeNull();
+    expect(movedTask?.title).toBe('Monday task');
+
+    // Verify the completed task is still on Monday
+    const completedTask = await ctx.query(api.dashboard.useDailyGoal, {
+      sessionId,
+      goalId: completedMondayGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    expect(completedTask).not.toBeNull();
+    expect(completedTask?.title).toBe('Completed Monday task');
+  });
+
+  test('moving daily goals to a different week', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+
+    // Create test data
+    const quarterlyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Quarterly
+    );
+    const weeklyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Weekly,
+      quarterlyGoalId
+    );
+
+    // Create a daily goal for Monday in week 1
+    const mondayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Week 1 Monday task',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    // Test moving to week 2 Tuesday
+    const moveResult = await ctx.mutation(api.goal.moveGoalsFromDay, {
+      sessionId,
+      from: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      to: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 2,
+        dayOfWeek: DayOfWeek.TUESDAY,
+      },
+      dryRun: false,
+    });
+
+    expect(moveResult.tasksMoved).toBe(1);
+
+    // Verify the task was moved to week 2 Tuesday
+    const movedTask = await ctx.query(api.dashboard.useDailyGoal, {
+      sessionId,
+      goalId: mondayGoalId,
+      weekNumber: 2,
+      dayOfWeek: DayOfWeek.TUESDAY,
+    });
+
+    expect(movedTask).not.toBeNull();
+    expect(movedTask?.title).toBe('Week 1 Monday task');
+    expect(movedTask?.weekNumber).toBe(2);
+    expect(movedTask?.dayOfWeek).toBe(DayOfWeek.TUESDAY);
+  });
+
+  test('move all goals including completed ones', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+
+    // Create test data
+    const quarterlyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Quarterly
+    );
+    const weeklyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Weekly,
+      quarterlyGoalId
+    );
+
+    // Create a daily goal for Wednesday
+    const wednesdayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Wednesday task',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.WEDNESDAY,
+    });
+
+    // Create a completed daily goal for Wednesday
+    const completedWednesdayGoalId = await ctx.mutation(
+      api.dashboard.createDailyGoal,
+      {
+        sessionId,
+        title: 'Completed Wednesday task',
+        parentId: weeklyGoalId,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.WEDNESDAY,
+      }
+    );
+
+    // Mark the second goal as complete
+    await ctx.mutation(api.dashboard.toggleGoalCompletion, {
+      sessionId,
+      goalId: completedWednesdayGoalId,
+      weekNumber: 1,
+      isComplete: true,
+    });
+
+    // Test moving all goals, including completed ones
+    const moveResult = await ctx.mutation(api.goal.moveGoalsFromDay, {
+      sessionId,
+      from: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.WEDNESDAY,
+      },
+      to: {
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        dayOfWeek: DayOfWeek.THURSDAY,
+      },
+      dryRun: false,
+      moveOnlyIncomplete: false,
+    });
+
+    expect(moveResult.tasksMoved).toBe(2);
+
+    // Verify both tasks were moved to Thursday
+    const movedTask1 = await ctx.query(api.dashboard.useDailyGoal, {
+      sessionId,
+      goalId: wednesdayGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.THURSDAY,
+    });
+
+    const movedTask2 = await ctx.query(api.dashboard.useDailyGoal, {
+      sessionId,
+      goalId: completedWednesdayGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.THURSDAY,
+    });
+
+    expect(movedTask1).not.toBeNull();
+    expect(movedTask2).not.toBeNull();
+    expect(movedTask1?.title).toBe('Wednesday task');
+    expect(movedTask2?.title).toBe('Completed Wednesday task');
+    expect(movedTask2?.isComplete).toBe(true);
   });
 });
