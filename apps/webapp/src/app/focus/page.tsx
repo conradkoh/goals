@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -24,17 +24,59 @@ import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 
 const FocusPage = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const year = parseInt(searchParams.get('year') ?? '2025');
   const quarter = parseInt(searchParams.get('quarter') ?? '1') as 1 | 2 | 3 | 4;
   const initialWeek = parseInt(searchParams.get('week') ?? '8');
+  const viewParam = searchParams.get('view') ?? 'daily';
   const currentDateTime = useCurrentDateTime();
 
-  const router = useRouter();
-  const [viewMode, setViewMode] = useState<ViewMode>('daily');
+  // Ensure viewParam is a valid ViewMode
+  const initialViewMode = (
+    viewParam === 'weekly' ? 'weekly' : 'daily'
+  ) as ViewMode;
+
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   const [selectedWeek, setSelectedWeek] = useState(initialWeek);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
     return currentDateTime.weekday as DayOfWeek;
   });
+
+  // Update URL when parameters change
+  const updateUrl = (params: {
+    week?: number;
+    view?: ViewMode;
+    day?: DayOfWeek;
+  }) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+
+    if (params.week !== undefined) {
+      newParams.set('week', params.week.toString());
+    }
+
+    if (params.view !== undefined) {
+      newParams.set('view', params.view);
+    }
+
+    if (params.day !== undefined) {
+      newParams.set('day', params.day.toString());
+    }
+
+    router.push(`/focus?${newParams.toString()}`);
+  };
+
+  // Update viewMode when URL changes
+  useEffect(() => {
+    if (viewParam === 'weekly' || viewParam === 'daily') {
+      setViewMode(viewParam);
+    }
+  }, [viewParam]);
+
+  // Update selectedWeek when URL changes
+  useEffect(() => {
+    setSelectedWeek(initialWeek);
+  }, [initialWeek]);
 
   const { weeks, startWeek, endWeek, currentWeekNumber, isCurrentQuarter } =
     useQuarterWeekInfo(year, quarter);
@@ -61,17 +103,23 @@ const FocusPage = () => {
     if (isAtMinBound) return;
 
     if (viewMode === 'weekly') {
-      setSelectedWeek(selectedWeek - 1);
+      const newWeek = selectedWeek - 1;
+      setSelectedWeek(newWeek);
+      updateUrl({ week: newWeek });
       return;
     }
 
     if (selectedDay === DayOfWeek.MONDAY) {
       // If we're on Monday and not at min week, go to previous week's Sunday
-      setSelectedWeek(selectedWeek - 1);
+      const newWeek = selectedWeek - 1;
+      setSelectedWeek(newWeek);
       setSelectedDay(DayOfWeek.SUNDAY);
+      updateUrl({ week: newWeek, day: DayOfWeek.SUNDAY });
     } else {
       // Otherwise just go to previous day
-      setSelectedDay((selectedDay - 1) as DayOfWeek);
+      const newDay = (selectedDay - 1) as DayOfWeek;
+      setSelectedDay(newDay);
+      updateUrl({ day: newDay });
     }
   };
 
@@ -79,26 +127,35 @@ const FocusPage = () => {
     if (isAtMaxBound) return;
 
     if (viewMode === 'weekly') {
-      setSelectedWeek(selectedWeek + 1);
+      const newWeek = selectedWeek + 1;
+      setSelectedWeek(newWeek);
+      updateUrl({ week: newWeek });
       return;
     }
 
     if (selectedDay === DayOfWeek.SUNDAY) {
       // If we're on Sunday and not at max week, go to next week's Monday
-      setSelectedWeek(selectedWeek + 1);
+      const newWeek = selectedWeek + 1;
+      setSelectedWeek(newWeek);
       setSelectedDay(DayOfWeek.MONDAY);
+      updateUrl({ week: newWeek, day: DayOfWeek.MONDAY });
     } else {
       // Otherwise just go to next day
-      setSelectedDay((selectedDay + 1) as DayOfWeek);
+      const newDay = (selectedDay + 1) as DayOfWeek;
+      setSelectedDay(newDay);
+      updateUrl({ day: newDay });
     }
   };
 
   const handleJumpToCurrent = () => {
     if (viewMode === 'daily') {
+      const currentDay = currentDateTime.weekday as DayOfWeek;
       setSelectedWeek(currentWeekNumber);
-      setSelectedDay(currentDateTime.weekday as DayOfWeek);
+      setSelectedDay(currentDay);
+      updateUrl({ week: currentWeekNumber, day: currentDay });
     } else {
       setSelectedWeek(currentWeekNumber);
+      updateUrl({ week: currentWeekNumber });
     }
   };
 
@@ -109,10 +166,17 @@ const FocusPage = () => {
   const handleNavigateToDay = (weekNumber: number, dayOfWeek: DayOfWeek) => {
     setSelectedWeek(weekNumber);
     setSelectedDay(dayOfWeek);
+    updateUrl({ week: weekNumber, day: dayOfWeek });
   };
 
   const handleNavigateToWeek = (weekNumber: number) => {
     setSelectedWeek(weekNumber);
+    updateUrl({ week: weekNumber });
+  };
+
+  const handleViewModeChange = (newViewMode: ViewMode) => {
+    setViewMode(newViewMode);
+    updateUrl({ view: newViewMode });
   };
 
   const renderLoadingSkeleton = () => (
@@ -171,10 +235,7 @@ const FocusPage = () => {
               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-lg font-semibold">Focus Mode</h2>
-                  <Select
-                    value={viewMode}
-                    onValueChange={(value: ViewMode) => setViewMode(value)}
-                  >
+                  <Select value={viewMode} onValueChange={handleViewModeChange}>
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Select view" />
                     </SelectTrigger>
