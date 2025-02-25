@@ -7,6 +7,10 @@ export type WeekGoalsTree = {
   quarterlyGoals: GoalWithDetailsAndChildren[];
   weekNumber: number;
   allGoals: GoalWithDetailsAndChildren[];
+  stats?: {
+    totalTasks: number;
+    completedTasks: number;
+  };
 };
 
 type Goal = Doc<'goals'>;
@@ -77,10 +81,13 @@ export const getWeekGoalsTree = async (
     };
   });
 
+  // We've removed the stats calculation as it's handled on the frontend
+
   return {
     quarterlyGoals,
     weekNumber,
     allGoals: Object.values(index),
+    // stats field is now optional and not included
   };
 };
 

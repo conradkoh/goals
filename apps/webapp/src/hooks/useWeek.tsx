@@ -24,6 +24,10 @@ interface WeekContextValue {
     date: string;
     dateTimestamp: number;
   }>;
+  stats: {
+    totalTasks: number;
+    completedTasks: number;
+  };
   createWeeklyGoalOptimistic: (
     parentId: Id<'goals'>,
     title: string,
@@ -115,12 +119,21 @@ export const WeekProviderWithoutDashboard = ({
     // Convert map back to array
     const quarterlyGoals = Array.from(quarterlyGoalsMap.values());
 
+    // Always calculate stats on the frontend now that backend stats are removed
+    const stats = {
+      totalTasks: dailyGoalsWithStatus.length,
+      completedTasks: dailyGoalsWithStatus.filter(
+        (goal) => goal.state?.isComplete
+      ).length,
+    };
+
     return {
       quarterlyGoals,
       weeklyGoals: weeklyGoalsWithStatus,
       dailyGoals: dailyGoalsWithStatus,
       weekNumber: weekData.weekNumber,
       days: weekData.days,
+      stats,
       createWeeklyGoalOptimistic: async (
         parentId: Id<'goals'>,
         title: string,

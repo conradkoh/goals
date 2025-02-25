@@ -90,7 +90,8 @@ export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
 >(({ weekNumber, year, showOnlyToday, selectedDayOverride }, ref) => {
-  const { days, weeklyGoals, createDailyGoalOptimistic } = useWeek();
+  const { days, weeklyGoals, createDailyGoalOptimistic, dailyGoals } =
+    useWeek();
   const currentDateTime = useCurrentDateTime();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isPastDaysExpanded, setIsPastDaysExpanded] = useState(false);
@@ -164,27 +165,46 @@ export const WeekCardDailyGoals = forwardRef<
       futureDays: future,
       pastDays: past,
     };
-  }, [days, weekNumber, selectedDayOverride, showOnlyToday]);
+  }, [
+    days,
+    weekNumber,
+    selectedDayOverride,
+    showOnlyToday,
+    currentDateTime.weekNumber,
+    currentDateTime.weekday,
+  ]);
 
   // Calculate past days summary
   const pastDaysSummary = useMemo(() => {
+    // If there are no past days, return zeros
+    if (!pastDays || pastDays.length === 0) {
+      return { totalTasks: 0, completedTasks: 0 };
+    }
+
+    // Always calculate based on past days only
     let totalTasks = 0;
     let completedTasks = 0;
 
-    pastDays.forEach((day) => {
-      day.dailyGoalsView?.weeklyGoals.forEach(({ weeklyGoal }) => {
-        const dailyGoals = weeklyGoal.children.filter(
-          (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === day.dayOfWeek
-        );
-        totalTasks += dailyGoals.length;
-        completedTasks += dailyGoals.filter(
-          (goal) => goal.state?.isComplete
-        ).length;
+    // Get past days of week numbers
+    const pastDayNumbers = pastDays.map((day) => day.dayOfWeek);
+
+    // Find daily goals for past days only
+    if (dailyGoals && dailyGoals.length > 0) {
+      dailyGoals.forEach((goal) => {
+        if (
+          goal.state?.daily &&
+          pastDayNumbers.includes(goal.state.daily.dayOfWeek)
+        ) {
+          totalTasks++;
+          if (goal.state.isComplete) {
+            completedTasks++;
+          }
+        }
       });
-    });
+    }
 
     return { totalTasks, completedTasks };
-  }, [pastDays]);
+  }, [pastDays, dailyGoals]);
 
   // Get the available weekly goals for the selected day, sorted appropriately
   const availableWeeklyGoals = useMemo(() => {
