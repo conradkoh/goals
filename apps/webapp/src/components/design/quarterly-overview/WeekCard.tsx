@@ -63,16 +63,18 @@ export const WeekCard = ({
       >
         <div
           className={cn(
-            'border-b p-4 flex-shrink-0',
+            'border-b p-3 md:p-4 flex-shrink-0',
             isCurrentWeek && 'bg-blue-50'
           )}
         >
           <div className="flex items-baseline justify-between">
-            <div className="flex items-baseline gap-2">
+            <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
               <h3 className="font-semibold">{weekLabel}</h3>
-              <span className="text-sm text-gray-500">{mondayDate}</span>
+              <span className="text-xs md:text-sm text-gray-500">
+                {mondayDate}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               <Button
                 variant="ghost"
                 size="icon"
@@ -131,7 +133,9 @@ export const WeekCard = ({
             </div>
           </div>
         </div>
-        <div className="flex-1 p-4 space-y-6 min-h-0">{children}</div>
+        <div className="flex-1 p-3 md:p-4 space-y-4 md:space-y-6 min-h-0 overflow-y-auto">
+          {children}
+        </div>
       </div>
 
       {dialog}

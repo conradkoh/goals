@@ -116,7 +116,7 @@ export const QuarterlyOverviewScreen2 = () => {
                 onFocusClick={() => handleFocusClick(week.weekNumber)}
                 weekData={weekDataWithTypedDays}
               >
-                <div className="space-y-2">
+                <div className="space-y-2 md:space-y-4">
                   <WeekCardSection title="💭 Quarterly Goals">
                     <WeekCardQuarterlyGoals
                       weekNumber={week.weekNumber}
@@ -159,11 +159,11 @@ interface WeekCardSectionProps {
 
 const WeekCardSection = ({ title, children }: WeekCardSectionProps) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       <div className="flex justify-between items-center px-2 py-1 rounded-md">
-        <h3 className="font-semibold">{title}</h3>
+        <h3 className="font-semibold text-sm md:text-base">{title}</h3>
       </div>
-      <div className="space-y-2">{children}</div>
+      <div className="space-y-1.5 md:space-y-2">{children}</div>
     </div>
   );
 };
