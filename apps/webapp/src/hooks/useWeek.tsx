@@ -109,6 +109,11 @@ export const WeekProviderWithoutDashboard = ({
       }
     });
 
+    // Sort weekly goals by name within each quarterly goal
+    quarterlyGoalsMap.forEach((quarterlyGoal) => {
+      quarterlyGoal.children.sort((a, b) => a.title.localeCompare(b.title));
+    });
+
     // Distribute daily goals to their parent weekly goals
     weeklyGoalsWithStatus.forEach((weeklyGoal) => {
       weeklyGoal.children = dailyGoalsWithStatus.filter(
