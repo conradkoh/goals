@@ -9,6 +9,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { Edit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface GoalEditPopoverProps {
   title: string;
@@ -27,6 +28,7 @@ export function GoalEditPopover({
   const [title, setTitle] = useState(initialTitle);
   const [details, setDetails] = useState(initialDetails ?? '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Sync title with external data when it changes or popover opens
   useEffect(() => {
@@ -53,11 +55,36 @@ export function GoalEditPopover({
 
     try {
       setIsSubmitting(true);
-      await onSave(title.trim(), details);
+      // Optimistically close the dialog immediately
       setIsOpen(false);
+      // Then perform the save operation
+      await onSave(title.trim(), details);
     } catch (error) {
       console.error('Failed to save goal:', error);
-      // TODO: Add proper error handling UI
+
+      // Show error toast with retry option
+      toast({
+        title: 'Failed to save goal',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
+        variant: 'destructive',
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              // Try again with the same data
+              onSave(title.trim(), details).catch((e) =>
+                console.error('Retry failed:', e)
+              );
+            }}
+          >
+            Retry
+          </Button>
+        ),
+      });
     } finally {
       setIsSubmitting(false);
     }

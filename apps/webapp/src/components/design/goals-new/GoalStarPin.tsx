@@ -44,7 +44,7 @@ export const GoalStarPin = ({
           />
         </div>
         <ActionButton
-          icon={<Star className="h-3.5 w-3.5" />}
+          icon={<Star className="h-3.5 w-3.5 fill-yellow-500" />}
           onClick={onStarred}
           className="text-yellow-500 hover:text-yellow-600"
         />
@@ -63,7 +63,7 @@ export const GoalStarPin = ({
           />
         </div>
         <ActionButton
-          icon={<Pin className="h-3.5 w-3.5" />}
+          icon={<Pin className="h-3.5 w-3.5 fill-blue-500" />}
           onClick={onPinned}
           className="text-blue-500 hover:text-blue-600"
         />
