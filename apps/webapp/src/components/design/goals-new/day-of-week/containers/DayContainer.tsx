@@ -1,7 +1,7 @@
 import { DayOfWeek } from '@/lib/constants';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DayHeader } from '../components/DayHeader';
-import { GoalGroupContainer } from './GoalGroupContainer';
+import { DailyGoalGroup } from '../../DailyGoalList';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 
 export interface DayContainerProps {
@@ -20,6 +20,9 @@ export interface DayContainerProps {
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (weeklyGoalId: Id<'goals'>, title: string) => Promise<void>;
   isCreating?: Record<string, boolean>;
+  sortDailyGoals?: (
+    goals: GoalWithDetailsAndChildren[]
+  ) => GoalWithDetailsAndChildren[];
 }
 
 export const DayContainer = ({
@@ -31,6 +34,7 @@ export const DayContainer = ({
   onDeleteGoal,
   onCreateGoal,
   isCreating = {},
+  sortDailyGoals,
 }: DayContainerProps) => {
   return (
     <div className="space-y-2 mb-1 border-b border-gray-100 last:border-b-0">
@@ -41,7 +45,7 @@ export const DayContainer = ({
       />
       <div>
         {weeklyGoalsWithQuarterly.map(({ weeklyGoal, quarterlyGoal }) => (
-          <GoalGroupContainer
+          <DailyGoalGroup
             key={weeklyGoal._id}
             weeklyGoal={weeklyGoal}
             quarterlyGoal={quarterlyGoal}
@@ -50,6 +54,7 @@ export const DayContainer = ({
             onDeleteGoal={onDeleteGoal}
             onCreateGoal={(title) => onCreateGoal(weeklyGoal._id, title)}
             isCreating={isCreating[weeklyGoal._id]}
+            sortGoals={sortDailyGoals}
           />
         ))}
       </div>

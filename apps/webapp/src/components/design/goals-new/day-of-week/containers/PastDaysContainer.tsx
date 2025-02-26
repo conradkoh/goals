@@ -19,6 +19,7 @@ export interface PastDaysContainerProps {
   isCreating?: Record<string, boolean>;
   completedTasks: number;
   totalTasks: number;
+  sortDailyGoals?: DayContainerProps['sortDailyGoals'];
 }
 
 export const PastDaysContainer = ({
@@ -29,6 +30,7 @@ export const PastDaysContainer = ({
   isCreating = {},
   completedTasks,
   totalTasks,
+  sortDailyGoals,
 }: PastDaysContainerProps) => {
   return (
     <CollapsibleMinimal>
@@ -52,6 +54,7 @@ export const PastDaysContainer = ({
             onDeleteGoal={onDeleteGoal}
             onCreateGoal={onCreateGoal}
             isCreating={isCreating}
+            sortDailyGoals={sortDailyGoals}
           />
         ))}
       </CollapsibleMinimalContent>

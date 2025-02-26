@@ -170,13 +170,21 @@ export const WeekCardDailyGoals = forwardRef<
     if (!selectedDay) return [];
 
     return weeklyGoals.sort((a, b) => {
-      if (a.state?.isStarred && !b.state?.isStarred) return -1;
-      if (!a.state?.isStarred && b.state?.isStarred) return 1;
-      if (a.state?.isPinned && !b.state?.isPinned) return -1;
-      if (!a.state?.isPinned && b.state?.isPinned) return 1;
       return a.title.localeCompare(b.title);
     });
   }, [days, selectedDayOfWeek, weeklyGoals]);
+
+  // Function to sort daily goals
+  const sortDailyGoals = (goals: GoalWithDetailsAndChildren[]) => {
+    return [...goals].sort((a, b) => {
+      // First sort by completion status
+      if (!a.state?.isComplete && b.state?.isComplete) return -1;
+      if (a.state?.isComplete && !b.state?.isComplete) return 1;
+
+      // Finally sort alphabetically
+      return a.title.localeCompare(b.title);
+    });
+  };
 
   // Auto-select first goal when list changes and nothing is selected
   useEffect(() => {
@@ -227,7 +235,10 @@ export const WeekCardDailyGoals = forwardRef<
   }));
 
   // Prepare data for each day section
-  const prepareWeeklyGoalsForDay = (day: DayData) => {
+  // Weekly goals are the same across all days
+  const prepareWeeklyGoalsForDay = () => {
+    // Get all weekly goals with valid parents
+    // The actual filtering by day happens in the DailyGoalGroup component
     return weeklyGoals
       .filter((weeklyGoal) => {
         if (!weeklyGoal.parentId) {
@@ -296,7 +307,7 @@ export const WeekCardDailyGoals = forwardRef<
             dayOfWeek: day.dayOfWeek,
             weekNumber,
             dateTimestamp: day.dateTimestamp,
-            weeklyGoalsWithQuarterly: prepareWeeklyGoalsForDay(day),
+            weeklyGoalsWithQuarterly: prepareWeeklyGoalsForDay(),
           }))}
           onUpdateGoalTitle={handleUpdateGoalTitle}
           onDeleteGoal={handleDeleteGoal}
@@ -304,6 +315,7 @@ export const WeekCardDailyGoals = forwardRef<
           isCreating={isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}}
           completedTasks={pastDaysSummary.completedTasks}
           totalTasks={pastDaysSummary.totalTasks}
+          sortDailyGoals={sortDailyGoals}
         />
       )}
       {!showOnlyToday && (
@@ -358,13 +370,14 @@ export const WeekCardDailyGoals = forwardRef<
             dayOfWeek={currentDay.dayOfWeek}
             weekNumber={weekNumber}
             dateTimestamp={currentDay.dateTimestamp}
-            weeklyGoalsWithQuarterly={prepareWeeklyGoalsForDay(currentDay)}
+            weeklyGoalsWithQuarterly={prepareWeeklyGoalsForDay()}
             onUpdateGoalTitle={handleUpdateGoalTitle}
             onDeleteGoal={handleDeleteGoal}
             onCreateGoal={handleCreateGoal}
             isCreating={
               isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
             }
+            sortDailyGoals={sortDailyGoals}
           />
         )}
 
@@ -375,13 +388,14 @@ export const WeekCardDailyGoals = forwardRef<
               dayOfWeek={day.dayOfWeek}
               weekNumber={weekNumber}
               dateTimestamp={day.dateTimestamp}
-              weeklyGoalsWithQuarterly={prepareWeeklyGoalsForDay(day)}
+              weeklyGoalsWithQuarterly={prepareWeeklyGoalsForDay()}
               onUpdateGoalTitle={handleUpdateGoalTitle}
               onDeleteGoal={handleDeleteGoal}
               onCreateGoal={handleCreateGoal}
               isCreating={
                 isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
               }
+              sortDailyGoals={sortDailyGoals}
             />
           ))}
       </div>
