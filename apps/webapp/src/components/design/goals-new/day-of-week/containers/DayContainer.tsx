@@ -1,8 +1,8 @@
 import { DayOfWeek } from '@/lib/constants';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DayHeader } from '../components/DayHeader';
-import { DailyGoalGroup } from '../../DailyGoalList';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+import { DailyGoalGroup } from '@/components/design/goals-new/daily-goal/DailyGoalGroup';
 
 export interface DayContainerProps {
   dayOfWeek: DayOfWeek;

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailyGoalItem } from './daily-goal/DailyGoalItem';
+import { DailyGoalItem } from './DailyGoalItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { CreateGoalInput } from './CreateGoalInput';
+import { CreateGoalInput } from '../CreateGoalInput';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { DayOfWeekType } from '@/lib/constants';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2, Pin, Star } from 'lucide-react';
-import { GoalEditPopover } from './GoalEditPopover';
+import { GoalEditPopover } from '../GoalEditPopover';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -317,21 +317,3 @@ export const DailyGoalGroupContainer = ({
     </div>
   );
 };
-
-export interface DailyGoalGroupProps {
-  weeklyGoal: GoalWithDetailsAndChildren;
-  quarterlyGoal: GoalWithDetailsAndChildren;
-  dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (title: string) => Promise<void>;
-  isCreating?: boolean;
-  className?: string;
-  sortGoals?: (
-    goals: GoalWithDetailsAndChildren[]
-  ) => GoalWithDetailsAndChildren[];
-}

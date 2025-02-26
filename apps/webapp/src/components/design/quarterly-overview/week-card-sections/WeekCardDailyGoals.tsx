@@ -181,7 +181,48 @@ export const WeekCardDailyGoals = forwardRef<
       if (!a.state?.isComplete && b.state?.isComplete) return -1;
       if (a.state?.isComplete && !b.state?.isComplete) return 1;
 
-      // Finally sort alphabetically
+      // Get parent weekly goals
+      const weeklyGoalA = weeklyGoals.find((g) => g._id === a.parentId);
+      const weeklyGoalB = weeklyGoals.find((g) => g._id === b.parentId);
+
+      // Get parent quarterly goals
+      const quarterlyGoalA = weeklyGoalA
+        ? quarterlyGoals.find((g) => g._id === weeklyGoalA.parentId)
+        : null;
+      const quarterlyGoalB = weeklyGoalB
+        ? quarterlyGoals.find((g) => g._id === weeklyGoalB.parentId)
+        : null;
+
+      // Sort by quarterly goal priority
+      if (quarterlyGoalA && quarterlyGoalB) {
+        // Sort by starred status
+        if (quarterlyGoalA.state?.isStarred && !quarterlyGoalB.state?.isStarred)
+          return -1;
+        if (!quarterlyGoalA.state?.isStarred && quarterlyGoalB.state?.isStarred)
+          return 1;
+
+        // Sort by pinned status
+        if (quarterlyGoalA.state?.isPinned && !quarterlyGoalB.state?.isPinned)
+          return -1;
+        if (!quarterlyGoalA.state?.isPinned && quarterlyGoalB.state?.isPinned)
+          return 1;
+
+        // If same priority, sort by quarterly goal title
+        const quarterlyCompare = quarterlyGoalA.title.localeCompare(
+          quarterlyGoalB.title
+        );
+        if (quarterlyCompare !== 0) return quarterlyCompare;
+
+        // If same quarterly goal, sort by weekly goal title
+        if (weeklyGoalA && weeklyGoalB) {
+          const weeklyCompare = weeklyGoalA.title.localeCompare(
+            weeklyGoalB.title
+          );
+          if (weeklyCompare !== 0) return weeklyCompare;
+        }
+      }
+
+      // Finally sort by daily goal title
       return a.title.localeCompare(b.title);
     });
   };
