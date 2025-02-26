@@ -62,6 +62,7 @@ import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
 import { GoalSelector } from '../../goals-new/GoalSelector';
 import { Spinner } from '@/components/ui/spinner';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { DailyGoalListContainer } from '../../goals-new/DailyGoalListContainer';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -582,8 +583,6 @@ const DailyGoalGroup = ({
   onNewGoalTitleChange,
   isCreating,
 }: DailyGoalGroupProps) => {
-  const [isHovering, setIsHovering] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const dailyGoals = weeklyGoal.children.filter(
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
   );
@@ -591,16 +590,6 @@ const DailyGoalGroup = ({
   // Calculate if all daily goals are complete
   const isSoftComplete =
     dailyGoals.length > 0 && dailyGoals.every((goal) => goal.state?.isComplete);
-
-  const handleSubmit = () => {
-    onCreateGoal();
-    // Don't hide the input after submission to allow for multiple entries
-  };
-
-  const handleEscape = () => {
-    setIsInputFocused(false);
-    onNewGoalTitleChange(''); // Clear the input
-  };
 
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
@@ -717,48 +706,17 @@ const DailyGoalGroup = ({
             </Popover>
           </div>
         </div>
-        <div className="space-y-1">
-          {dailyGoals.map((dailyGoal) => (
-            <DailyGoalItem
-              key={dailyGoal._id}
-              goal={dailyGoal}
-              onUpdateTitle={onUpdateGoalTitle}
-              onDelete={onDeleteGoal}
-            />
-          ))}
-          <div
-            className="pt-1"
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => !isInputFocused && setIsHovering(false)}
-          >
-            <div
-              className={cn(
-                'transition-opacity duration-150',
-                isInputFocused || isHovering
-                  ? 'opacity-100 pointer-events-auto'
-                  : 'opacity-0 pointer-events-none'
-              )}
-            >
-              <div className="relative">
-                <CreateGoalInput
-                  placeholder="Add a task..."
-                  value={newGoalTitle}
-                  onChange={onNewGoalTitleChange}
-                  onSubmit={handleSubmit}
-                  onEscape={handleEscape}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => {
-                    if (!newGoalTitle) {
-                      setIsInputFocused(false);
-                      setIsHovering(false);
-                    }
-                  }}
-                  autoFocus={isInputFocused}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <DailyGoalListContainer
+          goals={dailyGoals}
+          onUpdateGoalTitle={onUpdateGoalTitle}
+          onDeleteGoal={onDeleteGoal}
+          onCreateGoal={async (title) => {
+            onNewGoalTitleChange(title);
+            await onCreateGoal();
+          }}
+          createInputPlaceholder="Add a task..."
+          isCreating={isCreating}
+        />
       </div>
     </div>
   );
