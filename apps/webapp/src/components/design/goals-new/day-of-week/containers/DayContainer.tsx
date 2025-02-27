@@ -1,27 +1,24 @@
-import { DayOfWeek } from '@/lib/constants';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DayHeader } from '../components/DayHeader';
-import { Id } from '@services/backend/convex/_generated/dataModel';
 import { DailyGoalItem } from '@/components/design/goals-new/daily-goal/DailyGoalItem';
-import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
-import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
-import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
-import { AddTaskInput } from '../components/AddTaskInput';
-import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
-import { Edit2 } from 'lucide-react';
+import { GoalEditPopover } from '@/components/design/goals-new/GoalEditPopover';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover';
-import { GoalEditPopover } from '@/components/design/goals-new/GoalEditPopover';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Button } from '@/components/ui/button';
-import { DeleteGoalIconButton } from '@/components/design/goals-new/DeleteGoalIconButton';
-import { useGoalActions } from '@/hooks/useGoalActions';
-import { Checkbox } from '@/components/ui/checkbox';
+import { GoalWithOptimisticStatus } from '@/hooks/useWeek';
+import { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2 } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useMemo } from 'react';
+import { AddTaskInput } from '../components/AddTaskInput';
+import { DayHeader } from '../components/DayHeader';
+import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
+import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
