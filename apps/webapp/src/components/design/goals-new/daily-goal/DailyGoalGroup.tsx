@@ -78,67 +78,26 @@ export const DailyGoalGroup = ({
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : ''
+          isSoftComplete ? 'bg-green-50' : '',
+          isPinned ? 'bg-blue-50' : '',
+          isStarred && !isPinned ? 'bg-yellow-50' : '',
+          !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
         )}
       >
         <div>
-          <div className="flex items-center justify-between">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-                >
-                  <span className="break-words w-full whitespace-pre-wrap">
-                    {weeklyGoal.title}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-4">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold break-words flex-1 mr-2">
-                      {weeklyGoal.title}
-                    </h3>
-                    <GoalEditPopover
-                      title={weeklyGoal.title}
-                      details={weeklyGoal.details}
-                      onSave={async (title, details) => {
-                        await onUpdateGoalTitle(weeklyGoal._id, title, details);
-                      }}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
-                  </div>
-                  {weeklyGoal.details && (
-                    <SafeHTML
-                      html={weeklyGoal.details}
-                      className="mt-2 text-sm"
-                    />
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+          <div className="flex items-center gap-1.5">
             {isStarred && (
-              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
             )}
             {isPinned && (
-              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
             )}
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+                  className="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
                 >
                   <span className="break-words w-full whitespace-pre-wrap">
                     {quarterlyGoal.title}
@@ -182,6 +141,49 @@ export const DailyGoalGroup = ({
               </PopoverContent>
             </Popover>
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+              >
+                <span className="break-words w-full whitespace-pre-wrap text-gray-600">
+                  {weeklyGoal.title}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-4">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <h3 className="font-semibold break-words flex-1 mr-2">
+                    {weeklyGoal.title}
+                  </h3>
+                  <GoalEditPopover
+                    title={weeklyGoal.title}
+                    details={weeklyGoal.details}
+                    onSave={async (title, details) => {
+                      await onUpdateGoalTitle(weeklyGoal._id, title, details);
+                    }}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                </div>
+                {weeklyGoal.details && (
+                  <SafeHTML
+                    html={weeklyGoal.details}
+                    className="mt-2 text-sm"
+                  />
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2 mt-2">

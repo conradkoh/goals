@@ -303,7 +303,23 @@ export const WeekCardDailyGoals = forwardRef<
           quarterlyGoal: parentQuarterlyGoal,
         };
       })
-      .filter((item): item is NonNullable<typeof item> => item !== null);
+      .filter((item): item is NonNullable<typeof item> => item !== null)
+      .sort((a, b) => {
+        // Sort by starred status first
+        const aStarred = a.quarterlyGoal.state?.isStarred ?? false;
+        const bStarred = b.quarterlyGoal.state?.isStarred ?? false;
+        if (aStarred && !bStarred) return -1;
+        if (!aStarred && bStarred) return 1;
+
+        // Then sort by pinned status
+        const aPinned = a.quarterlyGoal.state?.isPinned ?? false;
+        const bPinned = b.quarterlyGoal.state?.isPinned ?? false;
+        if (aPinned && !bPinned) return -1;
+        if (!aPinned && bPinned) return 1;
+
+        // Finally sort by title
+        return a.quarterlyGoal.title.localeCompare(b.quarterlyGoal.title);
+      });
   };
 
   const handleUpdateGoalTitle = (

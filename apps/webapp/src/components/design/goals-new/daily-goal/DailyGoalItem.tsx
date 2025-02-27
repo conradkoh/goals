@@ -71,7 +71,7 @@ export const DailyGoalItem = ({
   };
 
   return (
-    <div className="group px-2 py-1 hover:bg-gray-50/50 rounded-sm">
+    <div className="group hover:bg-gray-50/50 rounded-sm">
       <div className="text-sm flex items-center gap-2 group/title">
         <Checkbox
           checked={isComplete}
