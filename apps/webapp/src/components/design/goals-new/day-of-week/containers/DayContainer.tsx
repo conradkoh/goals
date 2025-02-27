@@ -183,7 +183,7 @@ const QuarterlyGoalSection = ({
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
 
-  const { weeklyGoalsForChecklist, weeklyGoalsWithChildrenInDay } =
+  const { weeklyGoalsForChecklist, weeklyGoalsForQuarterlySection } =
     useMemo(() => {
       return {
         weeklyGoalsForChecklist: weeklyGoals.filter((weekly) => {
@@ -195,7 +195,12 @@ const QuarterlyGoalSection = ({
           const completedAt = weekly.state.completedAt
             ? DateTime.fromMillis(weekly.state?.completedAt)
             : null;
-          // exclusion condition 2: weekly goal is complete in a day other than the current day
+
+          //exclusion condition 2: weekly goal is complete but no completion date (for legacy records)
+          if (weekly.state?.isComplete && !completedAt) {
+            return false;
+          }
+          // exclusion condition 3: weekly goal is complete in a day other than the current day
           const isCompleteInOtherDays =
             weekly.state?.isComplete &&
             completedAt &&
@@ -206,16 +211,19 @@ const QuarterlyGoalSection = ({
 
           return true;
         }),
-        weeklyGoalsWithChildrenInDay: weeklyGoals.filter((weekly) =>
-          weekly.children.some(
-            (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
-          )
-        ),
+        weeklyGoalsForQuarterlySection:
+          mode === 'focus'
+            ? weeklyGoals.filter((weekly) =>
+                weekly.children.some(
+                  (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
+                )
+              )
+            : weeklyGoals,
       };
     }, [weeklyGoals, dayOfWeek]);
   if (
     mode === 'focus' &&
-    weeklyGoalsWithChildrenInDay.length === 0 &&
+    weeklyGoalsForQuarterlySection.length === 0 &&
     weeklyGoalsForChecklist.length === 0
   ) {
     return null; //do not render the quarter section at all
@@ -262,7 +270,7 @@ const QuarterlyGoalSection = ({
         )}
 
         <div className="space-y-2 ml-1">
-          {weeklyGoalsWithChildrenInDay.map((weeklyGoal) => (
+          {weeklyGoalsForQuarterlySection.map((weeklyGoal) => (
             <WeeklyGoalSection
               key={weeklyGoal._id.toString()}
               weeklyGoal={weeklyGoal}
