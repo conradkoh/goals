@@ -276,19 +276,8 @@ export const WeekCardDailyGoals = forwardRef<
 
   // Prepare data for each day section, memoized to avoid unnecessary recalculations
   // This returns weekly goals sorted by priority for the day containers
-  const preparedWeeklyGoalsForDay = useMemo(() => {
-    // Create a set of weekly goal IDs that have at least one daily goal child
-    const weeklyGoalsWithChildren = new Set<Id<'goals'>>();
-
-    if (dailyGoals && dailyGoals.length > 0) {
-      dailyGoals.forEach((dailyGoal) => {
-        if (dailyGoal.parentId) {
-          weeklyGoalsWithChildren.add(dailyGoal.parentId);
-        }
-      });
-    }
-
-    // Get all weekly goals with valid parents and with at least one daily goal child
+  const weeklyGoalsWithQuarterly = useMemo(() => {
+    // Get all weekly goals with valid parents
     const validWeeklyGoals = [...weeklyGoals]
       .filter((weeklyGoal) => {
         // Check if weekly goal has a valid parent
@@ -296,12 +285,6 @@ export const WeekCardDailyGoals = forwardRef<
           console.debug(`Weekly goal ${weeklyGoal._id} has no parentId`);
           return false;
         }
-
-        // Only include weekly goals that have at least one daily goal child
-        if (!weeklyGoalsWithChildren.has(weeklyGoal._id)) {
-          return false;
-        }
-
         return true;
       })
       .map((weeklyGoal) => {
@@ -369,7 +352,7 @@ export const WeekCardDailyGoals = forwardRef<
         return a.title.localeCompare(b.title);
       })
       .flatMap(([, group]) => group);
-  }, [weeklyGoals, quarterlyGoals, dailyGoals]);
+  }, [weeklyGoals, quarterlyGoals]);
 
   const handleUpdateGoalTitle = (
     goalId: Id<'goals'>,
@@ -413,7 +396,7 @@ export const WeekCardDailyGoals = forwardRef<
             dayOfWeek: day.dayOfWeek,
             weekNumber,
             dateTimestamp: day.dateTimestamp,
-            weeklyGoalsWithQuarterly: preparedWeeklyGoalsForDay,
+            weeklyGoalsWithQuarterly: weeklyGoalsWithQuarterly,
           }))}
           onUpdateGoalTitle={handleUpdateGoalTitle}
           onDeleteGoal={handleDeleteGoal}
@@ -474,7 +457,7 @@ export const WeekCardDailyGoals = forwardRef<
             dayOfWeek={currentDay.dayOfWeek}
             weekNumber={weekNumber}
             dateTimestamp={currentDay.dateTimestamp}
-            weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
+            weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
             onUpdateGoalTitle={handleUpdateGoalTitle}
             onDeleteGoal={handleDeleteGoal}
             onCreateGoal={handleCreateGoal}
@@ -492,7 +475,7 @@ export const WeekCardDailyGoals = forwardRef<
             dayOfWeek={day.dayOfWeek}
             weekNumber={weekNumber}
             dateTimestamp={day.dateTimestamp}
-            weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
+            weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
             onUpdateGoalTitle={handleUpdateGoalTitle}
             onDeleteGoal={handleDeleteGoal}
             onCreateGoal={handleCreateGoal}

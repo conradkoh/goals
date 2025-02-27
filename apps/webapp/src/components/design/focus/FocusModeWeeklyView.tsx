@@ -6,22 +6,6 @@ import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 
-interface PreviewTask {
-  id: string;
-  title: string;
-  details?: string;
-  quarterlyGoal: {
-    id: string;
-    title: string;
-    isStarred?: boolean;
-    isPinned?: boolean;
-  };
-  weeklyGoal: {
-    id: string;
-    title: string;
-  };
-}
-
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
   year: number;
@@ -90,6 +74,7 @@ export const FocusModeWeeklyView = ({
             weekNumber={weekNumber}
             year={year}
             quarter={quarter}
+            mode="plan"
           />
         </WeekProviderWithoutDashboard>
       </div>

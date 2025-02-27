@@ -19,6 +19,7 @@ import { AddTaskInput } from '../components/AddTaskInput';
 import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
 import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
+import { ConditionalRender } from '@/components/util/ConditionalRender';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
@@ -77,8 +78,7 @@ const WeeklyGoalSection = ({
   );
 
   const hasDailyGoals = dailyGoals.length > 0;
-  const shouldShowAddTask =
-    mode === 'plan' || (mode === 'focus' && hasDailyGoals);
+  const shouldShowAddTask = mode === 'plan' || hasDailyGoals;
 
   return (
     <div>
@@ -182,12 +182,25 @@ const QuarterlyGoalSection = ({
 
   const { weeklyGoalsForChecklist, weeklyGoalsForQuarterlySection } =
     useMemo(() => {
+      // In plan mode, show all weekly goals
+      if (mode === 'plan') {
+        return {
+          weeklyGoalsForChecklist: weeklyGoals.filter((weekly) => {
+            if (!weekly.state) return false;
+            // Only show goals without children in the checklist
+            return weekly.children.length === 0;
+          }),
+          weeklyGoalsForQuarterlySection: weeklyGoals,
+        };
+      }
+
+      // In focus mode, filter weekly goals
       return {
         weeklyGoalsForChecklist: weeklyGoals.filter((weekly) => {
           if (!weekly.state) return false;
           // exclusion condition 1: weekly goal has children in the week
           const hasChildrenInWeek = weekly.children.length > 0;
-          if (hasChildrenInWeek) return false; //if there are children, immediately filter out
+          if (hasChildrenInWeek) return false;
 
           const completedAt = weekly.state.completedAt
             ? DateTime.fromMillis(weekly.state?.completedAt)
@@ -208,22 +221,21 @@ const QuarterlyGoalSection = ({
 
           return true;
         }),
-        weeklyGoalsForQuarterlySection:
-          mode === 'focus'
-            ? weeklyGoals.filter((weekly) =>
-                weekly.children.some(
-                  (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
-                )
-              )
-            : weeklyGoals,
+        weeklyGoalsForQuarterlySection: weeklyGoals.filter((weekly) =>
+          weekly.children.some(
+            (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
+          )
+        ),
       };
-    }, [weeklyGoals, dayOfWeek]);
+    }, [weeklyGoals, mode, dayOfWeek]);
+
+  // In focus mode, only show if there are goals to display
   if (
     mode === 'focus' &&
     weeklyGoalsForQuarterlySection.length === 0 &&
     weeklyGoalsForChecklist.length === 0
   ) {
-    return null; //do not render the quarter section at all
+    return null;
   }
 
   // Calculate if all daily goals are complete
@@ -251,20 +263,22 @@ const QuarterlyGoalSection = ({
           goal={quarterlyGoal}
           onUpdateTitle={onUpdateTitle}
         />
-
-        {mode === 'focus' && weeklyGoalsForChecklist.length > 0 && (
-          <div className="ml-1 mb-3 space-y-1 border-b border-gray-100 pb-2">
-            <div className="text-xs text-gray-500 mb-1">Weekly Goals</div>
-            {weeklyGoalsForChecklist.map((weeklyGoal) => (
-              <WeeklyGoalItem
-                key={weeklyGoal._id.toString()}
-                goal={weeklyGoal}
-                onUpdateTitle={onUpdateTitle}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
-        )}
+        <ConditionalRender condition={mode === 'focus'}>
+          {/* this adhoc checklist only renders in the focus mode */}
+          {weeklyGoalsForChecklist.length > 0 && (
+            <div className="ml-1 mb-3 space-y-1 border-b border-gray-100 pb-2">
+              <div className="text-xs text-gray-500 mb-1">Weekly Goals</div>
+              {weeklyGoalsForChecklist.map((weeklyGoal) => (
+                <WeeklyGoalItem
+                  key={weeklyGoal._id.toString()}
+                  goal={weeklyGoal}
+                  onUpdateTitle={onUpdateTitle}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          )}
+        </ConditionalRender>
 
         <div className="space-y-2 ml-1">
           {weeklyGoalsForQuarterlySection.map((weeklyGoal) => (
@@ -320,28 +334,29 @@ export const DayContainer = ({
   sortDailyGoals,
   mode = 'plan',
 }: DayContainerProps) => {
-  // Group weekly goals by quarterly goal ID
-  const groupedByQuarterly: Record<
+  // First, get unique quarterly goals and their associated weekly goals
+  const quarterlyGoalsMap = new Map<
     string,
     {
       quarterlyGoal: GoalWithDetailsAndChildren;
       weeklyGoals: GoalWithDetailsAndChildren[];
     }
-  > = {};
+  >();
 
+  // Group by quarterly goals first
   weeklyGoalsWithQuarterly.forEach(({ weeklyGoal, quarterlyGoal }) => {
     const quarterlyId = quarterlyGoal._id.toString();
-    if (!groupedByQuarterly[quarterlyId]) {
-      groupedByQuarterly[quarterlyId] = {
+    if (!quarterlyGoalsMap.has(quarterlyId)) {
+      quarterlyGoalsMap.set(quarterlyId, {
         quarterlyGoal,
         weeklyGoals: [],
-      };
+      });
     }
-    groupedByQuarterly[quarterlyId].weeklyGoals.push(weeklyGoal);
+    quarterlyGoalsMap.get(quarterlyId)!.weeklyGoals.push(weeklyGoal);
   });
 
   // Sort the quarterly goals: starred first, then pinned, then the rest
-  const sortedQuarterlyEntries = Object.entries(groupedByQuarterly).sort(
+  const sortedQuarterlyEntries = Array.from(quarterlyGoalsMap.entries()).sort(
     ([, a], [, b]) => {
       const aIsStarred = a.quarterlyGoal.state?.isStarred ?? false;
       const aIsPinned = a.quarterlyGoal.state?.isPinned ?? false;
