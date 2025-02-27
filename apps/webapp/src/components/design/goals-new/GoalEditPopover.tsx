@@ -135,7 +135,7 @@ export function GoalEditPopover({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full"
+            className="w-full text-base"
             placeholder="Enter title..."
           />
         </div>
