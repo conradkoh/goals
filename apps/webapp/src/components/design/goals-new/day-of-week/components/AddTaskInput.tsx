@@ -20,7 +20,6 @@ export const AddTaskInput = ({
 
   return (
     <div
-      className="ml-2"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => {
         if (!newGoalTitle) {

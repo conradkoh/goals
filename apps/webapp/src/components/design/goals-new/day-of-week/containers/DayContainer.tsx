@@ -123,10 +123,10 @@ const WeeklyGoalSection = ({
         </PopoverContent>
       </Popover>
 
-      <div className="ml-1 space-y-1">
+      <div className="space-y-1">
         {(sortDailyGoals ? sortDailyGoals(dailyGoals) : dailyGoals).map(
           (dailyGoal) => (
-            <div key={dailyGoal._id.toString()}>
+            <div key={dailyGoal._id.toString()} className="ml-1">
               <DailyGoalItem
                 goal={dailyGoal}
                 onUpdateTitle={onUpdateTitle}
