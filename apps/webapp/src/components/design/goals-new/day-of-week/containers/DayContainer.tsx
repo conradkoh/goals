@@ -14,7 +14,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { AddTaskInput } from '../components/AddTaskInput';
 import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
@@ -73,12 +73,35 @@ const WeeklyGoalSection = ({
   onCreateGoal,
   isCreating,
 }: WeeklyGoalSectionProps) => {
-  const dailyGoals = weeklyGoal.children.filter(
-    (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+  // Memoize filtered daily goals to prevent unnecessary recalculations
+  const dailyGoals = useMemo(
+    () =>
+      weeklyGoal.children.filter(
+        (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+      ),
+    [weeklyGoal.children, dayOfWeek]
   );
 
-  const hasDailyGoals = dailyGoals.length > 0;
-  const shouldShowAddTask = mode === 'plan' || hasDailyGoals;
+  // Memoize derived values
+  const hasDailyGoals = useMemo(() => dailyGoals.length > 0, [dailyGoals]);
+  const shouldShowAddTask = useMemo(
+    () => mode === 'plan' || hasDailyGoals,
+    [mode, hasDailyGoals]
+  );
+
+  // Memoize the sorted daily goals
+  const sortedDailyGoals = useMemo(
+    () => (sortDailyGoals ? sortDailyGoals(dailyGoals) : dailyGoals),
+    [sortDailyGoals, dailyGoals]
+  );
+
+  // Memoize the save handler to prevent unnecessary re-renders
+  const handleSave = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateTitle(weeklyGoal._id, title, details);
+    },
+    [onUpdateTitle, weeklyGoal._id]
+  );
 
   return (
     <div>
@@ -102,9 +125,7 @@ const WeeklyGoalSection = ({
               <GoalEditPopover
                 title={weeklyGoal.title}
                 details={weeklyGoal.details}
-                onSave={async (title, details) => {
-                  await onUpdateTitle(weeklyGoal._id, title, details);
-                }}
+                onSave={handleSave}
                 trigger={
                   <Button
                     variant="ghost"
@@ -124,17 +145,15 @@ const WeeklyGoalSection = ({
       </Popover>
 
       <div className="space-y-1">
-        {(sortDailyGoals ? sortDailyGoals(dailyGoals) : dailyGoals).map(
-          (dailyGoal) => (
-            <div key={dailyGoal._id.toString()} className="ml-1">
-              <DailyGoalItem
-                goal={dailyGoal}
-                onUpdateTitle={onUpdateTitle}
-                onDelete={onDelete}
-              />
-            </div>
-          )
-        )}
+        {sortedDailyGoals.map((dailyGoal) => (
+          <div key={dailyGoal._id.toString()} className="ml-1">
+            <DailyGoalItem
+              goal={dailyGoal}
+              onUpdateTitle={onUpdateTitle}
+              onDelete={onDelete}
+            />
+          </div>
+        ))}
 
         {shouldShowAddTask && (
           <AddTaskInput
@@ -177,8 +196,15 @@ const QuarterlyGoalSection = ({
   onCreateGoal,
   isCreating,
 }: QuarterlyGoalSectionProps) => {
-  const isStarred = quarterlyGoal.state?.isStarred ?? false;
-  const isPinned = quarterlyGoal.state?.isPinned ?? false;
+  const isStarred = useMemo(
+    () => quarterlyGoal.state?.isStarred ?? false,
+    [quarterlyGoal.state?.isStarred]
+  );
+
+  const isPinned = useMemo(
+    () => quarterlyGoal.state?.isPinned ?? false,
+    [quarterlyGoal.state?.isPinned]
+  );
 
   const { weeklyGoalsForChecklist, weeklyGoalsForQuarterlySection } =
     useMemo(() => {
@@ -229,24 +255,41 @@ const QuarterlyGoalSection = ({
       };
     }, [weeklyGoals, mode, dayOfWeek]);
 
-  // In focus mode, only show if there are goals to display
-  if (
-    mode === 'focus' &&
-    weeklyGoalsForQuarterlySection.length === 0 &&
-    weeklyGoalsForChecklist.length === 0
-  ) {
+  // Calculate if all daily goals are complete
+  const allDailyGoals = useMemo(
+    () =>
+      weeklyGoals.flatMap((weekly) =>
+        weekly.children.filter(
+          (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
+        )
+      ),
+    [weeklyGoals, dayOfWeek]
+  );
+
+  const isSoftComplete = useMemo(
+    () =>
+      allDailyGoals.length > 0 &&
+      allDailyGoals.every((goal) => goal.state?.isComplete),
+    [allDailyGoals]
+  );
+
+  // Check if there are goals to display in focus mode
+  const shouldRender = useMemo(() => {
+    if (mode !== 'focus') return true;
+    return (
+      weeklyGoalsForQuarterlySection.length > 0 ||
+      weeklyGoalsForChecklist.length > 0
+    );
+  }, [
+    mode,
+    weeklyGoalsForQuarterlySection.length,
+    weeklyGoalsForChecklist.length,
+  ]);
+
+  // Early return if nothing to render
+  if (!shouldRender) {
     return null;
   }
-
-  // Calculate if all daily goals are complete
-  const allDailyGoals = weeklyGoals.flatMap((weekly) =>
-    weekly.children.filter(
-      (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
-    )
-  );
-  const isSoftComplete =
-    allDailyGoals.length > 0 &&
-    allDailyGoals.every((goal) => goal.state?.isComplete);
 
   return (
     <div className="mb-2">
@@ -334,42 +377,71 @@ export const DayContainer = ({
   sortDailyGoals,
   mode = 'plan',
 }: DayContainerProps) => {
-  // First, get unique quarterly goals and their associated weekly goals
-  const quarterlyGoalsMap = new Map<
-    string,
-    {
-      quarterlyGoal: GoalWithDetailsAndChildren;
-      weeklyGoals: GoalWithDetailsAndChildren[];
-    }
-  >();
+  // Memoize the callback functions to prevent unnecessary re-renders
+  const handleUpdateGoalTitle = useCallback(
+    (goalId: Id<'goals'>, title: string, details?: string) => {
+      return onUpdateGoalTitle(goalId, title, details);
+    },
+    [onUpdateGoalTitle]
+  );
 
-  // Group by quarterly goals first
-  weeklyGoalsWithQuarterly.forEach(({ weeklyGoal, quarterlyGoal }) => {
-    const quarterlyId = quarterlyGoal._id.toString();
-    if (!quarterlyGoalsMap.has(quarterlyId)) {
-      quarterlyGoalsMap.set(quarterlyId, {
-        quarterlyGoal,
-        weeklyGoals: [],
-      });
-    }
-    quarterlyGoalsMap.get(quarterlyId)!.weeklyGoals.push(weeklyGoal);
-  });
+  const handleDeleteGoal = useCallback(
+    (goalId: Id<'goals'>) => {
+      return onDeleteGoal(goalId);
+    },
+    [onDeleteGoal]
+  );
+
+  const handleCreateGoal = useCallback(
+    (weeklyGoalId: Id<'goals'>, title: string) => {
+      return onCreateGoal(weeklyGoalId, title);
+    },
+    [onCreateGoal]
+  );
+
+  // First, get unique quarterly goals and their associated weekly goals
+  // Memoize the quarterly goals map to prevent unnecessary recalculations
+  const quarterlyGoalsMap = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        quarterlyGoal: GoalWithDetailsAndChildren;
+        weeklyGoals: GoalWithDetailsAndChildren[];
+      }
+    >();
+
+    // Group by quarterly goals first
+    weeklyGoalsWithQuarterly.forEach(({ weeklyGoal, quarterlyGoal }) => {
+      const quarterlyId = quarterlyGoal._id.toString();
+      if (!map.has(quarterlyId)) {
+        map.set(quarterlyId, {
+          quarterlyGoal,
+          weeklyGoals: [],
+        });
+      }
+      map.get(quarterlyId)!.weeklyGoals.push(weeklyGoal);
+    });
+
+    return map;
+  }, [weeklyGoalsWithQuarterly]);
 
   // Sort the quarterly goals: starred first, then pinned, then the rest
-  const sortedQuarterlyEntries = Array.from(quarterlyGoalsMap.entries()).sort(
-    ([, a], [, b]) => {
-      const aIsStarred = a.quarterlyGoal.state?.isStarred ?? false;
-      const aIsPinned = a.quarterlyGoal.state?.isPinned ?? false;
-      const bIsStarred = b.quarterlyGoal.state?.isStarred ?? false;
-      const bIsPinned = b.quarterlyGoal.state?.isPinned ?? false;
+  const sortedQuarterlyEntries = useMemo(
+    () =>
+      Array.from(quarterlyGoalsMap.entries()).sort(([, a], [, b]) => {
+        const aIsStarred = a.quarterlyGoal.state?.isStarred ?? false;
+        const aIsPinned = a.quarterlyGoal.state?.isPinned ?? false;
+        const bIsStarred = b.quarterlyGoal.state?.isStarred ?? false;
+        const bIsPinned = b.quarterlyGoal.state?.isPinned ?? false;
 
-      if (aIsStarred && !bIsStarred) return -1;
-      if (!aIsStarred && bIsStarred) return 1;
-      if (aIsPinned && !bIsPinned) return -1;
-      if (!aIsPinned && bIsPinned) return 1;
+        if (aIsStarred && !bIsStarred) return -1;
+        if (!aIsStarred && bIsStarred) return 1;
+        if (aIsPinned && !bIsPinned) return -1;
+        if (!aIsPinned && bIsPinned) return 1;
 
-      return a.quarterlyGoal.title.localeCompare(b.quarterlyGoal.title);
-    }
+        return a.quarterlyGoal.title.localeCompare(b.quarterlyGoal.title);
+      }),
+    [quarterlyGoalsMap]
   );
 
   return (
@@ -389,9 +461,9 @@ export const DayContainer = ({
               dayOfWeek={dayOfWeek}
               mode={mode}
               sortDailyGoals={sortDailyGoals}
-              onUpdateTitle={onUpdateGoalTitle}
-              onDelete={onDeleteGoal}
-              onCreateGoal={onCreateGoal}
+              onUpdateTitle={handleUpdateGoalTitle}
+              onDelete={handleDeleteGoal}
+              onCreateGoal={handleCreateGoal}
               isCreating={isCreating}
             />
           )

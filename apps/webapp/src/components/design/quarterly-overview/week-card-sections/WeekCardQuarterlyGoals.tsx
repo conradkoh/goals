@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useWeek } from '@/hooks/useWeek';
@@ -53,7 +53,7 @@ export const WeekCardQuarterlyGoals = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleCreateGoal = async () => {
+  const handleCreateGoal = useCallback(async () => {
     if (!newGoalTitle.trim()) return;
     try {
       // When not expanded, create the goal as pinned by default
@@ -70,66 +70,80 @@ export const WeekCardQuarterlyGoals = ({
       console.error('Failed to create quarterly goal:', error);
       // TODO: Add proper error handling UI
     }
-  };
+  }, [
+    createQuarterlyGoal,
+    newGoalTitle,
+    weekNumber,
+    year,
+    quarter,
+    isExpanded,
+  ]);
 
-  const handleToggleStatus = async (
-    goalId: Id<'goals'>,
-    isStarred: boolean,
-    isPinned: boolean
-  ) => {
-    try {
-      await updateQuarterlyGoalStatus({
-        weekNumber,
-        year,
-        quarter,
-        goalId,
-        isStarred,
-        isPinned,
-      });
-    } catch (error) {
-      console.error('Failed to update goal status:', error);
-      // TODO: Add proper error handling UI
-    }
-  };
+  const handleToggleStatus = useCallback(
+    async (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => {
+      try {
+        await updateQuarterlyGoalStatus({
+          weekNumber,
+          year,
+          quarter,
+          goalId,
+          isStarred,
+          isPinned,
+        });
+      } catch (error) {
+        console.error('Failed to update goal status:', error);
+        // TODO: Add proper error handling UI
+      }
+    },
+    [updateQuarterlyGoalStatus, weekNumber, year, quarter]
+  );
 
-  const handleUpdateTitle = async (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => {
-    try {
-      await updateQuarterlyGoalTitle({
-        goalId,
-        title,
-        details,
-      });
-    } catch (error) {
-      console.error('Failed to update goal title:', error);
-      throw error;
-    }
-  };
+  const handleUpdateTitle = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
+      try {
+        await updateQuarterlyGoalTitle({
+          goalId,
+          title,
+          details,
+        });
+      } catch (error) {
+        console.error('Failed to update goal title:', error);
+        throw error;
+      }
+    },
+    [updateQuarterlyGoalTitle]
+  );
 
-  const handleDeleteGoal = async (goalId: Id<'goals'>) => {
-    try {
-      await deleteQuarterlyGoal({
-        goalId,
-      });
-    } catch (error) {
-      console.error('Failed to delete goal:', error);
-      throw error;
-    }
-  };
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      try {
+        await deleteQuarterlyGoal({
+          goalId,
+        });
+      } catch (error) {
+        console.error('Failed to delete goal:', error);
+        throw error;
+      }
+    },
+    [deleteQuarterlyGoal]
+  );
 
   // Sort the goals before rendering
-  const sortedGoals = sortGoals(quarterlyGoals);
+  const sortedGoals = useMemo(
+    () => sortGoals(quarterlyGoals),
+    [quarterlyGoals]
+  );
 
   // Split goals into important (starred/pinned) and other
-  const importantGoals = sortedGoals.filter(
-    (goal) => goal.state?.isStarred || goal.state?.isPinned
-  );
-  const otherGoals = sortedGoals.filter(
-    (goal) => !goal.state?.isStarred && !goal.state?.isPinned
-  );
+  const { importantGoals, otherGoals } = useMemo(() => {
+    const important = sortedGoals.filter(
+      (goal) => goal.state?.isStarred || goal.state?.isPinned
+    );
+    const other = sortedGoals.filter(
+      (goal) => !goal.state?.isStarred && !goal.state?.isPinned
+    );
+    return { importantGoals: important, otherGoals: other };
+  }, [sortedGoals]);
 
   return (
     <div className="space-y-2">

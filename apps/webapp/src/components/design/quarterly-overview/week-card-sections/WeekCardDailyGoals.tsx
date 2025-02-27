@@ -20,6 +20,7 @@ import {
   useImperativeHandle,
   useMemo,
   useState,
+  useCallback,
 } from 'react';
 import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
 import {
@@ -174,57 +175,66 @@ export const WeekCardDailyGoals = forwardRef<
   }, [weeklyGoals]);
 
   // Function to sort daily goals
-  const sortDailyGoals = (goals: GoalWithDetailsAndChildren[]) => {
-    return [...goals].sort((a, b) => {
-      // First sort by completion status
-      if (!a.state?.isComplete && b.state?.isComplete) return -1;
-      if (a.state?.isComplete && !b.state?.isComplete) return 1;
+  const sortDailyGoals = useCallback(
+    (goals: GoalWithDetailsAndChildren[]) => {
+      return [...goals].sort((a, b) => {
+        // First sort by completion status
+        if (!a.state?.isComplete && b.state?.isComplete) return -1;
+        if (a.state?.isComplete && !b.state?.isComplete) return 1;
 
-      // Get parent weekly goals
-      const weeklyGoalA = weeklyGoals.find((g) => g._id === a.parentId);
-      const weeklyGoalB = weeklyGoals.find((g) => g._id === b.parentId);
+        // Get parent weekly goals
+        const weeklyGoalA = weeklyGoals.find((g) => g._id === a.parentId);
+        const weeklyGoalB = weeklyGoals.find((g) => g._id === b.parentId);
 
-      // Get parent quarterly goals
-      const quarterlyGoalA = weeklyGoalA
-        ? quarterlyGoals.find((g) => g._id === weeklyGoalA.parentId)
-        : null;
-      const quarterlyGoalB = weeklyGoalB
-        ? quarterlyGoals.find((g) => g._id === weeklyGoalB.parentId)
-        : null;
+        // Get parent quarterly goals
+        const quarterlyGoalA = weeklyGoalA
+          ? quarterlyGoals.find((g) => g._id === weeklyGoalA.parentId)
+          : null;
+        const quarterlyGoalB = weeklyGoalB
+          ? quarterlyGoals.find((g) => g._id === weeklyGoalB.parentId)
+          : null;
 
-      // Sort by quarterly goal priority
-      if (quarterlyGoalA && quarterlyGoalB) {
-        // Sort by starred status
-        if (quarterlyGoalA.state?.isStarred && !quarterlyGoalB.state?.isStarred)
-          return -1;
-        if (!quarterlyGoalA.state?.isStarred && quarterlyGoalB.state?.isStarred)
-          return 1;
+        // Sort by quarterly goal priority
+        if (quarterlyGoalA && quarterlyGoalB) {
+          // Sort by starred status
+          if (
+            quarterlyGoalA.state?.isStarred &&
+            !quarterlyGoalB.state?.isStarred
+          )
+            return -1;
+          if (
+            !quarterlyGoalA.state?.isStarred &&
+            quarterlyGoalB.state?.isStarred
+          )
+            return 1;
 
-        // Sort by pinned status
-        if (quarterlyGoalA.state?.isPinned && !quarterlyGoalB.state?.isPinned)
-          return -1;
-        if (!quarterlyGoalA.state?.isPinned && quarterlyGoalB.state?.isPinned)
-          return 1;
+          // Sort by pinned status
+          if (quarterlyGoalA.state?.isPinned && !quarterlyGoalB.state?.isPinned)
+            return -1;
+          if (!quarterlyGoalA.state?.isPinned && quarterlyGoalB.state?.isPinned)
+            return 1;
 
-        // If same priority, sort by quarterly goal title
-        const quarterlyCompare = quarterlyGoalA.title.localeCompare(
-          quarterlyGoalB.title
-        );
-        if (quarterlyCompare !== 0) return quarterlyCompare;
-
-        // If same quarterly goal, sort by weekly goal title
-        if (weeklyGoalA && weeklyGoalB) {
-          const weeklyCompare = weeklyGoalA.title.localeCompare(
-            weeklyGoalB.title
+          // If same priority, sort by quarterly goal title
+          const quarterlyCompare = quarterlyGoalA.title.localeCompare(
+            quarterlyGoalB.title
           );
-          if (weeklyCompare !== 0) return weeklyCompare;
-        }
-      }
+          if (quarterlyCompare !== 0) return quarterlyCompare;
 
-      // Finally sort by daily goal title
-      return a.title.localeCompare(b.title);
-    });
-  };
+          // If same quarterly goal, sort by weekly goal title
+          if (weeklyGoalA && weeklyGoalB) {
+            const weeklyCompare = weeklyGoalA.title.localeCompare(
+              weeklyGoalB.title
+            );
+            if (weeklyCompare !== 0) return weeklyCompare;
+          }
+        }
+
+        // Finally sort by daily goal title
+        return a.title.localeCompare(b.title);
+      });
+    },
+    [weeklyGoals, quarterlyGoals]
+  );
 
   // Auto-select first goal when list changes and nothing is selected
   useEffect(() => {
@@ -354,39 +364,41 @@ export const WeekCardDailyGoals = forwardRef<
       .flatMap(([, group]) => group);
   }, [weeklyGoals, quarterlyGoals]);
 
-  const handleUpdateGoalTitle = (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => {
-    return updateQuarterlyGoalTitle({ goalId, title, details });
-  };
+  const handleUpdateGoalTitle = useCallback(
+    (goalId: Id<'goals'>, title: string, details?: string) => {
+      return updateQuarterlyGoalTitle({ goalId, title, details });
+    },
+    [updateQuarterlyGoalTitle]
+  );
 
-  const handleDeleteGoal = async (goalId: Id<'goals'>): Promise<void> => {
-    const goal = dailyGoals.find((g) => g._id === goalId);
-    if (!goal || !goal.state?.daily?.dayOfWeek) return;
-    await deleteDailyGoalOptimistic(goalId);
-  };
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>): Promise<void> => {
+      const goal = dailyGoals.find((g) => g._id === goalId);
+      if (!goal || !goal.state?.daily?.dayOfWeek) return;
+      await deleteDailyGoalOptimistic(goalId);
+    },
+    [dailyGoals, deleteDailyGoalOptimistic]
+  );
 
-  const handleCreateGoal = async (
-    weeklyGoalId: Id<'goals'>,
-    title: string
-  ): Promise<void> => {
-    const dateTimestamp = DateTime.fromObject({
-      weekNumber,
-      weekYear: year,
-    })
-      .startOf('week')
-      .plus({ days: selectedDayOfWeek - 1 })
-      .toMillis();
+  const handleCreateGoal = useCallback(
+    async (weeklyGoalId: Id<'goals'>, title: string): Promise<void> => {
+      const dateTimestamp = DateTime.fromObject({
+        weekNumber,
+        weekYear: year,
+      })
+        .startOf('week')
+        .plus({ days: selectedDayOfWeek - 1 })
+        .toMillis();
 
-    await createDailyGoalOptimistic(
-      weeklyGoalId,
-      title,
-      selectedDayOfWeek,
-      dateTimestamp
-    );
-  };
+      await createDailyGoalOptimistic(
+        weeklyGoalId,
+        title,
+        selectedDayOfWeek,
+        dateTimestamp
+      );
+    },
+    [createDailyGoalOptimistic, weekNumber, year, selectedDayOfWeek]
+  );
 
   return (
     <div className="space-y-4">

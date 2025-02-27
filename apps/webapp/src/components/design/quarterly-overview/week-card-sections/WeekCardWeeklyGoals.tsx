@@ -23,7 +23,7 @@ import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useMemo, useState, useCallback } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
@@ -331,6 +331,7 @@ const WeeklyGoalGroup = ({
 export const WeekCardWeeklyGoals = forwardRef<
   HTMLDivElement,
   WeekCardWeeklyGoalsProps
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 >(({ weekNumber, year, quarter }, ref) => {
   const { updateQuarterlyGoalTitle } = useGoalActions();
   const { quarterlyGoals, deleteWeeklyGoalOptimistic } = useWeek();
@@ -351,31 +352,33 @@ export const WeekCardWeeklyGoals = forwardRef<
       });
   }, [quarterlyGoals]);
 
-  const handleUpdateWeeklyGoalTitle = async (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => {
-    try {
-      await updateQuarterlyGoalTitle({
-        goalId,
-        title,
-        details,
-      });
-    } catch (error) {
-      console.error('Failed to update weekly goal title:', error);
-      throw error;
-    }
-  };
+  const handleUpdateWeeklyGoalTitle = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
+      try {
+        await updateQuarterlyGoalTitle({
+          goalId,
+          title,
+          details,
+        });
+      } catch (error) {
+        console.error('Failed to update weekly goal title:', error);
+        throw error;
+      }
+    },
+    [updateQuarterlyGoalTitle]
+  );
 
-  const handleDeleteWeeklyGoal = async (goalId: Id<'goals'>) => {
-    try {
-      await deleteWeeklyGoalOptimistic(goalId);
-    } catch (error) {
-      console.error('Failed to delete weekly goal:', error);
-      throw error;
-    }
-  };
+  const handleDeleteWeeklyGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      try {
+        await deleteWeeklyGoalOptimistic(goalId);
+      } catch (error) {
+        console.error('Failed to delete weekly goal:', error);
+        throw error;
+      }
+    },
+    [deleteWeeklyGoalOptimistic]
+  );
 
   return (
     <div className="space-y-4" ref={ref}>
