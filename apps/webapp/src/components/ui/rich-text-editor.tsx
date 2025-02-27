@@ -126,6 +126,7 @@ export function RichTextEditor({
       const html = editor.getHTML();
       onChange(html);
     },
+    immediatelyRender: false,
   });
 
   // Handle keyboard shortcuts

@@ -14,6 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#ffffff',
+};
+
 export const metadata: Metadata = {
   title: 'Goals',
   description: 'Track and accomplish your goals',
@@ -23,12 +30,6 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
     title: 'Goals App',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: '#ffffff',
   applicationName: 'Goals App',
   formatDetection: {
     telephone: false,
