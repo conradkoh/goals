@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogPortal } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
@@ -23,26 +23,15 @@ import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react';
+import { forwardRef, useMemo, useState } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
-import { WeekCardDailyGoals } from './WeekCardDailyGoals';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
   year: number;
   quarter: number;
-}
-
-export interface WeekCardWeeklyGoalsRef {
-  openFocusMode: () => void;
 }
 
 // Internal component for rendering a weekly goal
@@ -131,11 +120,12 @@ const WeeklyGoal = ({
       >
         <div className="px-2 py-1">
           <div className="text-sm flex items-center gap-2 group/title">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={isComplete}
-              onChange={(e) => handleToggleCompletion(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              onCheckedChange={(checked) =>
+                handleToggleCompletion(checked === true)
+              }
+              className="flex-shrink-0"
             />
 
             {/* View Mode */}
@@ -338,70 +328,12 @@ const WeeklyGoalGroup = ({
   );
 };
 
-// WeeklyGoalsFocusMode component
-const WeeklyGoalsFocusMode = ({
-  weekNumber,
-  year,
-  quarter,
-  onClose,
-}: {
-  weekNumber: number;
-  year: number;
-  quarter: number;
-  onClose: () => void;
-}) => {
-  // Add keyboard event handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
-  return (
-    <div className="fixed inset-0 bg-white z-50 overflow-auto">
-      <div className="max-w-5xl mx-auto px-6 py-4">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center border-b pb-4">
-            <h2 className="text-lg font-semibold">
-              Focus Mode - Today&apos;s Goals
-            </h2>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Close
-            </Button>
-          </div>
-
-          <div className="space-y-8">
-            <div>
-              <WeekCardDailyGoals
-                weekNumber={weekNumber}
-                year={year}
-                quarter={quarter}
-                showOnlyToday={true}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const WeekCardWeeklyGoals = forwardRef<
-  WeekCardWeeklyGoalsRef,
+  HTMLDivElement,
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter }, ref) => {
   const { updateQuarterlyGoalTitle } = useGoalActions();
   const { quarterlyGoals, deleteWeeklyGoalOptimistic } = useWeek();
-  const [isFocusMode, setIsFocusMode] = useState(false);
-
-  useImperativeHandle(ref, () => ({
-    openFocusMode: () => setIsFocusMode(true),
-  }));
 
   // Filter and sort important quarterly goals
   const importantQuarterlyGoals = useMemo(() => {
@@ -446,24 +378,13 @@ export const WeekCardWeeklyGoals = forwardRef<
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={ref}>
       {importantQuarterlyGoals.length === 0 ? (
         <div className="text-sm text-muted-foreground italic px-3">
           No starred or pinned quarterly goals
         </div>
       ) : (
         <div className="space-y-2">
-          <Dialog open={isFocusMode} onOpenChange={setIsFocusMode}>
-            <DialogPortal>
-              <WeeklyGoalsFocusMode
-                weekNumber={weekNumber}
-                year={year}
-                quarter={quarter}
-                onClose={() => setIsFocusMode(false)}
-              />
-            </DialogPortal>
-          </Dialog>
-
           {importantQuarterlyGoals.map((goal) => {
             const weeklyGoals = goal.children;
             const isStarred = goal.state?.isStarred ?? false;

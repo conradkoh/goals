@@ -22,7 +22,10 @@ import {
   useState,
 } from 'react';
 import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
-import { DayContainer } from '@/components/design/goals-new/day-of-week/containers/DayContainer';
+import {
+  DayContainer,
+  DayContainerMode,
+} from '@/components/design/goals-new/day-of-week/containers/DayContainer';
 import { PastDaysContainer } from '@/components/design/goals-new/day-of-week/containers/PastDaysContainer';
 import { GoalSelector } from '@/components/design/goals-new/GoalSelector';
 
@@ -31,6 +34,7 @@ export interface WeekCardDailyGoalsProps {
   year: number;
   quarter: number;
   selectedDayOverride?: DayOfWeek;
+  mode?: DayContainerMode;
 }
 
 interface DayData {
@@ -52,7 +56,7 @@ export interface WeekCardDailyGoalsRef {
 export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
->(({ weekNumber, year, selectedDayOverride }, ref) => {
+>(({ weekNumber, year, selectedDayOverride, mode = 'plan' }, ref) => {
   const {
     days,
     weeklyGoals,
@@ -478,6 +482,7 @@ export const WeekCardDailyGoals = forwardRef<
               isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
             }
             sortDailyGoals={sortDailyGoals}
+            mode={mode}
           />
         )}
 
@@ -495,6 +500,7 @@ export const WeekCardDailyGoals = forwardRef<
               isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
             }
             sortDailyGoals={sortDailyGoals}
+            mode={mode}
           />
         ))}
       </div>

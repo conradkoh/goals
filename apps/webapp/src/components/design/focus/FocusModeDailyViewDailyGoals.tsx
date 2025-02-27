@@ -4,7 +4,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 import { DateTime } from 'luxon';
 import { useMemo } from 'react';
 import { DayContainer } from '@/components/design/goals-new/day-of-week/containers/DayContainer';
-import { useWeek } from '@/hooks/useWeek';
+import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { useGoalActions } from '@/hooks/useGoalActions';
 
 export interface FocusModeDailyViewDailyGoalsProps {
@@ -98,22 +98,8 @@ export const FocusModeDailyViewDailyGoals = ({
 
   // Prepare weekly goals with children for the selected day
   const preparedWeeklyGoalsForDay = useMemo(() => {
-    // Create a set of weekly goal IDs that have at least one daily goal child for the selected day
-    const weeklyGoalsWithChildren = new Set<Id<'goals'>>();
-
-    if (dailyGoals && dailyGoals.length > 0) {
-      dailyGoals.forEach((dailyGoal) => {
-        // Only count daily goals that are for the selected day
-        if (
-          dailyGoal.parentId &&
-          dailyGoal.state?.daily?.dayOfWeek === selectedDayOfWeek
-        ) {
-          weeklyGoalsWithChildren.add(dailyGoal.parentId);
-        }
-      });
-    }
-
-    // Get all weekly goals with valid parents, that aren't completed, and have at least one daily goal child
+    // Get all weekly goals with valid parents that aren't completed
+    // We no longer filter out weekly goals without daily goals here since DayContainer in 'focus' mode handles that
     const validWeeklyGoals = [...weeklyGoals]
       .filter((weeklyGoal) => {
         // Check if weekly goal has a valid parent
@@ -123,11 +109,6 @@ export const FocusModeDailyViewDailyGoals = ({
 
         // Filter out completed weekly goals
         if (weeklyGoal.state?.isComplete) {
-          return false;
-        }
-
-        // Only include weekly goals that have at least one daily goal child for the selected day
-        if (!weeklyGoalsWithChildren.has(weeklyGoal._id)) {
           return false;
         }
 
@@ -198,7 +179,7 @@ export const FocusModeDailyViewDailyGoals = ({
         return a.title.localeCompare(b.title);
       })
       .flatMap(([, group]) => group);
-  }, [weeklyGoals, quarterlyGoals, dailyGoals, selectedDayOfWeek]);
+  }, [weeklyGoals, quarterlyGoals]);
 
   const handleUpdateGoalTitle = (
     goalId: Id<'goals'>,
@@ -250,6 +231,7 @@ export const FocusModeDailyViewDailyGoals = ({
         onDeleteGoal={handleDeleteGoal}
         onCreateGoal={handleCreateGoal}
         sortDailyGoals={sortDailyGoals}
+        mode="focus"
       />
     </div>
   );
