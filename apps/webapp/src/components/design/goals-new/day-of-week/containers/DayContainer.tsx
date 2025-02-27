@@ -54,6 +54,9 @@ export const DayContainer = ({
   const [newGoalTitles, setNewGoalTitles] = useState<Record<string, string>>(
     {}
   );
+  const [visibleInputs, setVisibleInputs] = useState<Record<string, boolean>>(
+    {}
+  );
 
   // Group weekly goals by quarterly goal ID
   const groupedByQuarterly: Record<
@@ -275,37 +278,82 @@ export const DayContainer = ({
                                 ))}
 
                           {/* Add task input for this weekly goal */}
-                          <div className="ml-2 mt-1">
-                            <CreateGoalInput
-                              placeholder="Add a task..."
-                              value={
-                                newGoalTitles[weeklyGoal._id.toString()] || ''
+                          <div
+                            className="ml-2"
+                            onMouseEnter={() => {
+                              setVisibleInputs((prev) => ({
+                                ...prev,
+                                [weeklyGoal._id.toString()]: true,
+                              }));
+                            }}
+                            onMouseLeave={() => {
+                              if (!newGoalTitles[weeklyGoal._id.toString()]) {
+                                setVisibleInputs((prev) => ({
+                                  ...prev,
+                                  [weeklyGoal._id.toString()]: false,
+                                }));
                               }
-                              onChange={(value) => {
-                                setNewGoalTitles({
-                                  ...newGoalTitles,
-                                  [weeklyGoal._id.toString()]: value,
-                                });
-                              }}
-                              onSubmit={() => {
-                                const title =
-                                  newGoalTitles[weeklyGoal._id.toString()];
-                                if (title && title.trim()) {
-                                  onCreateGoal(weeklyGoal._id, title.trim());
+                            }}
+                          >
+                            <div
+                              className={cn(
+                                'transition-opacity duration-150',
+                                visibleInputs[weeklyGoal._id.toString()]
+                                  ? 'opacity-100 pointer-events-auto'
+                                  : 'opacity-0 pointer-events-none'
+                              )}
+                            >
+                              <CreateGoalInput
+                                placeholder="Add a task..."
+                                value={
+                                  newGoalTitles[weeklyGoal._id.toString()] || ''
+                                }
+                                onChange={(value) => {
                                   setNewGoalTitles({
                                     ...newGoalTitles,
-                                    [weeklyGoal._id.toString()]: '',
+                                    [weeklyGoal._id.toString()]: value,
                                   });
-                                }
-                              }}
-                              disabled={isCreating[weeklyGoal._id]}
-                            >
-                              {isCreating[weeklyGoal._id] && (
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                                  <Spinner className="h-4 w-4" />
-                                </div>
-                              )}
-                            </CreateGoalInput>
+                                }}
+                                onSubmit={() => {
+                                  const title =
+                                    newGoalTitles[weeklyGoal._id.toString()];
+                                  if (title && title.trim()) {
+                                    onCreateGoal(weeklyGoal._id, title.trim());
+                                    setNewGoalTitles({
+                                      ...newGoalTitles,
+                                      [weeklyGoal._id.toString()]: '',
+                                    });
+                                    setVisibleInputs((prev) => ({
+                                      ...prev,
+                                      [weeklyGoal._id.toString()]: false,
+                                    }));
+                                  }
+                                }}
+                                onFocus={() => {
+                                  setVisibleInputs((prev) => ({
+                                    ...prev,
+                                    [weeklyGoal._id.toString()]: true,
+                                  }));
+                                }}
+                                onBlur={() => {
+                                  if (
+                                    !newGoalTitles[weeklyGoal._id.toString()]
+                                  ) {
+                                    setVisibleInputs((prev) => ({
+                                      ...prev,
+                                      [weeklyGoal._id.toString()]: false,
+                                    }));
+                                  }
+                                }}
+                                disabled={isCreating[weeklyGoal._id]}
+                              >
+                                {isCreating[weeklyGoal._id] && (
+                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <Spinner className="h-4 w-4" />
+                                  </div>
+                                )}
+                              </CreateGoalInput>
+                            </div>
                           </div>
                         </div>
                       </div>
