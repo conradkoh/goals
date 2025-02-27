@@ -286,6 +286,10 @@ export const WeekCardDailyGoals = forwardRef<
           console.debug(`Weekly goal ${weeklyGoal._id} has no parentId`);
           return false;
         }
+        // Filter out completed weekly goals in focus mode
+        if (showOnlyToday && weeklyGoal.state?.isComplete) {
+          return false;
+        }
         return true;
       })
       .map((weeklyGoal) => {
