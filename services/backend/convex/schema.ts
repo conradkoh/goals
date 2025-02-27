@@ -49,54 +49,6 @@ export default defineSchema({
     carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
   }).index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter']),
 
-  // DEPRECATED: Use goalStateByWeek instead
-  goalsWeekly: defineTable({
-    //partition
-    userId: v.id('users'),
-    year: v.number(),
-    quarter: v.number(),
-
-    // others
-    goalId: v.id('goals'),
-    weekNumber: v.number(),
-    progress: v.string(),
-    // quarterly goals
-    isStarred: v.boolean(),
-    isPinned: v.boolean(),
-    // weekly goals
-    isComplete: v.boolean(),
-    // daily goals
-    daily: v.optional(
-      v.object({
-        dayOfWeek: v.union(
-          v.literal(DayOfWeek.MONDAY),
-          v.literal(DayOfWeek.TUESDAY),
-          v.literal(DayOfWeek.WEDNESDAY),
-          v.literal(DayOfWeek.THURSDAY),
-          v.literal(DayOfWeek.FRIDAY),
-          v.literal(DayOfWeek.SATURDAY),
-          v.literal(DayOfWeek.SUNDAY)
-        ),
-        dateTimestamp: v.optional(v.number()),
-      })
-    ),
-    carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
-  })
-    .index('by_user', ['userId']) //TEMP: for migration only
-    .index('by_user_and_year_and_quarter_and_week', [
-      'userId',
-      'year',
-      'quarter',
-      'weekNumber',
-    ])
-    // Index specifically for daily goals lookup
-    .index('by_daily_goal_lookup', [
-      'userId',
-      'weekNumber',
-      'daily.dayOfWeek',
-      'goalId',
-    ]),
-
   // timeseries data for snapshotting
   goalStateByWeek: defineTable({
     //partition
