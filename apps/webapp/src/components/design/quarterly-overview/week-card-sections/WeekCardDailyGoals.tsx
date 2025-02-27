@@ -21,15 +21,15 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
-import { DayContainer, PastDaysContainer } from '../../goals-new/day-of-week';
-import { GoalSelector } from '../../goals-new/GoalSelector';
+import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
+import { DayContainer } from '@/components/design/goals-new/day-of-week/containers/DayContainer';
+import { PastDaysContainer } from '@/components/design/goals-new/day-of-week/containers/PastDaysContainer';
+import { GoalSelector } from '@/components/design/goals-new/GoalSelector';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
   year: number;
   quarter: number;
-  showOnlyToday?: boolean;
   selectedDayOverride?: DayOfWeek;
 }
 
@@ -52,7 +52,7 @@ export interface WeekCardDailyGoalsRef {
 export const WeekCardDailyGoals = forwardRef<
   WeekCardDailyGoalsRef,
   WeekCardDailyGoalsProps
->(({ weekNumber, year, showOnlyToday, selectedDayOverride }, ref) => {
+>(({ weekNumber, year, selectedDayOverride }, ref) => {
   const {
     days,
     weeklyGoals,
@@ -89,7 +89,7 @@ export const WeekCardDailyGoals = forwardRef<
     const todayDayOfWeek = currentDateTime.weekday as DayOfWeekType;
     const sortedDays = [...(days as DayData[])];
 
-    if (selectedDayOverride && showOnlyToday) {
+    if (selectedDayOverride) {
       const selectedDayData = sortedDays.find(
         (d) => d.dayOfWeek === selectedDayOverride
       );
@@ -129,7 +129,6 @@ export const WeekCardDailyGoals = forwardRef<
     days,
     weekNumber,
     selectedDayOverride,
-    showOnlyToday,
     currentDateTime.weekNumber,
     currentDateTime.weekday,
   ]);
@@ -274,18 +273,31 @@ export const WeekCardDailyGoals = forwardRef<
   // Prepare data for each day section, memoized to avoid unnecessary recalculations
   // This returns weekly goals sorted by priority for the day containers
   const preparedWeeklyGoalsForDay = useMemo(() => {
-    // Get all weekly goals with valid parents
-    // The actual filtering by day happens in the DailyGoalGroup component
+    // Create a set of weekly goal IDs that have at least one daily goal child
+    const weeklyGoalsWithChildren = new Set<Id<'goals'>>();
+
+    if (dailyGoals && dailyGoals.length > 0) {
+      dailyGoals.forEach((dailyGoal) => {
+        if (dailyGoal.parentId) {
+          weeklyGoalsWithChildren.add(dailyGoal.parentId);
+        }
+      });
+    }
+
+    // Get all weekly goals with valid parents and with at least one daily goal child
     const validWeeklyGoals = [...weeklyGoals]
       .filter((weeklyGoal) => {
+        // Check if weekly goal has a valid parent
         if (!weeklyGoal.parentId) {
           console.debug(`Weekly goal ${weeklyGoal._id} has no parentId`);
           return false;
         }
-        // Filter out completed weekly goals in focus mode
-        if (showOnlyToday && weeklyGoal.state?.isComplete) {
+
+        // Only include weekly goals that have at least one daily goal child
+        if (!weeklyGoalsWithChildren.has(weeklyGoal._id)) {
           return false;
         }
+
         return true;
       })
       .map((weeklyGoal) => {
@@ -353,7 +365,7 @@ export const WeekCardDailyGoals = forwardRef<
         return a.title.localeCompare(b.title);
       })
       .flatMap(([, group]) => group);
-  }, [weeklyGoals, quarterlyGoals, showOnlyToday]);
+  }, [weeklyGoals, quarterlyGoals, dailyGoals]);
 
   const handleUpdateGoalTitle = (
     goalId: Id<'goals'>,
@@ -391,7 +403,7 @@ export const WeekCardDailyGoals = forwardRef<
 
   return (
     <div className="space-y-4">
-      {!showOnlyToday && pastDays.length > 0 && (
+      {pastDays.length > 0 && (
         <PastDaysContainer
           days={pastDays.map((day) => ({
             dayOfWeek: day.dayOfWeek,
@@ -408,52 +420,50 @@ export const WeekCardDailyGoals = forwardRef<
           sortDailyGoals={sortDailyGoals}
         />
       )}
-      {!showOnlyToday && (
-        <div>
-          <CreateGoalInput
-            placeholder="Add a daily goal..."
-            value={newGoalTitle}
-            onChange={setNewGoalTitle}
-            onSubmit={handleCreateDailyGoal}
-          >
-            <div className="flex gap-2 items-start">
-              <div className="w-1/3">
-                <Select
-                  value={selectedDayOfWeek.toString()}
-                  onValueChange={(value) =>
-                    setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
-                  }
-                >
-                  <SelectTrigger className="h-12 text-xs">
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.values(DayOfWeek).map((value) => (
-                      <SelectItem key={value} value={value.toString()}>
-                        {getDayName(value)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-2/3 relative">
-                <GoalSelector
-                  goals={availableWeeklyGoals}
-                  value={selectedWeeklyGoalId}
-                  onChange={(value) => setSelectedWeeklyGoalId(value)}
-                  placeholder="Select weekly goal"
-                  emptyStateMessage="No weekly goals available"
-                />
-                {isCreating && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <Spinner className="h-4 w-4" />
-                  </div>
-                )}
-              </div>
+      <div>
+        <CreateGoalInput
+          placeholder="Add a daily goal..."
+          value={newGoalTitle}
+          onChange={setNewGoalTitle}
+          onSubmit={handleCreateDailyGoal}
+        >
+          <div className="flex gap-2 items-start">
+            <div className="w-1/3">
+              <Select
+                value={selectedDayOfWeek.toString()}
+                onValueChange={(value) =>
+                  setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                }
+              >
+                <SelectTrigger className="h-12 text-xs">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(DayOfWeek).map((value) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {getDayName(value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CreateGoalInput>
-        </div>
-      )}
+            <div className="w-2/3 relative">
+              <GoalSelector
+                goals={availableWeeklyGoals}
+                value={selectedWeeklyGoalId}
+                onChange={(value) => setSelectedWeeklyGoalId(value)}
+                placeholder="Select weekly goal"
+                emptyStateMessage="No weekly goals available"
+              />
+              {isCreating && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <Spinner className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          </div>
+        </CreateGoalInput>
+      </div>
       <div className="space-y-2">
         {currentDay && (
           <DayContainer
@@ -471,23 +481,22 @@ export const WeekCardDailyGoals = forwardRef<
           />
         )}
 
-        {!showOnlyToday &&
-          futureDays.map((day) => (
-            <DayContainer
-              key={day.dayOfWeek}
-              dayOfWeek={day.dayOfWeek}
-              weekNumber={weekNumber}
-              dateTimestamp={day.dateTimestamp}
-              weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
-              onUpdateGoalTitle={handleUpdateGoalTitle}
-              onDeleteGoal={handleDeleteGoal}
-              onCreateGoal={handleCreateGoal}
-              isCreating={
-                isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
-              }
-              sortDailyGoals={sortDailyGoals}
-            />
-          ))}
+        {futureDays.map((day) => (
+          <DayContainer
+            key={day.dayOfWeek}
+            dayOfWeek={day.dayOfWeek}
+            weekNumber={weekNumber}
+            dateTimestamp={day.dateTimestamp}
+            weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
+            onUpdateGoalTitle={handleUpdateGoalTitle}
+            onDeleteGoal={handleDeleteGoal}
+            onCreateGoal={handleCreateGoal}
+            isCreating={
+              isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+            }
+            sortDailyGoals={sortDailyGoals}
+          />
+        ))}
       </div>
     </div>
   );
