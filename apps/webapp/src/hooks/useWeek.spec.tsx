@@ -48,7 +48,7 @@ describe('useWeek', () => {
           children: [],
           path: '/quarterly1/weekly2',
           state: {
-            _id: 'weekly_state2' as Id<'goalsWeekly'>,
+            _id: 'weekly_state2' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200001,
             userId: 'user1' as Id<'users'>,
             year: 2023,
@@ -75,7 +75,7 @@ describe('useWeek', () => {
           children: [],
           path: '/quarterly1/weekly1',
           state: {
-            _id: 'weekly_state1' as Id<'goalsWeekly'>,
+            _id: 'weekly_state1' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200002,
             userId: 'user1' as Id<'users'>,
             year: 2023,
@@ -102,7 +102,7 @@ describe('useWeek', () => {
           children: [],
           path: '/quarterly1/weekly3',
           state: {
-            _id: 'weekly_state3' as Id<'goalsWeekly'>,
+            _id: 'weekly_state3' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200003,
             userId: 'user1' as Id<'users'>,
             year: 2023,
@@ -145,7 +145,7 @@ describe('useWeek', () => {
           children: [],
           path: '/quarterly2/weekly5',
           state: {
-            _id: 'weekly_state5' as Id<'goalsWeekly'>,
+            _id: 'weekly_state5' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200005,
             userId: 'user1' as Id<'users'>,
             year: 2023,
@@ -172,7 +172,7 @@ describe('useWeek', () => {
           children: [],
           path: '/quarterly2/weekly4',
           state: {
-            _id: 'weekly_state4' as Id<'goalsWeekly'>,
+            _id: 'weekly_state4' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200006,
             userId: 'user1' as Id<'users'>,
             year: 2023,

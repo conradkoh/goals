@@ -1,15 +1,16 @@
 import { v } from 'convex/values';
 import { mutation, MutationCtx } from '../../../convex/_generated/server';
 import { requireLogin } from '../requireLogin';
-import { Id, Doc } from '../../../convex/_generated/dataModel';
+import { Doc, Id } from '../../../convex/_generated/dataModel';
 import {
   QuarterlyGoalToUpdate,
-  WeeklyGoalToCopy,
-  DailyGoalToMove,
-  GoalDepth,
   ProcessGoalResult,
+  GoalDepth,
+  DailyGoalToMove,
   CarryOver,
+  WeekStateToCopy,
 } from './types';
+import { DateTime } from 'luxon';
 
 // Type representing a time period with year, quarter, and week number
 export type TimePeriod = {
@@ -19,7 +20,7 @@ export type TimePeriod = {
 };
 
 export type BaseGoalMoveResult = {
-  weeklyGoalsToCopy: {
+  weekStatesToCopy: {
     title: string;
     carryOver: {
       type: 'week';
@@ -54,7 +55,7 @@ export type DryRunResult = BaseGoalMoveResult & {
 };
 
 export type UpdateResult = BaseGoalMoveResult & {
-  weeklyGoalsCopied: number;
+  weekStatesCopied: number;
   dailyGoalsMoved: number;
   quarterlyGoalsUpdated: number;
 };
@@ -92,9 +93,9 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   const previousWeekGoals = await getGoalsForWeek(ctx, userId, from);
 
   const result: ProcessGoalResult = {
-    weeklyGoalsToCopy: [],
-    dailyGoalsToMove: [],
     quarterlyGoalsToUpdate: [],
+    dailyGoalsToMove: [],
+    weekStatesToCopy: [],
   };
 
   // Process each goal from the previous week in parallel
@@ -110,7 +111,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
         weeklyState,
         from
       );
-      result.weeklyGoalsToCopy.push(...processedGoal.weeklyGoalsToCopy);
+      result.weekStatesToCopy.push(...processedGoal.weekStatesToCopy);
       result.dailyGoalsToMove.push(...processedGoal.dailyGoalsToMove);
       result.quarterlyGoalsToUpdate.push(
         ...processedGoal.quarterlyGoalsToUpdate
@@ -122,34 +123,36 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   if (dryRun) {
     return (await generateDryRunPreview(
       ctx,
-      result.weeklyGoalsToCopy,
+      result.weekStatesToCopy,
       result.dailyGoalsToMove,
       result.quarterlyGoalsToUpdate
     )) as MoveGoalsFromWeekResult<T>;
   }
 
   // Perform the actual updates
-  await updateQuarterlyGoals(ctx, userId, result.quarterlyGoalsToUpdate, to);
-  const copiedWeeklyGoals = await copyWeeklyGoals(
+  const copiedWeekStates = await copyWeeklyGoals(
     ctx,
     userId,
-    result.weeklyGoalsToCopy,
+    result.weekStatesToCopy,
     to
   );
+
+  // Update quarterly goals with their starred/pinned states
+  await updateQuarterlyGoals(ctx, userId, result.quarterlyGoalsToUpdate, to);
 
   // Generate the preview data for the commit case
   const previewData = await generateDryRunPreview(
     ctx,
-    result.weeklyGoalsToCopy,
+    result.weekStatesToCopy,
     result.dailyGoalsToMove,
     result.quarterlyGoalsToUpdate
   );
 
   return {
-    weeklyGoalsToCopy: previewData.weeklyGoalsToCopy,
+    weekStatesToCopy: previewData.weekStatesToCopy,
     dailyGoalsToMove: previewData.dailyGoalsToMove,
     quarterlyGoalsToUpdate: previewData.quarterlyGoalsToUpdate,
-    weeklyGoalsCopied: copiedWeeklyGoals.length,
+    weekStatesCopied: copiedWeekStates.length,
     dailyGoalsMoved: result.dailyGoalsToMove.length,
     quarterlyGoalsUpdated: result.quarterlyGoalsToUpdate.length,
   } as MoveGoalsFromWeekResult<T>;
@@ -171,7 +174,7 @@ export async function getGoalsForWeek(
   period: TimePeriod
 ) {
   return await ctx.db
-    .query('goalsWeekly')
+    .query('goalStateByWeek')
     .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
       q
         .eq('userId', userId)
@@ -212,7 +215,7 @@ async function getDailyGoalState(
   goalId: Id<'goals'>
 ) {
   return await ctx.db
-    .query('goalsWeekly')
+    .query('goalStateByWeek')
     .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
       q
         .eq('userId', userId)
@@ -227,11 +230,11 @@ async function getDailyGoalState(
 async function processQuarterlyGoal(
   ctx: MutationCtx,
   goal: Doc<'goals'>,
-  weeklyState: Doc<'goalsWeekly'>
+  weeklyState: Doc<'goalStateByWeek'>
 ): Promise<QuarterlyGoalToUpdate[]> {
   if (weeklyState.isStarred || weeklyState.isPinned) {
     // Get all weekly goals under this quarterly goal
-    const weeklyGoals = await ctx.db
+    const weeklyGoalItems = await ctx.db
       .query('goals')
       .withIndex('by_user_and_year_and_quarter', (q) =>
         q
@@ -244,9 +247,9 @@ async function processQuarterlyGoal(
 
     // Check if any weekly goals are incomplete
     const hasIncompleteWeeklyGoals = await Promise.all(
-      weeklyGoals.map(async (weeklyGoal) => {
+      weeklyGoalItems.map(async (weeklyGoal) => {
         const state = await ctx.db
-          .query('goalsWeekly')
+          .query('goalStateByWeek')
           .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
             q
               .eq('userId', goal.userId)
@@ -262,13 +265,12 @@ async function processQuarterlyGoal(
 
     // Only update if there are incomplete weekly goals
     if (hasIncompleteWeeklyGoals) {
-      // If the goal is starred, it cannot be pinned
-      const isStarred = weeklyState.isStarred;
       return [
         {
           goalId: goal._id,
-          isStarred,
-          isPinned: isStarred ? false : weeklyState.isPinned,
+          title: goal.title,
+          isStarred: weeklyState.isStarred,
+          isPinned: weeklyState.isStarred ? false : weeklyState.isPinned,
         },
       ];
     }
@@ -280,13 +282,13 @@ export async function processGoal(
   ctx: MutationCtx,
   userId: Id<'users'>,
   goal: Doc<'goals'>,
-  weeklyState: Doc<'goalsWeekly'>,
+  weeklyState: Doc<'goalStateByWeek'>,
   from: TimePeriod
 ): Promise<ProcessGoalResult> {
   const result: ProcessGoalResult = {
-    weeklyGoalsToCopy: [],
-    dailyGoalsToMove: [],
     quarterlyGoalsToUpdate: [],
+    dailyGoalsToMove: [],
+    weekStatesToCopy: [],
   };
 
   switch (goal.depth) {
@@ -310,7 +312,7 @@ export async function processGoal(
         from,
         quarterlyGoal
       );
-      result.weeklyGoalsToCopy = weeklyGoals;
+      result.weekStatesToCopy = weeklyGoals;
       result.dailyGoalsToMove = dailyGoals;
       break;
     }
@@ -327,10 +329,10 @@ export async function processWeeklyGoal(
   ctx: MutationCtx,
   userId: Id<'users'>,
   goal: Doc<'goals'>,
-  weeklyState: Doc<'goalsWeekly'>,
+  weeklyState: Doc<'goalStateByWeek'>,
   from: TimePeriod,
   quarterlyGoal: Doc<'goals'> | null
-): Promise<{ weeklyGoals: WeeklyGoalToCopy[]; dailyGoals: DailyGoalToMove[] }> {
+): Promise<{ weeklyGoals: WeekStateToCopy[]; dailyGoals: DailyGoalToMove[] }> {
   if (goal.depth !== GoalDepth.Weekly) {
     throw new Error(
       `processWeeklyGoal called on non-weekly goal: ${goal._id} (${goal.title})`
@@ -365,9 +367,9 @@ export async function processWeeklyGoal(
     // - If the goal was carried over, preserve the rootGoalId from the previous carry over, and set previousGoalId to the current goal's ID
     const rootGoalId = weeklyState.carryOver?.fromGoal.rootGoalId ?? goal._id;
 
-    const weeklyGoalToCopy: WeeklyGoalToCopy = {
+    const weeklyGoalToCopy: WeekStateToCopy = {
       originalGoal: goal,
-      weeklyState,
+      weekState: weeklyState,
       carryOver: {
         type: 'week',
         numWeeks: (weeklyState.carryOver?.numWeeks ?? 0) + 1,
@@ -391,7 +393,7 @@ export async function processWeeklyGoal(
       if (dailyState && !dailyState.isComplete) {
         const dailyGoalToMove: DailyGoalToMove = {
           goal: dailyGoal,
-          weeklyState: dailyState,
+          weekState: dailyState,
           parentWeeklyGoal: goal,
           parentQuarterlyGoal: quarterlyGoal ?? undefined,
         };
@@ -411,19 +413,17 @@ export async function processWeeklyGoal(
 
 export async function generateDryRunPreview(
   ctx: MutationCtx,
-  weeklyGoalsToCopy: WeeklyGoalToCopy[],
+  weekStatesToCopy: WeekStateToCopy[],
   dailyGoalsToMove: DailyGoalToMove[],
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[]
 ): Promise<DryRunResult> {
   return {
     isDryRun: true,
     canPull: true,
-    weeklyGoalsToCopy: weeklyGoalsToCopy.map((item) => ({
+    weekStatesToCopy: weekStatesToCopy.map((item) => ({
       title: item.originalGoal.title,
       carryOver: item.carryOver,
-      dailyGoalsCount: dailyGoalsToMove.filter(
-        (dg) => dg.parentWeeklyGoal._id === item.originalGoal._id
-      ).length,
+      dailyGoalsCount: item.dailyGoalsToMove.length,
       quarterlyGoalId: item.quarterlyGoalId,
     })),
     dailyGoalsToMove: dailyGoalsToMove.map((item) => ({
@@ -434,17 +434,12 @@ export async function generateDryRunPreview(
       quarterlyGoalId: item.parentQuarterlyGoal?._id,
       quarterlyGoalTitle: item.parentQuarterlyGoal?.title,
     })),
-    quarterlyGoalsToUpdate: await Promise.all(
-      quarterlyGoalsToUpdate.map(async (item) => {
-        const goal = await ctx.db.get(item.goalId);
-        return {
-          id: item.goalId,
-          title: goal?.title ?? '',
-          isStarred: item.isStarred,
-          isPinned: item.isPinned,
-        };
-      })
-    ),
+    quarterlyGoalsToUpdate: quarterlyGoalsToUpdate.map((item) => ({
+      id: item.goalId,
+      title: item.title,
+      isStarred: item.isStarred,
+      isPinned: item.isPinned,
+    })),
   };
 }
 
@@ -463,20 +458,30 @@ export async function updateQuarterlyGoals(
         item.goalId
       );
 
-      // Determine the new state:
-      // 1. If the goal is already starred in the target week, keep it starred and not pinned
-      // 2. If the goal is not starred in the target week but is starred in the source week, make it starred and not pinned
-      // 3. If neither week has it starred, use the pinned state from the source week
-      const newState = {
-        isStarred: existingState?.isStarred || item.isStarred,
-        isPinned:
-          existingState?.isStarred || item.isStarred ? false : item.isPinned,
-      };
-
+      // Determine final state based on existing state and source state
+      let newState;
       if (existingState) {
+        // Prioritize existing starred state over pinned state from source
+        if (existingState.isStarred) {
+          newState = {
+            isStarred: true,
+            isPinned: false, // Starred goals cannot be pinned
+          };
+        } else {
+          // If not already starred, apply the states from the source
+          newState = {
+            isStarred: item.isStarred,
+            isPinned: item.isPinned,
+          };
+        }
         await ctx.db.patch(existingState._id, newState);
       } else {
-        await ctx.db.insert('goalsWeekly', {
+        // If no existing state, simply apply the states from the source
+        newState = {
+          isStarred: item.isStarred,
+          isPinned: item.isPinned,
+        };
+        await ctx.db.insert('goalStateByWeek', {
           userId,
           year: to.year,
           quarter: to.quarter,
@@ -494,19 +499,19 @@ export async function updateQuarterlyGoals(
 export async function copyWeeklyGoals(
   ctx: MutationCtx,
   userId: Id<'users'>,
-  weeklyGoalsToCopy: WeeklyGoalToCopy[],
+  weekStatesToCopy: WeekStateToCopy[],
   to: TimePeriod
 ) {
   return await Promise.all(
-    weeklyGoalsToCopy.map(async (item) => {
-      const { weeklyGoal, weeklyGoalState } = await copyWeeklyGoal(
+    weekStatesToCopy.map(async (item) => {
+      const { weeklyGoal, weekState } = await copyWeeklyGoal(
         ctx,
         userId,
         item,
         to
       );
-
       await migrateDailyGoals(ctx, item.dailyGoalsToMove, weeklyGoal, to);
+      return weeklyGoal;
     })
   );
 }
@@ -514,29 +519,30 @@ export async function copyWeeklyGoals(
 export async function copyWeeklyGoal(
   ctx: MutationCtx,
   userId: Id<'users'>,
-  weeklyGoalToCopy: WeeklyGoalToCopy,
+  weekStateToCopy: WeekStateToCopy,
   to: TimePeriod
 ) {
+  // Create a new carry over object with incremented numWeeks
   const carryOver: CarryOver = {
     type: 'week',
-    numWeeks: (weeklyGoalToCopy.weeklyState.carryOver?.numWeeks ?? 0) + 1,
+    numWeeks: (weekStateToCopy.weekState.carryOver?.numWeeks ?? 0) + 1,
     fromGoal: {
-      previousGoalId: weeklyGoalToCopy.originalGoal._id,
+      previousGoalId: weekStateToCopy.originalGoal._id,
       rootGoalId:
-        weeklyGoalToCopy.weeklyState.carryOver?.fromGoal.rootGoalId ??
-        weeklyGoalToCopy.originalGoal._id,
+        weekStateToCopy.weekState.carryOver?.fromGoal.rootGoalId ??
+        weekStateToCopy.originalGoal._id,
     },
   };
 
   // Extract only the fields we want to copy
   const { _id, _creationTime, ...goalFieldsToCopy } =
-    weeklyGoalToCopy.originalGoal;
+    weekStateToCopy.originalGoal;
 
   // Check if this goal was already cloned based on the carry over information
   const goalsForTargetWeek = await getGoalsForWeek(ctx, userId, to);
   let targetWeekGoalId = goalsForTargetWeek.find(
     (goal) =>
-      goal.carryOver?.fromGoal.rootGoalId === weeklyGoalToCopy.originalGoal._id
+      goal.carryOver?.fromGoal.rootGoalId === weekStateToCopy.originalGoal._id
   )?.goalId;
 
   if (!targetWeekGoalId) {
@@ -544,15 +550,15 @@ export async function copyWeeklyGoal(
     targetWeekGoalId = await ctx.db.insert('goals', {
       ...goalFieldsToCopy,
       carryOver,
-      parentId: weeklyGoalToCopy.quarterlyGoalId,
-      inPath: weeklyGoalToCopy.quarterlyGoalId
-        ? `/${weeklyGoalToCopy.quarterlyGoalId}`
+      parentId: weekStateToCopy.quarterlyGoalId,
+      inPath: weekStateToCopy.quarterlyGoalId
+        ? `/${weekStateToCopy.quarterlyGoalId}`
         : '/',
     });
   }
 
   // Create weekly state that points to the new goal
-  const newWeeklyStateId = await ctx.db.insert('goalsWeekly', {
+  const newWeeklyStateId = await ctx.db.insert('goalStateByWeek', {
     userId,
     year: to.year,
     quarter: to.quarter,
@@ -565,18 +571,18 @@ export async function copyWeeklyGoal(
     carryOver,
   });
 
-  const [weeklyGoal, weeklyGoalState] = await Promise.all([
+  const [weeklyGoal, weeklyState] = await Promise.all([
     ctx.db.get(targetWeekGoalId),
     ctx.db.get(newWeeklyStateId),
   ]);
 
-  if (!weeklyGoal || !weeklyGoalState) {
+  if (!weeklyGoal || !weeklyState) {
     throw new Error('Failed to copy weekly goal or weekly state');
   }
 
   return {
     weeklyGoal,
-    weeklyGoalState,
+    weekState: weeklyState,
   };
 }
 
@@ -598,7 +604,7 @@ export async function migrateDailyGoals(
       });
 
       // Update the weekly state to point to the original daily goal
-      await ctx.db.patch(dailyGoal.weeklyState._id, {
+      await ctx.db.patch(dailyGoal.weekState._id, {
         weekNumber: to.weekNumber,
       });
     })

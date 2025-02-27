@@ -28,7 +28,7 @@ interface DailyGoalToCopy {
   };
 }
 
-interface WeeklyGoalToCopy {
+interface WeekStateToCopy {
   title: string;
   carryOver: {
     type: 'week';
@@ -47,7 +47,7 @@ interface WeekCardPreviewDialogProps {
   onOpenChange: (open: boolean) => void;
   preview: {
     tasks: Array<DailyGoalToCopy>;
-    weeklyGoals: Array<WeeklyGoalToCopy>;
+    weeklyGoals: Array<WeekStateToCopy>;
   } | null;
   onMoveTasks: () => void;
 }
@@ -128,7 +128,7 @@ export const WeekCardPreviewDialog = ({
     }
   });
 
-  // Add weekly goals from weeklyGoalsToCopy
+  // Add weekly goals from weekStates
   preview.weeklyGoals.forEach((weeklyGoal) => {
     const id = weeklyGoal.carryOver.fromGoal.previousGoalId;
     if (!weeklyGoals.has(id)) {
@@ -260,7 +260,7 @@ export const WeekCardPreviewDialog = ({
                   <h4 className="font-semibold text-sm">Weekly Goals</h4>
                   <div className="space-y-2">
                     {Array.from(weeklyGoals.values()).map((goal) => {
-                      // Find the corresponding weekly goal in weeklyGoalsToCopy
+                      // Find the corresponding weekly goal in weekStates
                       const weeklyGoalToCopy = preview.weeklyGoals.find(
                         (wg) => wg.carryOver.fromGoal.previousGoalId === goal.id
                       );
@@ -322,7 +322,7 @@ export const WeekCardPreviewDialog = ({
                                 ([weeklyId, weeklyGroup]) => {
                                   if (!weeklyGroup?.goal) return null;
 
-                                  // Find the corresponding weekly goal in weeklyGoalsToCopy
+                                  // Find the corresponding weekly goal in weekStates
                                   const weeklyGoalToCopy =
                                     preview.weeklyGoals.find(
                                       (wg) =>

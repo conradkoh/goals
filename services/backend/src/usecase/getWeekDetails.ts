@@ -17,7 +17,7 @@ type Goal = Doc<'goals'>;
 type GoalWithDetails = Goal & {
   grandParentTitle?: string;
   parentTitle?: string;
-  state?: Doc<'goalsWeekly'>;
+  state?: Doc<'goalStateByWeek'>;
 };
 export type GoalWithDetailsAndChildren = TWithChildren<GoalWithDetails>;
 /**
@@ -52,8 +52,8 @@ export const getWeekGoalsTree = async (
   const { userId, year, quarter, weekNumber } = args;
 
   // Get goals for this specific week
-  const weeklyGoals = await ctx.db
-    .query('goalsWeekly')
+  const weekStates = await ctx.db
+    .query('goalStateByWeek')
     .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
       q
         .eq('userId', userId)
@@ -64,12 +64,12 @@ export const getWeekGoalsTree = async (
     .collect();
 
   // Get the associated goal details
-  const goalIds = weeklyGoals.map((wg) => wg.goalId);
+  const goalIds = weekStates.map((ws) => ws.goalId);
   const goals = (
     await Promise.all(goalIds.map((goalId) => ctx.db.get(goalId)))
   ).filter((goal) => goal !== null);
 
-  const weeklyGoalsMap = new Map(weeklyGoals.map((wg) => [wg.goalId, wg]));
+  const weekStatesMap = new Map(weekStates.map((ws) => [ws.goalId, ws]));
 
   // Organize goals by depth, root goals (depth 0) are quarterly goals
   const { tree: quarterlyGoals, index } = buildGoalTree(goals, (n) => {
@@ -77,7 +77,7 @@ export const getWeekGoalsTree = async (
     return {
       //add data from the weekly goals (timeseries)
       ...n,
-      state: weeklyGoalsMap.get(n._id),
+      state: weekStatesMap.get(n._id),
     };
   });
 

@@ -94,7 +94,7 @@ export const createQuarterlyGoal = mutation({
 
     // Create initial weekly states for this goal (for all weeks in the quarter)
     for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
-      await ctx.db.insert('goalsWeekly', {
+      await ctx.db.insert('goalStateByWeek', {
         userId,
         year,
         quarter,
@@ -136,7 +136,7 @@ export const updateQuarterlyGoalStatus = mutation({
 
     // Find the weekly goal record
     const weeklyGoal = await ctx.db
-      .query('goalsWeekly')
+      .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
           .eq('userId', userId)
@@ -239,7 +239,7 @@ export const deleteQuarterlyGoal = mutation({
 
     // Delete all weekly goals associated with this goal
     const weeklyGoals = await ctx.db
-      .query('goalsWeekly')
+      .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
       )
@@ -292,7 +292,7 @@ export const createWeeklyGoal = mutation({
     });
 
     // Create initial weekly state
-    await ctx.db.insert('goalsWeekly', {
+    await ctx.db.insert('goalStateByWeek', {
       userId,
       year: parentGoal.year,
       quarter: parentGoal.quarter,
@@ -351,7 +351,7 @@ export const createDailyGoal = mutation({
     });
 
     // Create the weekly goal data
-    await ctx.db.insert('goalsWeekly', {
+    await ctx.db.insert('goalStateByWeek', {
       userId,
       year: parentGoal.year,
       quarter: parentGoal.quarter,
@@ -401,7 +401,7 @@ export const toggleGoalCompletion = mutation({
 
     // Find the weekly goal record
     const weeklyGoal = await ctx.db
-      .query('goalsWeekly')
+      .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
           .eq('userId', userId)
@@ -442,7 +442,7 @@ export const toggleGoalCompletion = mutation({
       await Promise.all(
         childGoals.map(async (childGoal) => {
           const childWeeklyGoal = await ctx.db
-            .query('goalsWeekly')
+            .query('goalStateByWeek')
             .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
               q
                 .eq('userId', userId)
@@ -503,7 +503,7 @@ export const updateDailyGoalDay = mutation({
 
     // Find the weekly goal record
     const weeklyGoal = await ctx.db
-      .query('goalsWeekly')
+      .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
           .eq('userId', userId)
@@ -561,10 +561,12 @@ export const useDailyGoal = query({
 
     // Get the weekly state for this goal using the optimized index
     const weeklyGoal = await ctx.db
-      .query('goalsWeekly')
-      .withIndex('by_daily_goal_lookup', (q) =>
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_year_and_quarter_and_week_and_daily', (q) =>
         q
           .eq('userId', userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
           .eq('weekNumber', weekNumber)
           .eq('daily.dayOfWeek', dayOfWeek)
           .eq('goalId', goalId)

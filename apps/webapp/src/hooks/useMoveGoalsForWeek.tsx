@@ -109,7 +109,7 @@ export const useMoveGoalsForWeek = ({
               },
             };
           }),
-          weeklyGoals: previewData.weeklyGoalsToCopy,
+          weeklyGoals: previewData.weekStatesToCopy,
         });
         setShowConfirmDialog(true);
       }

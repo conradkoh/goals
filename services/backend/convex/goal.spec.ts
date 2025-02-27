@@ -97,7 +97,7 @@ describe('moveGoalsFromWeek', () => {
     expect(previewResult).toEqual({
       canPull: true,
       isDryRun: true,
-      weeklyGoalsToCopy: [
+      weekStatesToCopy: [
         {
           title: 'Goal weekly',
           carryOver: {
@@ -142,10 +142,10 @@ describe('moveGoalsFromWeek', () => {
 
     // Verify move results
     expect(moveResult).toEqual({
-      weeklyGoalsToCopy: expect.any(Array),
+      weekStatesToCopy: expect.any(Array),
       dailyGoalsToMove: expect.any(Array),
       quarterlyGoalsToUpdate: expect.any(Array),
-      weeklyGoalsCopied: 1,
+      weekStatesCopied: 1,
       dailyGoalsMoved: 1,
       quarterlyGoalsUpdated: 1,
     });

@@ -164,7 +164,7 @@ export const WeekProviderWithoutDashboard = ({
           path: '',
           isOptimistic: true,
           state: {
-            _id: `optimistic_weekly_${tempId}` as Id<'goalsWeekly'>,
+            _id: `optimistic_weekly_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
             year: weekData.weekNumber,
@@ -249,7 +249,7 @@ export const WeekProviderWithoutDashboard = ({
           path: '',
           isOptimistic: true,
           state: {
-            _id: `optimistic_daily_${tempId}` as Id<'goalsWeekly'>,
+            _id: `optimistic_daily_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
             year: weekData.weekNumber,

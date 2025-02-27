@@ -1,9 +1,10 @@
 import { v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { mutation } from './_generated/server';
+import { internalMutation, mutation } from './_generated/server';
 import { moveGoalsFromWeekUsecase } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
 import { DayOfWeek, getDayName } from '../src/constants';
-import { Id } from './_generated/dataModel';
+import { Id, Doc } from './_generated/dataModel';
+import { internal } from './_generated/api';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -79,7 +80,7 @@ export const moveGoalsFromDay = mutation({
 
     // Find all daily goals from the source day
     const allGoalStates = await ctx.db
-      .query('goalsWeekly')
+      .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
         q
           .eq('userId', userId)
@@ -118,7 +119,7 @@ export const moveGoalsFromDay = mutation({
 
         // Get the quarterly goal's weekly state for starred/pinned status
         const quarterlyGoalWeekly = await ctx.db
-          .query('goalsWeekly')
+          .query('goalStateByWeek')
           .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
             q
               .eq('userId', userId)
@@ -210,5 +211,136 @@ export const moveGoalsFromDay = mutation({
     }
 
     return { tasksMoved: validTasks.length };
+  },
+});
+
+// migration from goalsWeekly to goalStateByWeek
+export const migrateGoals = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const goalsWeekly = await ctx.db.query('goalsWeekly').collect();
+    const groupedByUser = goalsWeekly.reduce((acc, goalWeekly) => {
+      acc[goalWeekly.userId] = acc[goalWeekly.userId] || [];
+      acc[goalWeekly.userId].push(goalWeekly);
+      return acc;
+    }, {} as Record<Id<'users'>, Doc<'goalsWeekly'>[]>);
+
+    const userIds = Object.keys(groupedByUser) as Id<'users'>[];
+
+    // Define types for our statistics
+    type UserMigrationResult = {
+      userId: Id<'users'>;
+      recordsDeleted: number;
+      recordsMigrated: number;
+      durationMs: number;
+      weekBreakdown: Record<string, number>;
+      success: boolean;
+    };
+
+    type MigrationSummary = {
+      totalUsers: number;
+      totalRecordsDeleted: number;
+      totalRecordsMigrated: number;
+      usersProcessed: number;
+      totalGoalsWeeklyRecords: number;
+    };
+
+    // Run migrations for all users and collect results
+    const userResults = await Promise.all(
+      userIds.map(async (userId) => {
+        const result = (await ctx.runMutation(
+          internal.goal.migrateGoalsForUser,
+          { userId }
+        )) as UserMigrationResult;
+        return result;
+      })
+    );
+
+    // Compile overall statistics
+    const totalStats = userResults.reduce(
+      (
+        acc: {
+          totalUsers: number;
+          totalRecordsDeleted: number;
+          totalRecordsMigrated: number;
+        },
+        userResult: UserMigrationResult
+      ) => {
+        acc.totalUsers++;
+        acc.totalRecordsDeleted += userResult.recordsDeleted;
+        acc.totalRecordsMigrated += userResult.recordsMigrated;
+        return acc;
+      },
+      { totalUsers: 0, totalRecordsDeleted: 0, totalRecordsMigrated: 0 }
+    );
+
+    // Return detailed statistics
+    return {
+      summary: {
+        ...totalStats,
+        usersProcessed: userIds.length,
+        totalGoalsWeeklyRecords: goalsWeekly.length,
+      } as MigrationSummary,
+      userDetails: userResults,
+    };
+  },
+});
+
+export const migrateGoalsForUser = internalMutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    // Track migration start time
+    const startTime = Date.now();
+
+    // // Get existing records in goalStateByWeek for this user
+    // const userGoalStates = await ctx.db
+    //   .query('goalStateByWeek')
+    //   .withIndex('by_user', (q) => q.eq('userId', args.userId))
+    //   .collect();
+
+    // // Delete existing records
+    // await Promise.all(
+    //   userGoalStates.map((goalState) => ctx.db.delete(goalState._id))
+    // );
+
+    // const recordsDeleted = userGoalStates.length;
+
+    // Get records from old table
+    const oldState = await ctx.db
+      .query('goalsWeekly')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .collect();
+
+    // Group the old records by some key metrics for stats
+    const recordsByWeek = oldState.reduce((acc, record) => {
+      const key = `${record.year}-Q${record.quarter}-W${record.weekNumber}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Insert new records
+    const insertionResults = await Promise.all(
+      oldState.map((goalWeekly) => {
+        const { _id, _creationTime, ...copyData } = goalWeekly;
+        return ctx.db.insert('goalStateByWeek', copyData);
+      })
+    );
+
+    const recordsMigrated = insertionResults.length;
+
+    // Calculate duration
+    const durationMs = Date.now() - startTime;
+
+    // Return detailed statistics
+    return {
+      userId: args.userId,
+      recordsDeleted: 0,
+      recordsMigrated,
+      durationMs,
+      weekBreakdown: recordsByWeek,
+      success: recordsMigrated === oldState.length,
+    };
   },
 });
