@@ -422,6 +422,7 @@ export const toggleGoalCompletion = mutation({
     // Update the completion status
     await ctx.db.patch(weeklyGoal._id, {
       isComplete,
+      completedAt: isComplete ? Date.now() : undefined,
     });
 
     // If this is a weekly goal (depth 1) and updateChildren is true, update all child goals
@@ -456,6 +457,7 @@ export const toggleGoalCompletion = mutation({
           if (childWeeklyGoal) {
             await ctx.db.patch(childWeeklyGoal._id, {
               isComplete,
+              completedAt: isComplete ? Date.now() : undefined,
             });
           }
         })
@@ -579,6 +581,7 @@ export const useDailyGoal = query({
       isComplete: weeklyGoal?.isComplete ?? false,
       isPinned: weeklyGoal?.isPinned ?? false,
       isStarred: weeklyGoal?.isStarred ?? false,
+      completedAt: weeklyGoal?.completedAt,
       weekNumber: weeklyGoal?.weekNumber,
       dayOfWeek: weeklyGoal?.daily?.dayOfWeek,
     };

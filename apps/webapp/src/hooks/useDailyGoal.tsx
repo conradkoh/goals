@@ -11,6 +11,7 @@ export interface DailyGoalDetails {
   isComplete: boolean;
   isPinned: boolean;
   isStarred: boolean;
+  completedAt?: number;
   weekNumber?: number;
   dayOfWeek?: DayOfWeekType;
 }

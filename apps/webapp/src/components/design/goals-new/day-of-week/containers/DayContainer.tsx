@@ -21,6 +21,30 @@ import { DeleteGoalIconButton } from '@/components/design/goals-new/DeleteGoalIc
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DateTime } from 'luxon';
+
+// Helper function to check if a goal was completed today
+export const wasCompletedToday = (
+  goal: GoalWithOptimisticStatus,
+  todayTimestamp: number
+): boolean => {
+  if (!goal.state?.isComplete || !goal.state?.completedAt) return false;
+
+  // Get the start of today
+  const startOfToday = DateTime.fromMillis(todayTimestamp)
+    .startOf('day')
+    .toMillis();
+  // Get the end of today
+  const endOfToday = DateTime.fromMillis(todayTimestamp)
+    .endOf('day')
+    .toMillis();
+
+  // Check if the goal was completed today
+  return (
+    goal.state.completedAt >= startOfToday &&
+    goal.state.completedAt <= endOfToday
+  );
+};
 
 export type DayContainerMode = 'plan' | 'focus';
 
@@ -260,7 +284,15 @@ export const DayContainer = ({
                     const hasDailyGoals = weekly.children.some(
                       (daily) => daily.state?.daily?.dayOfWeek === dayOfWeek
                     );
-                    return !hasDailyGoals;
+                    // Include goals that were completed today even if they don't have daily goals
+                    const wasCompletedOnSameDay = wasCompletedToday(
+                      weekly,
+                      dateTimestamp
+                    );
+                    return (
+                      !hasDailyGoals &&
+                      (!weekly.state?.isComplete || wasCompletedOnSameDay)
+                    );
                   })
                 : [];
 

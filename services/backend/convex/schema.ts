@@ -65,6 +65,7 @@ export default defineSchema({
     isPinned: v.boolean(),
     // weekly goals
     isComplete: v.boolean(),
+    completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
     // daily goals
     daily: v.optional(
       v.object({

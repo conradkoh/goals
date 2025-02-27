@@ -3,7 +3,10 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useMemo } from 'react';
-import { DayContainer } from '@/components/design/goals-new/day-of-week/containers/DayContainer';
+import {
+  DayContainer,
+  wasCompletedToday,
+} from '@/components/design/goals-new/day-of-week/containers/DayContainer';
 import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { useGoalActions } from '@/hooks/useGoalActions';
 
@@ -107,9 +110,24 @@ export const FocusModeDailyViewDailyGoals = ({
           return false;
         }
 
-        // Filter out completed weekly goals
+        // Filter out completed weekly goals unless they were completed today
         if (weeklyGoal.state?.isComplete) {
-          return false;
+          // Get the current day's date timestamp
+          const currentDayData = (
+            days as Array<{
+              dayOfWeek: DayOfWeekType;
+              date: string;
+              dateTimestamp: number;
+            }>
+          ).find((day) => day.dayOfWeek === selectedDayOfWeek);
+
+          if (
+            currentDayData &&
+            wasCompletedToday(weeklyGoal, currentDayData.dateTimestamp)
+          ) {
+            return true; // Include goals completed today
+          }
+          return false; // Filter out other completed goals
         }
 
         return true;
