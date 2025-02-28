@@ -278,12 +278,10 @@ export const MultiWeekGrid = ({
           </>
         )}
       </button>
-      <div
-        id="quarterly-grid-container"
-        className="min-h-full flex-1 px-4 md:px-8 py-2"
-      >
+      <div id="multi-week-grid-container" className="flex-1 px-4 md:px-8 py-2">
         <div
-          className="grid grid-flow-col gap-4 h-full pb-4"
+          id="multi-week-grid-content"
+          className="flex-grow grid grid-flow-col gap-4 h-full py-2"
           style={{
             width: `${gridWidth}px`,
             gridTemplateColumns: `repeat(${numItems}, minmax(${

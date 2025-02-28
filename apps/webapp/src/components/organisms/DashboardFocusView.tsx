@@ -50,13 +50,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   return (
     <div id="db-focus-view" className="w-full h-full">
-      <div
-        className="w-full
-        md:max-w-3xl 
-        lg:max-w-4xl 
-        xl:max-w-5xl 
-        2xl:max-w-6xl"
-      >
+      <div className="w-full h-full">
         {viewMode === 'quarterly' && (
           <FocusModeQuarterlyView
             year={selectedYear}
@@ -65,24 +59,28 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
         )}
 
         {viewMode === 'weekly' && weekData && (
-          <FocusModeWeeklyView
-            weekNumber={selectedWeekNumber}
-            year={selectedYear}
-            quarter={selectedQuarter}
-            weekData={weekData}
-            onNavigate={handleWeekNavigation}
-          />
+          <div className="w-full h-full md:max-w-4xl mx-auto">
+            <FocusModeWeeklyView
+              weekNumber={selectedWeekNumber}
+              year={selectedYear}
+              quarter={selectedQuarter}
+              weekData={weekData}
+              onNavigate={handleWeekNavigation}
+            />
+          </div>
         )}
 
         {viewMode === 'daily' && weekData && (
-          <FocusModeDailyView
-            weekNumber={selectedWeekNumber}
-            year={selectedYear}
-            quarter={selectedQuarter}
-            weekData={weekData}
-            selectedDayOfWeek={selectedDayOfWeek}
-            onNavigate={handleDayNavigation}
-          />
+          <div className="w-full h-full md:max-w-4xl mx-auto">
+            <FocusModeDailyView
+              weekNumber={selectedWeekNumber}
+              year={selectedYear}
+              quarter={selectedQuarter}
+              weekData={weekData}
+              selectedDayOfWeek={selectedDayOfWeek}
+              onNavigate={handleDayNavigation}
+            />
+          </div>
         )}
 
         {(viewMode === 'weekly' || viewMode === 'daily') && !weekData && (

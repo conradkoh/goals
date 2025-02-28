@@ -31,7 +31,7 @@ export const FocusModeQuarterlyView = memo(
     }, [year, quarter]);
 
     return (
-      <div id="focus-mode-quarterly-view" className="w-full">
+      <div id="focus-mode-quarterly-view" className="w-full h-full">
         <MultiWeekGenerator startDate={startOfQuarter} endDate={endOfQuarter}>
           <MultiWeekLayout />
         </MultiWeekGenerator>

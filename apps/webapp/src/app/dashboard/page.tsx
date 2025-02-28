@@ -36,14 +36,7 @@ const QuarterOverviewPage = () => {
       </div>
 
       {/* Main Content - always shows scrollbars */}
-      <div
-        className="flex-1 overflow-auto"
-        style={{
-          overflow: 'scroll',
-          scrollbarWidth: 'auto',
-          msOverflowStyle: 'scrollbar',
-        }}
-      >
+      <div className="flex-1 overflow-auto">
         <DashboardFocusView
           initialViewMode={viewMode}
           onViewModeChange={handleViewModeChange}
