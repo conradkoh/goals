@@ -32,13 +32,16 @@ const MemoizedWeekCardContent = memo(
       quarter: number
     ) => void;
   }) => {
-    // Format the date as a string for mondayDate
-    const mondayDate = new Date(
-      week.year,
-      (week.quarter - 1) * 3,
-      1 + (week.weekNumber - 1) * 7
-    );
+    // Format the date as a string for mondayDate using Luxon for proper ISO week handling
+    const mondayDate = DateTime.fromObject({
+      weekYear: week.year,
+      weekNumber: week.weekNumber,
+    })
+      .startOf('week')
+      .toJSDate();
+
     const mondayDateString = mondayDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    console.log('mondayDateString', mondayDateString);
 
     // Create days array with proper format
     const days = useMemo(() => {
