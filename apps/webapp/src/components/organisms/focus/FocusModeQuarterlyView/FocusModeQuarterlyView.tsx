@@ -1,55 +1,40 @@
-import React, { memo } from 'react';
-import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardQuarterlyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardQuarterlyGoals';
-import { Skeleton } from '@/components/ui/skeleton';
+import React, { useMemo, memo } from 'react';
+import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
+import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
 
 interface FocusModeQuarterlyViewProps {
-  year: number;
-  quarter: number;
-  weekData: WeekData;
-  isLoading?: boolean;
+  year?: number;
+  quarter?: number;
 }
 
-// Loading skeleton for quarterly goals
-const QuarterlyGoalsSkeleton = () => (
-  <div className="space-y-3">
-    <Skeleton className="h-10 w-full" />
-    <Skeleton className="h-10 w-5/6" />
-    <Skeleton className="h-10 w-4/5" />
-  </div>
-);
-
-// Use React.memo to prevent unnecessary re-renders
 export const FocusModeQuarterlyView = memo(
   ({
-    year,
-    quarter,
-    weekData,
-    isLoading = false,
+    year = new Date().getFullYear(),
+    quarter = Math.floor(new Date().getMonth() / 3) + 1,
   }: FocusModeQuarterlyViewProps) => {
-    // If loading, show skeleton
-    if (isLoading) {
-      return (
-        <div className="space-y-4">
-          <QuarterlyGoalsSkeleton />
-        </div>
-      );
-    }
+    // Calculate the start and end dates of the quarter
+    const { startOfQuarter, endOfQuarter } = useMemo(() => {
+      // Quarter is 1-based (1-4), but Date month is 0-based (0-11)
+      const startMonth = (quarter - 1) * 3;
+      const endMonth = startMonth + 2;
 
-    // Ensure weekData is valid before rendering
-    if (!weekData || !weekData.tree) {
-      return null;
-    }
+      // Create start date (first day of the first month of the quarter)
+      const startDate = new Date(year, startMonth, 1);
+
+      // Create end date (last day of the last month of the quarter)
+      const endDate = new Date(year, endMonth + 1, 0);
+
+      return {
+        startOfQuarter: startDate,
+        endOfQuarter: endDate,
+      };
+    }, [year, quarter]);
 
     return (
-      <div className="space-y-4">
-        <WeekProviderWithoutDashboard weekData={weekData}>
-          <WeekCardQuarterlyGoals
-            weekNumber={weekData.weekNumber}
-            year={year}
-            quarter={quarter}
-          />
-        </WeekProviderWithoutDashboard>
+      <div className="w-full">
+        <MultiWeekGenerator startDate={startOfQuarter} endDate={endOfQuarter}>
+          <MultiWeekLayout />
+        </MultiWeekGenerator>
       </div>
     );
   }

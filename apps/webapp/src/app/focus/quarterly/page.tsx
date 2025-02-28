@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, memo } from 'react';
-import { QuarterlyFocusView } from '@/components/organisms/focus/FocusModeQuarterlyView/QuarterlyFocusView';
+import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ViewMode } from '@/app/focus/page.constants';
 import { FocusHeader } from '../components/FocusHeader';
@@ -52,7 +52,7 @@ const QuarterlyFocusPage = memo(() => {
 
       {/* Content - Full width for quarterly view */}
       <div className="w-full py-8">
-        <QuarterlyFocusView year={year} quarter={quarter} />
+        <FocusModeQuarterlyView year={year} quarter={quarter} />
       </div>
     </div>
   );
