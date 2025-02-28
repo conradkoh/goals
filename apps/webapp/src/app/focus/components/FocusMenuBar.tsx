@@ -11,15 +11,15 @@ import {
 import { useDashboard } from '@/hooks/useDashboard';
 import { ViewMode } from '@/app/focus/page.constants';
 
-export type YearQuarterSelectorProps = {
+export type FocusMenuBarProps = {
   viewMode?: ViewMode;
   onViewModeChange?: (viewMode: ViewMode) => void;
 };
 
-export const YearQuarterSelector = ({
+export const FocusMenuBar = ({
   viewMode = 'quarterly',
   onViewModeChange,
-}: YearQuarterSelectorProps) => {
+}: FocusMenuBarProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentYear, currentQuarter } = useDashboard();
@@ -52,7 +52,10 @@ export const YearQuarterSelector = ({
   };
 
   return (
-    <div className="flex items-center justify-center sm:justify-start gap-3">
+    <div
+      id="focus-menu-bar"
+      className="flex items-center justify-center sm:justify-start gap-3"
+    >
       <div className="flex items-center gap-2">
         <Select
           value={selectedYear.toString()}
@@ -94,9 +97,9 @@ export const YearQuarterSelector = ({
             <SelectValue placeholder="Select view" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="daily">Daily View</SelectItem>
-            <SelectItem value="weekly">Weekly View</SelectItem>
             <SelectItem value="quarterly">Quarterly View</SelectItem>
+            <SelectItem value="weekly">Weekly View</SelectItem>
+            <SelectItem value="daily">Daily View</SelectItem>
           </SelectContent>
         </Select>
       </div>

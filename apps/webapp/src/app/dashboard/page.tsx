@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { DashboardFocusView } from '../../components/organisms/DashboardFocusView';
 import { ViewMode } from '@/app/focus/page.constants';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { YearQuarterSelector } from '@/components/organisms/quarterly-overview/YearQuarterSelector';
+import { FocusMenuBar } from '@/app/focus/components/FocusMenuBar';
 
 const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
@@ -28,7 +28,7 @@ const QuarterOverviewPage = () => {
       {/* Filter Bar */}
       <div className="bg-background p-3 border-b">
         <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
-          <YearQuarterSelector
+          <FocusMenuBar
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
           />
