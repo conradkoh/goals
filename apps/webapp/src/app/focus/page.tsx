@@ -244,52 +244,31 @@ const FocusPage = () => {
 
   return (
     <div className="min-h-screen w-screen bg-gray-50 overflow-clip">
-      {/* Top Bar */}
-      <FocusHeader
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        onClose={handleClose}
-      >
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handlePrevious}
-            disabled={isAtMinBound}
-            className={cn(
-              'h-8 w-8 text-muted-foreground hover:text-foreground',
-              isAtMinBound && 'opacity-50 cursor-not-allowed'
-            )}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium min-w-[140px] text-center">
-            {viewMode === 'daily'
-              ? `${getDayName(selectedDay)} [Week ${selectedWeek}]`
-              : `Week ${selectedWeek}`}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNext}
-            disabled={isAtMaxBound}
-            className={cn(
-              'h-8 w-8 text-muted-foreground hover:text-foreground',
-              isAtMaxBound && 'opacity-50 cursor-not-allowed'
-            )}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <JumpToCurrentButton
+      <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
+        {/* Top Bar */}
+        <FocusHeader
           viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+          onClose={handleClose}
           selectedWeek={selectedWeek}
           selectedDay={selectedDay}
-          currentWeekNumber={currentWeekNumber}
-          isCurrentQuarter={isCurrentQuarter}
-          onJumpToCurrent={handleJumpToCurrent}
-        />
-      </FocusHeader>
+          isAtMinBound={isAtMinBound}
+          isAtMaxBound={isAtMaxBound}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          selectedYear={year}
+          selectedQuarter={quarter}
+        >
+          <JumpToCurrentButton
+            viewMode={viewMode}
+            selectedWeek={selectedWeek}
+            selectedDay={selectedDay}
+            currentWeekNumber={currentWeekNumber}
+            isCurrentQuarter={isCurrentQuarter}
+            onJumpToCurrent={handleJumpToCurrent}
+          />
+        </FocusHeader>
+      </div>
 
       {/* Content */}
       {!weekDetails || !currentWeekInfo ? (

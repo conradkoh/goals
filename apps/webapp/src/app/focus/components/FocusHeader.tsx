@@ -1,25 +1,42 @@
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ViewMode } from '@/app/focus/page.constants';
 import { cn } from '@/lib/utils';
+import { DayOfWeek } from '@/lib/constants';
+import { FocusMenuBar } from './FocusMenuBar';
 
 interface FocusHeaderProps {
   viewMode: ViewMode;
   onViewModeChange: (newViewMode: ViewMode) => void;
   onClose: () => void;
   children?: React.ReactNode;
+  // Navigation props
+  selectedWeek?: number;
+  selectedDay?: DayOfWeek;
+  isAtMinBound?: boolean;
+  isAtMaxBound?: boolean;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  selectedYear?: number;
+  selectedQuarter?: 1 | 2 | 3 | 4;
 }
 
 export const FocusHeader = memo(
-  ({ viewMode, onViewModeChange, onClose, children }: FocusHeaderProps) => {
+  ({
+    viewMode,
+    onViewModeChange,
+    onClose,
+    children,
+    selectedWeek,
+    selectedDay,
+    isAtMinBound,
+    isAtMaxBound,
+    onPrevious,
+    onNext,
+    selectedYear,
+    selectedQuarter,
+  }: FocusHeaderProps) => {
     // Determine if we should use container class based on view mode
     const isQuarterlyView = viewMode === 'quarterly';
 
@@ -36,16 +53,18 @@ export const FocusHeader = memo(
               <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                 <div className="flex items-center gap-4">
                   <h2 className="text-lg font-semibold">Focus Mode</h2>
-                  <Select value={viewMode} onValueChange={onViewModeChange}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select view" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily View</SelectItem>
-                      <SelectItem value="weekly">Weekly View</SelectItem>
-                      <SelectItem value="quarterly">Quarterly View</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FocusMenuBar
+                    viewMode={viewMode}
+                    onViewModeChange={onViewModeChange}
+                    selectedWeek={selectedWeek}
+                    selectedDay={selectedDay}
+                    isAtMinBound={isAtMinBound}
+                    isAtMaxBound={isAtMaxBound}
+                    onPrevious={onPrevious}
+                    onNext={onNext}
+                    selectedYear={selectedYear}
+                    selectedQuarter={selectedQuarter}
+                  />
                 </div>
                 <Button
                   variant="ghost"

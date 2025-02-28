@@ -3,7 +3,6 @@ import React, { useCallback } from 'react';
 import { DashboardFocusView } from '../../components/organisms/DashboardFocusView';
 import { ViewMode } from '@/app/focus/page.constants';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FocusMenuBar } from '@/app/focus/components/FocusMenuBar';
 
 const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
@@ -25,17 +24,6 @@ const QuarterOverviewPage = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Filter Bar */}
-      <div className="bg-background p-3 border-b">
-        <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
-          <FocusMenuBar
-            viewMode={viewMode}
-            onViewModeChange={handleViewModeChange}
-          />
-        </div>
-      </div>
-
-      {/* Main Content - always shows scrollbars */}
       <div className="flex-1 overflow-auto">
         <DashboardFocusView
           initialViewMode={viewMode}
