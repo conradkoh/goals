@@ -9,6 +9,7 @@ import { DayOfWeek } from '@/lib/constants';
 import { FocusMenuBar } from '@/app/focus/components/FocusMenuBar';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface DashboardFocusViewProps {
   initialViewMode?: ViewMode;
@@ -20,13 +21,46 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onViewModeChange,
 }) => {
   const { selectedYear, selectedQuarter, currentWeekNumber } = useDashboard();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   // Call hooks at the top level
   const currentDateTime = useCurrentDateTime();
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-  const [selectedWeekNumber, setSelectedWeekNumber] =
-    useState<number>(currentWeekNumber);
-  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
-    currentDateTime.weekday as DayOfWeek
+
+  // Initialize week and day from URL or defaults
+  const [selectedWeekNumber, setSelectedWeekNumber] = useState<number>(() => {
+    const weekFromUrl = searchParams.get('week');
+    return weekFromUrl ? parseInt(weekFromUrl) : currentWeekNumber;
+  });
+
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => {
+    const dayFromUrl = searchParams.get('day');
+    return dayFromUrl
+      ? (parseInt(dayFromUrl) as DayOfWeek)
+      : (currentDateTime.weekday as DayOfWeek);
+  });
+
+  // Update URL helper function
+  const updateUrl = useCallback(
+    (params: { week?: number; day?: DayOfWeek; viewMode?: ViewMode }) => {
+      const newParams = new URLSearchParams(searchParams.toString());
+
+      if (params.week !== undefined) {
+        newParams.set('week', params.week.toString());
+      }
+
+      if (params.day !== undefined) {
+        newParams.set('day', params.day.toString());
+      }
+
+      if (params.viewMode !== undefined) {
+        newParams.set('viewMode', params.viewMode);
+      }
+
+      router.push(`/dashboard?${newParams.toString()}`);
+    },
+    [router, searchParams]
   );
 
   // Get quarter week info for navigation bounds
@@ -61,23 +95,29 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   const handleViewModeChange = useCallback(
     (newViewMode: ViewMode) => {
       setViewMode(newViewMode);
+      updateUrl({ viewMode: newViewMode });
       if (onViewModeChange) {
         onViewModeChange(newViewMode);
       }
     },
-    [onViewModeChange]
+    [onViewModeChange, updateUrl]
   );
 
-  const handleWeekNavigation = useCallback((weekNumber: number) => {
-    setSelectedWeekNumber(weekNumber);
-  }, []);
+  const handleWeekNavigation = useCallback(
+    (weekNumber: number) => {
+      setSelectedWeekNumber(weekNumber);
+      updateUrl({ week: weekNumber });
+    },
+    [updateUrl]
+  );
 
   const handleDayNavigation = useCallback(
     (weekNumber: number, dayOfWeek: DayOfWeek) => {
       setSelectedWeekNumber(weekNumber);
       setSelectedDayOfWeek(dayOfWeek);
+      updateUrl({ week: weekNumber, day: dayOfWeek });
     },
-    []
+    [updateUrl]
   );
 
   const handlePrevious = useCallback(() => {
@@ -86,6 +126,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     if (viewMode === 'weekly') {
       const newWeek = selectedWeekNumber - 1;
       setSelectedWeekNumber(newWeek);
+      updateUrl({ week: newWeek });
       return;
     }
 
@@ -94,12 +135,20 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
       const newWeek = selectedWeekNumber - 1;
       setSelectedWeekNumber(newWeek);
       setSelectedDayOfWeek(DayOfWeek.SUNDAY);
+      updateUrl({ week: newWeek, day: DayOfWeek.SUNDAY });
     } else {
       // Otherwise just go to previous day
       const newDay = (selectedDayOfWeek - 1) as DayOfWeek;
       setSelectedDayOfWeek(newDay);
+      updateUrl({ day: newDay });
     }
-  }, [isAtMinBound, viewMode, selectedWeekNumber, selectedDayOfWeek]);
+  }, [
+    isAtMinBound,
+    viewMode,
+    selectedWeekNumber,
+    selectedDayOfWeek,
+    updateUrl,
+  ]);
 
   const handleNext = useCallback(() => {
     if (isAtMaxBound) return;
@@ -107,6 +156,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     if (viewMode === 'weekly') {
       const newWeek = selectedWeekNumber + 1;
       setSelectedWeekNumber(newWeek);
+      updateUrl({ week: newWeek });
       return;
     }
 
@@ -115,12 +165,27 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
       const newWeek = selectedWeekNumber + 1;
       setSelectedWeekNumber(newWeek);
       setSelectedDayOfWeek(DayOfWeek.MONDAY);
+      updateUrl({ week: newWeek, day: DayOfWeek.MONDAY });
     } else {
       // Otherwise just go to next day
       const newDay = (selectedDayOfWeek + 1) as DayOfWeek;
       setSelectedDayOfWeek(newDay);
+      updateUrl({ day: newDay });
     }
-  }, [isAtMaxBound, viewMode, selectedWeekNumber, selectedDayOfWeek]);
+  }, [
+    isAtMaxBound,
+    viewMode,
+    selectedWeekNumber,
+    selectedDayOfWeek,
+    updateUrl,
+  ]);
+
+  // Set initial day in URL if in daily view
+  useEffect(() => {
+    if (viewMode === 'daily' && !searchParams.get('day')) {
+      updateUrl({ day: selectedDayOfWeek });
+    }
+  }, [viewMode, selectedDayOfWeek, searchParams, updateUrl]);
 
   return (
     <div id="db-focus-view" className="w-full h-full">

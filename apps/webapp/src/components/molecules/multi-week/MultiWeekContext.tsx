@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { WeekData, useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
-import { DateTime } from 'luxon';
+import { generateISOWeeks } from '@/lib/date/iso-week';
 
 // Define the context type
 interface MultiWeekContextType {
@@ -24,34 +24,6 @@ interface MultiWeekContextType {
 const MultiWeekContext = createContext<MultiWeekContextType | undefined>(
   undefined
 );
-
-// Helper function to generate weeks between two dates
-const generateWeeks = (
-  startDate: Date,
-  endDate: Date
-): { weekNumber: number; year: number; quarter: number }[] => {
-  const weeks: { weekNumber: number; year: number; quarter: number }[] = [];
-
-  // Clone the start date to avoid modifying the original
-  let currentDateTime = DateTime.fromJSDate(startDate);
-  const endDateTime = DateTime.fromJSDate(endDate);
-
-  while (currentDateTime <= endDateTime) {
-    const weekNumber = currentDateTime.weekNumber;
-    const quarter = Math.ceil(currentDateTime.month / 3);
-
-    weeks.push({
-      weekNumber,
-      year: currentDateTime.year,
-      quarter,
-    });
-
-    // Move to the next week
-    currentDateTime = currentDateTime.plus({ weeks: 1 });
-  }
-
-  return weeks;
-};
 
 // Helper function to create a placeholder WeekData object for a week
 const createPlaceholderWeekData = (
@@ -163,9 +135,9 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
   endDate,
   children,
 }) => {
-  // Generate the weeks between the start and end dates
+  // Generate the weeks between the start and end dates using our ISO week utility
   const generatedWeeks = useMemo(() => {
-    return generateWeeks(startDate, endDate);
+    return generateISOWeeks(startDate, endDate);
   }, [startDate, endDate]);
 
   // Create initial placeholder data for each week
@@ -193,15 +165,6 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
       weekNumber: number
     ) => {
       setWeeksWithData((prevWeeks) => {
-        // Find the existing week that needs to be updated
-        const existingWeek = prevWeeks.find(
-          (w) =>
-            w.year === year &&
-            w.quarter === quarter &&
-            w.weekNumber === weekNumber
-        );
-
-        // Update the data
         return prevWeeks.map((week) => {
           if (
             week.year === year &&
