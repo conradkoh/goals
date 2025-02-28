@@ -31,7 +31,9 @@ export default function DashboardLayout({
             className="h-screen bg-background flex flex-col overflow-y-hidden"
           >
             <Header />
-            <main className="flex-1 max-h-[calc(100vh-4rem)]">{children}</main>
+            <main className="flex-grow max-h-[calc(100vh-4rem)] overflow-x-auto">
+              {children}
+            </main>
           </div>
           <Toaster />
         </DashboardProvider>
