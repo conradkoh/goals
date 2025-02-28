@@ -10,12 +10,23 @@ import {
 } from '@/components/ui/collapsible-minimal';
 import { QuarterlyGoal } from '../../goals-new/QuarterlyGoal';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
   year: number;
   quarter: number;
+  isLoading?: boolean;
 }
+
+// Loading skeleton for quarterly goals
+const QuarterlyGoalsSkeleton = () => (
+  <div className="space-y-3">
+    <Skeleton className="h-10 w-full" />
+    <Skeleton className="h-10 w-5/6" />
+    <Skeleton className="h-10 w-4/5" />
+  </div>
+);
 
 // Helper function to sort goals by status and title
 const sortGoals = (
@@ -42,6 +53,7 @@ export const WeekCardQuarterlyGoals = ({
   weekNumber,
   year,
   quarter,
+  isLoading = false,
 }: WeekCardQuarterlyGoalsProps) => {
   const {
     createQuarterlyGoal,
@@ -145,10 +157,15 @@ export const WeekCardQuarterlyGoals = ({
     return { importantGoals: important, otherGoals: other };
   }, [sortedGoals]);
 
+  // If loading, show skeleton
+  if (isLoading) {
+    return <QuarterlyGoalsSkeleton />;
+  }
+
   return (
     <div className="space-y-2">
       <CreateGoalInput
-        placeholder="Add a quarterly goal..."
+        placeholder="Add a task..."
         value={newGoalTitle}
         onChange={setNewGoalTitle}
         onSubmit={handleCreateGoal}

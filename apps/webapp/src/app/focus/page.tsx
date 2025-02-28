@@ -21,6 +21,7 @@ import { FocusModeDailyView } from '@/components/design/focus/FocusModeDailyView
 import { FocusModeWeeklyView } from '@/components/design/focus/FocusModeWeeklyView';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { FocusHeader } from './components/FocusHeader';
 
 const FocusPage = () => {
   const searchParams = useSearchParams();
@@ -34,7 +35,11 @@ const FocusPage = () => {
 
   // Ensure viewParam is a valid ViewMode
   const initialViewMode = (
-    viewParam === 'weekly' ? 'weekly' : 'daily'
+    viewParam === 'weekly'
+      ? 'weekly'
+      : viewParam === 'quarterly'
+      ? 'quarterly'
+      : 'daily'
   ) as ViewMode;
 
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -42,6 +47,13 @@ const FocusPage = () => {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
     return currentDateTime.weekday as DayOfWeek;
   });
+
+  // Redirect to quarterly focus page if quarterly view is selected
+  useEffect(() => {
+    if (viewMode === 'quarterly') {
+      router.push(`/focus/quarterly?year=${year}&quarter=${quarter}`);
+    }
+  }, [viewMode, year, quarter, router]);
 
   // Update URL when parameters change
   const updateUrl = (params: {
@@ -176,7 +188,12 @@ const FocusPage = () => {
 
   const handleViewModeChange = (newViewMode: ViewMode) => {
     setViewMode(newViewMode);
-    updateUrl({ view: newViewMode });
+
+    // If quarterly view is selected, we'll redirect in the useEffect
+    // Otherwise, update the URL as usual
+    if (newViewMode !== 'quarterly') {
+      updateUrl({ view: newViewMode });
+    }
   };
 
   const renderLoadingSkeleton = () => (
@@ -228,83 +245,51 @@ const FocusPage = () => {
   return (
     <div className="min-h-screen w-screen bg-gray-50 overflow-clip">
       {/* Top Bar */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-              <div className="flex items-center justify-between w-full sm:w-auto gap-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-semibold">Focus Mode</h2>
-                  <Select value={viewMode} onValueChange={handleViewModeChange}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select view" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="daily">Daily View</SelectItem>
-                      <SelectItem value="weekly">Weekly View</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleClose}
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground sm:hidden"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handlePrevious}
-                  disabled={isAtMinBound}
-                  className={cn(
-                    'h-8 w-8 text-muted-foreground hover:text-foreground',
-                    isAtMinBound && 'opacity-50 cursor-not-allowed'
-                  )}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm font-medium min-w-[140px] text-center">
-                  {viewMode === 'daily'
-                    ? `${getDayName(selectedDay)} [Week ${selectedWeek}]`
-                    : `Week ${selectedWeek}`}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleNext}
-                  disabled={isAtMaxBound}
-                  className={cn(
-                    'h-8 w-8 text-muted-foreground hover:text-foreground',
-                    isAtMaxBound && 'opacity-50 cursor-not-allowed'
-                  )}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <JumpToCurrentButton
-                viewMode={viewMode}
-                selectedWeek={selectedWeek}
-                selectedDay={selectedDay}
-                currentWeekNumber={currentWeekNumber}
-                isCurrentQuarter={isCurrentQuarter}
-                onJumpToCurrent={handleJumpToCurrent}
-              />
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground hidden sm:flex"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      <FocusHeader
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        onClose={handleClose}
+      >
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePrevious}
+            disabled={isAtMinBound}
+            className={cn(
+              'h-8 w-8 text-muted-foreground hover:text-foreground',
+              isAtMinBound && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium min-w-[140px] text-center">
+            {viewMode === 'daily'
+              ? `${getDayName(selectedDay)} [Week ${selectedWeek}]`
+              : `Week ${selectedWeek}`}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNext}
+            disabled={isAtMaxBound}
+            className={cn(
+              'h-8 w-8 text-muted-foreground hover:text-foreground',
+              isAtMaxBound && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
-      </div>
+        <JumpToCurrentButton
+          viewMode={viewMode}
+          selectedWeek={selectedWeek}
+          selectedDay={selectedDay}
+          currentWeekNumber={currentWeekNumber}
+          isCurrentQuarter={isCurrentQuarter}
+          onJumpToCurrent={handleJumpToCurrent}
+        />
+      </FocusHeader>
 
       {/* Content */}
       {!weekDetails || !currentWeekInfo ? (

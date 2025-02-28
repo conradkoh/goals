@@ -26,9 +26,12 @@ export const JumpToCurrentButton = ({
   const isCurrentView =
     viewMode === 'daily'
       ? selectedWeek === currentWeekNumber && selectedDay === today.weekday
-      : selectedWeek === currentWeekNumber;
+      : viewMode === 'weekly'
+      ? selectedWeek === currentWeekNumber
+      : false; // For quarterly view, we don't have a concept of "current" in this component
 
-  if (!isCurrentQuarter || isCurrentView) {
+  // Don't show the button for quarterly view or if we're already on the current view
+  if (!isCurrentQuarter || isCurrentView || viewMode === 'quarterly') {
     return null;
   }
 

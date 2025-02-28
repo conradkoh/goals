@@ -80,7 +80,7 @@ export const CreateGoalInput = ({
           }}
           autoFocus={autoFocus}
           disabled={disabled}
-          className="h-7 text-sm pl-8 bg-transparent border-none hover:bg-gray-50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm"
+          className="flex w-full rounded-md border border-input px-3 py-1 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-7 text-sm pl-8 bg-transparent border-none hover:bg-gray-50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm"
         />
         <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">
           <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />

@@ -147,7 +147,7 @@ export function QuarterlyGoal({
                 variant="ghost"
                 className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               >
-                <span className="break-words w-full whitespace-pre-wrap">
+                <span className="break-words w-full whitespace-pre-wrap text-gray-600">
                   {goal.title}
                 </span>
               </Button>

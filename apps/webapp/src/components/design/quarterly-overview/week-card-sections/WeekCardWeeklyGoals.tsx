@@ -27,12 +27,23 @@ import { forwardRef, useMemo, useState, useCallback } from 'react';
 import { CreateGoalInput } from '../../goals-new/CreateGoalInput';
 import { DeleteGoalIconButton } from '../../goals-new/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../goals-new/GoalEditPopover';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
   year: number;
   quarter: number;
+  isLoading?: boolean;
 }
+
+// Loading skeleton for weekly goals
+const WeeklyGoalsSkeleton = () => (
+  <div className="space-y-3">
+    <Skeleton className="h-10 w-full" />
+    <Skeleton className="h-10 w-5/6" />
+    <Skeleton className="h-10 w-4/5" />
+  </div>
+);
 
 // Internal component for rendering a weekly goal
 const WeeklyGoal = ({
@@ -331,8 +342,7 @@ const WeeklyGoalGroup = ({
 export const WeekCardWeeklyGoals = forwardRef<
   HTMLDivElement,
   WeekCardWeeklyGoalsProps
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
->(({ weekNumber, year, quarter }, ref) => {
+>(({ weekNumber, year, quarter, isLoading = false }, ref) => {
   const { updateQuarterlyGoalTitle } = useGoalActions();
   const { quarterlyGoals, deleteWeeklyGoalOptimistic } = useWeek();
 
@@ -379,6 +389,11 @@ export const WeekCardWeeklyGoals = forwardRef<
     },
     [deleteWeeklyGoalOptimistic]
   );
+
+  // If loading, show skeleton
+  if (isLoading) {
+    return <WeeklyGoalsSkeleton />;
+  }
 
   return (
     <div className="space-y-4" ref={ref}>
