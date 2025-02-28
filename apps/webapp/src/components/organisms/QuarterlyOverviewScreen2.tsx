@@ -1,7 +1,7 @@
 'use client';
 
-import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
-import { WeekCardWeeklyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardDailyGoals';
+import { WeekCardWeeklyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardWeeklyGoals';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import {

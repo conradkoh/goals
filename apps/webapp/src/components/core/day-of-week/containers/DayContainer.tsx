@@ -1,5 +1,5 @@
-import { DailyGoalItem } from '@/components/design/goals-new/daily-goal/DailyGoalItem';
-import { GoalEditPopover } from '@/components/design/goals-new/GoalEditPopover';
+import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
+import { GoalEditPopover } from '@/components/organisms/goals-new/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import {
   Popover,

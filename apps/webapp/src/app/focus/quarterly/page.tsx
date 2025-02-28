@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useMemo, memo } from 'react';
-import { QuarterlyFocusView } from '@/components/design/focus/FocusModeQuarterlyView/QuarterlyFocusView';
+import { QuarterlyFocusView } from '@/components/organisms/focus/FocusModeQuarterlyView/QuarterlyFocusView';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ViewMode } from '@/app/focus/page.constants';
 import { FocusHeader } from '../components/FocusHeader';

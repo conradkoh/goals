@@ -14,8 +14,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { YearQuarterSelector } from '@/components/design/quarterly-overview/YearQuarterSelector';
-import { SyncPassphrase } from '@/components/design/sync/SyncPassphrase';
+import { YearQuarterSelector } from '@/components/organisms/quarterly-overview/YearQuarterSelector';
+import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import { Separator } from '@/components/ui/separator';
 
 export default function DashboardLayout({

@@ -1,4 +1,4 @@
-import { FocusModeDailyViewDailyGoals } from '@/components/design/focus/FocusModeDailyViewDailyGoals';
+import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 

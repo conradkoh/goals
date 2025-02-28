@@ -1,6 +1,6 @@
-import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardWeeklyGoals';
 import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';

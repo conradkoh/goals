@@ -22,13 +22,13 @@ import {
   useState,
   useCallback,
 } from 'react';
-import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
+import { CreateGoalInput } from '@/components/organisms/goals-new/CreateGoalInput';
 import {
   DayContainer,
   DayContainerMode,
 } from '@/components/core/day-of-week/containers/DayContainer';
 import { PastDaysContainer } from '@/components/core/day-of-week/containers/PastDaysContainer';
-import { GoalSelector } from '@/components/design/goals-new/GoalSelector';
+import { GoalSelector } from '@/components/organisms/goals-new/GoalSelector';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export interface WeekCardDailyGoalsProps {

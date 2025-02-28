@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { GoalEditPopover } from '@/components/design/goals-new/GoalEditPopover';
+import { GoalEditPopover } from '@/components/organisms/goals-new/GoalEditPopover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Star, Pin, Edit2 } from 'lucide-react';
 

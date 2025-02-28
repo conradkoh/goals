@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
+import { CreateGoalInput } from '@/components/organisms/goals-new/CreateGoalInput';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
