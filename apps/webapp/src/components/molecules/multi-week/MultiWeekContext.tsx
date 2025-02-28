@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useState,
   useCallback,
+  useEffect,
 } from 'react';
 import { WeekData, useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
@@ -135,13 +136,28 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
   endDate,
   children,
 }) => {
+  // Create a unique key for the component based on dates
+  const componentKey = useMemo(() => {
+    return `${startDate.getTime()}-${endDate.getTime()}`;
+  }, [startDate, endDate]);
+
   // Generate the weeks between the start and end dates using our ISO week utility
   const generatedWeeks = useMemo(() => {
+    console.log(
+      'Regenerating weeks for',
+      startDate.toISOString(),
+      endDate.toISOString()
+    );
     return generateISOWeeks(startDate, endDate);
   }, [startDate, endDate]);
 
   // Create initial placeholder data for each week
   const initialWeeksWithData = useMemo(() => {
+    console.log(
+      'Creating placeholder data for',
+      generatedWeeks.length,
+      'weeks'
+    );
     return generatedWeeks.map((week) => ({
       ...week,
       weekData: createPlaceholderWeekData(
@@ -155,6 +171,12 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
 
   // State to store the weeks with data
   const [weeksWithData, setWeeksWithData] = useState(initialWeeksWithData);
+
+  // IMPORTANT: Reset weeksWithData when initialWeeksWithData changes (which happens when startDate/endDate change)
+  useEffect(() => {
+    console.log('Resetting weeks with data due to date change');
+    setWeeksWithData(initialWeeksWithData);
+  }, [initialWeeksWithData]);
 
   // Function to update a specific week's data - memoized to prevent infinite loops
   const updateWeekData = useCallback(
@@ -211,8 +233,9 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
     return { weeks: weeksWithData };
   }, [weeksWithData]);
 
+  // Add key to Provider to force re-mount when dates change
   return (
-    <MultiWeekContext.Provider value={contextValue}>
+    <MultiWeekContext.Provider value={contextValue} key={componentKey}>
       {/* Render data fetchers for each week */}
       {generatedWeeks.map((week) => (
         <WeekDataFetcher
