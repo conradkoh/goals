@@ -12,25 +12,11 @@ export const FocusModeQuarterlyView = memo(
     year = new Date().getFullYear(),
     quarter = Math.floor(new Date().getMonth() / 3) + 1,
   }: FocusModeQuarterlyViewProps) => {
-    console.log(
-      'FocusModeQuarterlyView rendering for year:',
-      year,
-      'quarter:',
-      quarter
-    );
-
     // Generate a key that changes when year or quarter changes
     const instanceKey = `quarterly-view-${year}-${quarter}`;
 
     // Calculate the start and end dates of the quarter
     const { startOfQuarter, endOfQuarter } = useMemo(() => {
-      console.log(
-        'Recalculating quarter dates for year:',
-        year,
-        'quarter:',
-        quarter
-      );
-
       // Quarter is 1-based (1-4), but Date month is 0-based (0-11)
       const startMonth = (quarter - 1) * 3;
       const endMonth = startMonth + 2;

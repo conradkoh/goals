@@ -37,21 +37,19 @@ const createPlaceholderWeekData = (
   const mondayDate = DateTime.fromObject({
     weekYear: year,
     weekNumber: weekNumber,
-  })
-    .startOf('week')
-    .toJSDate();
+  }).startOf('week');
 
-  const mondayDateString = mondayDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  const mondayDateString = mondayDate.toFormat('yyyy-MM-dd'); // Format as YYYY-MM-DD using Luxon
 
-  // Create the days array
+  // Create the days array using Luxon for consistent date handling
   const days = Array(7)
     .fill(null)
     .map((_, i) => {
-      const date = new Date(mondayDate.getTime() + i * 24 * 60 * 60 * 1000);
+      const date = mondayDate.plus({ days: i });
       return {
         dayOfWeek: (i % 7) as DayOfWeek,
-        date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        dateTimestamp: date.getTime(),
+        date: date.toFormat('yyyy-MM-dd'), // Format as YYYY-MM-DD using Luxon
+        dateTimestamp: date.toMillis(), // Use Luxon's toMillis instead of getTime()
         goals: [],
       };
     });
@@ -144,21 +142,11 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
 
   // Generate the weeks between the start and end dates using our ISO week utility
   const generatedWeeks = useMemo(() => {
-    console.log(
-      'Regenerating weeks for',
-      startDate.toISOString(),
-      endDate.toISOString()
-    );
     return generateISOWeeks(startDate, endDate);
   }, [startDate, endDate]);
 
   // Create initial placeholder data for each week
   const initialWeeksWithData = useMemo(() => {
-    console.log(
-      'Creating placeholder data for',
-      generatedWeeks.length,
-      'weeks'
-    );
     return generatedWeeks.map((week) => ({
       ...week,
       weekData: createPlaceholderWeekData(
@@ -175,7 +163,6 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
 
   // IMPORTANT: Reset weeksWithData when initialWeeksWithData changes (which happens when startDate/endDate change)
   useEffect(() => {
-    console.log('Resetting weeks with data due to date change');
     setWeeksWithData(initialWeeksWithData);
   }, [initialWeeksWithData]);
 

@@ -36,23 +36,19 @@ const MemoizedWeekCardContent = memo(
     const mondayDate = DateTime.fromObject({
       weekYear: week.year,
       weekNumber: week.weekNumber,
-    })
-      .startOf('week')
-      .toJSDate();
+    }).startOf('week');
+    const mondayDateString = mondayDate.toFormat('yyyy-MM-dd');
 
-    const mondayDateString = mondayDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    console.log('mondayDateString', mondayDateString);
-
-    // Create days array with proper format
+    // Create days array with proper format using Luxon
     const days = useMemo(() => {
       return Array(7)
         .fill(null)
         .map((_, i) => {
-          const date = new Date(mondayDate.getTime() + i * 24 * 60 * 60 * 1000);
+          const date = mondayDate.plus({ days: i });
           return {
             dayOfWeek: (i % 7) as DayOfWeek,
-            date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-            dateTimestamp: date.getTime(),
+            date: date.toFormat('yyyy-MM-dd'), // Format as YYYY-MM-DD using Luxon
+            dateTimestamp: date.toMillis(), // Use Luxon's toMillis instead of getTime()
             goals: [],
           };
         });
@@ -128,9 +124,8 @@ export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
   const router = useRouter();
 
-  // Get the current week number
-  const currentDate = new Date();
-  const currentDateTime = DateTime.fromJSDate(currentDate);
+  // Get the current week number using Luxon
+  const currentDateTime = DateTime.now();
   const currentWeekNumber = currentDateTime.weekNumber;
   const currentYear = currentDateTime.year;
   const currentQuarter = Math.ceil(currentDateTime.month / 3);
