@@ -76,7 +76,7 @@ export const MultiWeekGrid = ({
     const gridWidth = numItems * cardWidth + (numItems - 1) * GAP_WIDTH;
     return { cardWidth, gapWidth: GAP_WIDTH, gridWidth };
   }, [numItems, containerWidth]); // Add containerWidth as dependency
-
+  console.log({ containerWidth });
   const calculateScrollPosition = () => {
     const container = containerRef.current;
     if (!container || currentIndex === -1) return 0;
@@ -89,7 +89,9 @@ export const MultiWeekGrid = ({
     // For desktop with 2 columns, we center the current card
     if (isMobile) {
       // For mobile, exactly align to the current card
-      return currentIndex * (cardWidth + gapWidth);
+      const scroll = currentIndex * (cardWidth + gapWidth);
+      // console.log({ scroll, currentIndex, cardWidth, gapWidth });
+      return scroll;
     } else {
       // For desktop, center the current card
       const offset = visibleCols / 2 - 0.5;

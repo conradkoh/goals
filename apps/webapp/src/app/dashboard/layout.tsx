@@ -14,7 +14,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { YearQuarterSelector } from '@/components/organisms/quarterly-overview/YearQuarterSelector';
 import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import { Separator } from '@/components/ui/separator';
 
@@ -47,12 +46,10 @@ const Header = () => {
 
   return (
     <header className="border-b">
-      <div className="w-full flex h-16 items-center justify-between px-6">
-        <div className="flex items-center gap-6">
+      <div className="max-w-screen-2xl mx-auto w-full">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
           <h1 className="text-xl font-semibold">Goals</h1>
-          <YearQuarterSelector />
-        </div>
-        <div className="flex items-center gap-4">
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon">

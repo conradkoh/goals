@@ -9,8 +9,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useDashboard } from '@/hooks/useDashboard';
+import { ViewMode } from '@/app/focus/page.constants';
 
-export const YearQuarterSelector = () => {
+export type YearQuarterSelectorProps = {
+  viewMode?: ViewMode;
+  onViewModeChange?: (viewMode: ViewMode) => void;
+};
+
+export const YearQuarterSelector = ({
+  viewMode = 'quarterly',
+  onViewModeChange,
+}: YearQuarterSelectorProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentYear, currentQuarter } = useDashboard();
@@ -36,6 +45,12 @@ export const YearQuarterSelector = () => {
     router.push(`/dashboard?${params.toString()}`);
   };
 
+  const handleViewModeChange = (newViewMode: ViewMode) => {
+    if (onViewModeChange) {
+      onViewModeChange(newViewMode);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Select
@@ -44,7 +59,7 @@ export const YearQuarterSelector = () => {
           updateUrlParams(parseInt(value), selectedQuarter)
         }
       >
-        <SelectTrigger className="w-[120px]">
+        <SelectTrigger className="w-[80px]">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>
@@ -62,7 +77,7 @@ export const YearQuarterSelector = () => {
           updateUrlParams(selectedYear, parseInt(value))
         }
       >
-        <SelectTrigger className="w-[120px]">
+        <SelectTrigger className="w-[80px]">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
         <SelectContent>
@@ -71,6 +86,17 @@ export const YearQuarterSelector = () => {
               Q{quarter}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={viewMode} onValueChange={handleViewModeChange}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select view" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="daily">Daily View</SelectItem>
+          <SelectItem value="weekly">Weekly View</SelectItem>
+          <SelectItem value="quarterly">Quarterly View</SelectItem>
         </SelectContent>
       </Select>
     </div>
