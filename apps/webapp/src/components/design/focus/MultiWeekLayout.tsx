@@ -7,9 +7,9 @@ import { DateTime } from 'luxon';
 import { DayOfWeek } from '@/lib/constants';
 import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
-import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
 
 // Memoized week card component to prevent unnecessary re-renders
 const MemoizedWeekCardContent = memo(

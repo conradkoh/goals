@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardQuarterlyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardQuarterlyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface FocusModeQuarterlyViewProps {

@@ -1,7 +1,7 @@
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '../quarterly-overview/week-card-sections/WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '../quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '../quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '../goals-new/week-card-sections/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '../goals-new/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '../goals-new/week-card-sections/WeekCardWeeklyGoals';
 import { Button } from '@/components/ui/button';
 import { History } from 'lucide-react';
 import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';

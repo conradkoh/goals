@@ -1,7 +1,7 @@
 'use client';
 
-import { WeekCardDailyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardDailyGoals';
-import { WeekCardWeeklyGoals } from '@/components/design/quarterly-overview/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
+import { WeekCardWeeklyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardWeeklyGoals';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import {
@@ -15,7 +15,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 import { useRouter } from 'next/navigation';
 import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
 import { WeekCard } from './quarterly-overview/WeekCard';
-import { WeekCardQuarterlyGoals } from './quarterly-overview/week-card-sections/WeekCardQuarterlyGoals';
+import { WeekCardQuarterlyGoals } from './goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { DayOfWeek } from '@/lib/constants';
 
 export interface DragData {

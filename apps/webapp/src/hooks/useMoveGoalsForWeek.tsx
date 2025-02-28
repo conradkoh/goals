@@ -4,7 +4,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
 import { toast } from '@/components/ui/use-toast';
-import { WeekCardPreviewDialog } from '@/components/design/quarterly-overview/week-card-sections/WeekCardPreviewDialog';
+import { WeekCardPreviewDialog } from '@/components/design/goals-new/week-card-sections/WeekCardPreviewDialog';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 
 interface PreviewTask {
