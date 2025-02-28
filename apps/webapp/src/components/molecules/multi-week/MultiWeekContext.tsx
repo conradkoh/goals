@@ -199,22 +199,13 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
       weekNumber: number
     ) => {
       setWeeksWithData((prevWeeks) => {
-        // Check if the data is already up to date to prevent unnecessary updates
+        // Find the existing week that needs to be updated
         const existingWeek = prevWeeks.find(
           (w) =>
             w.year === year &&
             w.quarter === quarter &&
             w.weekNumber === weekNumber
         );
-
-        if (
-          existingWeek &&
-          existingWeek.weekData.tree.allGoals.length ===
-            newWeekData.tree.allGoals.length
-        ) {
-          // Data is already up to date, no need to update
-          return prevWeeks;
-        }
 
         // Update the data
         return prevWeeks.map((week) => {
