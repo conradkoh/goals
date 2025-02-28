@@ -9,6 +9,7 @@ import React, {
 import { WeekData, useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { generateISOWeeks } from '@/lib/date/iso-week';
+import { DateTime } from 'luxon';
 
 // Define the context type
 interface MultiWeekContextType {
@@ -32,21 +33,21 @@ const createPlaceholderWeekData = (
   year: number,
   quarter: number
 ): WeekData => {
-  // Calculate the Monday date for this week
-  const firstDayOfYear = new Date(year, 0, 1);
-  const dayOfWeek = firstDayOfYear.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const daysToAdd = (weekNumber - 1) * 7 - (dayOfWeek - 1);
+  // Calculate the Monday date for this week using Luxon for proper ISO week handling
+  const mondayDate = DateTime.fromObject({
+    weekYear: year,
+    weekNumber: weekNumber,
+  })
+    .startOf('week')
+    .toJSDate();
 
-  // Create the Monday date for this week
-  const mondayDate = new Date(year, 0, daysToAdd);
   const mondayDateString = mondayDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
 
   // Create the days array
   const days = Array(7)
     .fill(null)
     .map((_, i) => {
-      const date = new Date(mondayDate);
-      date.setDate(mondayDate.getDate() + i);
+      const date = new Date(mondayDate.getTime() + i * 24 * 60 * 60 * 1000);
       return {
         dayOfWeek: (i % 7) as DayOfWeek,
         date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
