@@ -19,7 +19,7 @@ import { AddTaskInput } from '../components/AddTaskInput';
 import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
 import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
-import { ConditionalRender } from '@/components/util/ConditionalRender';
+import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (

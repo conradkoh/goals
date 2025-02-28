@@ -1,5 +1,5 @@
 'use client';
-import { ClientOnly } from '@/components/util/ClientOnly';
+import { ClientOnly } from '@/components/atoms/ClientOnly';
 import { SessionProvider } from '@/modules/auth/SessionContext';
 
 export default function FocusLayout({

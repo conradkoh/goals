@@ -3,7 +3,7 @@
 import { User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
-import { ClientOnly } from '@/components/util/ClientOnly';
+import { ClientOnly } from '@/components/atoms/ClientOnly';
 import { DashboardProvider } from '@/hooks/useDashboard';
 import { SessionProvider } from '@/modules/auth/SessionContext';
 import { useSession } from '@/modules/auth/useSession';

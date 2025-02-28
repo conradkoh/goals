@@ -1,5 +1,5 @@
 'use client';
-import { ConditionalRender } from '@/components/util/ConditionalRender';
+import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { api } from '@services/backend/convex/_generated/api';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';

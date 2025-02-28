@@ -3,7 +3,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import { cn } from '@/lib/utils';
-import { ConditionalRender } from '@/components/util/ConditionalRender';
+import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { EditorView } from '@tiptap/pm/view';
