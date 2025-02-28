@@ -1,12 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  useCallback,
-  useEffect,
-} from 'react';
-import { WeekData, useWeekWithoutDashboard } from '@/hooks/useWeek';
+import React, { createContext, useContext, useMemo } from 'react';
+import { WeekData } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { generateISOWeeks } from '@/lib/date/iso-week';
 import { DateTime } from 'luxon';
@@ -18,7 +11,6 @@ interface MultiWeekContextType {
     year: number;
     quarter: number;
     weekData: WeekData;
-    isLoading: boolean;
   }[];
 }
 
@@ -39,7 +31,7 @@ const createPlaceholderWeekData = (
     weekNumber: weekNumber,
   }).startOf('week');
 
-  const mondayDateString = mondayDate.toFormat('yyyy-MM-dd'); // Format as YYYY-MM-DD using Luxon
+  const mondayDateString = mondayDate.toFormat('yyyy-MM-dd');
 
   // Create the days array using Luxon for consistent date handling
   const days = Array(7)
@@ -48,17 +40,17 @@ const createPlaceholderWeekData = (
       const date = mondayDate.plus({ days: i });
       return {
         dayOfWeek: (i % 7) as DayOfWeek,
-        date: date.toFormat('yyyy-MM-dd'), // Format as YYYY-MM-DD using Luxon
-        dateTimestamp: date.toMillis(), // Use Luxon's toMillis instead of getTime()
+        date: date.toFormat('yyyy-MM-dd'),
+        dateTimestamp: date.toMillis(),
         goals: [],
       };
     });
 
   // Create a proper WeekGoalsTree structure
   const tree = {
-    quarterlyGoals: [], // Empty array of quarterly goals
-    weekNumber: weekNumber, // The week number
-    allGoals: [], // Empty array of all goals
+    quarterlyGoals: [],
+    weekNumber: weekNumber,
+    allGoals: [],
     stats: {
       totalTasks: 0,
       completedTasks: 0,
@@ -72,54 +64,6 @@ const createPlaceholderWeekData = (
     days,
     tree,
   };
-};
-
-// Component to fetch data for a single week
-interface WeekDataFetcherProps {
-  year: number;
-  quarter: number;
-  weekNumber: number;
-  onDataFetched: (
-    weekData: WeekData,
-    year: number,
-    quarter: number,
-    weekNumber: number
-  ) => void;
-  onLoadingChange: (
-    isLoading: boolean,
-    year: number,
-    quarter: number,
-    weekNumber: number
-  ) => void;
-}
-
-const WeekDataFetcher: React.FC<WeekDataFetcherProps> = ({
-  year,
-  quarter,
-  weekNumber,
-  onDataFetched,
-  onLoadingChange,
-}) => {
-  // Fetch the week data
-  const weekData = useWeekWithoutDashboard({
-    year,
-    quarter,
-    week: weekNumber,
-  });
-
-  // Set loading state when data is being fetched
-  React.useEffect(() => {
-    // If weekData is undefined, we're still loading
-    onLoadingChange(weekData === undefined, year, quarter, weekNumber);
-
-    // When data is fetched, call the callback
-    if (weekData) {
-      onDataFetched(weekData, year, quarter, weekNumber);
-    }
-  }, [weekData, year, quarter, weekNumber, onDataFetched, onLoadingChange]);
-
-  // This component doesn't render anything
-  return null;
 };
 
 // Props for the MultiWeekGenerator component
@@ -146,7 +90,7 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
   }, [startDate, endDate]);
 
   // Create initial placeholder data for each week
-  const initialWeeksWithData = useMemo(() => {
+  const weeksWithData = useMemo(() => {
     return generatedWeeks.map((week) => ({
       ...week,
       weekData: createPlaceholderWeekData(
@@ -154,87 +98,16 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
         week.year,
         week.quarter
       ),
-      isLoading: true, // Initially all weeks are loading
     }));
   }, [generatedWeeks]);
-
-  // State to store the weeks with data
-  const [weeksWithData, setWeeksWithData] = useState(initialWeeksWithData);
-
-  // IMPORTANT: Reset weeksWithData when initialWeeksWithData changes (which happens when startDate/endDate change)
-  useEffect(() => {
-    setWeeksWithData(initialWeeksWithData);
-  }, [initialWeeksWithData]);
-
-  // Function to update a specific week's data - memoized to prevent infinite loops
-  const updateWeekData = useCallback(
-    (
-      newWeekData: WeekData,
-      year: number,
-      quarter: number,
-      weekNumber: number
-    ) => {
-      setWeeksWithData((prevWeeks) => {
-        return prevWeeks.map((week) => {
-          if (
-            week.year === year &&
-            week.quarter === quarter &&
-            week.weekNumber === weekNumber
-          ) {
-            return {
-              ...week,
-              weekData: newWeekData,
-              isLoading: false, // Data is loaded
-            };
-          }
-          return week;
-        });
-      });
-    },
-    []
-  );
-
-  // Function to update loading state for a specific week
-  const updateLoadingState = useCallback(
-    (isLoading: boolean, year: number, quarter: number, weekNumber: number) => {
-      setWeeksWithData((prevWeeks) => {
-        return prevWeeks.map((week) => {
-          if (
-            week.year === year &&
-            week.quarter === quarter &&
-            week.weekNumber === weekNumber
-          ) {
-            return {
-              ...week,
-              isLoading,
-            };
-          }
-          return week;
-        });
-      });
-    },
-    []
-  );
 
   // Create the context value
   const contextValue = useMemo(() => {
     return { weeks: weeksWithData };
   }, [weeksWithData]);
 
-  // Add key to Provider to force re-mount when dates change
   return (
     <MultiWeekContext.Provider value={contextValue} key={componentKey}>
-      {/* Render data fetchers for each week */}
-      {generatedWeeks.map((week) => (
-        <WeekDataFetcher
-          key={`${week.year}-${week.quarter}-${week.weekNumber}`}
-          year={week.year}
-          quarter={week.quarter}
-          weekNumber={week.weekNumber}
-          onDataFetched={updateWeekData}
-          onLoadingChange={updateLoadingState}
-        />
-      ))}
       {children}
     </MultiWeekContext.Provider>
   );

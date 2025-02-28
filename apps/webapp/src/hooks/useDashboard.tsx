@@ -1,15 +1,11 @@
 'use client';
 
-import { useSession } from '@/modules/auth/useSession';
-import { api } from '@services/backend/convex/_generated/api';
-import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
-import { useQuery } from 'convex/react';
 import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
-import React, { createContext, useContext, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useQuarterWeekInfo } from './useQuarterWeekInfo';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useCurrentDateTime } from './useCurrentDateTime';
+import { useQuarterWeekInfo } from './useQuarterWeekInfo';
 
 export const useDashboard = () => {
   const val = useContext(DashboardContext);

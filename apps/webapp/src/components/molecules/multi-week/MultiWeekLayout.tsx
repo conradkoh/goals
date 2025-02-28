@@ -1,124 +1,119 @@
 import { WeekCardDailyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardWeeklyGoals';
-import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import {
+  WeekData,
+  WeekProviderWithoutDashboard,
+  useWeekWithoutDashboard,
+} from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { useRouter } from 'next/navigation';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { WeekCard } from '../week/WeekCard';
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
 import { DateTime } from 'luxon';
 
-// Memoized week card component to prevent unnecessary re-renders
-const MemoizedWeekCardContent = memo(
-  ({
-    week,
-    isCurrentWeek,
-    handleFocusClick,
-  }: {
-    week: {
-      year: number;
-      quarter: number;
-      weekNumber: number;
-      weekData: any;
-      isLoading: boolean;
-    };
-    isCurrentWeek: boolean;
-    handleFocusClick: (
-      weekNumber: number,
-      year: number,
-      quarter: number
-    ) => void;
-  }) => {
-    // Format the date as a string for mondayDate using Luxon for proper ISO week handling
-    const mondayDate = DateTime.fromObject({
-      weekYear: week.year,
+// Week card content component
+const WeekCardContent = ({
+  week,
+  isCurrentWeek,
+  handleFocusClick,
+}: {
+  week: {
+    year: number;
+    quarter: number;
+    weekNumber: number;
+    weekData: WeekData;
+  };
+  isCurrentWeek: boolean;
+  handleFocusClick: (weekNumber: number, year: number, quarter: number) => void;
+}) => {
+  // Fetch the actual week data from the backend
+  const weekDataFromBackend = useWeekWithoutDashboard({
+    year: week.year,
+    quarter: week.quarter,
+    week: week.weekNumber,
+  });
+
+  // Format the date as a string for mondayDate using Luxon for proper ISO week handling
+  const mondayDate = DateTime.fromObject({
+    weekYear: week.year,
+    weekNumber: week.weekNumber,
+  }).startOf('week');
+  const mondayDateString = mondayDate.toFormat('yyyy-MM-dd');
+
+  // Use the backend data if available, otherwise use placeholder data
+  const weekData = useMemo(
+    () => ({
+      weekLabel: `Week ${week.weekNumber}`,
       weekNumber: week.weekNumber,
-    }).startOf('week');
-    const mondayDateString = mondayDate.toFormat('yyyy-MM-dd');
+      mondayDate: mondayDateString,
+      days: (weekDataFromBackend || week.weekData).days,
+      tree: weekDataFromBackend?.tree || week.weekData.tree || { allGoals: [] },
+    }),
+    [week.weekNumber, mondayDateString, weekDataFromBackend, week.weekData]
+  );
 
-    // Create days array with proper format using Luxon
-    const days = useMemo(() => {
-      return Array(7)
-        .fill(null)
-        .map((_, i) => {
-          const date = mondayDate.plus({ days: i });
-          return {
-            dayOfWeek: (i % 7) as DayOfWeek,
-            date: date.toFormat('yyyy-MM-dd'), // Format as YYYY-MM-DD using Luxon
-            dateTimestamp: date.toMillis(), // Use Luxon's toMillis instead of getTime()
-            goals: [],
-          };
-        });
-    }, [mondayDate]);
+  // Loading state is determined by weekDataFromBackend being undefined
+  const isLoading = weekDataFromBackend === undefined;
 
-    const weekData = useMemo(
-      () => ({
-        weekLabel: `Week ${week.weekNumber}`,
-        weekNumber: week.weekNumber,
-        mondayDate: mondayDateString,
-        days,
-        tree: week.weekData.tree || { allGoals: [] },
-      }),
-      [week.weekNumber, mondayDateString, days, week.weekData.tree]
-    );
+  // Memoize the focus click handler
+  const handleFocusClickMemo = useCallback(
+    () => handleFocusClick(week.weekNumber, week.year, week.quarter),
+    [handleFocusClick, week.weekNumber, week.year, week.quarter]
+  );
 
-    return (
-      <WeekCard
-        key={`${week.year}-${week.quarter}-${week.weekNumber}`}
-        year={week.year}
-        quarter={week.quarter}
-        weekLabel={`Week ${week.weekNumber}`}
-        mondayDate={mondayDateString}
-        weekNumber={week.weekNumber}
-        isCurrentWeek={isCurrentWeek}
-        onFocusClick={() =>
-          handleFocusClick(week.weekNumber, week.year, week.quarter)
-        }
-        weekData={weekData}
+  return (
+    <WeekCard
+      year={week.year}
+      quarter={week.quarter}
+      weekLabel={`Week ${week.weekNumber}`}
+      mondayDate={mondayDateString}
+      weekNumber={week.weekNumber}
+      isCurrentWeek={isCurrentWeek}
+      onFocusClick={handleFocusClickMemo}
+      weekData={weekData}
+    >
+      <WeekProviderWithoutDashboard
+        weekData={weekDataFromBackend || week.weekData}
       >
         <div className="space-y-2 md:space-y-4">
           <WeekCardSection title="💭 Quarterly Goals">
-            <WeekProviderWithoutDashboard weekData={week.weekData}>
-              <WeekCardQuarterlyGoals
-                weekNumber={week.weekNumber}
-                year={week.year}
-                quarter={week.quarter}
-                isLoading={week.isLoading}
-              />
-            </WeekProviderWithoutDashboard>
+            <WeekCardQuarterlyGoals
+              weekNumber={week.weekNumber}
+              year={week.year}
+              quarter={week.quarter}
+              isLoading={isLoading}
+            />
           </WeekCardSection>
 
           <WeekCardSection title="🚀 Weekly Goals">
-            <WeekProviderWithoutDashboard weekData={week.weekData}>
-              <WeekCardWeeklyGoals
-                weekNumber={week.weekNumber}
-                year={week.year}
-                quarter={week.quarter}
-                isLoading={week.isLoading}
-              />
-            </WeekProviderWithoutDashboard>
+            <WeekCardWeeklyGoals
+              weekNumber={week.weekNumber}
+              year={week.year}
+              quarter={week.quarter}
+              isLoading={isLoading}
+            />
           </WeekCardSection>
 
           <WeekCardSection title="📊 Daily Goals">
-            <WeekProviderWithoutDashboard weekData={week.weekData}>
-              <WeekCardDailyGoals
-                weekNumber={week.weekNumber}
-                year={week.year}
-                quarter={week.quarter}
-                isLoading={week.isLoading}
-              />
-            </WeekProviderWithoutDashboard>
+            <WeekCardDailyGoals
+              weekNumber={week.weekNumber}
+              year={week.year}
+              quarter={week.quarter}
+              isLoading={isLoading}
+            />
           </WeekCardSection>
         </div>
-      </WeekCard>
-    );
-  }
-);
+      </WeekProviderWithoutDashboard>
+    </WeekCard>
+  );
+};
 
-MemoizedWeekCardContent.displayName = 'MemoizedWeekCardContent';
+// Update the displayName
+WeekCardContent.displayName = 'WeekCardContent';
 
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
@@ -152,7 +147,7 @@ export const MultiWeekLayout = memo(() => {
   const sensors = useSensors(mouseSensor);
 
   // Handle focus click to navigate to the focus page
-  const handleFocusClick = React.useCallback(
+  const handleFocusClick = useCallback(
     (weekNumber: number, year: number, quarter: number) => {
       router.push(`/focus?year=${year}&quarter=${quarter}&week=${weekNumber}`);
     },
@@ -163,29 +158,21 @@ export const MultiWeekLayout = memo(() => {
     <div className="flex flex-col h-full">
       <DndContext sensors={sensors}>
         <MultiWeekGrid currentIndex={currentIndex} numItems={weeks.length}>
-          {weeks.map(
-            (week: {
-              year: number;
-              quarter: number;
-              weekNumber: number;
-              weekData: any;
-              isLoading: boolean;
-            }) => {
-              const isCurrentWeek =
-                week.weekNumber === currentWeekNumber &&
-                week.year === currentYear &&
-                week.quarter === currentQuarter;
+          {weeks.map((week) => {
+            const isCurrentWeek =
+              week.weekNumber === currentWeekNumber &&
+              week.year === currentYear &&
+              week.quarter === currentQuarter;
 
-              return (
-                <MemoizedWeekCardContent
-                  key={`${week.year}-${week.quarter}-${week.weekNumber}`}
-                  week={week}
-                  isCurrentWeek={isCurrentWeek}
-                  handleFocusClick={handleFocusClick}
-                />
-              );
-            }
-          )}
+            return (
+              <WeekCardContent
+                key={`${week.year}-${week.quarter}-${week.weekNumber}`}
+                week={week}
+                isCurrentWeek={isCurrentWeek}
+                handleFocusClick={handleFocusClick}
+              />
+            );
+          })}
         </MultiWeekGrid>
       </DndContext>
     </div>
