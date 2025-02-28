@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { WeekData, useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
+import { DateTime } from 'luxon';
 
 // Define the context type
 interface MultiWeekContextType {
@@ -32,28 +33,21 @@ const generateWeeks = (
   const weeks: { weekNumber: number; year: number; quarter: number }[] = [];
 
   // Clone the start date to avoid modifying the original
-  const currentDate = new Date(startDate);
+  let currentDateTime = DateTime.fromJSDate(startDate);
+  const endDateTime = DateTime.fromJSDate(endDate);
 
-  while (currentDate <= endDate) {
-    // Calculate the week number (1-based)
-    const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
-    const pastDaysOfYear =
-      (currentDate.getTime() - firstDayOfYear.getTime()) / 86400000;
-    const weekNumber = Math.ceil(
-      (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
-    );
-
-    // Calculate the quarter (1-based)
-    const quarter = Math.floor(currentDate.getMonth() / 3) + 1;
+  while (currentDateTime <= endDateTime) {
+    const weekNumber = currentDateTime.weekNumber;
+    const quarter = Math.ceil(currentDateTime.month / 3);
 
     weeks.push({
       weekNumber,
-      year: currentDate.getFullYear(),
+      year: currentDateTime.year,
       quarter,
     });
 
     // Move to the next week
-    currentDate.setDate(currentDate.getDate() + 7);
+    currentDateTime = currentDateTime.plus({ weeks: 1 });
   }
 
   return weeks;

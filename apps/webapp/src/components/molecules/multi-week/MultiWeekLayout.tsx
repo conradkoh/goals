@@ -9,6 +9,7 @@ import React, { memo, useMemo } from 'react';
 import { WeekCard } from '../week/WeekCard';
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
+import { DateTime } from 'luxon';
 
 // Memoized week card component to prevent unnecessary re-renders
 const MemoizedWeekCardContent = memo(
@@ -126,14 +127,10 @@ export const MultiWeekLayout = memo(() => {
 
   // Get the current week number
   const currentDate = new Date();
-  const firstDayOfYear = new Date(currentDate.getFullYear(), 0, 1);
-  const pastDaysOfYear =
-    (currentDate.getTime() - firstDayOfYear.getTime()) / 86400000;
-  const currentWeekNumber = Math.ceil(
-    (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7
-  );
-  const currentYear = currentDate.getFullYear();
-  const currentQuarter = Math.floor(currentDate.getMonth() / 3) + 1;
+  const currentDateTime = DateTime.fromJSDate(currentDate);
+  const currentWeekNumber = currentDateTime.weekNumber;
+  const currentYear = currentDateTime.year;
+  const currentQuarter = Math.ceil(currentDateTime.month / 3);
 
   // Find the index of the current week in our weeks array
   const currentIndex = useMemo(() => {
