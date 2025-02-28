@@ -26,8 +26,8 @@ import { CreateGoalInput } from '@/components/design/goals-new/CreateGoalInput';
 import {
   DayContainer,
   DayContainerMode,
-} from '@/components/design/goals-new/day-of-week/containers/DayContainer';
-import { PastDaysContainer } from '@/components/design/goals-new/day-of-week/containers/PastDaysContainer';
+} from '@/components/core/day-of-week/containers/DayContainer';
+import { PastDaysContainer } from '@/components/core/day-of-week/containers/PastDaysContainer';
 import { GoalSelector } from '@/components/design/goals-new/GoalSelector';
 import { Skeleton } from '@/components/ui/skeleton';
 
