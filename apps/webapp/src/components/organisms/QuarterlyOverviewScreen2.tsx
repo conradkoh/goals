@@ -13,8 +13,8 @@ import {
 } from '@dnd-kit/core';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useRouter } from 'next/navigation';
-import { MultiWeekGrid } from '../core/multi-week/MultiWeekGrid';
-import { WeekCard } from '../core/week/WeekCard';
+import { MultiWeekGrid } from '../molecules/multi-week/MultiWeekGrid';
+import { WeekCard } from '../molecules/week/WeekCard';
 import { WeekCardQuarterlyGoals } from './goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { DayOfWeek } from '@/lib/constants';
 

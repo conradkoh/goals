@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import {
   DayContainer,
   wasCompletedToday,
-} from '@/components/core/day-of-week/containers/DayContainer';
+} from '@/components/molecules/day-of-week/containers/DayContainer';
 import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { useGoalActions } from '@/hooks/useGoalActions';
 

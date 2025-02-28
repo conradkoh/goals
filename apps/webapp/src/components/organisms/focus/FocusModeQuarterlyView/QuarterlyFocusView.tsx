@@ -1,6 +1,6 @@
 import React, { useMemo, memo } from 'react';
-import { MultiWeekGenerator } from '../../../core/multi-week/MultiWeekContext';
-import { MultiWeekLayout } from '../../../core/multi-week/MultiWeekLayout';
+import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
+import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
 
 interface QuarterlyFocusViewProps {
   year?: number;
