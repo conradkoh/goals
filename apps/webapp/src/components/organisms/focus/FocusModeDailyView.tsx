@@ -20,7 +20,7 @@ export const FocusModeDailyView = ({
   onNavigate,
 }: FocusModeDailyViewProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-4">
       <WeekProviderWithoutDashboard weekData={weekData}>
         <FocusModeDailyViewDailyGoals
           weekNumber={weekNumber}

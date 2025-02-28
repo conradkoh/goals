@@ -242,7 +242,7 @@ export const MultiWeekGrid = ({
 
   return (
     <div
-      id="quarterly-grid"
+      id="multi-week-grid"
       ref={containerRef}
       className="relative flex-1 h-full overflow-auto"
     >

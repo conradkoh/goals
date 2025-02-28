@@ -24,18 +24,25 @@ const QuarterOverviewPage = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen w-full pt-2 sm:pt-4 h-full">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 mb-2">
-        <div className="flex flex-wrap justify-center items-center gap-4">
+    <div className="flex flex-col h-full">
+      {/* Filter Bar */}
+      <div className="bg-background p-3 border-b">
+        <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
           <YearQuarterSelector
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
           />
         </div>
       </div>
+
+      {/* Main Content - always shows scrollbars */}
       <div
-        id="db-focus-view-container"
-        className="flex-grow w-full h-[calc(100vh-120px)] overflow-hidden"
+        className="flex-1 overflow-auto"
+        style={{
+          overflow: 'scroll',
+          scrollbarWidth: 'auto',
+          msOverflowStyle: 'scrollbar',
+        }}
       >
         <DashboardFocusView
           initialViewMode={viewMode}

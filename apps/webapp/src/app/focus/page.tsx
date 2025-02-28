@@ -198,7 +198,7 @@ const FocusPage = () => {
 
   const renderLoadingSkeleton = () => (
     <div className="container mx-auto py-8">
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="space-y-6">
           {/* Day Header Skeleton */}
           <div className="flex items-center justify-between">

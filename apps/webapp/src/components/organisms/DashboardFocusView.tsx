@@ -49,8 +49,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   );
 
   return (
-    <div className="flex flex-col w-full max-w-screen-2xl mx-auto">
-      <div className="w-full">
+    <div id="db-focus-view" className="w-full h-full">
+      <div
+        className="w-full
+        md:max-w-3xl 
+        lg:max-w-4xl 
+        xl:max-w-5xl 
+        2xl:max-w-6xl"
+      >
         {viewMode === 'quarterly' && (
           <FocusModeQuarterlyView
             year={selectedYear}

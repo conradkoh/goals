@@ -52,53 +52,54 @@ export const YearQuarterSelector = ({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Select
-        value={selectedYear.toString()}
-        onValueChange={(value) =>
-          updateUrlParams(parseInt(value), selectedQuarter)
-        }
-      >
-        <SelectTrigger className="w-[80px]">
-          <SelectValue placeholder="Year" />
-        </SelectTrigger>
-        <SelectContent>
-          {years.map((year) => (
-            <SelectItem key={year} value={year.toString()}>
-              {year}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="flex items-center justify-center sm:justify-start gap-3">
+      <div className="flex items-center gap-2">
+        <Select
+          value={selectedYear.toString()}
+          onValueChange={(value) =>
+            updateUrlParams(parseInt(value), selectedQuarter)
+          }
+        >
+          <SelectTrigger className="w-[80px]">
+            <SelectValue placeholder="Year" />
+          </SelectTrigger>
+          <SelectContent>
+            {years.map((year) => (
+              <SelectItem key={year} value={year.toString()}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Select
-        value={selectedQuarter.toString()}
-        onValueChange={(value) =>
-          updateUrlParams(selectedYear, parseInt(value))
-        }
-      >
-        <SelectTrigger className="w-[80px]">
-          <SelectValue placeholder="Quarter" />
-        </SelectTrigger>
-        <SelectContent>
-          {quarters.map((quarter) => (
-            <SelectItem key={quarter} value={quarter.toString()}>
-              Q{quarter}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select value={viewMode} onValueChange={handleViewModeChange}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select view" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="daily">Daily View</SelectItem>
-          <SelectItem value="weekly">Weekly View</SelectItem>
-          <SelectItem value="quarterly">Quarterly View</SelectItem>
-        </SelectContent>
-      </Select>
+        <Select
+          value={selectedQuarter.toString()}
+          onValueChange={(value) =>
+            updateUrlParams(selectedYear, parseInt(value))
+          }
+        >
+          <SelectTrigger className="w-[80px]">
+            <SelectValue placeholder="Quarter" />
+          </SelectTrigger>
+          <SelectContent>
+            {quarters.map((quarter) => (
+              <SelectItem key={quarter} value={quarter.toString()}>
+                Q{quarter}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={viewMode} onValueChange={handleViewModeChange}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Select view" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">Daily View</SelectItem>
+            <SelectItem value="weekly">Weekly View</SelectItem>
+            <SelectItem value="quarterly">Quarterly View</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };

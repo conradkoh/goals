@@ -28,12 +28,10 @@ export default function DashboardLayout({
         <DashboardProvider>
           <div
             id="dashboard-layout"
-            className="h-screen bg-background flex flex-col overflow-y-hidden"
+            className="h-screen bg-background flex flex-col"
           >
             <Header />
-            <main className="flex-grow max-h-[calc(100vh-4rem)] overflow-x-auto">
-              {children}
-            </main>
+            <main className="flex-1 overflow-auto">{children}</main>
           </div>
           <Toaster />
         </DashboardProvider>
@@ -47,7 +45,7 @@ const Header = () => {
   const user = useQuery(api.auth.getUser, { sessionId });
 
   return (
-    <header className="border-b">
+    <header className="border-b shadow-sm">
       <div className="max-w-screen-2xl mx-auto w-full">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6">
           <h1 className="text-xl font-semibold">Goals</h1>

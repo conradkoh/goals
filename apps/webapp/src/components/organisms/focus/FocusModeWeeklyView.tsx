@@ -71,7 +71,7 @@ export const FocusModeWeeklyView = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold">💭 Quarterly Goals</div>
           {!isFirstWeek && (
@@ -92,14 +92,14 @@ export const FocusModeWeeklyView = ({
         </WeekProviderWithoutDashboard>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="font-semibold mb-4">🚀 Weekly Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           {weeklyGoalsComponent}
         </WeekProviderWithoutDashboard>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="font-semibold mb-4">🔍 Daily Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           {dailyGoalsComponent}
