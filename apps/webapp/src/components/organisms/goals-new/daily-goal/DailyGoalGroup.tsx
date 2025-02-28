@@ -1,6 +1,6 @@
-import { CreateGoalInput } from '@/components/organisms/goals-new/CreateGoalInput';
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
-import { GoalEditPopover } from '@/components/organisms/goals-new/GoalEditPopover';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Spinner } from '@/components/ui/spinner';

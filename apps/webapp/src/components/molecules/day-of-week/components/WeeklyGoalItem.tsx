@@ -9,9 +9,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { GoalEditPopover } from '@/components/organisms/goals-new/GoalEditPopover';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { DeleteGoalIconButton } from '@/components/organisms/goals-new/DeleteGoalIconButton';
+import { DeleteGoalIconButton } from '@/components/atoms/DeleteGoalIconButton';
 import { Spinner } from '@/components/ui/spinner';
 import { Edit2 } from 'lucide-react';
 

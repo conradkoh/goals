@@ -6,7 +6,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { SafeHTML, sanitizeHTML } from '@/components/ui/safe-html';
-import { GoalStarPin } from './GoalStarPin';
+import { GoalStarPin } from '../../atoms/GoalStarPin';
 import {
   Popover,
   PopoverContent,
@@ -22,8 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { DeleteGoalIconButton } from './DeleteGoalIconButton';
-import { GoalEditPopover } from './GoalEditPopover';
+import { DeleteGoalIconButton } from '../../atoms/DeleteGoalIconButton';
+import { GoalEditPopover } from '../../atoms/GoalEditPopover';
 import { cn } from '@/lib/utils';
 
 interface QuarterlyGoalProps {

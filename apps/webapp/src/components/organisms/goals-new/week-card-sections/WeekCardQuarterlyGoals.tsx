@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CreateGoalInput } from '../CreateGoalInput';
+import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';

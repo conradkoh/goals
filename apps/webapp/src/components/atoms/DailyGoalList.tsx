@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailyGoalItem } from './daily-goal/DailyGoalItem';
+import { DailyGoalItem } from '../organisms/goals-new/daily-goal/DailyGoalItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { CreateGoalInput } from './CreateGoalInput';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2, Pin, Star } from 'lucide-react';
-import { GoalEditPopover } from './GoalEditPopover';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];

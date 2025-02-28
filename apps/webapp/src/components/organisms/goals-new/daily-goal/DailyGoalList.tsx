@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DailyGoalItem } from './DailyGoalItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { CreateGoalInput } from '../CreateGoalInput';
+import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { DayOfWeekType } from '@/lib/constants';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2, Pin, Star } from 'lucide-react';
-import { GoalEditPopover } from '../GoalEditPopover';
+import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];

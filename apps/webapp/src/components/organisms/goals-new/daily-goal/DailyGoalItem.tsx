@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2 } from 'lucide-react';
-import { GoalEditPopover } from '../GoalEditPopover';
-import { DeleteGoalIconButton } from '../DeleteGoalIconButton';
+import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
+import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
 import {
   Select,
   SelectContent,

@@ -24,9 +24,9 @@ import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import { forwardRef, useMemo, useState, useCallback } from 'react';
-import { CreateGoalInput } from '../CreateGoalInput';
-import { DeleteGoalIconButton } from '../DeleteGoalIconButton';
-import { GoalEditPopover } from '../GoalEditPopover';
+import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
+import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
+import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeekCardWeeklyGoalsProps {
