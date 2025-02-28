@@ -1,26 +1,15 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
-import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
-import { ViewMode } from '@/app/focus/page.constants';
-import { DayOfWeek, getDayName } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ViewMode } from '@/app/focus/page.constants';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
-import { useWeekWithoutDashboard } from '@/hooks/useWeek';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { useWeekWithoutDashboard } from '@/hooks/useWeek';
+import { DayOfWeek } from '@/lib/constants';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { FocusHeader } from './components/FocusHeader';
 
 const FocusPage = () => {

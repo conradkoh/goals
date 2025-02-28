@@ -11,21 +11,6 @@ import { useSearchParams } from 'next/navigation';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
 import { useCurrentDateTime } from './useCurrentDateTime';
 
-interface WeekData {
-  weekLabel: string;
-  weekNumber: number;
-  mondayDate: string;
-  days: Array<{
-    dayOfWeek: number;
-    date: string;
-    dateTimestamp: number;
-  }>;
-  // actual data
-  tree: WeekGoalsTree;
-}
-
-type IndexedQuarterlyGoalsByWeek = Record<number, WeekGoalsTree>;
-
 export const useDashboard = () => {
   const val = useContext(DashboardContext);
   if (val === 'not-found') {
@@ -35,8 +20,6 @@ export const useDashboard = () => {
 };
 
 interface DashboardContextValue {
-  data: AsyncQueryReturnType<typeof api.dashboard.getQuarterOverview>;
-  isLoading: boolean;
   currentDate: DateTime;
   currentYear: number;
   currentQuarter: 1 | 2 | 3 | 4;
@@ -45,7 +28,6 @@ interface DashboardContextValue {
   currentMonthName: string;
   currentDayOfMonth: number;
   currentDayName: string;
-  weekData: WeekData[];
   selectedYear: number; // Exposed selectedYear
   selectedQuarter: 1 | 2 | 3 | 4; // Exposed selectedQuarter
 }
@@ -59,7 +41,6 @@ export const DashboardProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { sessionId } = useSession();
   const searchParams = useSearchParams();
 
   // Use reactive current date
@@ -82,38 +63,13 @@ export const DashboardProvider = ({
     : currentQuarter;
 
   // Get quarter week info
-  const { weeks, currentWeekNumber } = useQuarterWeekInfo(
+  const { currentWeekNumber } = useQuarterWeekInfo(
     selectedYear,
     selectedQuarter
   );
 
-  // Get data from backend
-  const weeksForQuarter = useQuery(api.dashboard.getQuarterOverview, {
-    sessionId,
-    year: selectedYear,
-    quarter: selectedQuarter,
-  });
-
-  // Combine week info with backend data
-  const weekData = useMemo(() => {
-    if (weeksForQuarter === undefined) {
-      return [];
-    }
-
-    return weeks.map((week) => ({
-      ...week,
-      tree: weeksForQuarter[week.weekNumber] || {
-        quarterlyGoals: [],
-        weekNumber: week.weekNumber,
-        allGoals: [],
-      },
-    }));
-  }, [weeks, weeksForQuarter]);
-
   const value = useMemo(
     () => ({
-      data: weeksForQuarter,
-      isLoading: weeksForQuarter === undefined,
       currentDate,
       currentYear,
       currentQuarter,
@@ -122,12 +78,10 @@ export const DashboardProvider = ({
       currentMonthName,
       currentDayOfMonth,
       currentDayName,
-      weekData,
       selectedYear,
       selectedQuarter,
     }),
     [
-      weeksForQuarter,
       currentDate,
       currentYear,
       currentQuarter,
@@ -136,7 +90,6 @@ export const DashboardProvider = ({
       currentMonthName,
       currentDayOfMonth,
       currentDayName,
-      weekData,
       selectedYear,
       selectedQuarter,
     ]
