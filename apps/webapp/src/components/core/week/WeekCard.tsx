@@ -1,7 +1,4 @@
-import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Focus, History, MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +12,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
+import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { cn } from '@/lib/utils';
+import { Focus, History, MoreVertical } from 'lucide-react';
 import { memo } from 'react';
 
 interface WeekCardProps {

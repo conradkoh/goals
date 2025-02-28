@@ -1,15 +1,14 @@
-import React, { memo, useMemo } from 'react';
-import { useMultiWeek } from './MultiWeekContext';
-import { WeekCard } from '../quarterly-overview/WeekCard';
-import { QuarterlyGrid } from '../quarterly-overview/QuarterlyGrid';
-import { useRouter } from 'next/navigation';
-import { DateTime } from 'luxon';
-import { DayOfWeek } from '@/lib/constants';
-import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardWeeklyGoals';
-import { WeekCardDailyGoals } from '@/components/design/goals-new/week-card-sections/WeekCardDailyGoals';
+import { WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { DayOfWeek } from '@/lib/constants';
+import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useRouter } from 'next/navigation';
+import React, { memo, useMemo } from 'react';
+import { WeekCard } from '../week/WeekCard';
+import { useMultiWeek } from './MultiWeekContext';
+import { MultiWeekGrid } from './MultiWeekGrid';
 
 // Memoized week card component to prevent unnecessary re-renders
 const MemoizedWeekCardContent = memo(
@@ -168,7 +167,7 @@ export const MultiWeekLayout = memo(() => {
   return (
     <div className="flex flex-col h-full">
       <DndContext sensors={sensors}>
-        <QuarterlyGrid currentIndex={currentIndex} numItems={weeks.length}>
+        <MultiWeekGrid currentIndex={currentIndex} numItems={weeks.length}>
           {weeks.map(
             (week: {
               year: number;
@@ -192,7 +191,7 @@ export const MultiWeekLayout = memo(() => {
               );
             }
           )}
-        </QuarterlyGrid>
+        </MultiWeekGrid>
       </DndContext>
     </div>
   );

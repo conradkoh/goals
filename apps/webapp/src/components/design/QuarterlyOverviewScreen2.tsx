@@ -13,8 +13,8 @@ import {
 } from '@dnd-kit/core';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useRouter } from 'next/navigation';
-import { QuarterlyGrid } from './quarterly-overview/QuarterlyGrid';
-import { WeekCard } from './quarterly-overview/WeekCard';
+import { MultiWeekGrid } from '../core/multi-week/MultiWeekGrid';
+import { WeekCard } from '../core/week/WeekCard';
 import { WeekCardQuarterlyGoals } from './goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { DayOfWeek } from '@/lib/constants';
 
@@ -93,7 +93,7 @@ export const QuarterlyOverviewScreen2 = () => {
   return (
     <div className="flex flex-col h-full pt-2">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <QuarterlyGrid currentIndex={currentIndex} numItems={weekData.length}>
+        <MultiWeekGrid currentIndex={currentIndex} numItems={weekData.length}>
           {weekData.map((week, weekIndex) => {
             // Cast dayOfWeek to DayOfWeek type
             const weekDataWithTypedDays = {
@@ -144,7 +144,7 @@ export const QuarterlyOverviewScreen2 = () => {
               </WeekCard>
             );
           })}
-        </QuarterlyGrid>
+        </MultiWeekGrid>
       </DndContext>
     </div>
   );

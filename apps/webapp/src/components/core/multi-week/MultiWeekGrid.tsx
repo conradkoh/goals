@@ -17,7 +17,7 @@ const JUMP_BUTTON_OFFSET = {
   RIGHT_MOBILE: 16, // tailwind right-4
 };
 
-interface QuarterlyGridProps {
+interface MultiWeekGridProps {
   children: React.ReactNode;
   currentIndex: number;
   numItems: number;
@@ -39,11 +39,11 @@ function computeCardWidth(containerWidth: number) {
   return cardWidth;
 }
 
-export const QuarterlyGrid = ({
+export const MultiWeekGrid = ({
   children,
   currentIndex,
   numItems,
-}: QuarterlyGridProps) => {
+}: MultiWeekGridProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasScrolledToCenter = useRef(false);
   const [isCurrentWeekVisible, setIsCurrentWeekVisible] = useState(true);
