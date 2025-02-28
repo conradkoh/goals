@@ -1,13 +1,15 @@
-import { useState } from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 import { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { useRef, useState } from 'react';
 
 export interface AddTaskInputProps {
   weeklyGoalId: Id<'goals'>;
   isCreating: boolean;
+  isOptimistic: boolean; //this will affect the submission behavior
   onCreateGoal: (
     weeklyGoalId: Id<'goals'>,
     title: string,
@@ -19,17 +21,65 @@ export interface AddTaskInputProps {
 export const AddTaskInput = ({
   weeklyGoalId,
   isCreating,
+  isOptimistic,
   onCreateGoal,
   forDayOfWeek,
 }: AddTaskInputProps) => {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  // Handle successful task creation
+  const handleSubmit = async () => {
+    if (newGoalTitle && newGoalTitle.trim()) {
+      try {
+        // Store the current title in case we need to restore it after an error
+        const currentTitle = newGoalTitle.trim();
+
+        // Clear the input immediately if using optimistic updates
+        if (isOptimistic) {
+          setNewGoalTitle('');
+        }
+
+        // Attempt to create the goal
+        await onCreateGoal(weeklyGoalId, currentTitle, forDayOfWeek);
+
+        // Only clear the input here if not using optimistic updates
+        if (!isOptimistic) {
+          setNewGoalTitle('');
+        }
+
+        // Keep the input visible and focused after submission
+        setIsVisible(true);
+        // Focus the input after a short delay to ensure the DOM has updated
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 10);
+      } catch (error) {
+        // Show error toast
+        toast({
+          title: 'Failed to create task',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'An unexpected error occurred',
+          variant: 'destructive',
+        });
+
+        console.error('Failed to create goal:', error);
+      }
+    }
+  };
 
   return (
     <div
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => {
-        if (!newGoalTitle) {
+        if (
+          !newGoalTitle &&
+          !document.activeElement?.contains(inputRef.current)
+        ) {
           setIsVisible(false);
         }
       }}
@@ -43,20 +93,17 @@ export const AddTaskInput = ({
         )}
       >
         <CreateGoalInput
+          ref={inputRef}
           placeholder="Add a task..."
           value={newGoalTitle}
           onChange={setNewGoalTitle}
-          onSubmit={() => {
-            if (newGoalTitle && newGoalTitle.trim()) {
-              onCreateGoal(weeklyGoalId, newGoalTitle.trim(), forDayOfWeek);
-              setNewGoalTitle('');
-              setIsVisible(false);
-            }
-          }}
+          onSubmit={handleSubmit}
           onFocus={() => setIsVisible(true)}
           onBlur={() => {
+            // Only hide if empty and not actively being used
             if (!newGoalTitle) {
-              setIsVisible(false);
+              // Small delay to allow for click events to process
+              setTimeout(() => setIsVisible(false), 100);
             }
           }}
           disabled={isCreating}
