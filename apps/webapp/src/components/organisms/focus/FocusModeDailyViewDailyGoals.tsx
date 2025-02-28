@@ -2,7 +2,7 @@ import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   DayContainer,
   wasCompletedToday,
@@ -32,6 +32,11 @@ export const FocusModeDailyViewDailyGoals = ({
     deleteDailyGoalOptimistic,
   } = useWeek();
   const { updateQuarterlyGoalTitle } = useGoalActions();
+
+  // Add state to track which goals are being created
+  const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>(
+    {}
+  );
 
   // Find the current day data
   const currentDay = useMemo(() => {
@@ -229,12 +234,26 @@ export const FocusModeDailyViewDailyGoals = ({
       .plus({ days: dayOfWeekToUse - 1 })
       .toMillis();
 
-    await createDailyGoalOptimistic(
-      weeklyGoalId,
-      title,
-      dayOfWeekToUse,
-      dateTimestamp
-    );
+    // Set the creating state for this weekly goal
+    setCreatingGoals((prev) => ({ ...prev, [weeklyGoalId]: true }));
+
+    try {
+      await createDailyGoalOptimistic(
+        weeklyGoalId,
+        title,
+        dayOfWeekToUse,
+        dateTimestamp
+      );
+    } catch (error) {
+      console.error('Failed to create daily goal:', error);
+    } finally {
+      // Clear the creating state
+      setCreatingGoals((prev) => {
+        const newState = { ...prev };
+        delete newState[weeklyGoalId];
+        return newState;
+      });
+    }
   };
 
   // If the current day doesn't exist, don't render anything
@@ -254,6 +273,7 @@ export const FocusModeDailyViewDailyGoals = ({
         onCreateGoal={handleCreateGoal}
         sortDailyGoals={sortDailyGoals}
         mode="focus"
+        isCreating={creatingGoals}
       />
     </div>
   );

@@ -162,7 +162,6 @@ const WeeklyGoalSection = ({
         {shouldShowAddTask && (
           <AddTaskInput
             weeklyGoalId={weeklyGoal._id}
-            isCreating={isCreating[weeklyGoal._id]}
             isOptimistic={true}
             onCreateGoal={onCreateGoal}
             forDayOfWeek={dayOfWeek}

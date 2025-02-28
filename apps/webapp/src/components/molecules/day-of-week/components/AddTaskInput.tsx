@@ -8,7 +8,6 @@ import { useRef, useState } from 'react';
 
 export interface AddTaskInputProps {
   weeklyGoalId: Id<'goals'>;
-  isCreating: boolean;
   isOptimistic: boolean; //this will affect the submission behavior
   onCreateGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -20,7 +19,6 @@ export interface AddTaskInputProps {
 
 export const AddTaskInput = ({
   weeklyGoalId,
-  isCreating,
   isOptimistic,
   onCreateGoal,
   forDayOfWeek,
@@ -76,10 +74,11 @@ export const AddTaskInput = ({
     <div
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => {
-        if (
-          !newGoalTitle &&
-          !document.activeElement?.contains(inputRef.current)
-        ) {
+        // we preserve the title if either the input is focused or the title is not empty
+        const isInputFocused = document.activeElement?.isEqualNode(
+          inputRef.current
+        );
+        if (!(isInputFocused || newGoalTitle)) {
           setIsVisible(false);
         }
       }}
@@ -106,14 +105,7 @@ export const AddTaskInput = ({
               setTimeout(() => setIsVisible(false), 100);
             }
           }}
-          disabled={isCreating}
-        >
-          {isCreating && (
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <Spinner className="h-4 w-4" />
-            </div>
-          )}
-        </CreateGoalInput>
+        />
       </div>
     </div>
   );
