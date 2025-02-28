@@ -28,8 +28,9 @@ interface DashboardContextValue {
   currentMonthName: string;
   currentDayOfMonth: number;
   currentDayName: string;
-  selectedYear: number; // Exposed selectedYear
-  selectedQuarter: 1 | 2 | 3 | 4; // Exposed selectedQuarter
+  selectedYear: number;
+  selectedQuarter: 1 | 2 | 3 | 4;
+  selectedWeek: number;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -68,6 +69,11 @@ export const DashboardProvider = ({
     selectedQuarter
   );
 
+  // Get selected week from URL or use current week
+  const selectedWeek = searchParams.get('week')
+    ? parseInt(searchParams.get('week')!)
+    : currentWeekNumber;
+
   const value = useMemo(
     () => ({
       currentDate,
@@ -80,6 +86,7 @@ export const DashboardProvider = ({
       currentDayName,
       selectedYear,
       selectedQuarter,
+      selectedWeek,
     }),
     [
       currentDate,
@@ -92,6 +99,7 @@ export const DashboardProvider = ({
       currentDayName,
       selectedYear,
       selectedQuarter,
+      selectedWeek,
     ]
   );
 

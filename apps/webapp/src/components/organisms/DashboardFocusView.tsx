@@ -124,7 +124,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   return (
     <div id="db-focus-view" className="w-full h-full">
-      <div className="w-full mb-4">
+      <div className="w-full">
         <FocusMenuBar
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}

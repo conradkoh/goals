@@ -149,11 +149,9 @@ export const FocusMenuBar = ({
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-[140px] text-center">
+                <span className="text-sm font-medium min-w-[100px] text-center">
                   {viewMode === 'daily' && selectedDay
-                    ? `${getDayName(selectedDay)}${
-                        selectedWeek ? ` [Week ${selectedWeek}]` : ''
-                      }`
+                    ? `${getDayName(selectedDay)}`
                     : viewMode === 'weekly' && selectedWeek
                     ? `Week ${selectedWeek}`
                     : ''}
