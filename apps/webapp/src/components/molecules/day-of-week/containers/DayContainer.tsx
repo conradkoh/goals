@@ -59,7 +59,11 @@ interface WeeklyGoalSectionProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (weeklyGoalId: Id<'goals'>, title: string) => Promise<void>;
+  onCreateGoal: (
+    weeklyGoalId: Id<'goals'>,
+    title: string,
+    forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
   isCreating: Record<string, boolean>;
 }
 
@@ -160,6 +164,7 @@ const WeeklyGoalSection = ({
             weeklyGoalId={weeklyGoal._id}
             isCreating={isCreating[weeklyGoal._id]}
             onCreateGoal={onCreateGoal}
+            forDayOfWeek={dayOfWeek}
           />
         )}
       </div>
@@ -181,7 +186,11 @@ interface QuarterlyGoalSectionProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (weeklyGoalId: Id<'goals'>, title: string) => Promise<void>;
+  onCreateGoal: (
+    weeklyGoalId: Id<'goals'>,
+    title: string,
+    forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
   isCreating: Record<string, boolean>;
 }
 
@@ -357,7 +366,11 @@ export interface DayContainerProps {
     details?: string
   ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (weeklyGoalId: Id<'goals'>, title: string) => Promise<void>;
+  onCreateGoal: (
+    weeklyGoalId: Id<'goals'>,
+    title: string,
+    forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
   isCreating?: Record<string, boolean>;
   sortDailyGoals?: (
     goals: GoalWithDetailsAndChildren[]
@@ -394,9 +407,9 @@ export const DayContainer = ({
 
   const handleCreateGoal = useCallback(
     (weeklyGoalId: Id<'goals'>, title: string) => {
-      return onCreateGoal(weeklyGoalId, title);
+      return onCreateGoal(weeklyGoalId, title, dayOfWeek);
     },
-    [onCreateGoal]
+    [onCreateGoal, dayOfWeek]
   );
 
   // First, get unique quarterly goals and their associated weekly goals

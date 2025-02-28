@@ -3,17 +3,24 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import { DayOfWeek } from '@/lib/constants';
 
 export interface AddTaskInputProps {
   weeklyGoalId: Id<'goals'>;
   isCreating: boolean;
-  onCreateGoal: (weeklyGoalId: Id<'goals'>, title: string) => Promise<void>;
+  onCreateGoal: (
+    weeklyGoalId: Id<'goals'>,
+    title: string,
+    forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
+  forDayOfWeek?: DayOfWeek;
 }
 
 export const AddTaskInput = ({
   weeklyGoalId,
   isCreating,
   onCreateGoal,
+  forDayOfWeek,
 }: AddTaskInputProps) => {
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isVisible, setIsVisible] = useState(false);
@@ -41,7 +48,7 @@ export const AddTaskInput = ({
           onChange={setNewGoalTitle}
           onSubmit={() => {
             if (newGoalTitle && newGoalTitle.trim()) {
-              onCreateGoal(weeklyGoalId, newGoalTitle.trim());
+              onCreateGoal(weeklyGoalId, newGoalTitle.trim(), forDayOfWeek);
               setNewGoalTitle('');
               setIsVisible(false);
             }

@@ -416,19 +416,26 @@ export const WeekCardDailyGoals = forwardRef<
     );
 
     const handleCreateGoal = useCallback(
-      async (weeklyGoalId: Id<'goals'>, title: string): Promise<void> => {
+      async (
+        weeklyGoalId: Id<'goals'>,
+        title: string,
+        forDayOfWeek?: DayOfWeek
+      ): Promise<void> => {
+        // Use the provided day of week if available, otherwise fall back to the selected day
+        const dayOfWeekToUse = forDayOfWeek ?? selectedDayOfWeek;
+
         const dateTimestamp = DateTime.fromObject({
           weekNumber,
           weekYear: year,
         })
           .startOf('week')
-          .plus({ days: selectedDayOfWeek - 1 })
+          .plus({ days: dayOfWeekToUse - 1 })
           .toMillis();
 
         await createDailyGoalOptimistic(
           weeklyGoalId,
           title,
-          selectedDayOfWeek,
+          dayOfWeekToUse,
           dateTimestamp
         );
       },
