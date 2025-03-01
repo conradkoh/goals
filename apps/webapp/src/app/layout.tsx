@@ -27,9 +27,9 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Goals App',
+    title: 'Goals',
   },
-  applicationName: 'Goals App',
+  applicationName: 'Goals',
   formatDetection: {
     telephone: false,
   },

@@ -21,8 +21,8 @@ import {
 } from '../components/primitives';
 
 export const metadata: Metadata = {
-  title: 'Installation Guide - Goals App Documentation',
-  description: 'Learn how to install and set up the Goals App on macOS',
+  title: 'Installation Guide - Goals Documentation',
+  description: 'Learn how to install and set up Goals on macOS',
 };
 
 export default function InstallationGuidePage() {
@@ -32,7 +32,7 @@ export default function InstallationGuidePage() {
         icon={<Download className="h-4 w-4" />}
         badge="Installation"
         title="macOS Installation Guide"
-        description="Learn how to install and set up the Goals App on your Mac with Safari and Raycast integration."
+        description="Learn how to install and set up Goals on your Mac with Safari and Raycast integration."
         badgeColor="blue"
       />
 
@@ -63,8 +63,8 @@ export default function InstallationGuidePage() {
         >
           <div className="space-y-6">
             <p className="text-slate-700">
-              Follow these steps to install Goals App as a Progressive Web App
-              (PWA) using Safari:
+              Follow these steps to install Goals as a Progressive Web App (PWA)
+              using Safari:
             </p>
 
             <div className="space-y-4">
@@ -94,7 +94,7 @@ export default function InstallationGuidePage() {
                 </h3>
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
-                    To add Goals App to your dock:
+                    To add Goals to your dock:
                   </p>
                   <DocList>
                     <DocListItem variant="blue">
@@ -121,7 +121,7 @@ export default function InstallationGuidePage() {
                   Step 3: Launch the App
                 </h3>
                 <p className="text-sm text-slate-600">
-                  Click on the Goals App icon in your dock to launch it. The app
+                  Click on the Goals icon in your dock to launch it. The app
                   will open in its own window, separate from Safari, providing a
                   native app-like experience.
                 </p>
@@ -137,8 +137,7 @@ export default function InstallationGuidePage() {
         >
           <div className="space-y-6">
             <p className="text-slate-700">
-              For quick access to Goals App, you can set up a hotkey using
-              Raycast:
+              For quick access to Goals, you can set up a hotkey using Raycast:
             </p>
 
             <div className="space-y-4">
@@ -191,7 +190,7 @@ export default function InstallationGuidePage() {
                     Find and select "Goals" from your Applications
                   </DocListItem>
                   <DocListItem variant="indigo">
-                    Click on the newly added Goals App in the extensions list
+                    Click on the newly added Goals in the extensions list
                   </DocListItem>
                   <DocListItem variant="indigo">
                     Click "Add Hotkey" and press your desired key combination
@@ -212,8 +211,8 @@ export default function InstallationGuidePage() {
               <p className="flex items-start gap-2">
                 <span className="font-semibold">Tip:</span>
                 <span>
-                  You can now quickly open Goals App from anywhere on your Mac
-                  by pressing your configured hotkey.
+                  You can now quickly open Goals from anywhere on your Mac by
+                  pressing your configured hotkey.
                 </span>
               </p>
             </DocInfoCard>

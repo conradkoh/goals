@@ -1,396 +1,211 @@
-# Form Validation Guide
+# Form Validation Standards
 
 ## Overview
 
-This guide outlines the standard patterns for implementing form validation in the Goals application using Zod, React Hook Form, and shadcn/ui components.
+This guide outlines the standard patterns for implementing form validation in Goals using Zod, React Hook Form, and shadcn/ui components.
 
 ## Schema Definition
 
-### Base Schema Types
+Define validation schemas using Zod:
 
-```typescript
+```tsx
 import { z } from 'zod';
 
-// Define reusable schema parts
-const baseFieldValidation = {
-  required_error: 'This field is required',
-  invalid_type_error: 'Invalid input type',
-};
-
-// Common field schemas
-const titleSchema = z
-  .string(baseFieldValidation)
-  .min(1, 'Title is required')
-  .max(100, 'Title must be less than 100 characters')
-  .transform((value) => value.trim());
-
-const descriptionSchema = z
-  .string()
-  .max(500, 'Description must be less than 500 characters')
-  .optional()
-  .transform((value) => value?.trim() ?? '');
-
-const dateSchema = z.date({
-  required_error: 'Date is required',
-  invalid_type_error: 'Invalid date format',
+export const goalSchema = z.object({
+  title: z
+    .string()
+    .min(3, { message: 'Title must be at least 3 characters' })
+    .max(100, { message: 'Title must be less than 100 characters' }),
+  description: z
+    .string()
+    .max(500, { message: 'Description must be less than 500 characters' })
+    .optional(),
+  dueDate: z
+    .date()
+    .min(new Date(), { message: 'Due date must be in the future' })
+    .optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
 });
+
+export type GoalFormValues = z.infer<typeof goalSchema>;
 ```
 
-### Goal Schemas
+## Form Implementation
 
-```typescript
-// Define the goal schema hierarchy
-const GoalBaseSchema = z.object({
-  title: titleSchema,
-  description: descriptionSchema,
-  dueDate: dateSchema,
-});
+Use React Hook Form with Zod resolver:
 
-const QuarterlyGoalSchema = GoalBaseSchema.extend({
-  type: z.literal('quarterly'),
-  quarter: z.number().min(1).max(4),
-  year: z.number().min(2000),
-});
-
-const WeeklyGoalSchema = GoalBaseSchema.extend({
-  type: z.literal('weekly'),
-  weekNumber: z.number().min(1).max(53),
-  quarterlyGoalId: z.string().uuid(),
-});
-
-const DailyGoalSchema = GoalBaseSchema.extend({
-  type: z.literal('daily'),
-  date: dateSchema,
-  weeklyGoalId: z.string().uuid(),
-});
-
-// Infer types from schemas
-type QuarterlyGoal = z.infer<typeof QuarterlyGoalSchema>;
-type WeeklyGoal = z.infer<typeof WeeklyGoalSchema>;
-type DailyGoal = z.infer<typeof DailyGoalSchema>;
-```
-
-## Form Implementation with shadcn/ui
-
-### Base Form Components
-
-```typescript
+```tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { goalSchema, GoalFormValues } from './schemas';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 
-// Form container with loading state
-interface FormContainerProps<T extends z.ZodType> {
-  schema: T;
-  onSubmit: (data: z.infer<T>) => Promise<void>;
-  children: React.ReactNode;
-  defaultValues?: Partial<z.infer<T>>;
-  isLoading?: boolean;
-}
-
-const FormContainer = <T extends z.ZodType>({
-  schema,
-  onSubmit,
-  children,
-  defaultValues,
-  isLoading,
-}: FormContainerProps<T>) => {
-  const form = useForm<z.infer<T>>({
-    resolver: zodResolver(schema),
-    defaultValues,
-    mode: 'onBlur',
+export function GoalForm({ onSubmit }) {
+  const form = useForm<GoalFormValues>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+    },
   });
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={cn(
-          'space-y-4',
-          isLoading && 'opacity-50 pointer-events-none'
-        )}
-      >
-        {children}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter goal title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter goal description (optional)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit">Create Goal</Button>
       </form>
     </Form>
   );
-};
+}
 ```
 
-### Custom Field Components
+## Real-time Validation
 
-```typescript
-// Text Input Field
-const InputField = <T extends z.ZodType>({
-  form,
-  name,
-  label,
-  placeholder,
-  description,
-}: {
-  form: UseFormReturn<z.infer<T>>;
-  name: keyof z.infer<T>;
-  label: string;
-  placeholder?: string;
-  description?: string;
-}) => (
-  <FormField
-    control={form.control}
-    name={name as string}
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>{label}</FormLabel>
-        <FormControl>
-          <Input placeholder={placeholder} {...field} />
-        </FormControl>
-        {description && <FormDescription>{description}</FormDescription>}
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-);
+For better user experience, implement real-time validation:
 
-// Date Picker Field
-const DatePickerField = <T extends z.ZodType>({
-  form,
-  name,
-  label,
-}: {
-  form: UseFormReturn<z.infer<T>>;
-  name: keyof z.infer<T>;
-  label: string;
-}) => (
-  <FormField
-    control={form.control}
-    name={name as string}
-    render={({ field }) => (
-      <FormItem className="flex flex-col">
-        <FormLabel>{label}</FormLabel>
-        <Popover>
-          <PopoverTrigger asChild>
-            <FormControl>
-              <Button
-                variant="outline"
-                className={cn(
-                  'w-full pl-3 text-left font-normal',
-                  !field.value && 'text-muted-foreground'
-                )}
-              >
-                {field.value ? (
-                  format(field.value, 'PPP')
-                ) : (
-                  <span>Pick a date</span>
-                )}
-                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-              </Button>
-            </FormControl>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={field.value}
-              onSelect={field.onChange}
-              disabled={(date) =>
-                date < new Date() || date < new Date('1900-01-01')
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-);
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 
-// Select Field
-const SelectField = <T extends z.ZodType>({
-  form,
-  name,
-  label,
-  options,
-}: {
-  form: UseFormReturn<z.infer<T>>;
-  name: keyof z.infer<T>;
-  label: string;
-  options: { value: string; label: string }[];
-}) => (
-  <FormField
-    control={form.control}
-    name={name as string}
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>{label}</FormLabel>
-        <Select onValueChange={field.onChange} defaultValue={field.value}>
-          <FormControl>
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-          </FormControl>
-          <SelectContent>
-            {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-);
-```
-
-### Goal Form Implementation
-
-```typescript
-const QuarterlyGoalForm = () => {
-  const { isLoading, execute } = useMutation(createQuarterlyGoal);
-
-  return (
-    <FormContainer
-      schema={QuarterlyGoalSchema}
-      onSubmit={execute}
-      isLoading={isLoading}
-      defaultValues={{
-        type: 'quarterly',
-        year: new Date().getFullYear(),
-      }}
-    >
-      {(form) => (
-        <>
-          <InputField
-            form={form}
-            name="title"
-            label="Goal Title"
-            placeholder="Enter your quarterly goal"
-          />
-          <InputField
-            form={form}
-            name="description"
-            label="Description"
-            placeholder="Describe your goal"
-          />
-          <DatePickerField form={form} name="dueDate" label="Due Date" />
-          <SelectField
-            form={form}
-            name="quarter"
-            label="Quarter"
-            options={[
-              { value: '1', label: 'Q1' },
-              { value: '2', label: 'Q2' },
-              { value: '3', label: 'Q3' },
-              { value: '4', label: 'Q4' },
-            ]}
-          />
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create Goal'
-            )}
-          </Button>
-        </>
-      )}
-    </FormContainer>
-  );
-};
-```
-
-## Best Practices with shadcn/ui
-
-1. **Component Organization**
-
-   - Keep form components in `@/components/forms` directory
-   - Create domain-specific form components (e.g., `GoalForm`, `TaskForm`)
-   - Reuse shadcn/ui base components
-
-2. **Styling**
-
-   - Use `cn` utility for conditional classes
-   - Follow shadcn/ui dark mode patterns
-   - Maintain consistent spacing with `space-y-*` classes
-
-3. **Loading States**
-
-   - Use shadcn/ui's built-in loading states
-   - Disable form during submission
-   - Show loading spinners in buttons
-
-4. **Error Handling**
-
-   - Use `FormMessage` for field errors
-   - Show toast notifications for form-level errors
-   - Use `useToast` from shadcn/ui for notifications
-
-5. **Accessibility**
-   - Maintain shadcn/ui's built-in accessibility features
-   - Use proper ARIA labels
-   - Support keyboard navigation
-
-## Example: Advanced Form with Async Validation
-
-```typescript
-import { useToast } from '@/components/ui/use-toast';
-
-const GoalFormWithAsyncValidation = () => {
-  const { toast } = useToast();
-  const form = useForm<z.infer<typeof GoalSchema>>({
-    resolver: zodResolver(GoalSchema),
+export function GoalFormWithRealTimeValidation({ onSubmit }) {
+  const form = useForm<GoalFormValues>({
+    resolver: zodResolver(goalSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+    },
+    mode: 'onChange', // Enable validation on change
   });
 
-  const onSubmit = async (data: z.infer<typeof GoalSchema>) => {
+  // Watch for changes to display validation in real-time
+  const title = form.watch('title');
+
+  useEffect(() => {
+    // Trigger validation when title changes
+    if (title.length > 0) {
+      form.trigger('title');
+    }
+  }, [title, form]);
+
+  return <Form {...form}>{/* Form fields as in previous example */}</Form>;
+}
+```
+
+## Server-Side Validation
+
+Always validate data on the server side as well:
+
+```tsx
+// In your Convex mutation
+import { mutation } from './_generated/server';
+import { v } from 'convex/values';
+import { z } from 'zod';
+
+// Define the schema on the server side too
+const goalSchema = z.object({
+  title: z.string().min(3).max(100),
+  description: z.string().max(500).optional(),
+  dueDate: z.number().optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+});
+
+export const createGoal = mutation({
+  args: {
+    title: v.string(),
+    description: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
+    priority: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Validate with Zod
+    const validatedData = goalSchema.parse(args);
+
+    // If validation passes, proceed with creating the goal
+    const goalId = await ctx.db.insert('goals', validatedData);
+    return goalId;
+  },
+});
+```
+
+## Error Handling
+
+Handle validation errors gracefully:
+
+```tsx
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+export function GoalFormWithErrorHandling() {
+  const [serverError, setServerError] = useState<string | null>(null);
+  const createGoal = useMutation(api.goals.create);
+
+  const onSubmit = async (data: GoalFormValues) => {
     try {
+      setServerError(null);
       await createGoal(data);
-      toast({
-        title: 'Success',
-        description: 'Goal created successfully',
-      });
+      // Handle success
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create goal',
-        variant: 'destructive',
-      });
+      // Handle server-side validation errors
+      setServerError(
+        error instanceof Error ? error.message : 'An unknown error occurred'
+      );
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {/* Form fields */}
-      </form>
-    </Form>
+    <>
+      {serverError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{serverError}</AlertDescription>
+        </Alert>
+      )}
+      <GoalForm onSubmit={onSubmit} />
+    </>
   );
-};
+}
 ```

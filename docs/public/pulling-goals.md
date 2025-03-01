@@ -1,6 +1,37 @@
 # Pulling Goals
 
-The Goals app provides functionality to help you manage and move incomplete tasks between different time periods. This helps you maintain continuity in your task management and ensures no important tasks are left behind.
+Goals provides functionality to help you manage and move incomplete tasks between different time periods. This helps you maintain continuity in your task management and ensures no important tasks are forgotten when transitioning between planning periods.
+
+## Pulling from Previous Quarters
+
+When starting a new quarter, you can pull incomplete goals from the previous quarter:
+
+1. Navigate to the Quarterly Goals view
+2. Click on "Pull from Previous Quarter"
+3. Select which incomplete goals you want to bring forward
+4. Click "Pull Selected Goals"
+
+This will copy the selected goals to your current quarter, allowing you to continue working on them.
+
+## Pulling from Previous Weeks
+
+Similarly, when starting a new week, you can pull incomplete goals from the previous week:
+
+1. Navigate to the Weekly Goals view
+2. Click on "Pull from Previous Week"
+3. Select which incomplete goals you want to bring forward
+4. Click "Pull Selected Goals"
+
+## Pulling from Previous Days
+
+For daily planning, you can pull incomplete tasks from the previous day:
+
+1. Navigate to the Daily Goals view
+2. Click on "Pull from Yesterday"
+3. Select which incomplete tasks you want to bring forward
+4. Click "Pull Selected Tasks"
+
+This feature helps ensure continuity in your daily planning and prevents important tasks from falling through the cracks.
 
 ## Pulling from Previous Day
 

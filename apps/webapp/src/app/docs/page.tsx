@@ -16,8 +16,8 @@ import {
 } from './components/primitives';
 
 export const metadata: Metadata = {
-  title: 'Goals App Documentation',
-  description: 'Documentation for the Goals App',
+  title: 'Goals Documentation',
+  description: 'Documentation for Goals',
 };
 
 export default function DocsPage() {
@@ -26,21 +26,21 @@ export default function DocsPage() {
       <DocHeader
         icon={<BookText className="h-4 w-4" />}
         badge="Documentation"
-        title="Goals App Documentation"
-        description="Welcome to the Goals App documentation. Here you'll find comprehensive guides and resources to help you get the most out of the app."
+        title="Goals Documentation"
+        description="Welcome to the Goals documentation. Here you'll find comprehensive guides and resources to help you get the most out of the app."
         badgeColor="blue"
       />
 
       <div className="grid gap-6 sm:grid-cols-2">
         <DocCard
           title="Installation Guide"
-          description="Learn how to install and set up the Goals App"
+          description="Learn how to install and set up Goals"
           icon={<Download className="h-5 w-5" />}
           href="/docs/installation"
           variant="blue"
         >
           <p className="text-sm text-slate-600 mb-4">
-            Get started with the Goals App installation process for macOS with
+            Get started with the Goals installation process for macOS with
             Safari and Raycast integration.
           </p>
           <DocList>
@@ -58,14 +58,14 @@ export default function DocsPage() {
 
         <DocCard
           title="Getting Started"
-          description="Learn how to use the Goals App effectively"
+          description="Learn how to use Goals effectively"
           icon={<PlayCircle className="h-5 w-5" />}
           href="/docs/terminology"
           variant="indigo"
         >
           <p className="text-sm text-slate-600 mb-4">
-            Understand how to use the Goals App effectively with quarterly,
-            weekly, and daily planning to achieve your objectives.
+            Understand how to use Goals effectively with quarterly, weekly, and
+            daily planning to achieve your objectives.
           </p>
           <DocList>
             <DocListItem variant="indigo">

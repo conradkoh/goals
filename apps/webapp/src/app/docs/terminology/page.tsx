@@ -20,9 +20,8 @@ import {
 } from '../components/primitives';
 
 export const metadata: Metadata = {
-  title: 'Getting Started - Goals App Documentation',
-  description:
-    'Learn how to use the Goals App and understand its core concepts',
+  title: 'Getting Started - Goals Documentation',
+  description: 'Learn how to use Goals and understand its core concepts',
 };
 
 export default function GettingStartedPage() {
@@ -31,23 +30,23 @@ export default function GettingStartedPage() {
       <DocHeader
         icon={<PlayCircle className="h-4 w-4" />}
         badge="Getting Started"
-        title="Getting Started with Goals App"
-        description="Learn how to use the Goals App effectively and understand the different types of goals to maximize your productivity."
+        title="Getting Started with Goals"
+        description="Learn how to use Goals effectively and understand the different types of goals to maximize your productivity."
         badgeColor="indigo"
       />
 
       <div className="grid gap-8">
         <DocSection
-          title="How Goals App Works"
+          title="How Goals Works"
           icon={<Target className="h-5 w-5" />}
           variant="primary"
         >
           <div className="space-y-4">
             <p className="text-slate-700">
-              The Goals App helps you organize your objectives using a
-              hierarchical approach, breaking down large goals into manageable
-              tasks. This structure makes it easier to track progress and stay
-              focused on what matters.
+              Goals helps you organize your objectives using a hierarchical
+              approach, breaking down large goals into manageable tasks. This
+              structure makes it easier to track progress and stay focused on
+              what matters.
             </p>
             <DocInfoCard variant="default">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
@@ -213,9 +212,9 @@ export default function GettingStartedPage() {
         >
           <div className="space-y-4">
             <p className="text-slate-700">
-              The Goals App offers different views to help you focus on your
-              goals at various levels. Switch between these views based on your
-              current planning needs.
+              Goals offers different views to help you focus on your goals at
+              various levels. Switch between these views based on your current
+              planning needs.
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -249,9 +248,8 @@ export default function GettingStartedPage() {
               <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
                 <h3 className="font-medium text-slate-900 mb-2">Focus Mode</h3>
                 <p className="text-sm text-slate-600">
-                  A distraction-free environment to concentrate on current
-                  tasks. Use this when you need to get work done without
-                  interruptions.
+                  A distraction-free view that shows only your current day's
+                  tasks. Perfect for when you need to concentrate on execution.
                 </p>
               </div>
             </div>

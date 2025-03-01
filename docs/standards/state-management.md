@@ -1,8 +1,8 @@
-# State Management Guide
+# State Management Standards
 
 ## Overview
 
-This guide outlines the standard patterns for managing state in the Goals application, with a focus on handling loading states and errors effectively.
+This guide outlines the standard patterns for managing state in Goals, with a focus on handling loading states and errors effectively.
 
 ## Implementation Pattern
 
@@ -66,38 +66,177 @@ const GoalCreation = () => {
 
 ## Loading States
 
-1. Use skeleton loaders for initial data fetch
-2. Use inline loading indicators for mutations
-3. Disable interactive elements during loading
+### Pattern 1: Using the `useQuery` Hook with Loading States
 
-```typescript
-const LoadingState = ({ children, isLoading }) => {
-  if (isLoading) {
-    return <SkeletonLoader />;
+```tsx
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
+export function GoalsList() {
+  const goals = useQuery(api.goals.list);
+
+  if (goals === undefined) {
+    return <LoadingSpinner />;
   }
-  return children;
-};
 
-const LoadingButton = ({ isLoading, children, ...props }) => (
-  <button disabled={isLoading} {...props}>
-    {isLoading ? <LoadingSpinner /> : children}
-  </button>
-);
+  return (
+    <ul>
+      {goals.map((goal) => (
+        <li key={goal._id}>{goal.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### Pattern 2: Skeleton Loading States
+
+For a better user experience, use skeleton loaders instead of spinners when appropriate:
+
+```tsx
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function GoalsList() {
+  const goals = useQuery(api.goals.list);
+
+  if (goals === undefined) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <ul>
+      {goals.map((goal) => (
+        <li key={goal._id}>{goal.title}</li>
+      ))}
+    </ul>
+  );
+}
 ```
 
 ## Error Handling
 
-1. Show inline error messages
-2. Provide retry functionality
-3. Clear errors on new attempts
+### Pattern 1: Try-Catch with Error States
 
-```typescript
-const ErrorState = ({ error, onRetry }) => (
-  <div className="error-container">
-    <p>{error.message}</p>
-    <button onClick={onRetry}>Retry</button>
-  </div>
-);
+```tsx
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+export function CreateGoalForm() {
+  const [error, setError] = useState<string | null>(null);
+  const createGoal = useMutation(api.goals.create);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const title = formData.get('title') as string;
+
+      await createGoal({ title });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'An unknown error occurred'
+      );
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <input name="title" placeholder="Goal title" />
+      <button type="submit">Create Goal</button>
+    </form>
+  );
+}
+```
+
+### Pattern 2: Global Error Handling
+
+For application-wide errors, use a context provider:
+
+```tsx
+// ErrorContext.tsx
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+type ErrorContextType = {
+  error: string | null;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+};
+
+const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
+
+export function ErrorProvider({ children }: { children: ReactNode }) {
+  const [error, setError] = useState<string | null>(null);
+
+  const clearError = () => setError(null);
+
+  return (
+    <ErrorContext.Provider value={{ error, setError, clearError }}>
+      {children}
+    </ErrorContext.Provider>
+  );
+}
+
+export function useError() {
+  const context = useContext(ErrorContext);
+  if (context === undefined) {
+    throw new Error('useError must be used within an ErrorProvider');
+  }
+  return context;
+}
+```
+
+## Optimistic Updates
+
+For a better user experience, implement optimistic updates:
+
+```tsx
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+
+export function ToggleGoalCompletion({ goalId }: { goalId: string }) {
+  const goals = useQuery(api.goals.list);
+  const updateGoal = useMutation(api.goals.update);
+
+  const goal = goals?.find((g) => g._id === goalId);
+  if (!goal) return null;
+
+  const handleToggle = async () => {
+    // Optimistically update the UI
+    const optimisticValue = !goal.completed;
+
+    // Update in the database
+    await updateGoal({
+      id: goalId,
+      completed: optimisticValue,
+    });
+  };
+
+  return (
+    <button onClick={handleToggle}>
+      {goal.completed ? 'Mark Incomplete' : 'Mark Complete'}
+    </button>
+  );
+}
 ```
 
 ## TypeScript Utilities
