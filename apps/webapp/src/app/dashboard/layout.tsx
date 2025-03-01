@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from 'lucide-react';
+import { User, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
 import { ClientOnly } from '@/components/atoms/ClientOnly';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/popover';
 import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 export default function DashboardLayout({
   children,
@@ -77,6 +78,13 @@ const Header = () => {
               </div>
               <Separator />
               <div className="py-2">
+                <Link
+                  href="/docs"
+                  className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-muted transition-colors"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Documentation</span>
+                </Link>
                 <SyncPassphrase />
               </div>
             </PopoverContent>

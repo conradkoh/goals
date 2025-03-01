@@ -1,0 +1,149 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import {
+  BookOpen,
+  ArrowLeft,
+  Download,
+  PlayCircle,
+  Menu,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+export default function DocsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const navItems = [
+    {
+      title: 'Getting Started',
+      href: '/docs/terminology',
+      icon: <PlayCircle className="h-4 w-4" />,
+    },
+    {
+      title: 'Installation Guide',
+      href: '/docs/installation',
+      icon: <Download className="h-4 w-4" />,
+    },
+  ];
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+        <div className="container flex h-16 items-center px-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-600" />
+              <h1 className="text-lg font-semibold">Documentation</h1>
+            </div>
+          </div>
+
+          <div className="ml-auto flex items-center gap-4">
+            <Link
+              href="/dashboard"
+              className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            >
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            >
+              {mobileNavOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile navigation overlay */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 bg-white md:hidden pt-16">
+          <nav className="container py-6">
+            <ul className="space-y-4">
+              {navItems.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-slate-100',
+                      pathname === item.href
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-700'
+                    )}
+                    onClick={() => setMobileNavOpen(false)}
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100">
+                      {item.icon}
+                    </span>
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-slate-100 text-slate-700"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100">
+                    <ArrowLeft className="h-4 w-4" />
+                  </span>
+                  Back to Dashboard
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
+      <div className="container flex-1 items-start md:grid md:grid-cols-[240px_minmax(0,1fr)] md:gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-10">
+        {/* Desktop sidebar */}
+        <aside className="fixed top-16 z-30 hidden h-[calc(100vh-4rem)] w-full shrink-0 overflow-y-auto border-r md:sticky md:block">
+          <div className="h-full py-8 pr-6">
+            <nav className="flex flex-col space-y-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-colors',
+                    pathname === item.href
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  )}
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100">
+                    {item.icon}
+                  </span>
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex w-full flex-col py-8 px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-3xl">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
+}
