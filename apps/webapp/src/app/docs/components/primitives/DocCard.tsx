@@ -31,9 +31,9 @@ export function DocCard({
   };
 
   return (
-    <div className="overflow-hidden border-none rounded-lg shadow-md">
+    <div className="overflow-hidden border-none rounded-lg shadow-md flex flex-col h-full">
       <div className={`${headerVariants[variant]} h-2`} />
-      <div className="pt-6 p-6">
+      <div className="pt-6 px-6">
         <div className="flex items-center gap-3 mb-2">
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-full ${iconVariants[variant]}`}
@@ -44,14 +44,14 @@ export function DocCard({
         </div>
         <p className="text-slate-600 text-sm">{description}</p>
       </div>
-      <div className="p-6 pt-0">
-        <div className="space-y-4">
-          {children}
+      <div className="p-6 pt-3 flex-1 flex flex-col">
+        <div className="flex-1">{children}</div>
+        <div className="mt-4">
           <Button
             asChild
             variant="outline"
             size="sm"
-            className="mt-2 w-full sm:w-auto group"
+            className="w-full sm:w-auto group"
           >
             <Link
               href={href}

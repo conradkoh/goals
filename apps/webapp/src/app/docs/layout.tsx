@@ -53,7 +53,7 @@ export default function DocsLayout({
             >
               <Button variant="outline" size="sm" className="gap-1.5">
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Dashboard
+                Go to Dashboard
               </Button>
             </Link>
             <Button
@@ -105,7 +105,7 @@ export default function DocsLayout({
                   <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100">
                     <ArrowLeft className="h-4 w-4" />
                   </span>
-                  Back to Dashboard
+                  Go to Dashboard
                 </Link>
               </li>
             </ul>

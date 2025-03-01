@@ -1,6 +1,12 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Download, BookText, ArrowRight, PlayCircle } from 'lucide-react';
+import {
+  Download,
+  BookText,
+  ArrowRight,
+  PlayCircle,
+  HelpCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DocHeader,
@@ -33,7 +39,7 @@ export default function DocsPage() {
           href="/docs/installation"
           variant="blue"
         >
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 mb-4">
             Get started with the Goals App installation process for macOS with
             Safari and Raycast integration.
           </p>
@@ -57,7 +63,7 @@ export default function DocsPage() {
           href="/docs/terminology"
           variant="indigo"
         >
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 mb-4">
             Understand how to use the Goals App effectively with quarterly,
             weekly, and daily planning to achieve your objectives.
           </p>
@@ -77,22 +83,27 @@ export default function DocsPage() {
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">
-              Need more help?
-            </h3>
-            <p className="text-sm text-slate-600">
-              If you have any questions or need assistance, check out our
-              support resources.
-            </p>
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+              <HelpCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-slate-900 mb-1">
+                Need more help?
+              </h3>
+              <p className="text-sm text-slate-600">
+                If you have any questions or need assistance, check out our
+                support resources.
+              </p>
+            </div>
           </div>
           <Button
             asChild
             variant="default"
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
           >
-            <Link href="/dashboard">Return to Dashboard</Link>
+            <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
         </div>
       </div>

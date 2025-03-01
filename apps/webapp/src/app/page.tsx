@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -40,13 +40,22 @@ export default function Home() {
           </div>
         </div>
 
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center justify-center gap-2 px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
-        >
-          Try Dashboard
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
+          >
+            Try Dashboard
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/docs"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 text-base font-medium text-blue-700 bg-white border border-blue-200 rounded-full hover:bg-blue-50 hover:border-blue-300 transition-colors"
+          >
+            <BookOpen className="w-4 h-4" />
+            Documentation
+          </Link>
+        </div>
       </main>
 
       <footer className="mt-20 text-center text-sm text-muted-foreground">
