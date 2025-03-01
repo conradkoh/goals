@@ -99,11 +99,14 @@ export default function DocsPage() {
           </div>
           <Button
             asChild
-            variant="default"
+            variant="outline"
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
+            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-medium whitespace-nowrap"
           >
-            <Link href="/dashboard">Go to Dashboard</Link>
+            <Link href="/dashboard" className="flex items-center gap-1.5">
+              Go to Dashboard
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
           </Button>
         </div>
       </div>
