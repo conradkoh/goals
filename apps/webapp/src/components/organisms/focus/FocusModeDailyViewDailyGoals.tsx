@@ -1,14 +1,14 @@
-import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DateTime } from 'luxon';
-import { useMemo, useState } from 'react';
 import {
   DayContainer,
   wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
-import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { DateTime } from 'luxon';
+import { useMemo, useState } from 'react';
 
 export interface FocusModeDailyViewDailyGoalsProps {
   weekNumber: number;

@@ -299,7 +299,6 @@ const QuarterlyGoalSection = ({
   if (!shouldRender) {
     return null;
   }
-
   return (
     <div className="mb-2">
       <div

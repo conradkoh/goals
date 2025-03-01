@@ -20,6 +20,7 @@ const FocusPage = () => {
   const quarter = parseInt(searchParams.get('quarter') ?? '1') as 1 | 2 | 3 | 4;
   const initialWeek = parseInt(searchParams.get('week') ?? '8');
   const viewParam = searchParams.get('view') ?? 'daily';
+  const dayParam = searchParams.get('day');
   const currentDateTime = useCurrentDateTime();
 
   // Ensure viewParam is a valid ViewMode
@@ -34,6 +35,15 @@ const FocusPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   const [selectedWeek, setSelectedWeek] = useState(initialWeek);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => {
+    // If there's a day in the URL, use that
+    if (dayParam) {
+      const day = parseInt(dayParam);
+      // Validate the day is within range
+      if (day >= DayOfWeek.MONDAY && day <= DayOfWeek.SUNDAY) {
+        return day as DayOfWeek;
+      }
+    }
+    // Otherwise use current day
     return currentDateTime.weekday as DayOfWeek;
   });
 
@@ -78,6 +88,13 @@ const FocusPage = () => {
   useEffect(() => {
     setSelectedWeek(initialWeek);
   }, [initialWeek]);
+
+  // Sync URL with selectedDay when switching to daily view
+  useEffect(() => {
+    if (viewMode === 'daily' && !dayParam) {
+      updateUrl({ day: selectedDay });
+    }
+  }, [viewMode, dayParam, selectedDay]);
 
   const { weeks, startWeek, endWeek, currentWeekNumber, isCurrentQuarter } =
     useQuarterWeekInfo(year, quarter);
