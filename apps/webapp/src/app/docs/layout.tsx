@@ -47,15 +47,6 @@ export default function DocsLayout({
           </div>
 
           <div className="ml-auto flex items-center gap-4">
-            <Link
-              href="/dashboard"
-              className="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
-            >
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Go to Dashboard
-              </Button>
-            </Link>
             <Button
               variant="ghost"
               size="icon"
