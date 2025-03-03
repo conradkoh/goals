@@ -74,28 +74,37 @@ export const MultiWeekGrid = ({
   const { cardWidth, gapWidth, gridWidth } = useMemo(() => {
     const cardWidth = computeCardWidth(containerWidth);
     const gridWidth = numItems * cardWidth + (numItems - 1) * GAP_WIDTH;
+
     return { cardWidth, gapWidth: GAP_WIDTH, gridWidth };
-  }, [numItems, containerWidth]); // Add containerWidth as dependency
+  }, [numItems, containerWidth]);
   const calculateScrollPosition = () => {
     const container = containerRef.current;
     if (!container || currentIndex === -1) return 0;
 
-    // Get the card width based on current container width
-    const isMobile = containerWidth < MOBILE_BREAKPOINT;
-    const visibleCols = isMobile ? MOBILE_VISIBLE_COLS : DESKTOP_VISIBLE_COLS;
+    // Get all card elements (these should be direct children of the grid container)
+    const gridContent = container.querySelector('#multi-week-grid-content');
+    if (!gridContent) return 0;
 
-    // For mobile, we want to align exactly to the current card (no partial cards)
-    // For desktop with 2 columns, we center the current card
-    if (isMobile) {
-      // For mobile, exactly align to the current card
-      const scroll = currentIndex * (cardWidth + gapWidth);
-      return scroll;
-    } else {
-      // For desktop, center the current card
-      const offset = visibleCols / 2 - 0.5;
-      const scrollDistance = (currentIndex - offset) * (cardWidth + gapWidth);
-      return Math.max(0, scrollDistance);
-    }
+    const cards = Array.from(gridContent.children);
+    if (cards.length === 0 || currentIndex >= cards.length) return 0;
+
+    // Get the current card element
+    const currentCard = cards[currentIndex];
+    if (!currentCard) return 0;
+
+    // Get the container and card dimensions
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = currentCard.getBoundingClientRect();
+
+    // Calculate the left position of the card relative to the container
+    const cardLeftRelativeToContainer =
+      cardRect.left - containerRect.left + container.scrollLeft;
+
+    // Calculate the scroll position that would center this card in the viewport
+    const scrollPosition =
+      cardLeftRelativeToContainer - (containerRect.width - cardRect.width) / 2;
+
+    return Math.max(0, scrollPosition);
   };
 
   const scrollToPosition = (position: number, smooth = false) => {
@@ -109,48 +118,81 @@ export const MultiWeekGrid = ({
   };
 
   const scrollToCurrentWeek = () => {
-    const scrollPosition = calculateScrollPosition();
-    scrollToPosition(scrollPosition, true);
+    const container = containerRef.current;
+    if (!container || currentIndex === -1) return;
+
+    const gridContent = container.querySelector('#multi-week-grid-content');
+    if (!gridContent) return;
+
+    const cards = Array.from(gridContent.children);
+    if (cards.length === 0 || currentIndex >= cards.length) return;
+
+    // Get the current card element
+    const currentCard = cards[currentIndex];
+    if (!currentCard) return;
+
+    // Get the container and card dimensions
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = currentCard.getBoundingClientRect();
+
+    // Calculate the left position of the card relative to the container
+    const cardLeftRelativeToContainer =
+      cardRect.left - containerRect.left + container.scrollLeft;
+
+    // Calculate the scroll position that would center this card in the viewport
+    const scrollPosition =
+      cardLeftRelativeToContainer - (containerRect.width - cardRect.width) / 2;
+
+    scrollToPosition(Math.max(0, scrollPosition), true);
   };
 
-  // Check if current week is visible
+  // Update checkCurrentWeekVisibility to use DOM measurements as well
   const checkCurrentWeekVisibility = () => {
     const container = containerRef.current;
     if (!container || currentIndex === -1) return;
 
-    const containerWidth = container.clientWidth;
-    const isMobile = containerWidth < MOBILE_BREAKPOINT;
-    const cardWidth = computeCardWidth(containerWidth);
+    // Get all card elements
+    const gridContent = container.querySelector('#multi-week-grid-content');
+    if (!gridContent) return;
 
-    // Calculate the visible range (what cards are visible in the viewport)
-    const scrollLeft = container.scrollLeft;
-    const visibleLeftEdge = scrollLeft;
-    const visibleRightEdge = scrollLeft + containerWidth;
+    const cards = Array.from(gridContent.children);
+    if (cards.length === 0 || currentIndex >= cards.length) return;
 
-    // Calculate the center point of the visible area
-    const visibleCenter = visibleLeftEdge + containerWidth / 2;
+    // Get the current card element
+    const currentCard = cards[currentIndex];
+    if (!currentCard) return;
 
-    // Calculate the position of the current week card
-    const currentCardLeftEdge = currentIndex * (cardWidth + GAP_WIDTH);
-    const currentCardRightEdge = currentCardLeftEdge + cardWidth;
-    const currentCardCenter = currentCardLeftEdge + cardWidth / 2;
+    // Get the container and card dimensions
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = currentCard.getBoundingClientRect();
 
-    // Determine if current week is to the right of the viewport's center
-    // Add a small buffer (5px) to avoid flickering if it's very close to center
-    const centerDistance = currentCardCenter - visibleCenter;
-    setIsCurrentWeekToRight(centerDistance > 5);
+    // Calculate visible area
+    const visibleLeftEdge = containerRect.left;
+    const visibleRightEdge = containerRect.right;
+    const visibleCenter = visibleLeftEdge + containerRect.width / 2;
 
-    // On mobile, a card is considered visible only if it's almost fully visible (90%)
-    // On desktop, a card is considered visible if at least 70% is visible
+    // Calculate card position
+    const cardLeftEdge = cardRect.left;
+    const cardRightEdge = cardRect.right;
+    const cardCenter = cardLeftEdge + cardRect.width / 2;
+
+    // Calculate centering offset
+    const centeringOffset = cardCenter - visibleCenter;
+
+    // Determine visibility
+    const isMobile = containerRect.width < MOBILE_BREAKPOINT;
     const visibilityThreshold = isMobile ? 0.9 : 0.7;
+
+    // Calculate how much of the card is visible
     const cardVisibleWidth =
-      Math.min(currentCardRightEdge, visibleRightEdge) -
-      Math.max(currentCardLeftEdge, visibleLeftEdge);
+      Math.min(cardRightEdge, visibleRightEdge) -
+      Math.max(cardLeftEdge, visibleLeftEdge);
 
     // If card is off-screen, cardVisibleWidth will be negative
-    const percentVisible = Math.max(0, cardVisibleWidth) / cardWidth;
+    const percentVisible = Math.max(0, cardVisibleWidth) / cardRect.width;
 
     setIsCurrentWeekVisible(percentVisible >= visibilityThreshold);
+    setIsCurrentWeekToRight(centeringOffset > 5);
   };
 
   // Handle scroll events with proper dependency array
@@ -166,10 +208,12 @@ export const MultiWeekGrid = ({
         clearTimeout(scrollTimeout);
       }
 
-      // Debounce the visibility check to avoid excessive calculations
-      scrollTimeout = setTimeout(() => {
-        checkCurrentWeekVisibility();
-      }, 50);
+      const container = containerRef.current;
+      if (container) {
+        scrollTimeout = setTimeout(() => {
+          checkCurrentWeekVisibility();
+        }, 50);
+      }
     };
 
     const handleResize = () => {
@@ -214,13 +258,16 @@ export const MultiWeekGrid = ({
     ) {
       // First scroll without animation
       const scrollPosition = calculateScrollPosition();
+
       scrollToPosition(scrollPosition, false);
 
       // After initial render, check visibility after a short delay
       // This ensures the DOM has fully rendered and measurements are accurate
       setTimeout(() => {
-        checkCurrentWeekVisibility();
-        hasScrolledToCenter.current = true;
+        if (containerRef.current) {
+          checkCurrentWeekVisibility();
+          hasScrolledToCenter.current = true;
+        }
       }, 100);
     }
   }, [numItems, currentIndex, containerWidth]);
