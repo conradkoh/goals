@@ -3,14 +3,9 @@ import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
 
 // Layout Constants
-const DESKTOP_VISIBLE_COLS = 2; // Changed from 4 to 2 for desktop
-const MOBILE_VISIBLE_COLS = 1; // Added for mobile
 const MOBILE_BREAKPOINT = 768; // Standard md breakpoint
-const DESKTOP_CONTAINER_X_PADDING = 64; // 8 * 8 (tailwind px-8)
-const MOBILE_CONTAINER_X_PADDING = 32; // 4 * 8 (tailwind px-4)
 const GAP_WIDTH = 16; // tailwind gap-4
 const GRID_GAP = 16; // matches gap-4
-const TARGET_COLUMN_INDEX = 0; // Center column for scroll positioning (will be adjusted to center current card)
 const JUMP_BUTTON_OFFSET = {
   TOP: 16, // tailwind top-4
   RIGHT_DESKTOP: 32, // tailwind right-8
@@ -26,10 +21,8 @@ interface MultiWeekGridProps {
 function computeCardWidth(containerWidth: number) {
   // Determine if we're in mobile view
   const isMobile = containerWidth < MOBILE_BREAKPOINT;
-  const visibleCols = isMobile ? MOBILE_VISIBLE_COLS : DESKTOP_VISIBLE_COLS;
-  const containerPadding = isMobile
-    ? MOBILE_CONTAINER_X_PADDING
-    : DESKTOP_CONTAINER_X_PADDING;
+  const visibleCols = isMobile ? 1 : 2; // 1 column on mobile, 2 on desktop
+  const containerPadding = isMobile ? 32 : 64; // px-4 (16*2) on mobile, px-8 (32*2) on desktop
 
   const numGaps = visibleCols - 1;
   const cardsOnlyWidth =
