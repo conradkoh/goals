@@ -1,10 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
 import { useCenteredScroll, useCalculatedThenMeasured } from '@/lib/scroll';
 
 // Layout Constants
 const MOBILE_BREAKPOINT = 768;
+const TABLET_BREAKPOINT = 1024;
+const DESKTOP_BREAKPOINT = 1280;
 const DEFAULT_CARD_WIDTH = 320;
 const JUMP_BUTTON_OFFSET = {
   TOP: 16, // tailwind top-4
@@ -34,18 +36,42 @@ export const MultiWeekGrid = ({
   gridClassName,
 }: MultiWeekGridProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 0
+  );
 
-  // Calculate card width based on container width
+  // Listen for window resize events
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Calculate card width based on container width and screen size
   const { value: cardWidth } = useCalculatedThenMeasured({
     calculateFn: () => DEFAULT_CARD_WIDTH,
     measureFn: () => {
       if (!containerRef.current) return DEFAULT_CARD_WIDTH;
       const containerWidth = containerRef.current.clientWidth;
-      return containerWidth < MOBILE_BREAKPOINT
-        ? Math.min(containerWidth - 32, DEFAULT_CARD_WIDTH)
-        : DEFAULT_CARD_WIDTH;
+
+      // Small and medium screens: fit 1 card
+      if (containerWidth < TABLET_BREAKPOINT) {
+        // Subtract horizontal padding (2 * 16px = 32px) and add some margin
+        // Ensure the card has some padding on both sides
+        return Math.min(containerWidth - 48, containerWidth * 0.9);
+      }
+
+      // Large and XL screens: fit 3 cards
+      // Account for horizontal padding (2 * 16px = 32px) and gaps between cards (2 * 24px = 48px for md:gap-6)
+      const availableWidth = containerWidth - 32 - 48;
+      return Math.floor(availableWidth / 3);
     },
-    dependencies: [],
+    dependencies: [windowWidth], // Recalculate when window width changes
   });
 
   // Use our centered scroll hook
@@ -57,8 +83,11 @@ export const MultiWeekGrid = ({
   } = useCenteredScroll(containerRef as React.RefObject<HTMLElement>, {
     itemIndex: currentIndex,
     itemCount: numItems,
-    visibilityThreshold: { mobile: 0.9, desktop: 0.7 },
-    mobileBreakpoint: MOBILE_BREAKPOINT,
+    visibilityThreshold: {
+      mobile: 0.95, // For small/medium screens (1 card) - higher threshold for better visibility
+      desktop: 0.6, // For large/XL screens (3 cards) - lower threshold to account for multiple cards
+    },
+    mobileBreakpoint: TABLET_BREAKPOINT, // Use tablet breakpoint instead of mobile
     autoScrollOnMount: true,
     gridContentSelector: '#multi-week-grid-content > div',
   });
@@ -127,7 +156,7 @@ export const MultiWeekGrid = ({
         className={cn('flex flex-1 overflow-x-auto px-4 pb-4', gridClassName)}
       >
         <div
-          className="flex-grow grid grid-flow-col gap-4 h-full py-2"
+          className="flex-grow grid grid-flow-col gap-4 md:gap-6 lg:gap-6 h-full py-2"
           style={{
             gridTemplateColumns: `repeat(${numItems}, ${cardWidth}px)`,
           }}
