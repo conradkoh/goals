@@ -11,12 +11,14 @@ import {
   WeekStateToCopy,
 } from './types';
 import { DateTime } from 'luxon';
+import { DayOfWeek } from '../../../src/constants';
 
 // Type representing a time period with year, quarter, and week number
 export type TimePeriod = {
   year: number; // The year of the time period
   quarter: number; // The quarter of the time period
   weekNumber: number; // The week number of the time period
+  dayOfWeek?: DayOfWeek; // Optional day of week to consolidate daily goals to (1-7, where 1 is Monday)
 };
 
 export type BaseGoalMoveResult = {
@@ -604,9 +606,19 @@ export async function migrateDailyGoals(
       });
 
       // Update the weekly state to point to the original daily goal
-      await ctx.db.patch(dailyGoal.weekState._id, {
+      const updateFields: Partial<Doc<'goalStateByWeek'>> = {
         weekNumber: to.weekNumber,
-      });
+      };
+
+      // If a target day of week is specified, update the day of week for the goal
+      if (to.dayOfWeek !== undefined) {
+        updateFields.daily = {
+          ...dailyGoal.weekState.daily,
+          dayOfWeek: to.dayOfWeek,
+        };
+      }
+
+      await ctx.db.patch(dailyGoal.weekState._id, updateFields);
     })
   );
 }

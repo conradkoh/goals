@@ -4,6 +4,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
@@ -14,7 +20,16 @@ import {
 import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { Focus, History, MoreVertical } from 'lucide-react';
+import {
+  Focus,
+  History,
+  MoreVertical,
+  ArrowDownToLine,
+  Calendar,
+  ArrowRightLeft,
+  MoveHorizontal,
+} from 'lucide-react';
+import { DayOfWeek, getDayName } from '@services/backend/src/constants';
 
 interface WeekCardProps {
   weekLabel: string;
@@ -89,7 +104,11 @@ export const WeekCard = ({
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={5}
+                  className="z-50 max-h-[70vh] overflow-y-auto"
+                >
                   {isDisabled ? (
                     <TooltipProvider delayDuration={0}>
                       <Tooltip>
@@ -115,18 +134,40 @@ export const WeekCard = ({
                       </Tooltip>
                     </TooltipProvider>
                   ) : (
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={handlePreviewTasks}
-                    >
-                      <History className="mr-2 h-4 w-4" />
-                      <div className="flex flex-col w-full items-center">
-                        <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">
-                          from previous week
+                    <>
+                      <DropdownMenuLabel className="font-semibold px-3 py-2">
+                        Pull from Previous Week
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        disabled={isFirstWeek || isMovingTasks}
+                        onClick={() => {
+                          if (!isFirstWeek && !isMovingTasks) {
+                            handlePreviewTasks(DayOfWeek.MONDAY);
+                          }
+                        }}
+                        className="flex items-center"
+                      >
+                        <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">
+                          To first day of the week (Monday)
                         </span>
-                      </div>
-                    </DropdownMenuItem>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
+                        disabled={isFirstWeek || isMovingTasks}
+                        onClick={() => {
+                          if (!isFirstWeek && !isMovingTasks) {
+                            handlePreviewTasks(undefined);
+                          }
+                        }}
+                        className="flex items-center"
+                      >
+                        <ArrowRightLeft className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">Preserve day of week</span>
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>

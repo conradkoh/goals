@@ -3,9 +3,29 @@ import { WeekCardDailyGoals } from '../goals-new/week-card-sections/WeekCardDail
 import { WeekCardQuarterlyGoals } from '../goals-new/week-card-sections/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '../goals-new/week-card-sections/WeekCardWeeklyGoals';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  History,
+  ArrowDownToLine,
+  Calendar,
+  ArrowRightLeft,
+  MoveHorizontal,
+} from 'lucide-react';
 import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 import { useMemo } from 'react';
+import { DayOfWeek } from '@services/backend/src/constants';
+import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
@@ -74,16 +94,14 @@ export const FocusModeWeeklyView = ({
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold">💭 Quarterly Goals</div>
           {!isFirstWeek && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handlePreviewTasks}
-              disabled={isDisabled}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <History className="h-4 w-4 mr-2" />
-              Pull from Previous Week
-            </Button>
+            <WeekActionMenu
+              isDisabled={isDisabled}
+              isFirstWeek={isFirstWeek}
+              isMovingTasks={isMovingTasks}
+              handlePreviewTasks={handlePreviewTasks}
+              buttonSize="icon"
+              showLabel={false}
+            />
           )}
         </div>
         <WeekProviderWithoutDashboard weekData={weekData}>

@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import type { ReactElement } from 'react';
+import { ReactElement, useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
 import { toast } from '@/components/ui/use-toast';
 import { WeekCardPreviewDialog } from '@/components/organisms/goals-new/week-card-sections/WeekCardPreviewDialog';
+import { DayOfWeek } from '@services/backend/src/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 
-interface PreviewTask {
+// Match the types expected by WeekCardPreviewDialog
+interface DailyGoalToCopy {
   id: string;
   title: string;
   details?: string;
@@ -20,10 +21,11 @@ interface PreviewTask {
   weeklyGoal: {
     id: string;
     title: string;
+    consolidateToDayOfWeek?: DayOfWeek;
   };
 }
 
-interface WeeklyGoalToCopy {
+interface WeekStateToCopy {
   title: string;
   carryOver: {
     type: 'week';
@@ -46,7 +48,7 @@ interface UseMoveGoalsForWeekProps {
 interface UseMoveGoalsForWeekReturn {
   isFirstWeek: boolean;
   isMovingTasks: boolean;
-  handlePreviewTasks: () => Promise<void>;
+  handlePreviewTasks: (targetDayOfWeek?: DayOfWeek) => Promise<void>;
   dialog: ReactElement;
 }
 
@@ -60,15 +62,21 @@ export const useMoveGoalsForWeek = ({
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<{
-    tasks: Array<PreviewTask>;
-    weeklyGoals: Array<WeeklyGoalToCopy>;
+    tasks: DailyGoalToCopy[];
+    weeklyGoals: WeekStateToCopy[];
   } | null>(null);
+  const [targetDayOfWeek, setTargetDayOfWeek] = useState<DayOfWeek | undefined>(
+    undefined
+  );
 
-  const isFirstWeek = weekNumber === 1; // First week of the quarter
+  const isFirstWeek = weekNumber === 1;
 
-  const handlePreviewTasks = async () => {
+  const handlePreviewTasks = async (dayOfWeek?: DayOfWeek) => {
     if (isFirstWeek) return;
     try {
+      // Store the target day of week for use in the actual move operation
+      setTargetDayOfWeek(dayOfWeek);
+
       const previewData = await moveGoalsFromWeekMutation({
         sessionId,
         from: {
@@ -80,13 +88,14 @@ export const useMoveGoalsForWeek = ({
           quarter,
           weekNumber,
           year,
+          ...(dayOfWeek !== undefined && { dayOfWeek }),
         },
         dryRun: true,
       });
 
       // Type guard to check if we have preview data
       if ('canPull' in previewData && previewData.canPull) {
-        // Map the daily goals to the PreviewTask format
+        // Map the daily goals to the DailyGoalToCopy format
         setPreview({
           tasks: previewData.dailyGoalsToMove.map((dailyGoal) => {
             // Find the quarterly goal status
@@ -100,6 +109,7 @@ export const useMoveGoalsForWeek = ({
               weeklyGoal: {
                 id: dailyGoal.weeklyGoalId,
                 title: dailyGoal.weeklyGoalTitle,
+                consolidateToDayOfWeek: dayOfWeek,
               },
               quarterlyGoal: {
                 id: dailyGoal.quarterlyGoalId!,
@@ -118,7 +128,7 @@ export const useMoveGoalsForWeek = ({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to preview tasks to move.',
+        description: 'Failed to preview tasks from previous week.',
       });
     }
   };
@@ -138,6 +148,7 @@ export const useMoveGoalsForWeek = ({
           quarter,
           weekNumber,
           year,
+          ...(targetDayOfWeek !== undefined && { dayOfWeek: targetDayOfWeek }),
         },
         dryRun: false,
       });

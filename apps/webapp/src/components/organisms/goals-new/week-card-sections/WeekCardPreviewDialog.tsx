@@ -1,4 +1,4 @@
-import { History, Star, Pin } from 'lucide-react';
+import { History, Star, Pin, Calendar, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+import { DayOfWeek, getDayName } from '@services/backend/src/constants';
 
 interface DailyGoalToCopy {
   id: string;
@@ -25,6 +26,7 @@ interface DailyGoalToCopy {
   weeklyGoal: {
     id: string;
     title: string;
+    consolidateToDayOfWeek?: DayOfWeek;
   };
 }
 
@@ -177,6 +179,17 @@ export const WeekCardPreviewDialog = ({
     return acc;
   }, {});
 
+  // Check if we're consolidating to a specific day
+  const isConsolidating = preview?.tasks.some(
+    (task) =>
+      task.weeklyGoal && task.weeklyGoal.consolidateToDayOfWeek !== undefined
+  );
+
+  const consolidationDay =
+    isConsolidating && preview?.tasks.length > 0
+      ? preview.tasks[0].weeklyGoal.consolidateToDayOfWeek
+      : undefined;
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -188,6 +201,27 @@ export const WeekCardPreviewDialog = ({
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">What will happen:</h3>
                 <div className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    {isConsolidating ? (
+                      <>
+                        <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <p className="text-sm">
+                          Daily goals will be consolidated to{' '}
+                          <span className="font-medium">
+                            {getDayName(consolidationDay!)}
+                          </span>
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRightLeft className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <p className="text-sm">
+                          Daily goals will preserve their original day of the
+                          week
+                        </p>
+                      </>
+                    )}
+                  </div>
                   <div className="flex items-start gap-2">
                     <div className="h-5 w-5 flex-shrink-0 mt-0.5">
                       <Star className="h-4 w-4 text-yellow-500" />
@@ -214,14 +248,13 @@ export const WeekCardPreviewDialog = ({
                   </div>
                   <div className="flex items-start gap-2">
                     <div className="h-5 w-5 flex-shrink-0 mt-0.5">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mt-1.5 ml-1.5" />
+                      <Calendar className="h-4 w-4 text-green-500" />
                     </div>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium text-gray-900">
                         Daily Goals
                       </span>{' '}
-                      that are incomplete will be moved (not copied) to this
-                      week
+                      that are incomplete will be moved to this week
                     </p>
                   </div>
                 </div>

@@ -18,6 +18,17 @@ export const moveGoalsFromWeek = mutation({
       year: v.number(),
       quarter: v.number(),
       weekNumber: v.number(),
+      dayOfWeek: v.optional(
+        v.union(
+          v.literal(DayOfWeek.MONDAY),
+          v.literal(DayOfWeek.TUESDAY),
+          v.literal(DayOfWeek.WEDNESDAY),
+          v.literal(DayOfWeek.THURSDAY),
+          v.literal(DayOfWeek.FRIDAY),
+          v.literal(DayOfWeek.SATURDAY),
+          v.literal(DayOfWeek.SUNDAY)
+        )
+      ),
     }),
     dryRun: v.optional(v.boolean()),
   },
