@@ -344,7 +344,7 @@ export const WeekCardWeeklyGoals = forwardRef<
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter, isLoading = false }, ref) => {
   const { updateQuarterlyGoalTitle } = useGoalActions();
-  const { quarterlyGoals, deleteWeeklyGoalOptimistic } = useWeek();
+  const { quarterlyGoals, deleteGoalOptimistic } = useWeek();
 
   // Filter and sort important quarterly goals
   const importantQuarterlyGoals = useMemo(() => {
@@ -381,13 +381,13 @@ export const WeekCardWeeklyGoals = forwardRef<
   const handleDeleteWeeklyGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
-        await deleteWeeklyGoalOptimistic(goalId);
+        await deleteGoalOptimistic(goalId);
       } catch (error) {
         console.error('Failed to delete weekly goal:', error);
         throw error;
       }
     },
-    [deleteWeeklyGoalOptimistic]
+    [deleteGoalOptimistic]
   );
 
   // If loading, show skeleton

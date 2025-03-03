@@ -29,7 +29,6 @@ export const FocusModeDailyViewDailyGoals = ({
     quarterlyGoals,
     createDailyGoalOptimistic,
     dailyGoals,
-    deleteDailyGoalOptimistic,
     deleteGoalOptimistic,
   } = useWeek();
   const { updateQuarterlyGoalTitle } = useGoalActions();

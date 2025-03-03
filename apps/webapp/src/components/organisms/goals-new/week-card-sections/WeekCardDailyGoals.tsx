@@ -89,7 +89,7 @@ export const WeekCardDailyGoals = forwardRef<
       quarterlyGoals,
       createDailyGoalOptimistic,
       dailyGoals,
-      deleteDailyGoalOptimistic,
+      deleteGoalOptimistic,
     } = useWeek();
     const { updateQuarterlyGoalTitle } = useGoalActions();
     const currentDateTime = useCurrentDateTime();
@@ -408,11 +408,9 @@ export const WeekCardDailyGoals = forwardRef<
 
     const handleDeleteGoal = useCallback(
       async (goalId: Id<'goals'>): Promise<void> => {
-        const goal = dailyGoals.find((g) => g._id === goalId);
-        if (!goal || !goal.state?.daily?.dayOfWeek) return;
-        await deleteDailyGoalOptimistic(goalId);
+        await deleteGoalOptimistic(goalId);
       },
-      [dailyGoals, deleteDailyGoalOptimistic]
+      [deleteGoalOptimistic]
     );
 
     const handleCreateGoal = useCallback(
