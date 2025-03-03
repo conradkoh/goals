@@ -43,104 +43,108 @@ interface WeekActionMenuProps {
   showLabel?: boolean;
 }
 
-export const WeekActionMenu = ({
-  isDisabled = false,
-  isFirstWeek = false,
-  isMovingTasks = false,
-  tooltipContent = "Can't pull from previous week",
-  handlePreviewTasks,
-  buttonSize = 'icon',
-  buttonVariant = 'ghost',
-  align = 'end',
-  className,
-  showLabel = false,
-}: WeekActionMenuProps) => {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant={buttonVariant}
-          size={buttonSize}
-          disabled={isDisabled}
-          className={cn(
-            'text-muted-foreground hover:text-foreground',
-            className
-          )}
+export const WeekActionMenu = React.memo(
+  ({
+    isDisabled = false,
+    isFirstWeek = false,
+    isMovingTasks = false,
+    tooltipContent = "Can't pull from previous week",
+    handlePreviewTasks,
+    buttonSize = 'icon',
+    buttonVariant = 'ghost',
+    align = 'end',
+    className,
+    showLabel = false,
+  }: WeekActionMenuProps) => {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={buttonVariant}
+            size={buttonSize}
+            disabled={isDisabled}
+            className={cn(
+              'text-muted-foreground hover:text-foreground',
+              className
+            )}
+          >
+            {showLabel ? (
+              <>
+                <ArrowDownToLine className="h-4 w-4 mr-2" />
+                Pull from Previous Week
+              </>
+            ) : (
+              <MoreVertical className="h-4 w-4" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align={align}
+          sideOffset={5}
+          className="z-50 max-h-[70vh] overflow-y-auto"
         >
-          {showLabel ? (
-            <>
-              <ArrowDownToLine className="h-4 w-4 mr-2" />
-              Pull from Previous Week
-            </>
+          {isDisabled ? (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-full cursor-not-allowed">
+                    <DropdownMenuItem
+                      className="cursor-not-allowed opacity-50"
+                      disabled
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col w-full items-center">
+                        <span>Pull Incomplete</span>
+                        <span className="text-gray-500 text-xs">
+                          from previous week
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipContent}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
-            <MoreVertical className="h-4 w-4" />
+            <>
+              <DropdownMenuLabel className="font-semibold px-3 py-2">
+                Pull from Previous Week
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                disabled={isFirstWeek || isMovingTasks}
+                onClick={() => {
+                  if (!isFirstWeek && !isMovingTasks) {
+                    handlePreviewTasks(DayOfWeek.MONDAY);
+                  }
+                }}
+                className="flex items-center"
+              >
+                <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">
+                  To first day of the week (Monday)
+                </span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                disabled={isFirstWeek || isMovingTasks}
+                onClick={() => {
+                  if (!isFirstWeek && !isMovingTasks) {
+                    handlePreviewTasks(undefined);
+                  }
+                }}
+                className="flex items-center"
+              >
+                <ArrowRightLeft className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">Preserve day of week</span>
+              </DropdownMenuItem>
+            </>
           )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align={align}
-        sideOffset={5}
-        className="z-50 max-h-[70vh] overflow-y-auto"
-      >
-        {isDisabled ? (
-          <TooltipProvider delayDuration={0}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="w-full cursor-not-allowed">
-                  <DropdownMenuItem
-                    className="cursor-not-allowed opacity-50"
-                    disabled
-                  >
-                    <History className="mr-2 h-4 w-4" />
-                    <div className="flex flex-col w-full items-center">
-                      <span>Pull Incomplete</span>
-                      <span className="text-gray-500 text-xs">
-                        from previous week
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{tooltipContent}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <>
-            <DropdownMenuLabel className="font-semibold px-3 py-2">
-              Pull from Previous Week
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              disabled={isFirstWeek || isMovingTasks}
-              onClick={() => {
-                if (!isFirstWeek && !isMovingTasks) {
-                  handlePreviewTasks(DayOfWeek.MONDAY);
-                }
-              }}
-              className="flex items-center"
-            >
-              <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="text-sm">To first day of the week (Monday)</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              disabled={isFirstWeek || isMovingTasks}
-              onClick={() => {
-                if (!isFirstWeek && !isMovingTasks) {
-                  handlePreviewTasks(undefined);
-                }
-              }}
-              className="flex items-center"
-            >
-              <ArrowRightLeft className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span className="text-sm">Preserve day of week</span>
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+);

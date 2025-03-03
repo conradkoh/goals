@@ -288,7 +288,6 @@ const FocusPage = () => {
               quarter={quarter}
               weekData={weekDetails}
               selectedDayOfWeek={selectedDay}
-              onNavigate={handleNavigateToDay}
             />
           ) : (
             <FocusModeWeeklyView
@@ -296,7 +295,6 @@ const FocusPage = () => {
               year={year}
               quarter={quarter}
               weekData={weekDetails}
-              onNavigate={handleNavigateToWeek}
             />
           )}
         </div>

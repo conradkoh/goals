@@ -22,10 +22,13 @@ import {
   ArrowRightLeft,
   MoveHorizontal,
 } from 'lucide-react';
-import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 import { useMemo } from 'react';
 import { DayOfWeek } from '@services/backend/src/constants';
 import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
+import {
+  MoveGoalsForWeekProvider,
+  useMoveGoalsForWeekContext,
+} from '@/hooks/useMoveGoalsForWeekContext';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
@@ -34,23 +37,33 @@ interface FocusModeWeeklyViewProps {
   weekData: WeekData;
 }
 
-export const FocusModeWeeklyView = ({
+// Inner component that uses the context
+const FocusModeWeeklyViewInner = ({
   weekNumber,
   year,
   quarter,
   weekData,
 }: FocusModeWeeklyViewProps) => {
-  const { isFirstWeek, isMovingTasks, handlePreviewTasks, dialog } =
-    useMoveGoalsForWeek({
-      weekNumber,
-      year,
-      quarter,
-    });
+  const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
+    useMoveGoalsForWeekContext();
 
-  // Memoize this value to prevent unnecessary re-renders
-  const isDisabled = useMemo(
-    () => isFirstWeek || isMovingTasks,
-    [isFirstWeek, isMovingTasks]
+  // Memoize the WeekActionMenu props
+  const weekActionMenuProps = useMemo(
+    () => ({
+      isDisabled,
+      isFirstWeek,
+      isMovingTasks,
+      handlePreviewTasks,
+      buttonSize: 'icon' as const,
+      showLabel: false,
+    }),
+    [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks]
+  );
+
+  // Memoize the conditional rendering of WeekActionMenu
+  const weekActionMenu = useMemo(
+    () => !isFirstWeek && <WeekActionMenu {...weekActionMenuProps} />,
+    [isFirstWeek, weekActionMenuProps]
   );
 
   // Memoize the components to prevent unnecessary re-renders
@@ -93,16 +106,7 @@ export const FocusModeWeeklyView = ({
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold">💭 Quarterly Goals</div>
-          {!isFirstWeek && (
-            <WeekActionMenu
-              isDisabled={isDisabled}
-              isFirstWeek={isFirstWeek}
-              isMovingTasks={isMovingTasks}
-              handlePreviewTasks={handlePreviewTasks}
-              buttonSize="icon"
-              showLabel={false}
-            />
-          )}
+          {weekActionMenu}
         </div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           {quarterlyGoalsComponent}
@@ -125,5 +129,25 @@ export const FocusModeWeeklyView = ({
 
       {dialog}
     </div>
+  );
+};
+
+// Outer component that provides the context
+export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
+  const { weekNumber, year, quarter, weekData } = props;
+
+  return (
+    <MoveGoalsForWeekProvider
+      weekNumber={weekNumber}
+      year={year}
+      quarter={quarter}
+    >
+      <FocusModeWeeklyViewInner
+        weekNumber={weekNumber}
+        year={year}
+        quarter={quarter}
+        weekData={weekData}
+      />
+    </MoveGoalsForWeekProvider>
   );
 };

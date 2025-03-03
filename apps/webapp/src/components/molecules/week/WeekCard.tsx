@@ -1,35 +1,14 @@
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent,
-  DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
+import { Focus } from 'lucide-react';
+import { DayOfWeek } from '@services/backend/src/constants';
+import { WeekActionMenu } from './WeekActionMenu';
+import { useMemo } from 'react';
 import {
-  Focus,
-  History,
-  MoreVertical,
-  ArrowDownToLine,
-  Calendar,
-  ArrowRightLeft,
-  MoveHorizontal,
-} from 'lucide-react';
-import { DayOfWeek, getDayName } from '@services/backend/src/constants';
+  MoveGoalsForWeekProvider,
+  useMoveGoalsForWeekContext,
+} from '@/hooks/useMoveGoalsForWeekContext';
 
 interface WeekCardProps {
   weekLabel: string;
@@ -43,7 +22,8 @@ interface WeekCardProps {
   quarter: number;
 }
 
-export const WeekCard = ({
+// Inner component that uses the context
+const WeekCardInner = ({
   weekLabel,
   mondayDate,
   weekNumber,
@@ -51,22 +31,29 @@ export const WeekCard = ({
   children,
   onFocusClick,
   weekData,
-  year,
-  quarter,
-}: WeekCardProps) => {
-  const { isFirstWeek, isMovingTasks, handlePreviewTasks, dialog } =
-    useMoveGoalsForWeek({
-      weekNumber,
-      year,
-      quarter,
-    });
+}: Omit<WeekCardProps, 'year' | 'quarter'>) => {
+  const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
+    useMoveGoalsForWeekContext();
 
-  const isDisabled = isFirstWeek || isMovingTasks;
   const tooltipContent = isFirstWeek
     ? 'Cannot pull goals from previous week as this is the first week of the quarter'
     : isMovingTasks
     ? 'Moving tasks...'
-    : null;
+    : "Can't pull from previous week";
+
+  // Memoize the WeekActionMenu props to prevent unnecessary re-renders
+  const weekActionMenuProps = useMemo(
+    () => ({
+      isDisabled,
+      isFirstWeek,
+      isMovingTasks,
+      handlePreviewTasks,
+      tooltipContent,
+      buttonSize: 'icon' as const,
+      showLabel: false,
+    }),
+    [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks, tooltipContent]
+  );
 
   return (
     <WeekProviderWithoutDashboard weekData={weekData}>
@@ -98,79 +85,7 @@ export const WeekCard = ({
               >
                 <Focus className="h-4 w-4" />
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  sideOffset={5}
-                  className="z-50 max-h-[70vh] overflow-y-auto"
-                >
-                  {isDisabled ? (
-                    <TooltipProvider delayDuration={0}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="w-full cursor-not-allowed">
-                            <DropdownMenuItem
-                              className="cursor-not-allowed opacity-50"
-                              disabled
-                            >
-                              <History className="mr-2 h-4 w-4" />
-                              <div className="flex flex-col w-full items-center">
-                                <span>Pull Incomplete</span>
-                                <span className="text-gray-500 text-xs">
-                                  from previous week
-                                </span>
-                              </div>
-                            </DropdownMenuItem>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{tooltipContent}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <>
-                      <DropdownMenuLabel className="font-semibold px-3 py-2">
-                        Pull from Previous Week
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-
-                      <DropdownMenuItem
-                        disabled={isFirstWeek || isMovingTasks}
-                        onClick={() => {
-                          if (!isFirstWeek && !isMovingTasks) {
-                            handlePreviewTasks(DayOfWeek.MONDAY);
-                          }
-                        }}
-                        className="flex items-center"
-                      >
-                        <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm">
-                          To first day of the week (Monday)
-                        </span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        disabled={isFirstWeek || isMovingTasks}
-                        onClick={() => {
-                          if (!isFirstWeek && !isMovingTasks) {
-                            handlePreviewTasks(undefined);
-                          }
-                        }}
-                        className="flex items-center"
-                      >
-                        <ArrowRightLeft className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm">Preserve day of week</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <WeekActionMenu {...weekActionMenuProps} />
             </div>
           </div>
         </div>
@@ -181,6 +96,21 @@ export const WeekCard = ({
 
       {dialog}
     </WeekProviderWithoutDashboard>
+  );
+};
+
+// Outer component that provides the context
+export const WeekCard = (props: WeekCardProps) => {
+  const { weekNumber, year, quarter, ...rest } = props;
+
+  return (
+    <MoveGoalsForWeekProvider
+      weekNumber={weekNumber}
+      year={year}
+      quarter={quarter}
+    >
+      <WeekCardInner weekNumber={weekNumber} {...rest} />
+    </MoveGoalsForWeekProvider>
   );
 };
 
