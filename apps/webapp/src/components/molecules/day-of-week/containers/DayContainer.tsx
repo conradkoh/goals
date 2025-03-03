@@ -15,7 +15,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 import { Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo } from 'react';
-import { AddTaskInput } from '../components/AddTaskInput';
+import { AddTaskInput } from '../../../atoms/AddTaskInput';
 import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
 import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
