@@ -20,7 +20,6 @@ export const FocusModeDailyView = ({
   selectedDayOfWeek,
   onJumpToCurrent,
 }: FocusModeDailyViewProps) => {
-  console.log({ onJumpToCurrent });
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
       <div className="flex justify-end mb-2">

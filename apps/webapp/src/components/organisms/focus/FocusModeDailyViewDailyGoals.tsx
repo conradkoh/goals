@@ -30,6 +30,7 @@ export const FocusModeDailyViewDailyGoals = ({
     createDailyGoalOptimistic,
     dailyGoals,
     deleteDailyGoalOptimistic,
+    deleteGoalOptimistic,
   } = useWeek();
   const { updateQuarterlyGoalTitle } = useGoalActions();
 
@@ -213,9 +214,7 @@ export const FocusModeDailyViewDailyGoals = ({
   };
 
   const handleDeleteGoal = async (goalId: Id<'goals'>): Promise<void> => {
-    const goal = dailyGoals.find((g) => g._id === goalId);
-    if (!goal || !goal.state?.daily?.dayOfWeek) return;
-    await deleteDailyGoalOptimistic(goalId);
+    await deleteGoalOptimistic(goalId);
   };
 
   const handleCreateGoal = async (

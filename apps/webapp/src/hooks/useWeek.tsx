@@ -8,6 +8,7 @@ import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
 import { useOptimisticArray, isOptimisticId } from './useOptimistic';
 import { useGoalActions } from './useGoalActions';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+import { toast } from '@/components/ui/use-toast';
 
 // Update the type to include isOptimistic flag
 export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
@@ -42,6 +43,7 @@ interface WeekContextValue {
     details?: string
   ) => Promise<void>;
   deleteDailyGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
+  deleteGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
 }
 interface WeekProviderWithoutDashboardProps {
   weekData: WeekData;
@@ -311,6 +313,71 @@ export const WeekProviderWithoutDashboard = ({
           // Remove optimistic update on error
           removeOptimistic();
           throw error;
+        }
+      },
+      deleteGoalOptimistic: async (goalId: Id<'goals'>) => {
+        // Find the goal in all goals to determine its type
+        const goal = allGoals.find((g) => g._id === goalId);
+
+        if (!goal) {
+          toast({
+            title: 'Failed to delete goal with id: ' + goalId,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Determine goal type based on depth
+        if (goal.depth === 1) {
+          // Weekly goal
+          const removeOptimistic = doWeeklyGoalAction({
+            type: 'remove',
+            id: goalId,
+          });
+
+          try {
+            // Perform actual deletion
+            await deleteQuarterlyGoal({
+              goalId,
+            });
+
+            // The optimistic update will be automatically cleaned up when the query refreshes
+            removeOptimistic();
+          } catch (error) {
+            // Revert optimistic update on error
+            removeOptimistic();
+            throw error;
+          }
+        } else if (goal.depth === 2) {
+          // Daily goal
+          const removeOptimistic = doDailyGoalAction({
+            type: 'remove',
+            id: goalId,
+          });
+
+          try {
+            // Perform actual deletion
+            await deleteQuarterlyGoal({
+              goalId,
+            });
+
+            // Remove optimistic update after success
+            removeOptimistic();
+          } catch (error) {
+            // Remove optimistic update on error
+            removeOptimistic();
+            throw error;
+          }
+        } else {
+          // Quarterly goal or unknown type
+          try {
+            await deleteQuarterlyGoal({
+              goalId,
+            });
+          } catch (error) {
+            console.error('Failed to delete goal:', error);
+            throw error;
+          }
         }
       },
     };
