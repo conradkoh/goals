@@ -10,11 +10,6 @@ export interface UseCenteredScrollOptions {
   itemIndex: number;
 
   /**
-   * The total number of items
-   */
-  itemCount: number;
-
-  /**
    * Threshold for considering an item visible (0-1)
    * 1 means fully visible, 0.5 means half visible
    * @default 0.7 for desktop, 0.9 for mobile
@@ -84,7 +79,6 @@ export function useCenteredScroll(
 ): CenteredScrollResult {
   const {
     itemIndex,
-    itemCount,
     visibilityThreshold = { mobile: 0.9, desktop: 0.7 },
     mobileBreakpoint = 768,
     autoScrollOnMount = true,

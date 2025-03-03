@@ -1,5 +1,5 @@
 'use client';
-import { JumpToCurrentButton } from '@/app/focus/components/JumpToCurrent';
+import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { ViewMode } from '@/app/focus/page.constants';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
@@ -177,6 +177,18 @@ const FocusPage = () => {
     }
   };
 
+  // Type-safe wrappers for the handleJumpToCurrent function
+  const handleJumpToCurrentDay = (weekNumber: number, dayOfWeek: DayOfWeek) => {
+    setSelectedWeek(weekNumber);
+    setSelectedDay(dayOfWeek);
+    updateUrl({ week: weekNumber, day: dayOfWeek });
+  };
+
+  const handleJumpToCurrentWeek = (weekNumber: number) => {
+    setSelectedWeek(weekNumber);
+    updateUrl({ week: weekNumber });
+  };
+
   const handleClose = () => {
     router.push(`/dashboard?year=${year}&quarter=${quarter}`);
   };
@@ -265,14 +277,17 @@ const FocusPage = () => {
           selectedYear={year}
           selectedQuarter={quarter}
         >
-          <JumpToCurrentButton
-            viewMode={viewMode}
-            selectedWeek={selectedWeek}
-            selectedDay={selectedDay}
-            currentWeekNumber={currentWeekNumber}
-            isCurrentQuarter={isCurrentQuarter}
-            onJumpToCurrent={handleJumpToCurrent}
-          />
+          {viewMode !== 'quarterly' && (
+            <JumpToCurrentButton
+              viewMode={viewMode === 'daily' ? 'daily' : 'weekly'}
+              year={year}
+              quarter={quarter}
+              selectedWeek={selectedWeek}
+              selectedDay={selectedDay}
+              onJumpToCurrentDay={handleJumpToCurrentDay}
+              onJumpToCurrentWeek={handleJumpToCurrentWeek}
+            />
+          )}
         </FocusHeader>
       </div>
 
@@ -288,6 +303,7 @@ const FocusPage = () => {
               quarter={quarter}
               weekData={weekDetails}
               selectedDayOfWeek={selectedDay}
+              onJumpToCurrent={handleJumpToCurrentDay}
             />
           ) : (
             <FocusModeWeeklyView
@@ -295,6 +311,7 @@ const FocusPage = () => {
               year={year}
               quarter={quarter}
               weekData={weekDetails}
+              onJumpToCurrent={handleJumpToCurrentWeek}
             />
           )}
         </div>

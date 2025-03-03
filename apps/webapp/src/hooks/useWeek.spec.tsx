@@ -1,6 +1,5 @@
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DayOfWeek } from '@services/backend/src/constants';
 
 // Mock for Vitest functionality
 const describe = (name: string, fn: () => void) => fn();

@@ -1,14 +1,14 @@
 'use client';
 
+import { ViewMode } from '@/app/focus/page.constants';
+import { useScreenSize } from '@/hooks/useScreenSize';
+import { DayOfWeek } from '@/lib/constants';
 import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
-import { useSearchParams, useRouter } from 'next/navigation';
-import React, { createContext, useContext, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { useCurrentDateTime } from './useCurrentDateTime';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
-import { ViewMode } from '@/app/focus/page.constants';
-import { DayOfWeek } from '@/lib/constants';
-import { useScreenSize } from '@/hooks/useScreenSize';
 
 export const useDashboard = () => {
   const val = useContext(DashboardContext);

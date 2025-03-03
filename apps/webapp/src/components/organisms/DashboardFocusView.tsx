@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
@@ -7,6 +7,8 @@ import { ViewMode } from '@/app/focus/page.constants';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { FocusMenuBar } from '@/app/focus/components/FocusMenuBar';
+import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 
 interface DashboardFocusViewProps {
   viewMode: ViewMode;
@@ -31,7 +33,17 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const { selectedYear, selectedQuarter } = useDashboard();
+  const {
+    selectedYear,
+    selectedQuarter,
+    handleWeekNavigation,
+    handleDayNavigation,
+  } = useDashboard();
+  const currentDateTime = useCurrentDateTime();
+  const { currentWeekNumber } = useQuarterWeekInfo(
+    selectedYear,
+    selectedQuarter as 1 | 2 | 3 | 4
+  );
 
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
@@ -72,6 +84,20 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     ]
   );
 
+  const handleJumpToCurrentDay = useCallback(
+    (weekNumber: number, dayOfWeek: DayOfWeek) => {
+      handleDayNavigation(weekNumber, dayOfWeek);
+    },
+    [handleDayNavigation]
+  );
+
+  const handleJumpToCurrentWeek = useCallback(
+    (weekNumber: number) => {
+      handleWeekNavigation(weekNumber);
+    },
+    [handleWeekNavigation]
+  );
+
   return (
     <div id="db-focus-view" className="w-full h-full">
       <div className="w-full">
@@ -109,6 +135,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               year={selectedYear}
               quarter={selectedQuarter}
               weekData={weekData}
+              onJumpToCurrent={handleJumpToCurrentWeek}
             />
           </div>
         )}
@@ -124,6 +151,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               quarter={selectedQuarter}
               weekData={weekData}
               selectedDayOfWeek={selectedDayOfWeek}
+              onJumpToCurrent={handleJumpToCurrentDay}
             />
           </div>
         )}

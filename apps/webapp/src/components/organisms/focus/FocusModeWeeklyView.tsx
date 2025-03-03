@@ -29,12 +29,14 @@ import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
 } from '@/hooks/useMoveGoalsForWeekContext';
+import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
   year: number;
   quarter: number;
   weekData: WeekData;
+  onJumpToCurrent: (weekNumber: number) => void;
 }
 
 // Inner component that uses the context
@@ -43,6 +45,7 @@ const FocusModeWeeklyViewInner = ({
   year,
   quarter,
   weekData,
+  onJumpToCurrent,
 }: FocusModeWeeklyViewProps) => {
   const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
     useMoveGoalsForWeekContext();
@@ -106,7 +109,17 @@ const FocusModeWeeklyViewInner = ({
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold">💭 Quarterly Goals</div>
-          {weekActionMenu}
+          <div className="flex items-center gap-2">
+            <JumpToCurrentButton
+              viewMode="weekly"
+              year={year}
+              quarter={quarter}
+              selectedWeek={weekNumber}
+              selectedDay={1 as DayOfWeek} // Not used for weekly view
+              onJumpToCurrentWeek={onJumpToCurrent}
+            />
+            {weekActionMenu}
+          </div>
         </div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           {quarterlyGoalsComponent}
@@ -134,7 +147,7 @@ const FocusModeWeeklyViewInner = ({
 
 // Outer component that provides the context
 export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
-  const { weekNumber, year, quarter, weekData } = props;
+  const { weekNumber, year, quarter, weekData, onJumpToCurrent } = props;
 
   return (
     <MoveGoalsForWeekProvider
@@ -147,6 +160,7 @@ export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
         year={year}
         quarter={quarter}
         weekData={weekData}
+        onJumpToCurrent={onJumpToCurrent}
       />
     </MoveGoalsForWeekProvider>
   );

@@ -82,7 +82,6 @@ export const MultiWeekGrid = ({
     checkItemVisibility: checkCurrentWeekVisibility,
   } = useCenteredScroll(containerRef as React.RefObject<HTMLElement>, {
     itemIndex: currentIndex,
-    itemCount: numItems,
     visibilityThreshold: {
       mobile: 0.95, // For small/medium screens (1 card) - higher threshold for better visibility
       desktop: 0.6, // For large/XL screens (3 cards) - lower threshold to account for multiple cards
