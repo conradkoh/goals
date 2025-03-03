@@ -12,7 +12,6 @@ interface FocusModeWeeklyViewProps {
   year: number;
   quarter: number;
   weekData: WeekData;
-  onNavigate: (weekNumber: number) => void;
 }
 
 export const FocusModeWeeklyView = ({

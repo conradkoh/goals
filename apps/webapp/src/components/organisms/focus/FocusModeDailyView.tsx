@@ -8,7 +8,6 @@ interface FocusModeDailyViewProps {
   weekNumber: number;
   weekData: WeekData;
   selectedDayOfWeek: DayOfWeek;
-  onNavigate: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
 export const FocusModeDailyView = ({
@@ -17,7 +16,6 @@ export const FocusModeDailyView = ({
   weekNumber,
   weekData,
   selectedDayOfWeek,
-  onNavigate,
 }: FocusModeDailyViewProps) => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">

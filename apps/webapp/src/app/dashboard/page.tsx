@@ -1,59 +1,80 @@
 'use client';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { DashboardFocusView } from '../../components/organisms/DashboardFocusView';
-import { ViewMode } from '@/app/focus/page.constants';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useScreenSize } from '@/hooks/useScreenSize';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useSearchParams } from 'next/navigation';
+import { useScreenSize } from '@/hooks/useScreenSize';
 
 const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { isMobile } = useScreenSize();
-  const { currentWeekNumber } = useDashboard();
+  const {
+    selectedYear,
+    selectedQuarter,
+    currentWeekNumber,
+    selectedWeek,
+    selectedDayOfWeek,
+    viewMode,
+    isAtMinBound,
+    isAtMaxBound,
+    handleViewModeChange,
+    handleYearQuarterChange,
+    handlePrevious,
+    handleNext,
+    updateUrlParams,
+  } = useDashboard();
 
-  // Get view mode from URL or use default based on screen size
-  const viewModeFromUrl = searchParams.get('viewMode') as ViewMode | null;
-  const viewMode = viewModeFromUrl || (isMobile ? 'weekly' : 'quarterly');
-
-  // Set default view mode based on screen size when first loading the page
+  // Set default parameters when first loading the page
   useEffect(() => {
-    if (!viewModeFromUrl) {
-      const params = new URLSearchParams(searchParams);
-      params.set('viewMode', isMobile ? 'weekly' : 'quarterly');
+    const params: Record<string, string> = {};
+    let shouldUpdateUrl = false;
 
-      // If setting to weekly view, also set the current week
-      if (isMobile && !params.has('week')) {
-        params.set('week', currentWeekNumber.toString());
-      }
-
-      router.replace(`/dashboard?${params.toString()}`);
+    // Set default view mode if not present
+    if (!searchParams.get('viewMode')) {
+      params.viewMode = isMobile ? 'weekly' : 'quarterly';
+      shouldUpdateUrl = true;
     }
-  }, [isMobile, router, searchParams, viewModeFromUrl, currentWeekNumber]);
 
-  // Update URL when view mode changes
-  const handleViewModeChange = useCallback(
-    (newViewMode: ViewMode) => {
-      // Update URL with new view mode
-      const params = new URLSearchParams(searchParams);
-      params.set('viewMode', newViewMode);
+    // Set default week if in weekly/daily mode and week not set
+    if (
+      (viewMode === 'weekly' || viewMode === 'daily') &&
+      !searchParams.get('week')
+    ) {
+      params.week = currentWeekNumber.toString();
+      shouldUpdateUrl = true;
+    }
 
-      // If changing to weekly view, ensure week parameter is set
-      if (newViewMode === 'weekly' && !params.has('week')) {
-        params.set('week', currentWeekNumber.toString());
-      }
+    // Set default day if in daily mode and day not set
+    if (viewMode === 'daily' && !searchParams.get('day')) {
+      params.day = selectedDayOfWeek.toString();
+      shouldUpdateUrl = true;
+    }
 
-      router.push(`/dashboard?${params.toString()}`);
-    },
-    [router, searchParams, currentWeekNumber]
-  );
+    if (shouldUpdateUrl) {
+      updateUrlParams(params);
+    }
+  }, [
+    isMobile,
+    searchParams,
+    viewMode,
+    currentWeekNumber,
+    selectedDayOfWeek,
+    updateUrlParams,
+  ]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto">
         <DashboardFocusView
-          initialViewMode={viewMode}
+          viewMode={viewMode}
+          selectedWeekNumber={selectedWeek}
+          selectedDayOfWeek={selectedDayOfWeek}
+          isAtMinBound={isAtMinBound}
+          isAtMaxBound={isAtMaxBound}
           onViewModeChange={handleViewModeChange}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onYearQuarterChange={handleYearQuarterChange}
         />
       </div>
     </div>

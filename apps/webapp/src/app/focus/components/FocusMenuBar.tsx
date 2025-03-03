@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -10,7 +9,6 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useDashboard } from '@/hooks/useDashboard';
 import { ViewMode } from '@/app/focus/page.constants';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -26,6 +24,7 @@ export type FocusMenuBarProps = {
   onNext?: () => void;
   selectedYear?: number;
   selectedQuarter?: 1 | 2 | 3 | 4;
+  onYearQuarterChange?: (year: number, quarter: number) => void;
 };
 
 export const FocusMenuBar = ({
@@ -37,39 +36,28 @@ export const FocusMenuBar = ({
   isAtMaxBound = false,
   onPrevious,
   onNext,
-  selectedYear: propSelectedYear,
-  selectedQuarter: propSelectedQuarter,
+  selectedYear,
+  selectedQuarter,
+  onYearQuarterChange,
 }: FocusMenuBarProps) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { currentYear, currentQuarter } = useDashboard();
-
-  // Get year and quarter from props or URL or use current values
-  const selectedYear =
-    propSelectedYear !== undefined
-      ? propSelectedYear
-      : searchParams.get('year')
-      ? parseInt(searchParams.get('year')!)
-      : currentYear;
-
-  const selectedQuarter =
-    propSelectedQuarter !== undefined
-      ? propSelectedQuarter
-      : searchParams.get('quarter')
-      ? (parseInt(searchParams.get('quarter')!) as 1 | 2 | 3 | 4)
-      : currentQuarter;
-
   // Generate years (current year - 1 to current year + 2)
-  const years = Array.from({ length: 4 }, (_, i) => currentYear - 1 + i);
+  const years = selectedYear
+    ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i)
+    : [];
 
   // Generate quarters
   const quarters = [1, 2, 3, 4];
 
-  const updateUrlParams = (year: number, quarter: number) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('year', year.toString());
-    params.set('quarter', quarter.toString());
-    router.push(`/dashboard?${params.toString()}`);
+  const handleYearChange = (year: number) => {
+    if (onYearQuarterChange && selectedQuarter) {
+      onYearQuarterChange(year, selectedQuarter);
+    }
+  };
+
+  const handleQuarterChange = (quarter: number) => {
+    if (onYearQuarterChange && selectedYear) {
+      onYearQuarterChange(selectedYear, quarter as 1 | 2 | 3 | 4);
+    }
   };
 
   const handleViewModeChange = (newViewMode: ViewMode) => {
@@ -92,48 +80,46 @@ export const FocusMenuBar = ({
           className="flex items-center justify-center sm:justify-start gap-3"
         >
           <div className="flex items-center gap-2">
-            {showYearQuarterSelectors && (
-              <>
-                <Select
-                  value={selectedYear.toString()}
-                  onValueChange={(value) =>
-                    updateUrlParams(parseInt(value), selectedQuarter)
-                  }
-                >
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {showYearQuarterSelectors &&
+              selectedYear &&
+              selectedQuarter &&
+              onYearQuarterChange && (
+                <>
+                  <Select
+                    value={selectedYear.toString()}
+                    onValueChange={(value) => handleYearChange(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[80px]">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                <Select
-                  value={selectedQuarter.toString()}
-                  onValueChange={(value) =>
-                    updateUrlParams(
-                      selectedYear,
-                      parseInt(value) as 1 | 2 | 3 | 4
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue placeholder="Quarter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {quarters.map((quarter) => (
-                      <SelectItem key={quarter} value={quarter.toString()}>
-                        Q{quarter}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
-            )}
+                  <Select
+                    value={selectedQuarter.toString()}
+                    onValueChange={(value) =>
+                      handleQuarterChange(parseInt(value))
+                    }
+                  >
+                    <SelectTrigger className="w-[80px]">
+                      <SelectValue placeholder="Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quarters.map((quarter) => (
+                        <SelectItem key={quarter} value={quarter.toString()}>
+                          Q{quarter}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </>
+              )}
 
             {showNavigationControls && onPrevious && onNext && (
               <div className="flex items-center gap-2 mr-2">
