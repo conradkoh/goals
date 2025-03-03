@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Select,
   SelectContent,
@@ -9,7 +7,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ViewMode } from '@/app/focus/page.constants';
+import { ViewMode } from '@/components/molecules/focus/constants';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +25,10 @@ export type FocusMenuBarProps = {
   onYearQuarterChange?: (year: number, quarter: number) => void;
 };
 
+/**
+ * A pure component that renders a menu bar for the focus mode views
+ * Includes controls for navigation, view mode selection, and year/quarter selection
+ */
 export const FocusMenuBar = ({
   viewMode = 'quarterly',
   onViewModeChange,
@@ -47,24 +49,6 @@ export const FocusMenuBar = ({
 
   // Generate quarters
   const quarters = [1, 2, 3, 4];
-
-  const handleYearChange = (year: number) => {
-    if (onYearQuarterChange && selectedQuarter) {
-      onYearQuarterChange(year, selectedQuarter);
-    }
-  };
-
-  const handleQuarterChange = (quarter: number) => {
-    if (onYearQuarterChange && selectedYear) {
-      onYearQuarterChange(selectedYear, quarter as 1 | 2 | 3 | 4);
-    }
-  };
-
-  const handleViewModeChange = (newViewMode: ViewMode) => {
-    if (onViewModeChange) {
-      onViewModeChange(newViewMode);
-    }
-  };
 
   // Only show year and quarter selectors in quarterly view
   const showYearQuarterSelectors = viewMode === 'quarterly';
@@ -87,7 +71,9 @@ export const FocusMenuBar = ({
                 <>
                   <Select
                     value={selectedYear.toString()}
-                    onValueChange={(value) => handleYearChange(parseInt(value))}
+                    onValueChange={(value) =>
+                      onYearQuarterChange(parseInt(value), selectedQuarter)
+                    }
                   >
                     <SelectTrigger className="w-[80px]">
                       <SelectValue placeholder="Year" />
@@ -104,7 +90,10 @@ export const FocusMenuBar = ({
                   <Select
                     value={selectedQuarter.toString()}
                     onValueChange={(value) =>
-                      handleQuarterChange(parseInt(value))
+                      onYearQuarterChange(
+                        selectedYear,
+                        parseInt(value) as 1 | 2 | 3 | 4
+                      )
                     }
                   >
                     <SelectTrigger className="w-[80px]">
@@ -157,7 +146,14 @@ export const FocusMenuBar = ({
               </div>
             )}
 
-            <Select value={viewMode} onValueChange={handleViewModeChange}>
+            <Select
+              value={viewMode}
+              onValueChange={
+                onViewModeChange
+                  ? (value) => onViewModeChange(value as ViewMode)
+                  : undefined
+              }
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Select view" />
               </SelectTrigger>

@@ -3,10 +3,10 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
-import { ViewMode } from '@/app/focus/page.constants';
+import { ViewMode } from '@/components/molecules/focus/constants';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
-import { FocusMenuBar } from '@/app/focus/components/FocusMenuBar';
+import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 

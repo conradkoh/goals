@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { ViewMode } from '@/app/focus/page.constants';
+import { ViewMode } from '@/components/molecules/focus/constants';
 import { cn } from '@/lib/utils';
 import { DayOfWeek } from '@/lib/constants';
 import { FocusMenuBar } from './FocusMenuBar';
@@ -20,8 +20,13 @@ interface FocusHeaderProps {
   onNext?: () => void;
   selectedYear?: number;
   selectedQuarter?: 1 | 2 | 3 | 4;
+  onYearQuarterChange?: (year: number, quarter: number) => void;
 }
 
+/**
+ * A pure component that renders the header for focus mode views
+ * Includes the FocusMenuBar and close button
+ */
 export const FocusHeader = memo(
   ({
     viewMode,
@@ -36,6 +41,7 @@ export const FocusHeader = memo(
     onNext,
     selectedYear,
     selectedQuarter,
+    onYearQuarterChange,
   }: FocusHeaderProps) => {
     // Determine if we should use container class based on view mode
     const isQuarterlyView = viewMode === 'quarterly';
@@ -64,6 +70,7 @@ export const FocusHeader = memo(
                     onNext={onNext}
                     selectedYear={selectedYear}
                     selectedQuarter={selectedQuarter}
+                    onYearQuarterChange={onYearQuarterChange}
                   />
                 </div>
                 <Button

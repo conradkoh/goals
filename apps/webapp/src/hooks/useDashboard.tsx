@@ -1,6 +1,6 @@
 'use client';
 
-import { ViewMode } from '@/app/focus/page.constants';
+import { ViewMode } from '@/components/molecules/focus/constants';
 import { useScreenSize } from '@/hooks/useScreenSize';
 import { DayOfWeek } from '@/lib/constants';
 import { FunctionReference } from 'convex/server';
