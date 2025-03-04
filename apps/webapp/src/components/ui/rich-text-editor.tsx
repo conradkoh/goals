@@ -76,12 +76,12 @@ export function RichTextEditor({
         },
         bulletList: {
           HTMLAttributes: {
-            class: 'list-disc ml-4',
+            class: 'list-disc ml-8',
           },
         },
         orderedList: {
           HTMLAttributes: {
-            class: 'list-decimal ml-4',
+            class: 'list-decimal ml-8',
           },
         },
         code: {

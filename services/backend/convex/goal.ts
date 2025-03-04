@@ -224,3 +224,83 @@ export const moveGoalsFromDay = mutation({
     return { tasksMoved: validTasks.length };
   },
 });
+
+export const updateRichTextListClasses = internalMutation({
+  args: {
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { dryRun = true } = args;
+
+    // Results to track changes
+    const results = {
+      goalsToUpdate: [] as {
+        id: Id<'goals'>;
+        oldDetails: string;
+        newDetails: string;
+      }[],
+      updatedGoals: [] as Id<'goals'>[],
+    };
+
+    // Find all goals with rich text content containing the old class patterns
+    const allGoals = await ctx.db
+      .query('goals')
+      .filter((q) => q.neq(q.field('details'), undefined))
+      .collect();
+
+    // Process each goal
+    for (const goal of allGoals) {
+      if (!goal.details) continue;
+
+      // Check if the goal contains the old class patterns
+      const containsBulletList = goal.details.includes(
+        'class="list-disc ml-4"'
+      );
+      const containsOrderedList = goal.details.includes(
+        'class="list-decimal ml-4"'
+      );
+
+      if (containsBulletList || containsOrderedList) {
+        // Create updated details with new classes
+        let newDetails = goal.details;
+
+        if (containsBulletList) {
+          newDetails = newDetails.replace(
+            /class="list-disc ml-4"/g,
+            'class="list-disc ml-8"'
+          );
+        }
+
+        if (containsOrderedList) {
+          newDetails = newDetails.replace(
+            /class="list-decimal ml-4"/g,
+            'class="list-decimal ml-8"'
+          );
+        }
+
+        // Add to results
+        results.goalsToUpdate.push({
+          id: goal._id,
+          oldDetails: goal.details,
+          newDetails,
+        });
+
+        // Update the goal if not in dry run mode
+        if (!dryRun) {
+          await ctx.db.patch(goal._id, {
+            details: newDetails,
+          });
+          results.updatedGoals.push(goal._id);
+        }
+      }
+    }
+
+    return {
+      dryRun,
+      totalGoalsFound: allGoals.length,
+      goalsToUpdate: results.goalsToUpdate.length,
+      updatedGoals: results.updatedGoals.length,
+      details: dryRun ? results.goalsToUpdate : results.updatedGoals,
+    };
+  },
+});
