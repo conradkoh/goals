@@ -59,10 +59,14 @@ interface WeeklyGoalSectionProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (
+  onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
     title: string,
     forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
+  onCreateWeeklyGoal: (
+    quarterlyGoalId: Id<'goals'>,
+    title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
   fireGoals?: Set<string>;
@@ -76,7 +80,8 @@ const WeeklyGoalSection = ({
   sortDailyGoals,
   onUpdateTitle,
   onDelete,
-  onCreateGoal,
+  onCreateDailyGoal,
+  onCreateWeeklyGoal,
   isCreating,
   fireGoals,
   toggleFireStatus,
@@ -167,9 +172,9 @@ const WeeklyGoalSection = ({
 
         {shouldShowAddTask && (
           <AddTaskInput
-            weeklyGoalId={weeklyGoal._id}
+            parentGoalId={weeklyGoal._id}
             isOptimistic={true}
-            onCreateGoal={onCreateGoal}
+            onCreateGoal={onCreateDailyGoal}
             forDayOfWeek={dayOfWeek}
           />
         )}
@@ -192,10 +197,14 @@ interface QuarterlyGoalSectionProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (
+  onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
     title: string,
     forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
+  onCreateWeeklyGoal: (
+    quarterlyGoalId: Id<'goals'>,
+    title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
   fireGoals?: Set<string>;
@@ -210,7 +219,8 @@ const QuarterlyGoalSection = ({
   sortDailyGoals,
   onUpdateTitle,
   onDelete,
-  onCreateGoal,
+  onCreateDailyGoal,
+  onCreateWeeklyGoal,
   isCreating,
   fireGoals,
   toggleFireStatus,
@@ -339,6 +349,11 @@ const QuarterlyGoalSection = ({
                   toggleFireStatus={toggleFireStatus}
                 />
               ))}
+              <AddTaskInput
+                parentGoalId={quarterlyGoal._id}
+                isOptimistic={true}
+                onCreateGoal={onCreateWeeklyGoal}
+              />
             </div>
           )}
         </ConditionalRender>
@@ -353,7 +368,8 @@ const QuarterlyGoalSection = ({
               sortDailyGoals={sortDailyGoals}
               onUpdateTitle={onUpdateTitle}
               onDelete={onDelete}
-              onCreateGoal={onCreateGoal}
+              onCreateDailyGoal={onCreateDailyGoal}
+              onCreateWeeklyGoal={onCreateWeeklyGoal}
               isCreating={isCreating}
               fireGoals={fireGoals}
               toggleFireStatus={toggleFireStatus}
@@ -379,10 +395,14 @@ export interface DayContainerProps {
     details?: string
   ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (
+  onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
     title: string,
     forDayOfWeek?: DayOfWeek
+  ) => Promise<void>;
+  onCreateWeeklyGoal: (
+    quarterlyGoalId: Id<'goals'>,
+    title: string
   ) => Promise<void>;
   isCreating?: Record<string, boolean>;
   sortDailyGoals?: (
@@ -400,7 +420,8 @@ export const DayContainer = ({
   weeklyGoalsWithQuarterly,
   onUpdateGoalTitle,
   onDeleteGoal,
-  onCreateGoal,
+  onCreateDailyGoal,
+  onCreateWeeklyGoal,
   isCreating = {},
   sortDailyGoals,
   mode = 'plan',
@@ -422,11 +443,18 @@ export const DayContainer = ({
     [onDeleteGoal]
   );
 
-  const handleCreateGoal = useCallback(
+  const handleCreateDailyGoal = useCallback(
     (weeklyGoalId: Id<'goals'>, title: string) => {
-      return onCreateGoal(weeklyGoalId, title, dayOfWeek);
+      return onCreateDailyGoal(weeklyGoalId, title, dayOfWeek);
     },
-    [onCreateGoal, dayOfWeek]
+    [onCreateDailyGoal, dayOfWeek]
+  );
+
+  const handleCreateWeeklyGoal = useCallback(
+    (quarterlyGoalId: Id<'goals'>, title: string) => {
+      return onCreateWeeklyGoal(quarterlyGoalId, title);
+    },
+    [onCreateWeeklyGoal]
   );
 
   // First, get unique quarterly goals and their associated weekly goals
@@ -493,7 +521,8 @@ export const DayContainer = ({
               sortDailyGoals={sortDailyGoals}
               onUpdateTitle={handleUpdateGoalTitle}
               onDelete={handleDeleteGoal}
-              onCreateGoal={handleCreateGoal}
+              onCreateDailyGoal={handleCreateDailyGoal}
+              onCreateWeeklyGoal={handleCreateWeeklyGoal}
               isCreating={isCreating}
               fireGoals={fireGoals}
               toggleFireStatus={toggleFireStatus}

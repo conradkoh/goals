@@ -15,7 +15,7 @@ export interface PastDaysContainerProps {
   >;
   onUpdateGoalTitle: DayContainerProps['onUpdateGoalTitle'];
   onDeleteGoal: DayContainerProps['onDeleteGoal'];
-  onCreateGoal: DayContainerProps['onCreateGoal'];
+  onCreateGoal: DayContainerProps['onCreateDailyGoal'];
   isCreating?: Record<string, boolean>;
   completedTasks: number;
   totalTasks: number;
@@ -52,7 +52,7 @@ export const PastDaysContainer = ({
             {...day}
             onUpdateGoalTitle={onUpdateGoalTitle}
             onDeleteGoal={onDeleteGoal}
-            onCreateGoal={onCreateGoal}
+            onCreateDailyGoal={onCreateGoal}
             isCreating={isCreating}
             sortDailyGoals={sortDailyGoals}
           />

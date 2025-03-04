@@ -1,5 +1,4 @@
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast';
 import { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -7,7 +6,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useRef, useState } from 'react';
 
 export interface AddTaskInputProps {
-  weeklyGoalId: Id<'goals'>;
+  parentGoalId: Id<'goals'>;
   isOptimistic: boolean; //this will affect the submission behavior
   onCreateGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -18,7 +17,7 @@ export interface AddTaskInputProps {
 }
 
 export const AddTaskInput = ({
-  weeklyGoalId,
+  parentGoalId,
   isOptimistic,
   onCreateGoal,
   forDayOfWeek,
@@ -41,7 +40,7 @@ export const AddTaskInput = ({
         }
 
         // Attempt to create the goal
-        await onCreateGoal(weeklyGoalId, currentTitle, forDayOfWeek);
+        await onCreateGoal(parentGoalId, currentTitle, forDayOfWeek);
 
         // Only clear the input here if not using optimistic updates
         if (!isOptimistic) {

@@ -9,7 +9,6 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -35,9 +34,9 @@ export const FocusModeDailyViewDailyGoals = ({
     weeklyGoals,
     quarterlyGoals,
     createDailyGoalOptimistic,
+    createWeeklyGoalOptimistic,
     dailyGoals,
     deleteGoalOptimistic,
-    createWeeklyGoalOptimistic,
   } = useWeek();
   const { updateQuarterlyGoalTitle } = useGoalActions();
   const { toast } = useToast();
@@ -46,12 +45,6 @@ export const FocusModeDailyViewDailyGoals = ({
   const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>(
     {}
   );
-
-  // State for weekly goal creation
-  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
-  const [selectedQuarterlyGoalId, setSelectedQuarterlyGoalId] =
-    useState<Id<'goals'> | null>(null);
-  const [isCreatingWeeklyGoal, setIsCreatingWeeklyGoal] = useState(false);
 
   // Find the current day data
   const currentDay = useMemo(() => {
@@ -219,26 +212,6 @@ export const FocusModeDailyViewDailyGoals = ({
       .flatMap(([, group]) => group);
   }, [weeklyGoals, quarterlyGoals]);
 
-  // Get sorted quarterly goals for the weekly goal creation dropdown
-  const sortedQuarterlyGoals = useMemo(() => {
-    return [...quarterlyGoals].sort((a, b) => {
-      // Sort by starred status first
-      const aStarred = a.state?.isStarred ?? false;
-      const bStarred = b.state?.isStarred ?? false;
-      if (aStarred && !bStarred) return -1;
-      if (!aStarred && bStarred) return 1;
-
-      // Then sort by pinned status
-      const aPinned = a.state?.isPinned ?? false;
-      const bPinned = b.state?.isPinned ?? false;
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
-
-      // Finally sort by title
-      return a.title.localeCompare(b.title);
-    });
-  }, [quarterlyGoals]);
-
   const handleUpdateGoalTitle = (
     goalId: Id<'goals'>,
     title: string,
@@ -251,7 +224,7 @@ export const FocusModeDailyViewDailyGoals = ({
     await deleteGoalOptimistic(goalId);
   };
 
-  const handleCreateGoal = async (
+  const handleCreateDailyGoal = async (
     weeklyGoalId: Id<'goals'>,
     title: string,
     forDayOfWeek?: DayOfWeek
@@ -289,35 +262,11 @@ export const FocusModeDailyViewDailyGoals = ({
     }
   };
 
-  // Handle creating a new weekly goal
-  const handleCreateWeeklyGoal = async () => {
-    if (!newWeeklyGoalTitle.trim() || !selectedQuarterlyGoalId) {
-      toast({
-        title: 'Cannot create weekly goal',
-        description: 'Please enter a title and select a quarterly goal',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const titleToCreate = newWeeklyGoalTitle.trim();
-    setNewWeeklyGoalTitle(''); // Clear input immediately for better UX
-    setIsCreatingWeeklyGoal(true);
-
-    try {
-      await createWeeklyGoalOptimistic(selectedQuarterlyGoalId, titleToCreate);
-    } catch (error) {
-      console.error('Failed to create weekly goal:', error);
-      toast({
-        title: 'Failed to create weekly goal',
-        description:
-          'There was an error creating your weekly goal. Please try again.',
-        variant: 'destructive',
-      });
-      setNewWeeklyGoalTitle(titleToCreate); // Restore the title on error
-    } finally {
-      setIsCreatingWeeklyGoal(false);
-    }
+  const handleCreateWeeklyGoal = async (
+    quarterlyGoalId: Id<'goals'>,
+    title: string
+  ): Promise<void> => {
+    await createWeeklyGoalOptimistic(quarterlyGoalId, title);
   };
 
   // If the current day doesn't exist, don't render anything
@@ -327,45 +276,6 @@ export const FocusModeDailyViewDailyGoals = ({
 
   return (
     <div className="space-y-4">
-      {/* Weekly Goal Creation Section */}
-      <div className="bg-white rounded-lg p-3 border border-gray-100 mb-4">
-        <h3 className="text-sm font-medium mb-2">Add Weekly Goal</h3>
-        <div className="space-y-2">
-          <div>
-            <label
-              htmlFor="quarterlyGoal"
-              className="text-xs text-gray-500 block mb-1"
-            >
-              Quarterly Goal
-            </label>
-            <select
-              id="quarterlyGoal"
-              className="w-full p-2 text-sm border border-gray-200 rounded-md"
-              value={selectedQuarterlyGoalId?.toString() || ''}
-              onChange={(e) =>
-                setSelectedQuarterlyGoalId(e.target.value as Id<'goals'>)
-              }
-            >
-              <option value="">Select a quarterly goal</option>
-              {sortedQuarterlyGoals.map((goal) => (
-                <option key={goal._id.toString()} value={goal._id.toString()}>
-                  {goal.title} {goal.state?.isStarred ? '⭐' : ''}{' '}
-                  {goal.state?.isPinned ? '📌' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <CreateGoalInput
-            placeholder="Add a weekly goal..."
-            value={newWeeklyGoalTitle}
-            onChange={setNewWeeklyGoalTitle}
-            onSubmit={handleCreateWeeklyGoal}
-            disabled={isCreatingWeeklyGoal}
-          />
-        </div>
-      </div>
-
       {/* Daily Goals Section */}
       <DayContainer
         dayOfWeek={currentDay.dayOfWeek}
@@ -374,7 +284,8 @@ export const FocusModeDailyViewDailyGoals = ({
         weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
         onUpdateGoalTitle={handleUpdateGoalTitle}
         onDeleteGoal={handleDeleteGoal}
-        onCreateGoal={handleCreateGoal}
+        onCreateDailyGoal={handleCreateDailyGoal}
+        onCreateWeeklyGoal={handleCreateWeeklyGoal}
         sortDailyGoals={sortDailyGoals}
         mode="focus"
         isCreating={creatingGoals}

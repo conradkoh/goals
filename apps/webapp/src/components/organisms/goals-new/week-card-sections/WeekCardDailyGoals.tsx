@@ -519,7 +519,7 @@ export const WeekCardDailyGoals = forwardRef<
               weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
               onUpdateGoalTitle={handleUpdateGoalTitle}
               onDeleteGoal={handleDeleteGoal}
-              onCreateGoal={handleCreateGoal}
+              onCreateDailyGoal={handleCreateGoal}
               isCreating={
                 isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
               }
@@ -537,7 +537,7 @@ export const WeekCardDailyGoals = forwardRef<
               weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
               onUpdateGoalTitle={handleUpdateGoalTitle}
               onDeleteGoal={handleDeleteGoal}
-              onCreateGoal={handleCreateGoal}
+              onCreateDailyGoal={handleCreateGoal}
               isCreating={
                 isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
               }
