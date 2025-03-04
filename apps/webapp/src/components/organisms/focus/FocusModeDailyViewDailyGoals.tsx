@@ -18,6 +18,8 @@ export interface FocusModeDailyViewDailyGoalsProps {
   year: number;
   quarter: number;
   selectedDayOfWeek: DayOfWeek;
+  fireGoals?: Set<string>;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const FocusModeDailyViewDailyGoals = ({
@@ -25,6 +27,8 @@ export const FocusModeDailyViewDailyGoals = ({
   year,
   quarter,
   selectedDayOfWeek,
+  fireGoals,
+  toggleFireStatus,
 }: FocusModeDailyViewDailyGoalsProps) => {
   const {
     days,
@@ -374,6 +378,8 @@ export const FocusModeDailyViewDailyGoals = ({
         sortDailyGoals={sortDailyGoals}
         mode="focus"
         isCreating={creatingGoals}
+        fireGoals={fireGoals}
+        toggleFireStatus={toggleFireStatus}
       />
     </div>
   );

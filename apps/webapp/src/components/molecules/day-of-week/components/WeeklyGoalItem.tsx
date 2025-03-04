@@ -14,6 +14,7 @@ import { SafeHTML } from '@/components/ui/safe-html';
 import { DeleteGoalIconButton } from '@/components/atoms/DeleteGoalIconButton';
 import { Spinner } from '@/components/ui/spinner';
 import { Edit2 } from 'lucide-react';
+import { FireIcon } from '@/components/atoms/FireIcon';
 
 export interface WeeklyGoalItemProps {
   goal: GoalWithOptimisticStatus;
@@ -23,12 +24,16 @@ export interface WeeklyGoalItemProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  isOnFire?: boolean;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const WeeklyGoalItem = ({
   goal,
   onUpdateTitle,
   onDelete,
+  isOnFire = false,
+  toggleFireStatus,
 }: WeeklyGoalItemProps) => {
   const { toggleGoalCompletion } = useGoalActions();
   const { weekNumber: currentWeekNumber } = useWeek();
@@ -44,7 +49,7 @@ export const WeeklyGoalItem = ({
   };
 
   return (
-    <div className="ml-1 group rounded-sm hover:bg-gray-50/50">
+    <div className="weekly-goal-item ml-1 group rounded-sm hover:bg-gray-50/50">
       <div>
         <div className="text-sm flex items-center gap-2 group/title">
           <Checkbox
@@ -103,6 +108,13 @@ export const WeeklyGoalItem = ({
               <Spinner className="h-4 w-4" />
             ) : (
               <>
+                {toggleFireStatus && (
+                  <FireIcon
+                    goalId={goal._id}
+                    isOnFire={isOnFire}
+                    toggleFireStatus={toggleFireStatus}
+                  />
+                )}
                 <GoalEditPopover
                   title={goal.title}
                   details={goal.details}

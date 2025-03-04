@@ -24,6 +24,7 @@ import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
+import { FireIcon } from '@/components/atoms/FireIcon';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -33,12 +34,16 @@ interface DailyGoalItemProps {
     details?: string
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  isOnFire?: boolean;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const DailyGoalItem = ({
   goal,
   onUpdateTitle,
   onDelete,
+  isOnFire = false,
+  toggleFireStatus,
 }: DailyGoalItemProps) => {
   const { toggleGoalCompletion, updateDailyGoalDay } = useGoalActions();
   const { weekNumber } = useWeek();
@@ -71,7 +76,7 @@ export const DailyGoalItem = ({
   };
 
   return (
-    <div className="group hover:bg-gray-50/50 rounded-sm">
+    <div className="daily-goal-item group hover:bg-gray-50/50 rounded-sm">
       <div className="text-sm flex items-center gap-2 group/title">
         <Checkbox
           checked={isComplete}
@@ -153,6 +158,13 @@ export const DailyGoalItem = ({
             <Spinner className="h-3.5 w-3.5" />
           ) : (
             <>
+              {toggleFireStatus && (
+                <FireIcon
+                  goalId={goal._id}
+                  isOnFire={isOnFire}
+                  toggleFireStatus={toggleFireStatus}
+                />
+              )}
               <GoalEditPopover
                 title={title}
                 details={details}

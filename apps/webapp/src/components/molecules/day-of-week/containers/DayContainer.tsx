@@ -65,6 +65,8 @@ interface WeeklyGoalSectionProps {
     forDayOfWeek?: DayOfWeek
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
+  fireGoals?: Set<string>;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 const WeeklyGoalSection = ({
@@ -76,6 +78,8 @@ const WeeklyGoalSection = ({
   onDelete,
   onCreateGoal,
   isCreating,
+  fireGoals,
+  toggleFireStatus,
 }: WeeklyGoalSectionProps) => {
   // Memoize filtered daily goals to prevent unnecessary recalculations
   const dailyGoals = useMemo(
@@ -155,6 +159,8 @@ const WeeklyGoalSection = ({
               goal={dailyGoal}
               onUpdateTitle={onUpdateTitle}
               onDelete={onDelete}
+              isOnFire={fireGoals?.has(dailyGoal._id.toString()) || false}
+              toggleFireStatus={toggleFireStatus}
             />
           </div>
         ))}
@@ -192,6 +198,8 @@ interface QuarterlyGoalSectionProps {
     forDayOfWeek?: DayOfWeek
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
+  fireGoals?: Set<string>;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 const QuarterlyGoalSection = ({
@@ -204,6 +212,8 @@ const QuarterlyGoalSection = ({
   onDelete,
   onCreateGoal,
   isCreating,
+  fireGoals,
+  toggleFireStatus,
 }: QuarterlyGoalSectionProps) => {
   const isStarred = useMemo(
     () => quarterlyGoal.state?.isStarred ?? false,
@@ -325,6 +335,8 @@ const QuarterlyGoalSection = ({
                   goal={weeklyGoal}
                   onUpdateTitle={onUpdateTitle}
                   onDelete={onDelete}
+                  isOnFire={fireGoals?.has(weeklyGoal._id.toString()) || false}
+                  toggleFireStatus={toggleFireStatus}
                 />
               ))}
             </div>
@@ -343,6 +355,8 @@ const QuarterlyGoalSection = ({
               onDelete={onDelete}
               onCreateGoal={onCreateGoal}
               isCreating={isCreating}
+              fireGoals={fireGoals}
+              toggleFireStatus={toggleFireStatus}
             />
           ))}
         </div>
@@ -375,6 +389,8 @@ export interface DayContainerProps {
     goals: GoalWithDetailsAndChildren[]
   ) => GoalWithDetailsAndChildren[];
   mode?: DayContainerMode;
+  fireGoals?: Set<string>;
+  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const DayContainer = ({
@@ -388,6 +404,8 @@ export const DayContainer = ({
   isCreating = {},
   sortDailyGoals,
   mode = 'plan',
+  fireGoals,
+  toggleFireStatus,
 }: DayContainerProps) => {
   // Memoize the callback functions to prevent unnecessary re-renders
   const handleUpdateGoalTitle = useCallback(
@@ -477,6 +495,8 @@ export const DayContainer = ({
               onDelete={handleDeleteGoal}
               onCreateGoal={handleCreateGoal}
               isCreating={isCreating}
+              fireGoals={fireGoals}
+              toggleFireStatus={toggleFireStatus}
             />
           )
         )}
