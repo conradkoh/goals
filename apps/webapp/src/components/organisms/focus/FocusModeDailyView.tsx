@@ -7,6 +7,7 @@ import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSect
 import { useCallback, useMemo, useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { useGoalActions } from '@/hooks/useGoalActions';
 
 interface FocusModeDailyViewProps {
   year: number;
@@ -27,6 +28,7 @@ const FocusModeDailyViewInner = ({
   onJumpToCurrent,
 }: FocusModeDailyViewProps) => {
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
+  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
   const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
@@ -83,32 +85,31 @@ const FocusModeDailyViewInner = ({
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
     async (goalId: Id<'goals'>, title: string, details?: string) => {
-      // This will be handled by the WeekProvider
-      const dailyGoalsComponent = document.querySelector(
-        'div[data-testid="focus-mode-daily-goals"]'
-      );
-      if (dailyGoalsComponent) {
-        const updateEvent = new CustomEvent('update-goal-title', {
-          detail: { goalId, title, details },
+      try {
+        await updateQuarterlyGoalTitle({
+          goalId,
+          title,
+          details,
         });
-        dailyGoalsComponent.dispatchEvent(updateEvent);
+      } catch (error) {
+        console.error('Failed to update goal title:', error);
       }
     },
-    []
+    [updateQuarterlyGoalTitle]
   );
 
-  const handleDeleteGoal = useCallback(async (goalId: Id<'goals'>) => {
-    // This will be handled by the WeekProvider
-    const dailyGoalsComponent = document.querySelector(
-      'div[data-testid="focus-mode-daily-goals"]'
-    );
-    if (dailyGoalsComponent) {
-      const deleteEvent = new CustomEvent('delete-goal', {
-        detail: { goalId },
-      });
-      dailyGoalsComponent.dispatchEvent(deleteEvent);
-    }
-  }, []);
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      try {
+        await deleteQuarterlyGoal({
+          goalId,
+        });
+      } catch (error) {
+        console.error('Failed to delete goal:', error);
+      }
+    },
+    [deleteQuarterlyGoal]
+  );
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
