@@ -337,7 +337,7 @@ const QuarterlyGoalSection = ({
         <ConditionalRender condition={mode === 'focus'}>
           {/* this adhoc checklist only renders in the focus mode */}
           {weeklyGoalsForChecklist.length > 0 && (
-            <div className="ml-1 mb-3 space-y-1 border-b border-gray-100 pb-2">
+            <div className="ml-1 space-y-1 border-b border-gray-100">
               <div className="text-xs text-gray-500 mb-1">Weekly Goals</div>
               {weeklyGoalsForChecklist.map((weeklyGoal) => (
                 <WeeklyGoalItem

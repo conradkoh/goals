@@ -4,7 +4,7 @@ import { DayOfWeek } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
@@ -27,6 +27,7 @@ const FocusModeDailyViewInner = ({
   onJumpToCurrent,
 }: FocusModeDailyViewProps) => {
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
+  const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
   const preparedWeeklyGoalsForDay = useCallback(() => {
@@ -73,6 +74,11 @@ const FocusModeDailyViewInner = ({
         } => item !== null
       );
   }, [weekData]);
+
+  // Determine if there are any fire goals to display
+  const hasFireGoals = useMemo(() => {
+    return fireGoals.size > 0;
+  }, [fireGoals]);
 
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
@@ -127,7 +133,17 @@ const FocusModeDailyViewInner = ({
           toggleFireStatus={toggleFireStatus}
         />
 
-        <div data-testid="focus-mode-daily-goals">
+        <div
+          data-testid="focus-mode-daily-goals"
+          className={`transition-opacity duration-300 ${
+            hasFireGoals && !isDailyViewHovered
+              ? 'opacity-0 hover:opacity-100'
+              : 'opacity-100'
+          }`}
+          onMouseEnter={() => setIsDailyViewHovered(true)}
+          onMouseLeave={() => setIsDailyViewHovered(false)}
+          onTouchStart={() => setIsDailyViewHovered(true)}
+        >
           <FocusModeDailyViewDailyGoals
             weekNumber={weekNumber}
             year={year}
