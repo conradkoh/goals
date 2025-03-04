@@ -5,7 +5,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMemo } from 'react';
 import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
 import { WeeklyGoalItem } from '@/components/molecules/day-of-week/components/WeeklyGoalItem';
-import { Flame, Edit2, Star, Pin } from 'lucide-react';
+import { Flame, Edit2, Star, Pin, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -15,6 +15,12 @@ import {
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface OnFireGoalsSectionProps {
   weeklyGoalsWithQuarterly: Array<{
@@ -134,6 +140,21 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       <div className="flex items-center gap-2 mb-3">
         <Flame className="h-5 w-5 text-red-500" />
         <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
+        <TooltipProvider delayDuration={300}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent
+              sideOffset={5}
+              className="animate-in fade-in-50 duration-300"
+            >
+              <p className="text-xs max-w-xs">
+                These urgent items are stored locally in your browser.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="space-y-4">

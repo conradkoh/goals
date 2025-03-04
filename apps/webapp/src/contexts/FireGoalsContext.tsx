@@ -1,5 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
+
+// Local storage key for fire goals
+const FIRE_GOALS_STORAGE_KEY = 'fireGoals';
 
 interface FireGoalsContextType {
   fireGoals: Set<string>;
@@ -23,11 +32,43 @@ interface FireGoalsProviderProps {
   children: ReactNode;
 }
 
+// Helper function to load fire goals from localStorage
+const loadFireGoalsFromStorage = (): Set<string> => {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+
+  try {
+    const storedFireGoals = localStorage.getItem(FIRE_GOALS_STORAGE_KEY);
+    if (storedFireGoals) {
+      return new Set(JSON.parse(storedFireGoals));
+    }
+  } catch (error) {
+    console.error('Error loading fire goals from localStorage:', error);
+  }
+
+  return new Set();
+};
+
 export const FireGoalsProvider: React.FC<FireGoalsProviderProps> = ({
   children,
 }) => {
-  // Use a Set to store the IDs of goals that are "on fire"
-  const [fireGoals, setFireGoals] = useState<Set<string>>(new Set());
+  // Initialize with values from localStorage
+  const [fireGoals, setFireGoals] = useState<Set<string>>(
+    loadFireGoalsFromStorage
+  );
+
+  // Persist to localStorage whenever fireGoals changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        FIRE_GOALS_STORAGE_KEY,
+        JSON.stringify(Array.from(fireGoals))
+      );
+    } catch (error) {
+      console.error('Error saving fire goals to localStorage:', error);
+    }
+  }, [fireGoals]);
 
   const toggleFireStatus = (goalId: Id<'goals'>) => {
     setFireGoals((prevFireGoals) => {
