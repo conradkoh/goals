@@ -35,6 +35,7 @@ interface DashboardContextValue {
   selectedWeek: number;
   selectedDayOfWeek: DayOfWeek;
   viewMode: ViewMode;
+  isFocusModeEnabled: boolean;
 
   // Navigation bounds
   startWeek: number;
@@ -49,6 +50,7 @@ interface DashboardContextValue {
     viewMode?: ViewMode;
     year?: number;
     quarter?: number;
+    focusMode?: boolean;
   }) => void;
   handleViewModeChange: (newViewMode: ViewMode) => void;
   handleYearQuarterChange: (year: number, quarter: number) => void;
@@ -56,6 +58,7 @@ interface DashboardContextValue {
   handleDayNavigation: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
   handlePrevious: () => void;
   handleNext: () => void;
+  toggleFocusMode: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
@@ -128,6 +131,7 @@ export const DashboardProvider = ({
       viewMode?: ViewMode;
       year?: number;
       quarter?: number;
+      focusMode?: boolean;
     }) => {
       const newParams = new URLSearchParams(searchParams.toString());
 
@@ -149,6 +153,10 @@ export const DashboardProvider = ({
 
       if (params.quarter !== undefined) {
         newParams.set('quarter', params.quarter.toString());
+      }
+
+      if (params.focusMode !== undefined) {
+        newParams.set('focusMode', params.focusMode.toString());
       }
 
       router.push(`/dashboard?${newParams.toString()}`);
@@ -264,6 +272,11 @@ export const DashboardProvider = ({
     updateUrlParams,
   ]);
 
+  // Handle toggle focus mode
+  const toggleFocusMode = useCallback(() => {
+    updateUrlParams({ focusMode: !(searchParams.get('focusMode') === 'true') });
+  }, [updateUrlParams, searchParams]);
+
   const value = useMemo(
     () => ({
       // Current date values
@@ -282,6 +295,7 @@ export const DashboardProvider = ({
       selectedWeek,
       selectedDayOfWeek,
       viewMode,
+      isFocusModeEnabled: searchParams.get('focusMode') === 'true',
 
       // Navigation bounds
       startWeek,
@@ -297,6 +311,7 @@ export const DashboardProvider = ({
       handleDayNavigation,
       handlePrevious,
       handleNext,
+      toggleFocusMode,
     }),
     [
       currentDate,
@@ -312,6 +327,7 @@ export const DashboardProvider = ({
       selectedWeek,
       selectedDayOfWeek,
       viewMode,
+      searchParams,
       startWeek,
       endWeek,
       isAtMinBound,
@@ -323,6 +339,7 @@ export const DashboardProvider = ({
       handleDayNavigation,
       handlePrevious,
       handleNext,
+      toggleFocusMode,
     ]
   );
 

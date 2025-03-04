@@ -5,7 +5,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMemo } from 'react';
 import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
 import { WeeklyGoalItem } from '@/components/molecules/day-of-week/components/WeeklyGoalItem';
-import { Flame, Edit2, Star, Pin, Info } from 'lucide-react';
+import { Flame, Edit2, Star, Pin, Info, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -36,6 +36,8 @@ interface OnFireGoalsSectionProps {
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   fireGoals: Set<string>;
   toggleFireStatus: (goalId: Id<'goals'>) => void;
+  isFocusModeEnabled?: boolean;
+  toggleFocusMode?: () => void;
 }
 
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
@@ -45,6 +47,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   onDeleteGoal,
   fireGoals,
   toggleFireStatus,
+  isFocusModeEnabled = false,
+  toggleFocusMode,
 }) => {
   const { weeklyGoals } = useWeek();
 
@@ -137,24 +141,56 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
   return (
     <div className="bg-red-50 rounded-lg p-4 mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Flame className="h-5 w-5 text-red-500" />
-        <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
-        <TooltipProvider delayDuration={300}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
-            </TooltipTrigger>
-            <TooltipContent
-              sideOffset={5}
-              className="animate-in fade-in-50 duration-300"
-            >
-              <p className="text-xs max-w-xs">
-                These urgent items are stored locally in your browser.
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Flame className="h-5 w-5 text-red-500" />
+          <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
+              </TooltipTrigger>
+              <TooltipContent
+                sideOffset={5}
+                className="animate-in fade-in-50 duration-300"
+              >
+                <p className="text-xs max-w-xs">
+                  These urgent items are stored locally in your browser.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {toggleFocusMode && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={'ghost'}
+                  size="sm"
+                  onClick={toggleFocusMode}
+                  className="text-red-600 hover:text-red-700 flex items-center gap-1"
+                >
+                  {isFocusModeEnabled ? (
+                    <>
+                      <EyeOff className="h-4 w-4 mr-1" />
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-4 w-4 mr-1" />
+                    </>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isFocusModeEnabled
+                  ? 'Show all goals'
+                  : 'Focus on urgent items only'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -248,7 +284,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                                 variant="ghost"
                                 className="p-0 h-auto text-sm font-medium text-gray-700 hover:text-gray-900 ml-2 hover:bg-transparent hover:no-underline"
                               >
-                                <span className="break-words w-full whitespace-pre-wrap">
+                                <span className="break-words whitespace-pre-wrap">
                                   {weeklyGoal.title}
                                 </span>
                               </Button>
@@ -290,7 +326,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                             </PopoverContent>
                           </Popover>
 
-                          {/* Daily Goals */}
                           <div className="ml-4 space-y-1">
                             {dailyGoals.map((dailyGoal) => (
                               <DailyGoalItem

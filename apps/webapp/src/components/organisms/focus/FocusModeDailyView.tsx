@@ -8,6 +8,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useDashboard } from '@/hooks/useDashboard';
 
 interface FocusModeDailyViewProps {
   year: number;
@@ -16,6 +17,7 @@ interface FocusModeDailyViewProps {
   weekData: WeekData;
   selectedDayOfWeek: DayOfWeek;
   onJumpToCurrent: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
+  isFocusModeEnabled?: boolean;
 }
 
 // This is the inner component that uses the FireGoals context
@@ -26,9 +28,11 @@ const FocusModeDailyViewInner = ({
   weekData,
   selectedDayOfWeek,
   onJumpToCurrent,
+  isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
   const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
+  const { toggleFocusMode } = useDashboard();
   const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
@@ -111,9 +115,15 @@ const FocusModeDailyViewInner = ({
     [deleteQuarterlyGoal]
   );
 
+  // Determine if content should be hidden
+  // Only hide content when there are fire goals AND focus mode is enabled
+  const shouldHideContent = useMemo(() => {
+    return hasFireGoals && isFocusModeEnabled && !isDailyViewHovered;
+  }, [hasFireGoals, isFocusModeEnabled, isDailyViewHovered]);
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex justify-end mb-2">
+      <div className="flex justify-end mb-2 gap-2">
         <JumpToCurrentButton
           viewMode="daily"
           year={year}
@@ -132,14 +142,14 @@ const FocusModeDailyViewInner = ({
           onDeleteGoal={handleDeleteGoal}
           fireGoals={fireGoals}
           toggleFireStatus={toggleFireStatus}
+          isFocusModeEnabled={isFocusModeEnabled}
+          toggleFocusMode={toggleFocusMode}
         />
 
         <div
           data-testid="focus-mode-daily-goals"
           className={`transition-opacity duration-300 ${
-            hasFireGoals && !isDailyViewHovered
-              ? 'opacity-0 hover:opacity-100'
-              : 'opacity-100'
+            shouldHideContent ? 'opacity-0 hover:opacity-100' : 'opacity-100'
           }`}
           onMouseEnter={() => setIsDailyViewHovered(true)}
           onMouseLeave={() => setIsDailyViewHovered(false)}

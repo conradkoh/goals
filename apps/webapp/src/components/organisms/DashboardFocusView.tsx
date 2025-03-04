@@ -38,6 +38,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     selectedQuarter,
     handleWeekNavigation,
     handleDayNavigation,
+    isFocusModeEnabled,
   } = useDashboard();
   const currentDateTime = useCurrentDateTime();
   const { currentWeekNumber } = useQuarterWeekInfo(
@@ -152,6 +153,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               weekData={weekData}
               selectedDayOfWeek={selectedDayOfWeek}
               onJumpToCurrent={handleJumpToCurrentDay}
+              isFocusModeEnabled={isFocusModeEnabled}
             />
           </div>
         )}
