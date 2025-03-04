@@ -88,6 +88,7 @@ export const WeekCardDailyGoals = forwardRef<
       weeklyGoals,
       quarterlyGoals,
       createDailyGoalOptimistic,
+      createWeeklyGoalOptimistic,
       dailyGoals,
       deleteGoalOptimistic,
     } = useWeek();
@@ -440,6 +441,24 @@ export const WeekCardDailyGoals = forwardRef<
       [createDailyGoalOptimistic, weekNumber, year, selectedDayOfWeek]
     );
 
+    // Add handleCreateWeeklyGoal function
+    const handleCreateWeeklyGoal = useCallback(
+      async (quarterlyGoalId: Id<'goals'>, title: string): Promise<void> => {
+        try {
+          await createWeeklyGoalOptimistic(quarterlyGoalId, title);
+        } catch (error) {
+          console.error('Failed to create weekly goal:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Failed to create weekly goal',
+            description:
+              'There was an error creating your weekly goal. Please try again.',
+          });
+        }
+      },
+      [createWeeklyGoalOptimistic]
+    );
+
     // If loading, show skeleton
     if (isLoading) {
       return <DailyGoalsSkeleton />;
@@ -454,6 +473,8 @@ export const WeekCardDailyGoals = forwardRef<
               weekNumber,
               dateTimestamp: day.dateTimestamp,
               weeklyGoalsWithQuarterly: weeklyGoalsWithQuarterly,
+              onCreateDailyGoal: handleCreateGoal,
+              onCreateWeeklyGoal: handleCreateWeeklyGoal,
             }))}
             onUpdateGoalTitle={handleUpdateGoalTitle}
             onDeleteGoal={handleDeleteGoal}
@@ -520,6 +541,7 @@ export const WeekCardDailyGoals = forwardRef<
               onUpdateGoalTitle={handleUpdateGoalTitle}
               onDeleteGoal={handleDeleteGoal}
               onCreateDailyGoal={handleCreateGoal}
+              onCreateWeeklyGoal={handleCreateWeeklyGoal}
               isCreating={
                 isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
               }
@@ -538,6 +560,7 @@ export const WeekCardDailyGoals = forwardRef<
               onUpdateGoalTitle={handleUpdateGoalTitle}
               onDeleteGoal={handleDeleteGoal}
               onCreateDailyGoal={handleCreateGoal}
+              onCreateWeeklyGoal={handleCreateWeeklyGoal}
               isCreating={
                 isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
               }
