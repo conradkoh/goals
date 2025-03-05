@@ -43,6 +43,11 @@ export const WeeklyGoalTaskItem = ({
       isComplete: newState,
       updateChildren: false,
     });
+
+    // If the goal is marked as complete and it's on fire, remove it from the onFire section
+    if (newState && isOnFire && toggleFireStatus) {
+      toggleFireStatus(goal._id);
+    }
   };
 
   return (

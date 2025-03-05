@@ -76,13 +76,18 @@ export const DailyGoalTaskItem = ({
       <div className="text-sm flex items-center gap-2 group/title">
         <Checkbox
           checked={isComplete}
-          onCheckedChange={(checked) =>
+          onCheckedChange={(checked) => {
             toggleGoalCompletion({
               goalId: goal._id,
               weekNumber,
               isComplete: checked === true,
-            })
-          }
+            });
+
+            // If the goal is marked as complete and it's on fire, remove it from the onFire section
+            if (checked === true && isOnFire && toggleFireStatus) {
+              toggleFireStatus(goal._id);
+            }
+          }}
           className="flex-shrink-0"
         />
 
