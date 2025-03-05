@@ -27,7 +27,6 @@ export const DeleteGoalIconButton = ({
   const { deleteGoalOptimistic } = useWeek();
 
   const handleDeleteClick = useCallback(async () => {
-    console.log('requireConfirmation', requireConfirmation);
     if (requireConfirmation) {
       await previewGoalDeletion(goalId);
     } else {
