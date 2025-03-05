@@ -39,7 +39,6 @@ export const FocusModeDailyViewDailyGoals = ({
     deleteGoalOptimistic,
   } = useWeek();
   const { updateQuarterlyGoalTitle } = useGoalActions();
-  const { toast } = useToast();
 
   // Add state to track which goals are being created
   const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>(

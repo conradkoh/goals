@@ -3,6 +3,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { GoalDeletePreviewDialog } from '../organisms/goals-new/week-card-sections/GoalDeletePreviewDialog';
+import { useWeek } from '@/hooks/useWeek';
 
 interface DeleteGoalIconButtonProps {
   requireConfirmation: boolean;
@@ -23,27 +24,20 @@ export const DeleteGoalIconButton = ({
       isDeleting,
     },
   } = useGoalActions();
+  const { deleteGoalOptimistic } = useWeek();
 
   const handleDeleteClick = useCallback(async () => {
+    console.log('requireConfirmation', requireConfirmation);
     if (requireConfirmation) {
       await previewGoalDeletion(goalId);
     } else {
-      await deleteGoal();
+      deleteGoalOptimistic(goalId);
     }
   }, [goalId, previewGoalDeletion, requireConfirmation]);
 
   const deleteGoal = useCallback(async () => {
     await confirmGoalDeletion();
   }, [confirmGoalDeletion]);
-
-  const DeleteButton = useMemo(
-    () => (
-      <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600">
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
-    ),
-    []
-  );
 
   return (
     <>

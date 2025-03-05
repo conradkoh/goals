@@ -128,7 +128,7 @@ export const WeeklyGoalItem = ({
                   }
                 />
                 <DeleteGoalIconButton
-                  requireConfirmation={false}
+                  requireConfirmation={true}
                   goalId={goal._id}
                 />
               </>
