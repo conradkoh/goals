@@ -42,14 +42,6 @@ export const useGoalActions = () => {
   );
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
 
-  // Goal deletion preview state
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [deletePreview, setDeletePreview] = useState<DeletePreview | null>(
-    null
-  );
-  const [goalToDelete, setGoalToDelete] = useState<Id<'goals'> | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   return useMemo(
     () => ({
       createQuarterlyGoal: async ({
@@ -255,63 +247,6 @@ export const useGoalActions = () => {
 
         return result;
       },
-
-      // New goal deletion preview functions
-      previewGoalDeletion: async (goalId: Id<'goals'>) => {
-        if (!sessionId) return;
-
-        try {
-          setIsDeleting(true);
-          const preview = (await deleteGoalMutation({
-            sessionId,
-            goalId,
-            dryRun: true,
-          })) as DeletePreview;
-
-          setDeletePreview(preview);
-          setGoalToDelete(goalId);
-          setIsPreviewOpen(true);
-        } catch (error) {
-          console.error('Error previewing goal deletion:', error);
-        } finally {
-          setIsDeleting(false);
-        }
-      },
-
-      confirmGoalDeletion: async () => {
-        if (!sessionId || !goalToDelete) return;
-
-        try {
-          setIsDeleting(true);
-          await deleteGoalMutation({
-            sessionId,
-            goalId: goalToDelete,
-          });
-
-          // Close the preview dialog after successful deletion
-          setIsPreviewOpen(false);
-          setDeletePreview(null);
-          setGoalToDelete(null);
-        } catch (error) {
-          console.error('Error deleting goal:', error);
-        } finally {
-          setIsDeleting(false);
-        }
-      },
-
-      cancelGoalDeletion: () => {
-        setIsPreviewOpen(false);
-        setDeletePreview(null);
-        setGoalToDelete(null);
-      },
-
-      // Goal deletion state
-      goalDeletionState: {
-        isPreviewOpen,
-        setIsPreviewOpen,
-        deletePreview,
-        isDeleting,
-      },
     }),
     [
       sessionId,
@@ -324,10 +259,6 @@ export const useGoalActions = () => {
       toggleGoalCompletionMutation,
       updateDailyGoalDayMutation,
       moveGoalsFromDayMutation,
-      isPreviewOpen,
-      deletePreview,
-      goalToDelete,
-      isDeleting,
     ]
   );
 };

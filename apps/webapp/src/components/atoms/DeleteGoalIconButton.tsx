@@ -1,9 +1,23 @@
-import { useGoalActions } from '@/hooks/useGoalActions';
+import { useMutation } from 'convex/react';
+import { api } from '@services/backend/convex/_generated/api';
+import { useSession } from '@/modules/auth/useSession';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Trash2 } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useState } from 'react';
 import { GoalDeletePreviewDialog } from '../organisms/goals-new/week-card-sections/GoalDeletePreviewDialog';
 import { useWeek } from '@/hooks/useWeek';
+
+interface GoalPreviewNode {
+  _id: Id<'goals'>;
+  title: string;
+  depth: number;
+  children: GoalPreviewNode[];
+}
+
+interface DeletePreview {
+  isDryRun: boolean;
+  goalsToDelete: GoalPreviewNode[];
+}
 
 interface DeleteGoalIconButtonProps {
   requireConfirmation: boolean;
@@ -14,41 +28,76 @@ export const DeleteGoalIconButton = ({
   requireConfirmation = true,
   goalId,
 }: DeleteGoalIconButtonProps) => {
-  const {
-    previewGoalDeletion,
-    confirmGoalDeletion,
-    goalDeletionState: {
-      isPreviewOpen,
-      setIsPreviewOpen,
-      deletePreview,
-      isDeleting,
-    },
-  } = useGoalActions();
+  const { sessionId } = useSession();
+  const deleteGoalMutation = useMutation(api.goal.deleteGoal);
   const { deleteGoalOptimistic } = useWeek();
+
+  // Goal deletion preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [deletePreview, setDeletePreview] = useState<DeletePreview | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = useCallback(async () => {
     if (requireConfirmation) {
-      await previewGoalDeletion(goalId);
+      if (!sessionId) return;
+
+      try {
+        setIsDeleting(true);
+        const preview = (await deleteGoalMutation({
+          sessionId,
+          goalId,
+          dryRun: true,
+        })) as DeletePreview;
+
+        setDeletePreview(preview);
+        setIsPreviewOpen(true);
+      } catch (error) {
+        console.error('Error previewing goal deletion:', error);
+      } finally {
+        setIsDeleting(false);
+      }
     } else {
       deleteGoalOptimistic(goalId);
     }
-  }, [goalId, previewGoalDeletion, requireConfirmation]);
+  }, [
+    goalId,
+    requireConfirmation,
+    sessionId,
+    deleteGoalMutation,
+    deleteGoalOptimistic,
+  ]);
 
   const deleteGoal = useCallback(async () => {
-    await confirmGoalDeletion();
-  }, [confirmGoalDeletion]);
+    if (!sessionId) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteGoalMutation({
+        sessionId,
+        goalId,
+      });
+
+      // Close the preview dialog after successful deletion
+      setIsPreviewOpen(false);
+      setDeletePreview(null);
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [sessionId, goalId, deleteGoalMutation]);
 
   return (
     <>
-      <>
-        <button
-          onClick={handleDeleteClick}
-          className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
-          disabled={isDeleting}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </>
+      <button
+        onClick={handleDeleteClick}
+        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
+        disabled={isDeleting}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
       <GoalDeletePreviewDialog
         open={isPreviewOpen}
         onOpenChange={setIsPreviewOpen}
