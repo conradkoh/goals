@@ -45,8 +45,7 @@ export const DailyGoalItem = ({
   isOnFire = false,
   toggleFireStatus,
 }: DailyGoalItemProps) => {
-  const { toggleGoalCompletion, updateDailyGoalDay } = useGoalActions();
-  const { weekNumber } = useWeek();
+  const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType
     | undefined;

@@ -63,6 +63,8 @@ const createPlaceholderWeekData = (
     mondayDate: mondayDateString,
     days,
     tree,
+    year,
+    quarter,
   };
 };
 

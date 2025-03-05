@@ -18,7 +18,6 @@ import {
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -59,8 +58,7 @@ const WeeklyGoal = ({
   ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }) => {
-  const { toggleGoalCompletion } = useGoalActions();
-  const { weekNumber } = useWeek();
+  const { toggleGoalCompletion, weekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
   const [showUpdateChildrenDialog, setShowUpdateChildrenDialog] =
     useState(false);
@@ -343,7 +341,7 @@ export const WeekCardWeeklyGoals = forwardRef<
   HTMLDivElement,
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter, isLoading = false }, ref) => {
-  const { updateQuarterlyGoalTitle } = useGoalActions();
+  const { updateQuarterlyGoalTitle } = useWeek();
   const { quarterlyGoals, deleteGoalOptimistic } = useWeek();
 
   // Filter and sort important quarterly goals

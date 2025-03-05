@@ -8,7 +8,6 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -87,12 +86,12 @@ export const WeekCardDailyGoals = forwardRef<
       days,
       weeklyGoals,
       quarterlyGoals,
+      dailyGoals,
+      updateQuarterlyGoalTitle,
+      deleteGoalOptimistic,
       createDailyGoalOptimistic,
       createWeeklyGoalOptimistic,
-      dailyGoals,
-      deleteGoalOptimistic,
     } = useWeek();
-    const { updateQuarterlyGoalTitle } = useGoalActions();
     const currentDateTime = useCurrentDateTime();
     const [newGoalTitle, setNewGoalTitle] = useState('');
     const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(

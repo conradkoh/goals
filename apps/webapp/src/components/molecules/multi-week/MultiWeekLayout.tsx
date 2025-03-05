@@ -52,6 +52,8 @@ const WeekCardContent = ({
       mondayDate: mondayDateString,
       days: (weekDataFromBackend || week.weekData).days,
       tree: weekDataFromBackend?.tree || week.weekData.tree || { allGoals: [] },
+      year: week.year,
+      quarter: week.quarter,
     }),
     [week.weekNumber, mondayDateString, weekDataFromBackend, week.weekData]
   );

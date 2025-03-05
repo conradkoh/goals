@@ -20,6 +20,8 @@ interface WeekContextValue {
   weeklyGoals: GoalWithDetailsAndChildren[];
   dailyGoals: GoalWithDetailsAndChildren[];
   weekNumber: number;
+  year: number;
+  quarter: number;
   days: Array<{
     dayOfWeek: number;
     date: string;
@@ -45,6 +47,7 @@ interface WeekContextValue {
   deleteDailyGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
   deleteGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
 }
+
 interface WeekProviderWithoutDashboardProps {
   weekData: WeekData;
   children: React.ReactNode;
@@ -138,6 +141,8 @@ export const WeekProviderWithoutDashboard = ({
       weeklyGoals: weeklyGoalsWithStatus,
       dailyGoals: dailyGoalsWithStatus,
       weekNumber: weekData.weekNumber,
+      year: weekData.year,
+      quarter: weekData.quarter,
       days: weekData.days,
       stats,
       createWeeklyGoalOptimistic: async (
@@ -154,8 +159,8 @@ export const WeekProviderWithoutDashboard = ({
           _id: tempId,
           _creationTime: Date.now(),
           userId: 'temp_user' as Id<'users'>,
-          year: weekData.weekNumber,
-          quarter: 1,
+          year: weekData.year,
+          quarter: weekData.quarter,
           title,
           details,
           parentId,
@@ -168,8 +173,8 @@ export const WeekProviderWithoutDashboard = ({
             _id: `optimistic_weekly_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
-            year: weekData.weekNumber,
-            quarter: 1,
+            year: weekData.year,
+            quarter: weekData.quarter,
             goalId: tempId,
             weekNumber: weekData.weekNumber,
             progress: '',
@@ -239,8 +244,8 @@ export const WeekProviderWithoutDashboard = ({
           _id: tempId,
           _creationTime: Date.now(),
           userId: 'temp_user' as Id<'users'>,
-          year: weekData.weekNumber,
-          quarter: 1,
+          year: weekData.year,
+          quarter: weekData.quarter,
           title,
           details,
           parentId,
@@ -253,8 +258,8 @@ export const WeekProviderWithoutDashboard = ({
             _id: `optimistic_daily_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),
             userId: 'temp_user' as Id<'users'>,
-            year: weekData.weekNumber,
-            quarter: 1,
+            year: weekData.year,
+            quarter: weekData.quarter,
             goalId: tempId,
             weekNumber: weekData.weekNumber,
             progress: '',
@@ -385,6 +390,8 @@ export const WeekProviderWithoutDashboard = ({
     optimisticWeeklyGoals,
     optimisticDailyGoals,
     weekData.weekNumber,
+    weekData.year,
+    weekData.quarter,
     weekData.days,
     createWeeklyGoal,
     deleteGoal,
@@ -405,7 +412,18 @@ export const useWeek = () => {
   if (!context) {
     throw new Error('useWeek must be used within a WeekProvider');
   }
-  return context;
+
+  // Call useGoalActions to get its functionality
+  const goalActions = useGoalActions();
+
+  // Combine the context with goalActions
+  return useMemo(
+    () => ({
+      ...context,
+      ...goalActions,
+    }),
+    [context, goalActions]
+  );
 };
 
 const WeekContext = createContext<WeekContextValue | undefined>(undefined);
@@ -414,6 +432,8 @@ export interface WeekData {
   weekLabel: string;
   weekNumber: number;
   mondayDate: string;
+  year: number;
+  quarter: number;
   days: Array<{
     dayOfWeek: DayOfWeek;
     date: string;
@@ -441,5 +461,15 @@ export const useWeekWithoutDashboard = ({
     weekNumber: week,
   });
 
-  return weekDetails;
+  return useMemo(
+    () =>
+      weekDetails
+        ? {
+            ...weekDetails,
+            year,
+            quarter,
+          }
+        : undefined,
+    [year, quarter, weekDetails]
+  );
 };

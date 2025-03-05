@@ -9,7 +9,6 @@ import {
   CollapsibleMinimalContent,
 } from '@/components/ui/collapsible-minimal';
 import { QuarterlyGoal } from '../QuarterlyGoal';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeekCardQuarterlyGoalsProps {
@@ -56,12 +55,12 @@ export const WeekCardQuarterlyGoals = ({
   isLoading = false,
 }: WeekCardQuarterlyGoalsProps) => {
   const {
+    quarterlyGoals,
     createQuarterlyGoal,
     updateQuarterlyGoalStatus,
     updateQuarterlyGoalTitle,
-    deleteGoal,
-  } = useGoalActions();
-  const { quarterlyGoals } = useWeek();
+    deleteGoalOptimistic: deleteGoal,
+  } = useWeek();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -129,9 +128,7 @@ export const WeekCardQuarterlyGoals = ({
   const handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
-        await deleteGoal({
-          goalId,
-        });
+        await deleteGoal(goalId);
       } catch (error) {
         console.error('Failed to delete goal:', error);
         throw error;

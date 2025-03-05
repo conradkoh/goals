@@ -1,5 +1,9 @@
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
-import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import {
+  WeekData,
+  WeekProviderWithoutDashboard,
+  useWeek,
+} from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
@@ -7,7 +11,6 @@ import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSect
 import { useCallback, useMemo, useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { useDashboard } from '@/hooks/useDashboard';
 
 interface FocusModeDailyViewProps {
@@ -31,7 +34,7 @@ const FocusModeDailyViewInner = ({
   isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
-  const { updateQuarterlyGoalTitle, deleteGoal } = useGoalActions();
+  const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
   const { toggleFocusMode } = useDashboard();
   const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
@@ -105,14 +108,12 @@ const FocusModeDailyViewInner = ({
   const handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
-        await deleteGoal({
-          goalId,
-        });
+        await deleteGoalOptimistic(goalId);
       } catch (error) {
         console.error('Failed to delete goal:', error);
       }
     },
-    [deleteGoal]
+    [deleteGoalOptimistic]
   );
 
   // Determine if content should be hidden
@@ -134,37 +135,35 @@ const FocusModeDailyViewInner = ({
         />
       </div>
 
-      <WeekProviderWithoutDashboard weekData={weekData}>
-        <OnFireGoalsSection
-          weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay()}
+      <OnFireGoalsSection
+        weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay()}
+        selectedDayOfWeek={selectedDayOfWeek}
+        onUpdateGoalTitle={handleUpdateGoalTitle}
+        onDeleteGoal={handleDeleteGoal}
+        fireGoals={fireGoals}
+        toggleFireStatus={toggleFireStatus}
+        isFocusModeEnabled={isFocusModeEnabled}
+        toggleFocusMode={toggleFocusMode}
+      />
+
+      <div
+        data-testid="focus-mode-daily-goals"
+        className={`transition-opacity duration-300 ${
+          shouldHideContent ? 'opacity-0 hover:opacity-100' : 'opacity-100'
+        }`}
+        onMouseEnter={() => setIsDailyViewHovered(true)}
+        onMouseLeave={() => setIsDailyViewHovered(false)}
+        onTouchStart={() => setIsDailyViewHovered(true)}
+      >
+        <FocusModeDailyViewDailyGoals
+          weekNumber={weekNumber}
+          year={year}
+          quarter={quarter}
           selectedDayOfWeek={selectedDayOfWeek}
-          onUpdateGoalTitle={handleUpdateGoalTitle}
-          onDeleteGoal={handleDeleteGoal}
           fireGoals={fireGoals}
           toggleFireStatus={toggleFireStatus}
-          isFocusModeEnabled={isFocusModeEnabled}
-          toggleFocusMode={toggleFocusMode}
         />
-
-        <div
-          data-testid="focus-mode-daily-goals"
-          className={`transition-opacity duration-300 ${
-            shouldHideContent ? 'opacity-0 hover:opacity-100' : 'opacity-100'
-          }`}
-          onMouseEnter={() => setIsDailyViewHovered(true)}
-          onMouseLeave={() => setIsDailyViewHovered(false)}
-          onTouchStart={() => setIsDailyViewHovered(true)}
-        >
-          <FocusModeDailyViewDailyGoals
-            weekNumber={weekNumber}
-            year={year}
-            quarter={quarter}
-            selectedDayOfWeek={selectedDayOfWeek}
-            fireGoals={fireGoals}
-            toggleFireStatus={toggleFireStatus}
-          />
-        </div>
-      </WeekProviderWithoutDashboard>
+      </div>
     </div>
   );
 };
@@ -172,8 +171,10 @@ const FocusModeDailyViewInner = ({
 // This is the outer component that provides the FireGoals context
 export const FocusModeDailyView = (props: FocusModeDailyViewProps) => {
   return (
-    <FireGoalsProvider>
-      <FocusModeDailyViewInner {...props} />
-    </FireGoalsProvider>
+    <WeekProviderWithoutDashboard weekData={props.weekData}>
+      <FireGoalsProvider>
+        <FocusModeDailyViewInner {...props} />
+      </FireGoalsProvider>
+    </WeekProviderWithoutDashboard>
   );
 };

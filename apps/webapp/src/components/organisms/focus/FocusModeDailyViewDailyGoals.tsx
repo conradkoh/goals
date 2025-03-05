@@ -2,7 +2,6 @@ import {
   DayContainer,
   wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -11,6 +10,7 @@ import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { useToast } from '@/components/ui/use-toast';
+import { DailyGoalItem } from '../goals-new/daily-goal/DailyGoalItem';
 
 export interface FocusModeDailyViewDailyGoalsProps {
   weekNumber: number;
@@ -37,8 +37,8 @@ export const FocusModeDailyViewDailyGoals = ({
     createWeeklyGoalOptimistic,
     dailyGoals,
     deleteGoalOptimistic,
+    updateQuarterlyGoalTitle,
   } = useWeek();
-  const { updateQuarterlyGoalTitle } = useGoalActions();
 
   // Add state to track which goals are being created
   const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>(

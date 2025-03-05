@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useGoalActions } from '@/hooks/useGoalActions';
+import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { History } from 'lucide-react';
 import { DateTime } from 'luxon';
@@ -30,7 +30,7 @@ export const DayHeader = ({
   weekNumber,
   dateTimestamp,
 }: DayHeaderProps) => {
-  const { moveGoalsFromDay } = useGoalActions();
+  const { moveGoalsFromDay } = useWeek();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<{

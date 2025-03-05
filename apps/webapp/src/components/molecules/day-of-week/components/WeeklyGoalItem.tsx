@@ -1,6 +1,5 @@
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithOptimisticStatus } from '@/hooks/useWeek';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -35,7 +34,7 @@ export const WeeklyGoalItem = ({
   isOnFire = false,
   toggleFireStatus,
 }: WeeklyGoalItemProps) => {
-  const { toggleGoalCompletion } = useGoalActions();
+  const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
 
