@@ -163,7 +163,6 @@ const WeeklyGoalSection = ({
             <DailyGoalTaskItem
               goal={dailyGoal}
               onUpdateTitle={onUpdateTitle}
-              onDelete={onDelete}
               isOnFire={fireGoals?.has(dailyGoal._id.toString()) || false}
               toggleFireStatus={toggleFireStatus}
             />
@@ -344,7 +343,6 @@ const QuarterlyGoalSection = ({
                   key={weeklyGoal._id.toString()}
                   goal={weeklyGoal}
                   onUpdateTitle={onUpdateTitle}
-                  onDelete={onDelete}
                   isOnFire={fireGoals?.has(weeklyGoal._id.toString()) || false}
                   toggleFireStatus={toggleFireStatus}
                 />

@@ -23,14 +23,12 @@ export interface DailyGoalListProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
 
 export const DailyGoalList = ({
   goals,
   onUpdateGoalTitle,
-  onDeleteGoal,
   className,
 }: DailyGoalListProps) => {
   return (
@@ -40,7 +38,6 @@ export const DailyGoalList = ({
           key={goal._id}
           goal={goal}
           onUpdateTitle={onUpdateGoalTitle}
-          onDelete={onDeleteGoal}
         />
       ))}
     </div>
@@ -90,11 +87,7 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList
-        goals={goals}
-        onUpdateGoalTitle={onUpdateGoalTitle}
-        onDeleteGoal={onDeleteGoal}
-      />
+      <DailyGoalList goals={goals} onUpdateGoalTitle={onUpdateGoalTitle} />
       <div
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isInputFocused && setIsHovering(false)}

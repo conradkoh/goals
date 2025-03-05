@@ -48,11 +48,7 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList
-        goals={goals}
-        onUpdateGoalTitle={onUpdateGoalTitle}
-        onDeleteGoal={onDeleteGoal}
-      />
+      <DailyGoalList goals={goals} onUpdateGoalTitle={onUpdateGoalTitle} />
       <div
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isInputFocused && setIsHovering(false)}

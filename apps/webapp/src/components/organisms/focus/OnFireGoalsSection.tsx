@@ -267,7 +267,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                           <WeeklyGoalTaskItem
                             goal={weeklyGoal}
                             onUpdateTitle={onUpdateGoalTitle}
-                            onDelete={onDeleteGoal}
                             isOnFire={true}
                             toggleFireStatus={toggleFireStatus}
                           />
@@ -332,7 +331,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                                 key={dailyGoal._id.toString()}
                                 goal={dailyGoal}
                                 onUpdateTitle={onUpdateGoalTitle}
-                                onDelete={onDeleteGoal}
                                 isOnFire={true}
                                 toggleFireStatus={toggleFireStatus}
                               />

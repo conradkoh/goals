@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { useGoalActions } from '@/hooks/useGoalActions';
 import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -33,7 +32,6 @@ interface DailyGoalItemProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
   isOnFire?: boolean;
   toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
@@ -41,7 +39,6 @@ interface DailyGoalItemProps {
 export const DailyGoalTaskItem = ({
   goal,
   onUpdateTitle,
-  onDelete,
   isOnFire = false,
   toggleFireStatus,
 }: DailyGoalItemProps) => {

@@ -137,7 +137,6 @@ export const DailyGoalGroup = ({
                 key={goal._id}
                 goal={goal}
                 onUpdateTitle={onUpdateGoalTitle}
-                onDelete={onDeleteGoal}
               />
             ))}
           </div>

@@ -22,7 +22,6 @@ export interface WeeklyGoalTaskItemProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
   isOnFire?: boolean;
   toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
@@ -30,7 +29,6 @@ export interface WeeklyGoalTaskItemProps {
 export const WeeklyGoalTaskItem = ({
   goal,
   onUpdateTitle,
-  onDelete,
   isOnFire = false,
   toggleFireStatus,
 }: WeeklyGoalTaskItemProps) => {
