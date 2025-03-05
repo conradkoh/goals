@@ -10,7 +10,7 @@ import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { useToast } from '@/components/ui/use-toast';
-import { DailyGoalItem } from '../goals-new/daily-goal/DailyGoalItem';
+import { DailyGoalTaskItem } from '../goals-new/daily-goal/DailyGoalTaskItem';
 
 export interface FocusModeDailyViewDailyGoalsProps {
   weekNumber: number;

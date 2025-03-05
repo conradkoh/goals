@@ -3,7 +3,7 @@ import { DayOfWeek } from '@/lib/constants';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMemo } from 'react';
-import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
+import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { Flame, Edit2, Star, Pin, Info, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -328,7 +328,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
                           <div className="ml-4 space-y-1">
                             {dailyGoals.map((dailyGoal) => (
-                              <DailyGoalItem
+                              <DailyGoalTaskItem
                                 key={dailyGoal._id.toString()}
                                 goal={dailyGoal}
                                 onUpdateTitle={onUpdateGoalTitle}

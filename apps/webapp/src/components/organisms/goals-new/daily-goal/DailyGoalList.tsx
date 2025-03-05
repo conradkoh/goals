@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailyGoalItem } from './DailyGoalItem';
+import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
 import { cn } from '@/lib/utils';
@@ -36,7 +36,7 @@ export const DailyGoalList = ({
   return (
     <div className={className}>
       {goals.map((goal) => (
-        <DailyGoalItem
+        <DailyGoalTaskItem
           key={goal._id}
           goal={goal}
           onUpdateTitle={onUpdateGoalTitle}

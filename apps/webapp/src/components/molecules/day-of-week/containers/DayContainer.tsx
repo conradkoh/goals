@@ -1,4 +1,4 @@
-import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
+import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import {
@@ -160,7 +160,7 @@ const WeeklyGoalSection = ({
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
           <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalItem
+            <DailyGoalTaskItem
               goal={dailyGoal}
               onUpdateTitle={onUpdateTitle}
               onDelete={onDelete}

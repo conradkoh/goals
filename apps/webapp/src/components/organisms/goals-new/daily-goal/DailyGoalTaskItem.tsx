@@ -38,7 +38,7 @@ interface DailyGoalItemProps {
   toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
-export const DailyGoalItem = ({
+export const DailyGoalTaskItem = ({
   goal,
   onUpdateTitle,
   onDelete,

@@ -1,5 +1,5 @@
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
+import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';
@@ -133,7 +133,7 @@ export const DailyGoalGroup = ({
         <div className="space-y-2 mt-2">
           <div>
             {dailyGoals.map((goal) => (
-              <DailyGoalItem
+              <DailyGoalTaskItem
                 key={goal._id}
                 goal={goal}
                 onUpdateTitle={onUpdateGoalTitle}
