@@ -31,7 +31,7 @@ const FocusModeDailyViewInner = ({
   isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
-  const { updateQuarterlyGoalTitle, deleteQuarterlyGoal } = useGoalActions();
+  const { updateQuarterlyGoalTitle, deleteGoal } = useGoalActions();
   const { toggleFocusMode } = useDashboard();
   const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
@@ -105,14 +105,14 @@ const FocusModeDailyViewInner = ({
   const handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
-        await deleteQuarterlyGoal({
+        await deleteGoal({
           goalId,
         });
       } catch (error) {
         console.error('Failed to delete goal:', error);
       }
     },
-    [deleteQuarterlyGoal]
+    [deleteGoal]
   );
 
   // Determine if content should be hidden

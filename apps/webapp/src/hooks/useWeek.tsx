@@ -54,8 +54,7 @@ export const WeekProviderWithoutDashboard = ({
   weekData,
   children,
 }: WeekProviderWithoutDashboardProps) => {
-  const { createWeeklyGoal, deleteQuarterlyGoal, createDailyGoal } =
-    useGoalActions();
+  const { createWeeklyGoal, deleteGoal, createDailyGoal } = useGoalActions();
   const allGoals = weekData.tree.allGoals;
 
   // Simple counter for optimistic items
@@ -212,7 +211,7 @@ export const WeekProviderWithoutDashboard = ({
 
         try {
           // Perform actual deletion
-          await deleteQuarterlyGoal({
+          await deleteGoal({
             goalId,
           });
 
@@ -303,7 +302,7 @@ export const WeekProviderWithoutDashboard = ({
 
         try {
           // Perform actual deletion
-          await deleteQuarterlyGoal({
+          await deleteGoal({
             goalId,
           });
 
@@ -337,7 +336,7 @@ export const WeekProviderWithoutDashboard = ({
 
           try {
             // Perform actual deletion
-            await deleteQuarterlyGoal({
+            await deleteGoal({
               goalId,
             });
 
@@ -357,7 +356,7 @@ export const WeekProviderWithoutDashboard = ({
 
           try {
             // Perform actual deletion
-            await deleteQuarterlyGoal({
+            await deleteGoal({
               goalId,
             });
 
@@ -371,7 +370,7 @@ export const WeekProviderWithoutDashboard = ({
         } else {
           // Quarterly goal or unknown type
           try {
-            await deleteQuarterlyGoal({
+            await deleteGoal({
               goalId,
             });
           } catch (error) {
@@ -388,7 +387,7 @@ export const WeekProviderWithoutDashboard = ({
     weekData.weekNumber,
     weekData.days,
     createWeeklyGoal,
-    deleteQuarterlyGoal,
+    deleteGoal,
     createDailyGoal,
     doWeeklyGoalAction,
     doDailyGoalAction,

@@ -59,7 +59,7 @@ export const WeekCardQuarterlyGoals = ({
     createQuarterlyGoal,
     updateQuarterlyGoalStatus,
     updateQuarterlyGoalTitle,
-    deleteQuarterlyGoal,
+    deleteGoal,
   } = useGoalActions();
   const { quarterlyGoals } = useWeek();
   const [newGoalTitle, setNewGoalTitle] = useState('');
@@ -129,7 +129,7 @@ export const WeekCardQuarterlyGoals = ({
   const handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
-        await deleteQuarterlyGoal({
+        await deleteGoal({
           goalId,
         });
       } catch (error) {
@@ -137,7 +137,7 @@ export const WeekCardQuarterlyGoals = ({
         throw error;
       }
     },
-    [deleteQuarterlyGoal]
+    [deleteGoal]
   );
 
   // Sort the goals before rendering

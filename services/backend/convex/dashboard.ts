@@ -192,7 +192,7 @@ export const updateQuarterlyGoalTitle = mutation({
   },
 });
 
-export const deleteQuarterlyGoal = mutation({
+export const deleteGoal = mutation({
   args: {
     sessionId: v.id('sessions'),
     goalId: v.id('goals'),

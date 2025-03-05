@@ -78,7 +78,7 @@ Common error codes to use:
 Example usage in a mutation:
 
 ```typescript
-export const deleteQuarterlyGoal = mutation({
+export const deleteGoal = mutation({
   handler: async (ctx, args) => {
     const goal = await ctx.db.get(args.goalId);
 
@@ -124,7 +124,7 @@ Use the `parseConvexError` utility to handle errors from Convex mutations. This 
 import { parseConvexError, errorTitles } from '@/lib/error';
 
 try {
-  await deleteQuarterlyGoal({ goalId });
+  await deleteGoal({ goalId });
 } catch (error) {
   const errorData = parseConvexError(error);
   showErrorToast(errorData);
@@ -152,7 +152,7 @@ function showErrorToast(error: ErrorData) {
 ```typescript
 const DeleteGoalButton = ({ goalId }: { goalId: Id<'goals'> }) => {
   const { toast } = useToast();
-  const deleteGoal = useMutation(api.dashboard.deleteQuarterlyGoal);
+  const deleteGoal = useMutation(api.dashboard.deleteGoal);
 
   const handleDelete = async () => {
     try {

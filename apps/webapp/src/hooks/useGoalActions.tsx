@@ -18,9 +18,7 @@ export const useGoalActions = () => {
   const updateQuarterlyGoalTitleMutation = useMutation(
     api.dashboard.updateQuarterlyGoalTitle
   );
-  const deleteQuarterlyGoalMutation = useMutation(
-    api.dashboard.deleteQuarterlyGoal
-  );
+  const deleteGoalMutation = useMutation(api.dashboard.deleteGoal);
   const toggleGoalCompletionMutation = useMutation(
     api.dashboard.toggleGoalCompletion
   );
@@ -149,8 +147,8 @@ export const useGoalActions = () => {
         });
       },
 
-      deleteQuarterlyGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
-        await deleteQuarterlyGoalMutation({
+      deleteGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
+        await deleteGoalMutation({
           sessionId,
           goalId,
         });
@@ -232,7 +230,7 @@ export const useGoalActions = () => {
       createDailyGoalMutation,
       updateQuarterlyGoalStatusMutation,
       updateQuarterlyGoalTitleMutation,
-      deleteQuarterlyGoalMutation,
+      deleteGoalMutation,
       toggleGoalCompletionMutation,
       updateDailyGoalDayMutation,
       moveGoalsFromDayMutation,
