@@ -18,7 +18,7 @@ export const useGoalActions = () => {
   const updateQuarterlyGoalTitleMutation = useMutation(
     api.dashboard.updateQuarterlyGoalTitle
   );
-  const deleteGoalMutation = useMutation(api.dashboard.deleteGoal);
+  const deleteGoalMutation = useMutation(api.goal.deleteGoal);
   const toggleGoalCompletionMutation = useMutation(
     api.dashboard.toggleGoalCompletion
   );

@@ -6,6 +6,7 @@ import { DayOfWeek, getDayName } from '../src/constants';
 import { Id, Doc } from './_generated/dataModel';
 import { internal } from './_generated/api';
 import { getNextPath, joinPath } from '../src/util/path';
+import { ConvexError } from 'convex/values';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -250,5 +251,53 @@ export const getAllChildGoals = internalQuery({
       )
       .collect();
     return childGoals;
+  },
+});
+
+export const deleteGoal = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Find the goal and verify ownership
+    const goal = await ctx.db.get(goalId);
+    if (!goal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Goal not found',
+      });
+    }
+    if (goal.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to delete this goal',
+      });
+    }
+
+    const pathPrefixForChildGoals = joinPath(goal.inPath, goal._id);
+    // Check for child goals
+    const childGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter', (q) =>
+        q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
+      )
+      .filter((q) =>
+        q.and(
+          q.gte(q.field('inPath'), pathPrefixForChildGoals),
+          q.lt(q.field('inPath'), getNextPath(pathPrefixForChildGoals))
+        )
+      )
+      .collect();
+
+    //delete all goals including itself
+    const goalIds = [...childGoals.map((g) => g._id), goalId];
+    await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
+
+    return goalId;
   },
 });

@@ -152,7 +152,7 @@ function showErrorToast(error: ErrorData) {
 ```typescript
 const DeleteGoalButton = ({ goalId }: { goalId: Id<'goals'> }) => {
   const { toast } = useToast();
-  const deleteGoal = useMutation(api.dashboard.deleteGoal);
+  const deleteGoal = useMutation(api.goal.deleteGoal);
 
   const handleDelete = async () => {
     try {

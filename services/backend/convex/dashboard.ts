@@ -192,49 +192,32 @@ export const updateQuarterlyGoalTitle = mutation({
   },
 });
 
-export const deleteGoal = mutation({
+export const updateGoalTitle = mutation({
   args: {
     sessionId: v.id('sessions'),
     goalId: v.id('goals'),
+    title: v.string(),
+    details: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId } = args;
+    const { sessionId, goalId, title, details } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
     // Find the goal and verify ownership
     const goal = await ctx.db.get(goalId);
     if (!goal) {
-      throw new ConvexError({
-        code: 'NOT_FOUND',
-        message: 'Goal not found',
-      });
+      throw new Error('Goal not found');
     }
     if (goal.userId !== userId) {
-      throw new ConvexError({
-        code: 'UNAUTHORIZED',
-        message: 'You do not have permission to delete this goal',
-      });
+      throw new Error('Unauthorized');
     }
 
-    const pathPrefixForChildGoals = joinPath(goal.inPath, goal._id);
-    // Check for child goals
-    const childGoals = await ctx.db
-      .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) =>
-        q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
-      )
-      .filter((q) =>
-        q.and(
-          q.gte(q.field('inPath'), pathPrefixForChildGoals),
-          q.lt(q.field('inPath'), getNextPath(pathPrefixForChildGoals))
-        )
-      )
-      .collect();
-
-    //delete all goals including itself
-    const goalIds = [...childGoals.map((g) => g._id), goalId];
-    await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
+    // Update the goal title and details
+    await ctx.db.patch(goalId, {
+      title,
+      ...(details !== undefined ? { details } : {}),
+    });
 
     return goalId;
   },
