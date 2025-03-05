@@ -158,6 +158,8 @@ describe('buildGoalTree', () => {
         ...n,
         state: undefined,
       }))
-    ).toThrow('depth 1 goal has no parent');
+    ).toThrow(
+      'depth 1 goal has deleted parent. node id: weekly1 | parent id: nonexistent'
+    );
   });
 });

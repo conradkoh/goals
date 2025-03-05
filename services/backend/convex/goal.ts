@@ -1,10 +1,11 @@
 import { v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { internalMutation, mutation } from './_generated/server';
+import { internalMutation, internalQuery, mutation } from './_generated/server';
 import { moveGoalsFromWeekUsecase } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
 import { DayOfWeek, getDayName } from '../src/constants';
 import { Id, Doc } from './_generated/dataModel';
 import { internal } from './_generated/api';
+import { getNextPath, joinPath } from '../src/util/path';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -222,5 +223,32 @@ export const moveGoalsFromDay = mutation({
     }
 
     return { tasksMoved: validTasks.length };
+  },
+});
+
+export const getAllChildGoals = internalQuery({
+  args: {
+    parentInPath: v.string(),
+    parentId: v.id('goals'),
+    userId: v.id('users'),
+    year: v.number(),
+    quarter: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { parentInPath, parentId, userId, year, quarter } = args;
+    const childGoalInPathPrefix = joinPath(parentInPath, parentId);
+    const childGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter', (q) =>
+        q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+      )
+      .filter((q) =>
+        q.and(
+          q.gte(q.field('inPath'), childGoalInPathPrefix),
+          q.lt(q.field('inPath'), getNextPath(childGoalInPathPrefix))
+        )
+      )
+      .collect();
+    return childGoals;
   },
 });

@@ -4,7 +4,7 @@ import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
-import { joinPath } from '../src/util/path';
+import { getNextPath, joinPath } from '../src/util/path';
 import { DateTime } from 'luxon';
 import { DayOfWeek, getDayName } from '../src/constants';
 import { api } from './_generated/api';
@@ -217,41 +217,24 @@ export const deleteGoal = mutation({
       });
     }
 
+    const pathPrefixForChildGoals = joinPath(goal.inPath, goal._id);
     // Check for child goals
     const childGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_year_and_quarter', (q) =>
         q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
       )
-      .filter((q) => q.eq(q.field('parentId'), goalId))
-      .collect();
-
-    if (childGoals.length > 0) {
-      throw new ConvexError({
-        code: 'VALIDATION_ERROR',
-        message:
-          'Cannot delete goal with child goals. Please delete all child goals first.',
-        details: {
-          childCount: childGoals.length,
-        },
-      });
-    }
-
-    // Delete all weekly goals associated with this goal
-    const weeklyGoals = await ctx.db
-      .query('goalStateByWeek')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
+      .filter((q) =>
+        q.and(
+          q.gte(q.field('inPath'), pathPrefixForChildGoals),
+          q.lt(q.field('inPath'), getNextPath(pathPrefixForChildGoals))
+        )
       )
-      .filter((q) => q.eq(q.field('goalId'), goalId))
       .collect();
 
-    for (const weeklyGoal of weeklyGoals) {
-      await ctx.db.delete(weeklyGoal._id);
-    }
-
-    // Delete the goal itself
-    await ctx.db.delete(goalId);
+    //delete all goals including itself
+    const goalIds = [...childGoals.map((g) => g._id), goalId];
+    await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
 
     return goalId;
   },

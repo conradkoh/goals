@@ -153,7 +153,7 @@ export function buildGoalTree(
         const parent = nodeIndex[node.parentId];
         if (!parent) {
           throw new Error(
-            `depth ${node.depth} goal has no parent. node id: ${node._id}`
+            `depth ${node.depth} goal has deleted parent. node id: ${node._id} | parent id: ${node.parentId}`
           );
         }
         parent.children.push(node);
