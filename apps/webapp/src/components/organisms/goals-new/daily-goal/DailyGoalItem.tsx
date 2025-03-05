@@ -178,8 +178,8 @@ export const DailyGoalItem = ({
                 }
               />
               <DeleteGoalIconButton
-                onDelete={() => onDelete(goal._id)}
                 requireConfirmation={false}
+                goalId={goal._id}
               />
             </>
           )}

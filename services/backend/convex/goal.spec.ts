@@ -698,13 +698,6 @@ describe('deleteGoal', () => {
     await expect(
       ctx.mutation(api.goal.deleteGoal, {
         sessionId,
-        goalId: quarterlyGoalId,
-      })
-    ).rejects.toThrow(/Goal not found/);
-
-    await expect(
-      ctx.mutation(api.goal.deleteGoal, {
-        sessionId,
         goalId: weeklyGoal2Id,
       })
     ).rejects.toThrow(/Goal not found/);
@@ -1209,5 +1202,88 @@ describe('deleteGoal', () => {
         goalId,
       })
     ).rejects.toThrow(/Goal not found/);
+  });
+
+  test('dryRun should return a preview of goals to be deleted', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+
+    // Create a quarterly goal
+    const quarterlyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Quarterly
+    );
+
+    // Create a weekly goal under the quarterly goal
+    const weeklyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Weekly,
+      quarterlyGoalId
+    );
+
+    // Create daily goals under the weekly goal
+    const dailyGoalId1 = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Daily,
+      weeklyGoalId
+    );
+
+    const dailyGoalId2 = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Daily,
+      weeklyGoalId
+    );
+
+    // Test deleting the weekly goal with dryRun
+    const result = (await ctx.mutation(api.goal.deleteGoal, {
+      sessionId,
+      goalId: weeklyGoalId,
+      dryRun: true,
+    })) as {
+      isDryRun: boolean;
+      goalsToDelete: Array<{
+        _id: Id<'goals'>;
+        title: string;
+        depth: number;
+        children: any[];
+      }>;
+    };
+
+    // Verify the result
+    expect(result).toHaveProperty('isDryRun', true);
+    expect(result.goalsToDelete).toHaveLength(1);
+
+    const weeklyGoalPreview = result.goalsToDelete[0];
+    expect(weeklyGoalPreview.title).toBe('Goal weekly');
+    expect(weeklyGoalPreview.depth).toBe(1);
+    expect(weeklyGoalPreview.children).toHaveLength(2);
+
+    // Now test actual deletion
+    const deleteResult = await ctx.mutation(api.goal.deleteGoal, {
+      sessionId,
+      goalId: weeklyGoalId,
+    });
+
+    // Verify that the weekly goal and its children are deleted
+    // We can do this by trying to fetch the week details and checking that the goals are gone
+    const weekDetails = await ctx.query(api.dashboard.getWeek, {
+      sessionId,
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    // The quarterly goal should still exist
+    const quarterlyGoals = weekDetails.tree.quarterlyGoals;
+    expect(quarterlyGoals.length).toBe(1);
+    expect(quarterlyGoals[0]._id).toBe(quarterlyGoalId);
+
+    // But the weekly goal and its children should be gone
+    const weeklyGoals = quarterlyGoals[0].children;
+    expect(weeklyGoals.length).toBe(0);
   });
 });

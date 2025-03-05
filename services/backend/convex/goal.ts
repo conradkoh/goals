@@ -258,9 +258,10 @@ export const deleteGoal = mutation({
   args: {
     sessionId: v.id('sessions'),
     goalId: v.id('goals'),
+    dryRun: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId } = args;
+    const { sessionId, goalId, dryRun = false } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -294,6 +295,42 @@ export const deleteGoal = mutation({
       )
       .collect();
 
+    // If this is a dry run, return a preview of what will be deleted
+    if (dryRun) {
+      // Organize goals by depth for preview
+      const allGoals = [goal, ...childGoals];
+
+      // Fetch goal states for all goals
+      const goalIds = allGoals.map((g) => g._id);
+      const goalStates = await ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
+        .filter((q) =>
+          q.or(...goalIds.map((id) => q.eq(q.field('goalId'), id)))
+        )
+        .collect();
+
+      // Group goal states by goal ID
+      const goalStatesByGoalId = goalStates.reduce((acc, state) => {
+        if (!acc[state.goalId]) {
+          acc[state.goalId] = [];
+        }
+        acc[state.goalId].push(state);
+        return acc;
+      }, {} as Record<Id<'goals'>, any[]>);
+
+      // Build a tree structure for the goals with state information
+      const { tree: goalsTree } = buildGoalTreeForPreview(
+        allGoals,
+        goalStatesByGoalId
+      );
+
+      return {
+        isDryRun: true,
+        goalsToDelete: goalsTree,
+      };
+    }
+
     //delete all goals including itself
     const goalIds = [...childGoals.map((g) => g._id), goalId];
     await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
@@ -301,3 +338,61 @@ export const deleteGoal = mutation({
     return goalId;
   },
 });
+
+// Helper function to build a tree of goals for preview
+function buildGoalTreeForPreview(
+  goals: Doc<'goals'>[],
+  goalStatesByGoalId: Record<Id<'goals'>, any[]> = {}
+) {
+  const roots: GoalPreviewNode[] = [];
+
+  // Find the main goal (the one being deleted)
+  // This is typically the first goal in the array
+  const mainGoal = goals[0];
+
+  // Index all nodes
+  const nodeIndex = goals.reduce((acc, goal) => {
+    // Get unique weeks for this goal from its states
+    const goalStates = goalStatesByGoalId[goal._id] || [];
+    const weeks = [
+      ...new Set(goalStates.map((state) => state.weekNumber)),
+    ].sort((a, b) => a - b);
+
+    const node: GoalPreviewNode = {
+      _id: goal._id,
+      title: goal.title,
+      depth: goal.depth,
+      children: [],
+      weeks: weeks.length > 0 ? weeks : undefined,
+    };
+    acc[goal._id] = node;
+    return acc;
+  }, {} as Record<Id<'goals'>, GoalPreviewNode>);
+
+  // Build the tree structure
+  for (const goal of goals) {
+    const node = nodeIndex[goal._id];
+
+    // The main goal is always a root, regardless of depth
+    if (goal._id === mainGoal._id) {
+      roots.push(node);
+    } else if (goal.parentId && nodeIndex[goal.parentId]) {
+      // Add as child to parent
+      nodeIndex[goal.parentId].children.push(node);
+    }
+  }
+
+  return {
+    tree: roots,
+    index: nodeIndex,
+  };
+}
+
+// Type for goal preview nodes
+type GoalPreviewNode = {
+  _id: Id<'goals'>;
+  title: string;
+  depth: number;
+  children: GoalPreviewNode[];
+  weeks?: number[];
+};

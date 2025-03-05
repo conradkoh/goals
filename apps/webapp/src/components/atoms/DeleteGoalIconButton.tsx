@@ -1,81 +1,67 @@
+import { useGoalActions } from '@/hooks/useGoalActions';
+import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Trash2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { parseConvexError, errorTitles } from '@/lib/error';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { useCallback, useMemo } from 'react';
+import { GoalDeletePreviewDialog } from '../organisms/goals-new/week-card-sections/GoalDeletePreviewDialog';
 
 interface DeleteGoalIconButtonProps {
-  onDelete: () => Promise<void>;
-  requireConfirmation?: boolean;
+  requireConfirmation: boolean;
+  goalId: Id<'goals'>;
 }
 
 export const DeleteGoalIconButton = ({
-  onDelete,
   requireConfirmation = true,
+  goalId,
 }: DeleteGoalIconButtonProps) => {
-  const { toast } = useToast();
+  const {
+    previewGoalDeletion,
+    confirmGoalDeletion,
+    goalDeletionState: {
+      isPreviewOpen,
+      setIsPreviewOpen,
+      deletePreview,
+      isDeleting,
+    },
+  } = useGoalActions();
 
-  const handleDelete = async () => {
-    try {
-      await onDelete();
-    } catch (error) {
-      console.error('Failed to delete goal:', error);
-      const errorData = parseConvexError(error);
-      toast({
-        variant: 'destructive',
-        title: errorTitles[errorData.code],
-        description: errorData.message,
-      });
+  const handleDeleteClick = useCallback(async () => {
+    if (requireConfirmation) {
+      await previewGoalDeletion(goalId);
+    } else {
+      await deleteGoal();
     }
-  };
+  }, [goalId, previewGoalDeletion, requireConfirmation]);
 
-  const DeleteButton = (
-    <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600">
-      <Trash2 className="h-3.5 w-3.5" />
-    </button>
-  );
+  const deleteGoal = useCallback(async () => {
+    await confirmGoalDeletion();
+  }, [confirmGoalDeletion]);
 
-  if (!requireConfirmation) {
-    return (
-      <button
-        onClick={handleDelete}
-        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
-      >
+  const DeleteButton = useMemo(
+    () => (
+      <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600">
         <Trash2 className="h-3.5 w-3.5" />
       </button>
-    );
-  }
+    ),
+    []
+  );
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{DeleteButton}</AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Goal</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this goal? This action cannot be
-            undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <>
+      <>
+        <button
+          onClick={handleDeleteClick}
+          className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </>
+      <GoalDeletePreviewDialog
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        preview={deletePreview}
+        onDeleteGoals={deleteGoal}
+      />
+    </>
   );
 };

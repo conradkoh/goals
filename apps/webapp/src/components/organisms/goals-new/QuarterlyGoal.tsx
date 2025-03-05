@@ -1,34 +1,21 @@
-import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { Edit2, Trash2 } from 'lucide-react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { SafeHTML, sanitizeHTML } from '@/components/ui/safe-html';
-import { GoalStarPin } from '../../atoms/GoalStarPin';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { SafeHTML } from '@/components/ui/safe-html';
+import { cn } from '@/lib/utils';
+import { Id } from '@services/backend/convex/_generated/dataModel';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { DeleteGoalIconButton } from '../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../atoms/GoalEditPopover';
-import { cn } from '@/lib/utils';
+import { GoalStarPin } from '../../atoms/GoalStarPin';
 
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
-  weekNumber: number;
   onToggleStatus: (
     goalId: Id<'goals'>,
     isStarred: boolean,
@@ -39,72 +26,16 @@ interface QuarterlyGoalProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }
 
 export function QuarterlyGoal({
   goal,
-  weekNumber,
   onToggleStatus,
   onUpdateTitle,
-  onDelete,
 }: QuarterlyGoalProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [title, setTitle] = useState(goal.title);
-  const [details, setDetails] = useState(goal.details || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const isAllWeeklyGoalsComplete =
     goal.children.length > 0 &&
     goal.children.every((child) => child.state?.isComplete);
-
-  const handleSave = async () => {
-    if (!title.trim()) return;
-
-    try {
-      setIsSubmitting(true);
-      // Sanitize the HTML before saving
-      const sanitizedDetails = sanitizeHTML(details);
-      await onUpdateTitle(
-        goal._id as Id<'goals'>,
-        title.trim(),
-        sanitizedDetails
-      );
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update goal:', error);
-      // TODO: Add proper error handling UI
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await onDelete(goal._id as Id<'goals'>);
-      setIsDeleteDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to delete goal:', error);
-      // TODO: Add proper error handling UI
-    }
-  };
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      // Handle Enter in title input
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSave();
-      }
-      // Handle Cmd/Ctrl + Enter anywhere in the form
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSave();
-      }
-    },
-    [handleSave]
-  );
 
   const handleToggleStar = useCallback(() => {
     onToggleStatus(
@@ -197,36 +128,9 @@ export function QuarterlyGoal({
           />
 
           {/* Delete Button */}
-          <DeleteGoalIconButton
-            onDelete={() => onDelete(goal._id as Id<'goals'>)}
-          />
+          <DeleteGoalIconButton goalId={goal._id} requireConfirmation={true} />
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Goal</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this goal? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

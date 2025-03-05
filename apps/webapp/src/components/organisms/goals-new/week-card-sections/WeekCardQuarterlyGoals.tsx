@@ -177,10 +177,8 @@ export const WeekCardQuarterlyGoals = ({
           <QuarterlyGoal
             key={goal._id}
             goal={goal}
-            weekNumber={weekNumber}
             onToggleStatus={handleToggleStatus}
             onUpdateTitle={handleUpdateTitle}
-            onDelete={handleDeleteGoal}
           />
         ))}
 
@@ -195,10 +193,8 @@ export const WeekCardQuarterlyGoals = ({
                 <QuarterlyGoal
                   key={goal._id}
                   goal={goal}
-                  weekNumber={weekNumber}
                   onToggleStatus={handleToggleStatus}
                   onUpdateTitle={handleUpdateTitle}
-                  onDelete={handleDeleteGoal}
                 />
               ))}
             </CollapsibleMinimalContent>

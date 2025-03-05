@@ -3,7 +3,22 @@ import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { DayOfWeek } from '@services/backend/src/constants';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { errorTitles } from '@services/backend/errors';
+import { toast } from '@/components/ui/use-toast';
+import { parseConvexError } from '@/lib/error';
+
+interface GoalPreviewNode {
+  _id: Id<'goals'>;
+  title: string;
+  depth: number;
+  children: GoalPreviewNode[];
+}
+
+interface DeletePreview {
+  isDryRun: boolean;
+  goalsToDelete: GoalPreviewNode[];
+}
 
 export const useGoalActions = () => {
   const { sessionId } = useSession();
@@ -26,6 +41,14 @@ export const useGoalActions = () => {
     api.dashboard.updateDailyGoalDay
   );
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
+
+  // Goal deletion preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [deletePreview, setDeletePreview] = useState<DeletePreview | null>(
+    null
+  );
+  const [goalToDelete, setGoalToDelete] = useState<Id<'goals'> | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   return useMemo(
     () => ({
@@ -148,10 +171,20 @@ export const useGoalActions = () => {
       },
 
       deleteGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
-        await deleteGoalMutation({
-          sessionId,
-          goalId,
-        });
+        try {
+          await deleteGoalMutation({
+            sessionId,
+            goalId,
+          });
+        } catch (error) {
+          console.error('Failed to delete goal:', error);
+          const errorData = parseConvexError(error);
+          toast({
+            variant: 'destructive',
+            title: errorTitles[errorData.code],
+            description: errorData.message,
+          });
+        }
       },
 
       toggleGoalCompletion: async ({
@@ -222,6 +255,63 @@ export const useGoalActions = () => {
 
         return result;
       },
+
+      // New goal deletion preview functions
+      previewGoalDeletion: async (goalId: Id<'goals'>) => {
+        if (!sessionId) return;
+
+        try {
+          setIsDeleting(true);
+          const preview = (await deleteGoalMutation({
+            sessionId,
+            goalId,
+            dryRun: true,
+          })) as DeletePreview;
+
+          setDeletePreview(preview);
+          setGoalToDelete(goalId);
+          setIsPreviewOpen(true);
+        } catch (error) {
+          console.error('Error previewing goal deletion:', error);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+
+      confirmGoalDeletion: async () => {
+        if (!sessionId || !goalToDelete) return;
+
+        try {
+          setIsDeleting(true);
+          await deleteGoalMutation({
+            sessionId,
+            goalId: goalToDelete,
+          });
+
+          // Close the preview dialog after successful deletion
+          setIsPreviewOpen(false);
+          setDeletePreview(null);
+          setGoalToDelete(null);
+        } catch (error) {
+          console.error('Error deleting goal:', error);
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+
+      cancelGoalDeletion: () => {
+        setIsPreviewOpen(false);
+        setDeletePreview(null);
+        setGoalToDelete(null);
+      },
+
+      // Goal deletion state
+      goalDeletionState: {
+        isPreviewOpen,
+        setIsPreviewOpen,
+        deletePreview,
+        isDeleting,
+      },
     }),
     [
       sessionId,
@@ -234,6 +324,10 @@ export const useGoalActions = () => {
       toggleGoalCompletionMutation,
       updateDailyGoalDayMutation,
       moveGoalsFromDayMutation,
+      isPreviewOpen,
+      deletePreview,
+      goalToDelete,
+      isDeleting,
     ]
   );
 };
