@@ -15,7 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 
-export interface WeeklyGoalItemProps {
+export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
   onUpdateTitle: (
     goalId: Id<'goals'>,
@@ -27,13 +27,13 @@ export interface WeeklyGoalItemProps {
   toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
-export const WeeklyGoalItem = ({
+export const WeeklyGoalTaskItem = ({
   goal,
   onUpdateTitle,
   onDelete,
   isOnFire = false,
   toggleFireStatus,
-}: WeeklyGoalItemProps) => {
+}: WeeklyGoalTaskItemProps) => {
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;

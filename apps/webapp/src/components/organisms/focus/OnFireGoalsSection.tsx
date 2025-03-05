@@ -4,7 +4,7 @@ import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWee
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMemo } from 'react';
 import { DailyGoalItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalItem';
-import { WeeklyGoalItem } from '@/components/molecules/day-of-week/components/WeeklyGoalItem';
+import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { Flame, Edit2, Star, Pin, Info, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -264,7 +264,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                       {/* Case 1: Weekly goals without children */}
                       {isWeeklyOnFire && dailyGoals.length === 0 && (
                         <div className="ml-2">
-                          <WeeklyGoalItem
+                          <WeeklyGoalTaskItem
                             goal={weeklyGoal}
                             onUpdateTitle={onUpdateGoalTitle}
                             onDelete={onDeleteGoal}

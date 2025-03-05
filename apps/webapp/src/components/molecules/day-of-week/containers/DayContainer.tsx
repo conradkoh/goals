@@ -18,7 +18,7 @@ import { useCallback, useMemo } from 'react';
 import { AddTaskInput } from '../../../atoms/AddTaskInput';
 import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
-import { WeeklyGoalItem } from '../components/WeeklyGoalItem';
+import { WeeklyGoalTaskItem } from '../components/WeeklyGoalTaskItem';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 
 // Helper function to check if a goal was completed today
@@ -340,7 +340,7 @@ const QuarterlyGoalSection = ({
             <div className="ml-1 space-y-1 border-b border-gray-100">
               <div className="text-xs text-gray-500 mb-1">Weekly Goals</div>
               {weeklyGoalsForChecklist.map((weeklyGoal) => (
-                <WeeklyGoalItem
+                <WeeklyGoalTaskItem
                   key={weeklyGoal._id.toString()}
                   goal={weeklyGoal}
                   onUpdateTitle={onUpdateTitle}
