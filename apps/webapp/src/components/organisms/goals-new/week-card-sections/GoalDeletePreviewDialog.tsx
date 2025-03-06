@@ -215,7 +215,7 @@ export const GoalDeletePreviewDialog = ({
                 )}
 
                 {/* Goals to delete section */}
-                <div className="space-y-4 border border-red-200 rounded-md p-3 bg-red-50">
+                <div className="space-y-4">
                   {preview.goalsToDelete.map((goal) => renderGoalTree(goal))}
                 </div>
               </div>
