@@ -8,11 +8,13 @@ import { SafeHTML } from '@/components/ui/safe-html';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2 } from 'lucide-react';
+import { Check, Edit2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { DeleteGoalIconButton } from '../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../atoms/GoalEditPopover';
 import { GoalStarPin } from '../../atoms/GoalStarPin';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useWeek } from '@/hooks/useWeek';
 
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
@@ -33,6 +35,8 @@ export function QuarterlyGoal({
   onToggleStatus,
   onUpdateTitle,
 }: QuarterlyGoalProps) {
+  const { toggleGoalCompletion, weekNumber } = useWeek();
+  const isComplete = goal.state?.isComplete ?? false;
   const isAllWeeklyGoalsComplete =
     goal.children.length > 0 &&
     goal.children.every((child) => child.state?.isComplete);
@@ -53,12 +57,35 @@ export function QuarterlyGoal({
     );
   }, [goal._id, goal.state?.isPinned, onToggleStatus]);
 
+  const handleToggleCompletion = useCallback(
+    async (newState: boolean) => {
+      await toggleGoalCompletion({
+        goalId: goal._id,
+        weekNumber,
+        isComplete: newState,
+        updateChildren: false,
+      });
+    },
+    [goal._id, weekNumber, toggleGoalCompletion]
+  );
+
+  const handleSaveTitle = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateTitle(goal._id, title, details);
+    },
+    [goal._id, onUpdateTitle]
+  );
+
   return (
     <>
       <div
         className={cn(
           'group px-2 py-1 rounded-sm',
-          isAllWeeklyGoalsComplete ? 'bg-green-50' : 'hover:bg-gray-50'
+          isComplete
+            ? 'bg-green-50'
+            : isAllWeeklyGoalsComplete
+            ? 'bg-green-50/50'
+            : 'hover:bg-gray-50'
         )}
       >
         <div className="flex items-center gap-2 group/title">
@@ -78,7 +105,10 @@ export function QuarterlyGoal({
                 variant="ghost"
                 className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               >
-                <span className="break-words w-full whitespace-pre-wrap text-gray-600">
+                <span className="break-words w-full whitespace-pre-wrap text-gray-600 flex items-center">
+                  {isComplete && (
+                    <Check className="h-3.5 w-3.5 text-green-500 mr-1.5 flex-shrink-0" />
+                  )}
                   {goal.title}
                 </span>
               </Button>
@@ -92,9 +122,7 @@ export function QuarterlyGoal({
                   <GoalEditPopover
                     title={goal.title}
                     details={goal.details || ''}
-                    onSave={async (title, details) => {
-                      await onUpdateTitle(goal._id, title, details);
-                    }}
+                    onSave={handleSaveTitle}
                     trigger={
                       <Button
                         variant="ghost"
@@ -109,6 +137,21 @@ export function QuarterlyGoal({
                 {goal.details && (
                   <SafeHTML html={goal.details} className="mt-2 text-sm" />
                 )}
+                <div className="flex items-center space-x-2 pt-2 border-t">
+                  <Checkbox
+                    id={`complete-${goal._id}`}
+                    checked={isComplete}
+                    onCheckedChange={(checked) =>
+                      handleToggleCompletion(checked === true)
+                    }
+                  />
+                  <label
+                    htmlFor={`complete-${goal._id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    Mark as complete
+                  </label>
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -117,9 +160,7 @@ export function QuarterlyGoal({
           <GoalEditPopover
             title={goal.title}
             details={goal.details || ''}
-            onSave={async (title, details) => {
-              await onUpdateTitle(goal._id, title, details);
-            }}
+            onSave={handleSaveTitle}
             trigger={
               <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
                 <Edit2 className="h-3.5 w-3.5" />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -13,8 +13,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Pin, Star } from 'lucide-react';
+import { Edit2, Pin, Star, Check } from 'lucide-react';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
+import { useWeek } from '@/hooks/useWeek';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -146,8 +148,36 @@ export const DailyGoalGroupHeader = ({
   quarterlyGoal,
   onUpdateGoalTitle,
 }: DailyGoalGroupHeaderProps) => {
+  const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
+  const isComplete = quarterlyGoal.state?.isComplete ?? false;
+
+  const handleToggleCompletion = useCallback(
+    async (newState: boolean) => {
+      await toggleGoalCompletion({
+        goalId: quarterlyGoal._id,
+        weekNumber,
+        isComplete: newState,
+        updateChildren: false,
+      });
+    },
+    [quarterlyGoal._id, weekNumber, toggleGoalCompletion]
+  );
+
+  const handleSaveWeeklyGoalTitle = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateGoalTitle(weeklyGoal._id, title, details);
+    },
+    [weeklyGoal._id, onUpdateGoalTitle]
+  );
+
+  const handleSaveQuarterlyGoalTitle = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateGoalTitle(quarterlyGoal._id, title, details);
+    },
+    [quarterlyGoal._id, onUpdateGoalTitle]
+  );
 
   return (
     <div>
@@ -172,9 +202,7 @@ export const DailyGoalGroupHeader = ({
                 <GoalEditPopover
                   title={weeklyGoal.title}
                   details={weeklyGoal.details}
-                  onSave={async (title, details) => {
-                    await onUpdateGoalTitle(weeklyGoal._id, title, details);
-                  }}
+                  onSave={handleSaveWeeklyGoalTitle}
                   trigger={
                     <Button
                       variant="ghost"
@@ -200,6 +228,7 @@ export const DailyGoalGroupHeader = ({
         {isPinned && (
           <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
         )}
+        {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -220,9 +249,7 @@ export const DailyGoalGroupHeader = ({
                 <GoalEditPopover
                   title={quarterlyGoal.title}
                   details={quarterlyGoal.details}
-                  onSave={async (title, details) => {
-                    await onUpdateGoalTitle(quarterlyGoal._id, title, details);
-                  }}
+                  onSave={handleSaveQuarterlyGoalTitle}
                   trigger={
                     <Button
                       variant="ghost"
@@ -240,6 +267,21 @@ export const DailyGoalGroupHeader = ({
                   className="mt-2 text-sm"
                 />
               )}
+              <div className="flex items-center space-x-2 pt-2 border-t">
+                <Checkbox
+                  id={`complete-group-${quarterlyGoal._id}`}
+                  checked={isComplete}
+                  onCheckedChange={(checked) =>
+                    handleToggleCompletion(checked === true)
+                  }
+                />
+                <label
+                  htmlFor={`complete-group-${quarterlyGoal._id}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Mark as complete
+                </label>
+              </div>
             </div>
           </PopoverContent>
         </Popover>
@@ -275,15 +317,46 @@ export const DailyGoalGroupContainer = ({
   isCreating = false,
   sortGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
 }: DailyGoalGroupContainerProps) => {
-  const dailyGoals = weeklyGoal.children.filter(
-    (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+  const dailyGoals = useMemo(
+    () =>
+      weeklyGoal.children.filter(
+        (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+      ),
+    [weeklyGoal.children, dayOfWeek]
   );
 
-  const sortedDailyGoals = sortGoals(dailyGoals);
+  const sortedDailyGoals = useMemo(
+    () => sortGoals(dailyGoals),
+    [dailyGoals, sortGoals]
+  );
 
-  const isSoftComplete =
-    sortedDailyGoals.length > 0 &&
-    sortedDailyGoals.every((goal) => goal.state?.isComplete);
+  const isSoftComplete = useMemo(
+    () =>
+      sortedDailyGoals.length > 0 &&
+      sortedDailyGoals.every((goal) => goal.state?.isComplete),
+    [sortedDailyGoals]
+  );
+
+  const handleUpdateGoalTitle = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
+      await onUpdateGoalTitle(goalId, title, details);
+    },
+    [onUpdateGoalTitle]
+  );
+
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      await onDeleteGoal(goalId);
+    },
+    [onDeleteGoal]
+  );
+
+  const handleCreateGoal = useCallback(
+    async (title: string) => {
+      await onCreateGoal(title);
+    },
+    [onCreateGoal]
+  );
 
   return (
     <div>
@@ -296,13 +369,13 @@ export const DailyGoalGroupContainer = ({
         <DailyGoalGroupHeader
           weeklyGoal={weeklyGoal}
           quarterlyGoal={quarterlyGoal}
-          onUpdateGoalTitle={onUpdateGoalTitle}
+          onUpdateGoalTitle={handleUpdateGoalTitle}
         />
         <DailyGoalListContainer
           goals={sortedDailyGoals}
-          onUpdateGoalTitle={onUpdateGoalTitle}
-          onDeleteGoal={onDeleteGoal}
-          onCreateGoal={onCreateGoal}
+          onUpdateGoalTitle={handleUpdateGoalTitle}
+          onDeleteGoal={handleDeleteGoal}
+          onCreateGoal={handleCreateGoal}
           createInputPlaceholder="Add a task..."
           isCreating={isCreating}
         />

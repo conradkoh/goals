@@ -8,7 +8,7 @@ import {
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { Edit2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
 interface GoalEditPopoverProps {
@@ -44,13 +44,13 @@ export function GoalEditPopover({
     }
   }, [isOpen, initialDetails]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setTitle(initialTitle);
     setDetails(initialDetails ?? '');
     setIsOpen(false);
-  };
+  }, [initialTitle, initialDetails]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!title.trim()) return;
 
     try {
@@ -88,37 +88,45 @@ export function GoalEditPopover({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [title, details, onSave, toast]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSave();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSave();
+      }
+    },
+    [handleSave]
+  );
 
   const handleFormShortcut = useFormSubmitShortcut({
     onSubmit: handleSave,
   });
 
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        handleCancel();
+      } else {
+        setIsOpen(true);
+      }
+    },
+    [handleCancel]
+  );
+
+  const defaultTrigger = useMemo(
+    () => (
+      <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Edit2 className="h-4 w-4" />
+      </Button>
+    ),
+    []
+  );
+
   return (
-    <Popover
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          handleCancel();
-        } else {
-          setIsOpen(true);
-        }
-      }}
-    >
-      <PopoverTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        )}
-      </PopoverTrigger>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
       <PopoverContent
         className="w-[400px] p-4 space-y-4"
         onKeyDown={handleFormShortcut}
