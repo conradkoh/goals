@@ -337,7 +337,7 @@ const QuarterlyGoalSection = ({
           {/* this adhoc checklist only renders in the focus mode */}
           {weeklyGoalsForChecklist.length > 0 && (
             <div className="ml-1 space-y-1 border-b border-gray-100">
-              <div className="text-xs text-gray-500 mb-1">Weekly Goals</div>
+              <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
               {weeklyGoalsForChecklist.map((weeklyGoal) => (
                 <WeeklyGoalTaskItem
                   key={weeklyGoal._id.toString()}
