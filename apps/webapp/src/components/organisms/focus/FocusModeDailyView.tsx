@@ -145,21 +145,18 @@ const FocusModeDailyViewInner = ({
         toggleFocusMode={toggleFocusMode}
       />
 
-      <div
-        data-testid="focus-mode-daily-goals"
-        className={`transition-opacity duration-300 ${
-          shouldHideContent ? 'opacity-0' : 'opacity-100'
-        }`}
-      >
-        <FocusModeDailyViewDailyGoals
-          weekNumber={weekNumber}
-          year={year}
-          quarter={quarter}
-          selectedDayOfWeek={selectedDayOfWeek}
-          fireGoals={fireGoals}
-          toggleFireStatus={toggleFireStatus}
-        />
-      </div>
+      {!shouldHideContent && (
+        <div data-testid="focus-mode-daily-goals">
+          <FocusModeDailyViewDailyGoals
+            weekNumber={weekNumber}
+            year={year}
+            quarter={quarter}
+            selectedDayOfWeek={selectedDayOfWeek}
+            fireGoals={fireGoals}
+            toggleFireStatus={toggleFireStatus}
+          />
+        </div>
+      )}
     </div>
   );
 };
