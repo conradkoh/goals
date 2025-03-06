@@ -3,7 +3,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export interface AddTaskInputProps {
   parentGoalId: Id<'goals'>;
@@ -69,6 +69,12 @@ export const AddTaskInput = ({
     }
   };
 
+  // Handle escape key press
+  const handleEscape = useCallback(() => {
+    setNewGoalTitle('');
+    setIsVisible(false);
+  }, []);
+
   return (
     <div
       onMouseEnter={() => setIsVisible(true)}
@@ -96,6 +102,7 @@ export const AddTaskInput = ({
           value={newGoalTitle}
           onChange={setNewGoalTitle}
           onSubmit={handleSubmit}
+          onEscape={handleEscape}
           onFocus={() => setIsVisible(true)}
           onBlur={() => {
             // Only hide if empty and not actively being used

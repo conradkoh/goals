@@ -36,7 +36,6 @@ const FocusModeDailyViewInner = ({
   const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
   const { toggleFocusMode } = useDashboard();
-  const [isDailyViewHovered, setIsDailyViewHovered] = useState(false);
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
   const preparedWeeklyGoalsForDay = useCallback(() => {
@@ -119,8 +118,8 @@ const FocusModeDailyViewInner = ({
   // Determine if content should be hidden
   // Only hide content when there are fire goals AND focus mode is enabled
   const shouldHideContent = useMemo(() => {
-    return hasFireGoals && isFocusModeEnabled && !isDailyViewHovered;
-  }, [hasFireGoals, isFocusModeEnabled, isDailyViewHovered]);
+    return hasFireGoals && isFocusModeEnabled;
+  }, [hasFireGoals, isFocusModeEnabled]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
@@ -149,11 +148,8 @@ const FocusModeDailyViewInner = ({
       <div
         data-testid="focus-mode-daily-goals"
         className={`transition-opacity duration-300 ${
-          shouldHideContent ? 'opacity-0 hover:opacity-100' : 'opacity-100'
+          shouldHideContent ? 'opacity-0' : 'opacity-100'
         }`}
-        onMouseEnter={() => setIsDailyViewHovered(true)}
-        onMouseLeave={() => setIsDailyViewHovered(false)}
-        onTouchStart={() => setIsDailyViewHovered(true)}
       >
         <FocusModeDailyViewDailyGoals
           weekNumber={weekNumber}

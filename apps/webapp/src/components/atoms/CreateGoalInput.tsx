@@ -54,18 +54,23 @@ export const CreateGoalInput = forwardRef(
         }
       };
 
-      if (isEditing) {
-        document.addEventListener('keydown', handleKeyDown);
-      }
+      // Always listen for Escape key, not just when isEditing
+      document.addEventListener('keydown', handleKeyDown);
 
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
       };
-    }, [isEditing, onChange, onEscape]);
+    }, [onChange, onEscape]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         onSubmit();
+      } else if (e.key === 'Escape') {
+        // Also handle Escape directly in the input's keyDown event
+        onChange('');
+        setIsEditing(false);
+        onEscape?.();
+        e.preventDefault(); // Prevent the event from bubbling up
       }
     };
 
