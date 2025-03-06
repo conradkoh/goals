@@ -1,4 +1,10 @@
-import { Trash2, AlertTriangle, Star, Pin, Calendar } from 'lucide-react';
+import {
+  Trash2,
+  AlertTriangle,
+  Target,
+  Calendar,
+  CheckSquare,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -94,33 +100,37 @@ export const GoalDeletePreviewDialog = ({
     const isWeekly = goal.depth === 1;
     const isDaily = goal.depth === 2;
 
+    // Determine background color and text color based on goal type
+    let bgColor = '';
+    let textColor = '';
+
+    if (isQuarterly) {
+      bgColor = 'bg-yellow-50';
+      textColor = 'text-yellow-800';
+    } else if (isWeekly) {
+      bgColor = 'bg-blue-50';
+      textColor = 'text-blue-800';
+    } else if (isDaily) {
+      bgColor = 'bg-green-50';
+      textColor = 'text-green-800';
+    }
+
     return (
       <div key={goal._id} className="space-y-2">
         <div
           className={cn(
             'flex items-center gap-1.5 px-2 py-1 rounded-md',
-            isQuarterly
-              ? 'bg-yellow-50'
-              : isWeekly
-              ? 'bg-blue-50'
-              : 'bg-green-50',
+            bgColor,
             level === 0 ? 'font-medium' : ''
           )}
           style={{ marginLeft: `${level * 16}px` }}
         >
-          {isQuarterly && <Star className="h-3.5 w-3.5 text-yellow-500" />}
-          {isWeekly && <Pin className="h-3.5 w-3.5 text-blue-500" />}
-          {isDaily && <Calendar className="h-3.5 w-3.5 text-green-500" />}
-          <div
-            className={cn(
-              'text-sm break-words flex-grow',
-              isQuarterly
-                ? 'text-yellow-800'
-                : isWeekly
-                ? 'text-blue-800'
-                : 'text-green-800'
-            )}
-          >
+          <span className="w-5 text-center">
+            {isQuarterly && '💭'}
+            {isWeekly && '🚀'}
+            {isDaily && '🔍'}
+          </span>
+          <div className={cn('text-sm break-words flex-grow', textColor)}>
             {goal.title}
             <span className="text-xs ml-2 opacity-70">({depthLabel})</span>
             {!isQuarterly && goal.weeks && goal.weeks.length > 0 && (
@@ -190,12 +200,12 @@ export const GoalDeletePreviewDialog = ({
                 {isDeletingQuarterlyGoal && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     <div className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                      <Star className="h-3 w-3" />
+                      <span>💭</span>
                       <span>1 Quarterly Goal</span>
                     </div>
                     {weeklyGoalsCount > 0 && (
                       <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <Pin className="h-3 w-3" />
+                        <span>🚀</span>
                         <span>
                           {weeklyGoalsCount} Weekly Goal
                           {weeklyGoalsCount !== 1 ? 's' : ''}
@@ -204,7 +214,7 @@ export const GoalDeletePreviewDialog = ({
                     )}
                     {dailyGoalsCount > 0 && (
                       <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
+                        <span>🔍</span>
                         <span>
                           {dailyGoalsCount} Daily Goal
                           {dailyGoalsCount !== 1 ? 's' : ''}
@@ -215,7 +225,7 @@ export const GoalDeletePreviewDialog = ({
                 )}
 
                 {/* Goals to delete section */}
-                <div className="space-y-4">
+                <div className="space-y-4 border border-gray-200 rounded-md p-3 bg-gray-50">
                   {preview.goalsToDelete.map((goal) => renderGoalTree(goal))}
                 </div>
               </div>

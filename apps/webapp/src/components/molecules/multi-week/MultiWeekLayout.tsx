@@ -100,7 +100,7 @@ const WeekCardContent = ({
             />
           </WeekCardSection>
 
-          <WeekCardSection title="📊 Daily Goals">
+          <WeekCardSection title="🔍 Daily Goals">
             <WeekCardDailyGoals
               weekNumber={week.weekNumber}
               year={week.year}
