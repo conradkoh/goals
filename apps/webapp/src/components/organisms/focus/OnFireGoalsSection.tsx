@@ -147,6 +147,11 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     return result.size > 0 ? result : null;
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
+  // Check if there are any visible fire goals for the current day
+  const hasVisibleFireGoalsForCurrentDay = useMemo(() => {
+    return onFireGoalsByQuarterly !== null;
+  }, [onFireGoalsByQuarterly]);
+
   const handleToggleGoalCompletion = useCallback(
     (goalId: Id<'goals'>, isComplete: boolean) => {
       toggleGoalCompletion({
@@ -166,7 +171,59 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [onUpdateGoalTitle]
   );
 
-  if (!onFireGoalsByQuarterly) return null;
+  if (!onFireGoalsByQuarterly) {
+    // If there are no visible fire goals but focus mode is enabled and toggle function is available,
+    // still render the toggle button to allow disabling focus mode
+    if (isFocusModeEnabled && toggleFocusMode) {
+      return (
+        <div className="bg-red-50 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-red-500" />
+              <h2 className="text-lg font-semibold text-red-700">
+                Urgent Items
+              </h2>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent
+                    sideOffset={5}
+                    className="animate-in fade-in-50 duration-300"
+                  >
+                    <p className="text-xs max-w-xs">
+                      These urgent items are stored locally in your browser.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={'ghost'}
+                    size="sm"
+                    onClick={toggleFocusMode}
+                    className="text-red-600 hover:text-red-700 flex items-center gap-1"
+                  >
+                    <EyeOff className="h-4 w-4 mr-1" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Show all goals</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <p className="text-sm text-red-600">
+            No urgent items for today. Showing all goals.
+          </p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="bg-red-50 rounded-lg p-4 mb-4">

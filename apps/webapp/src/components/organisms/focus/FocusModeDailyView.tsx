@@ -88,6 +88,32 @@ const FocusModeDailyViewInner = ({
     return fireGoals.size > 0;
   }, [fireGoals]);
 
+  // Check if there are any fire goals for the current day
+  const hasVisibleFireGoalsForCurrentDay = useMemo(() => {
+    if (fireGoals.size === 0) return false;
+
+    const weeklyGoalsWithQuarterly = preparedWeeklyGoalsForDay();
+
+    // Check if any weekly goals are on fire
+    const hasOnFireWeeklyGoals = weeklyGoalsWithQuarterly.some(
+      ({ weeklyGoal }) => fireGoals.has(weeklyGoal._id.toString())
+    );
+
+    if (hasOnFireWeeklyGoals) return true;
+
+    // Check if any daily goals for the selected day are on fire
+    const hasOnFireDailyGoals = weeklyGoalsWithQuarterly.some(
+      ({ weeklyGoal }) =>
+        weeklyGoal.children.some(
+          (dailyGoal) =>
+            dailyGoal.state?.daily?.dayOfWeek === selectedDayOfWeek &&
+            fireGoals.has(dailyGoal._id.toString())
+        )
+    );
+
+    return hasOnFireDailyGoals;
+  }, [fireGoals, preparedWeeklyGoalsForDay, selectedDayOfWeek]);
+
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
     async (goalId: Id<'goals'>, title: string, details?: string) => {
@@ -116,10 +142,10 @@ const FocusModeDailyViewInner = ({
   );
 
   // Determine if content should be hidden
-  // Only hide content when there are fire goals AND focus mode is enabled
+  // Only hide content when there are visible fire goals for the current day AND focus mode is enabled
   const shouldHideContent = useMemo(() => {
-    return hasFireGoals && isFocusModeEnabled;
-  }, [hasFireGoals, isFocusModeEnabled]);
+    return hasVisibleFireGoalsForCurrentDay && isFocusModeEnabled;
+  }, [hasVisibleFireGoalsForCurrentDay, isFocusModeEnabled]);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
