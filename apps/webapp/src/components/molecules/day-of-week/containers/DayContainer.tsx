@@ -98,7 +98,7 @@ const WeeklyGoalSection = ({
   // Memoize derived values
   const hasDailyGoals = useMemo(() => dailyGoals.length > 0, [dailyGoals]);
   const shouldShowAddTask = useMemo(
-    () => mode === 'plan' || hasDailyGoals,
+    () => mode === 'plan' || mode === 'focus' || hasDailyGoals,
     [mode, hasDailyGoals]
   );
 
@@ -304,15 +304,9 @@ const QuarterlyGoalSection = ({
   // Check if there are goals to display in focus mode
   const shouldRender = useMemo(() => {
     if (mode !== 'focus') return true;
-    return (
-      weeklyGoalsForQuarterlySection.length > 0 ||
-      weeklyGoalsForChecklist.length > 0
-    );
-  }, [
-    mode,
-    weeklyGoalsForQuarterlySection.length,
-    weeklyGoalsForChecklist.length,
-  ]);
+    // In focus mode, always render the quarterly goal section
+    return true;
+  }, [mode]);
 
   // Early return if nothing to render
   if (!shouldRender) {
@@ -334,26 +328,24 @@ const QuarterlyGoalSection = ({
           onUpdateTitle={onUpdateTitle}
         />
         <ConditionalRender condition={mode === 'focus'}>
-          {/* this adhoc checklist only renders in the focus mode */}
-          {weeklyGoalsForChecklist.length > 0 && (
-            <div className="ml-1 space-y-1 border-b border-gray-100">
-              <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
-              {weeklyGoalsForChecklist.map((weeklyGoal) => (
-                <WeeklyGoalTaskItem
-                  key={weeklyGoal._id.toString()}
-                  goal={weeklyGoal}
-                  onUpdateTitle={onUpdateTitle}
-                  isOnFire={fireGoals?.has(weeklyGoal._id.toString()) || false}
-                  toggleFireStatus={toggleFireStatus}
-                />
-              ))}
-              <AddTaskInput
-                parentGoalId={quarterlyGoal._id}
-                isOptimistic={true}
-                onCreateGoal={onCreateWeeklyGoal}
+          {/* this adhoc checklist always renders in the focus mode */}
+          <div className="ml-1 space-y-1 border-b border-gray-100">
+            <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
+            {weeklyGoalsForChecklist.map((weeklyGoal) => (
+              <WeeklyGoalTaskItem
+                key={weeklyGoal._id.toString()}
+                goal={weeklyGoal}
+                onUpdateTitle={onUpdateTitle}
+                isOnFire={fireGoals?.has(weeklyGoal._id.toString()) || false}
+                toggleFireStatus={toggleFireStatus}
               />
-            </div>
-          )}
+            ))}
+            <AddTaskInput
+              parentGoalId={quarterlyGoal._id}
+              isOptimistic={true}
+              onCreateGoal={onCreateWeeklyGoal}
+            />
+          </div>
         </ConditionalRender>
 
         <div className="space-y-2 ml-1">
