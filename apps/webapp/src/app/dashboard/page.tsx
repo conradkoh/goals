@@ -9,8 +9,6 @@ const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
   const { isMobile } = useScreenSize();
   const {
-    selectedYear,
-    selectedQuarter,
     currentWeekNumber,
     selectedWeek,
     selectedDayOfWeek,
@@ -31,7 +29,7 @@ const QuarterOverviewPage = () => {
 
     // Set default view mode if not present
     if (!searchParams.get('viewMode')) {
-      params.viewMode = isMobile ? 'weekly' : 'quarterly';
+      params.viewMode = isMobile ? 'daily' : 'quarterly';
       shouldUpdateUrl = true;
     }
 

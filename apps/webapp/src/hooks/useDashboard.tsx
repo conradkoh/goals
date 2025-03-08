@@ -101,7 +101,7 @@ export const DashboardProvider = ({
 
   // Get view mode from URL or use default based on screen size
   const viewModeFromUrl = searchParams.get('viewMode') as ViewMode | null;
-  const viewMode = viewModeFromUrl || (isMobile ? 'weekly' : 'quarterly');
+  const viewMode = viewModeFromUrl || (isMobile ? 'daily' : 'quarterly');
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');

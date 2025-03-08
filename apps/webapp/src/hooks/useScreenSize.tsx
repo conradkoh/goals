@@ -9,7 +9,9 @@ export const useScreenSize = (): {
   isMobile: boolean;
   isDesktop: boolean;
 } => {
-  const [screenSize, setScreenSize] = useState<ScreenSize>('desktop');
+  const [screenSize, setScreenSize] = useState<ScreenSize>(() =>
+    getScreenSize()
+  );
 
   useEffect(() => {
     // Set initial screen size
@@ -23,19 +25,24 @@ export const useScreenSize = (): {
   }, []);
 
   const updateScreenSize = () => {
-    const width = window.innerWidth;
-    if (width < 768) {
-      setScreenSize('mobile');
-    } else if (width < 1024) {
-      setScreenSize('tablet');
-    } else {
-      setScreenSize('desktop');
-    }
+    const screenSize = getScreenSize();
+    setScreenSize(screenSize);
   };
 
   return {
-    screenSize,
+    screenSize: screenSize ?? 'desktop',
     isMobile: screenSize === 'mobile',
     isDesktop: screenSize === 'desktop' || screenSize === 'tablet',
   };
 };
+
+function getScreenSize() {
+  const width = window.innerWidth;
+  if (width < 768) {
+    return 'mobile';
+  } else if (width < 1024) {
+    return 'tablet';
+  } else {
+    return 'desktop';
+  }
+}
