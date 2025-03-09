@@ -1,14 +1,8 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-
-// Local storage key for fire goals
-const FIRE_GOALS_STORAGE_KEY = 'fireGoals';
+import { api } from '@services/backend/convex/_generated/api';
+import { useMutation, useQuery } from 'convex/react';
+import { useSession } from '@/modules/auth/useSession';
 
 interface FireGoalsContextType {
   fireGoals: Set<string>;
@@ -32,57 +26,21 @@ interface FireGoalsProviderProps {
   children: ReactNode;
 }
 
-// Helper function to load fire goals from localStorage
-const loadFireGoalsFromStorage = (): Set<string> => {
-  if (typeof window === 'undefined') {
-    return new Set();
-  }
-
-  try {
-    const storedFireGoals = localStorage.getItem(FIRE_GOALS_STORAGE_KEY);
-    if (storedFireGoals) {
-      return new Set(JSON.parse(storedFireGoals));
-    }
-  } catch (error) {
-    console.error('Error loading fire goals from localStorage:', error);
-  }
-
-  return new Set();
-};
-
 export const FireGoalsProvider: React.FC<FireGoalsProviderProps> = ({
   children,
 }) => {
-  // Initialize with values from localStorage
-  const [fireGoals, setFireGoals] = useState<Set<string>>(
-    loadFireGoalsFromStorage
+  const { sessionId } = useSession();
+  const toggleFireStatusMutation = useMutation(api.fireGoal.toggleFireStatus);
+  const fireGoalsQuery = useQuery(api.fireGoal.getFireGoals, { sessionId });
+
+  // Convert array to Set if query is ready, otherwise use empty set
+  const fireGoals = new Set(
+    (fireGoalsQuery ?? []).map((goalId) => goalId.toString())
   );
 
-  // Persist to localStorage whenever fireGoals changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        FIRE_GOALS_STORAGE_KEY,
-        JSON.stringify(Array.from(fireGoals))
-      );
-    } catch (error) {
-      console.error('Error saving fire goals to localStorage:', error);
-    }
-  }, [fireGoals]);
-
-  const toggleFireStatus = (goalId: Id<'goals'>) => {
-    setFireGoals((prevFireGoals) => {
-      const newFireGoals = new Set(prevFireGoals);
-      const goalIdStr = goalId.toString();
-
-      if (newFireGoals.has(goalIdStr)) {
-        newFireGoals.delete(goalIdStr);
-      } else {
-        newFireGoals.add(goalIdStr);
-      }
-
-      return newFireGoals;
-    });
+  const toggleFireStatus = async (goalId: Id<'goals'>) => {
+    if (!sessionId) return;
+    await toggleFireStatusMutation({ sessionId, goalId });
   };
 
   const isOnFire = (goalId: Id<'goals'>) => {
