@@ -31,6 +31,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Checkbox } from '@/components/ui/checkbox';
+import { GoalDetailsContent } from '@/components/molecules/goal-details';
 
 interface OnFireGoalsSectionProps {
   weeklyGoalsWithQuarterly: Array<{
@@ -336,9 +337,9 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                         />
                       </div>
                       {quarterlyGoal.details && (
-                        <SafeHTML
-                          html={quarterlyGoal.details}
-                          className="mt-2 text-sm"
+                        <GoalDetailsContent
+                          title={quarterlyGoal.title}
+                          details={quarterlyGoal.details}
                         />
                       )}
                       <div className="flex items-center space-x-2 pt-2 border-t">

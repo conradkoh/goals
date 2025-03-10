@@ -15,6 +15,7 @@ import {
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2, Pin, Star } from 'lucide-react';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { GoalDetailsContent } from '@/components/molecules/goal-details';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -199,9 +200,9 @@ export const DailyGoalGroupHeader = ({
                 />
               </div>
               {quarterlyGoal.details && (
-                <SafeHTML
-                  html={quarterlyGoal.details}
-                  className="mt-2 text-sm"
+                <GoalDetailsContent
+                  title={quarterlyGoal.title}
+                  details={quarterlyGoal.details}
                 />
               )}
             </div>
@@ -243,7 +244,10 @@ export const DailyGoalGroupHeader = ({
               />
             </div>
             {weeklyGoal.details && (
-              <SafeHTML html={weeklyGoal.details} className="mt-2 text-sm" />
+              <GoalDetailsContent
+                title={weeklyGoal.title}
+                details={weeklyGoal.details}
+              />
             )}
           </div>
         </PopoverContent>

@@ -5,25 +5,21 @@ import { useWeek } from '@/hooks/useWeek';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2 } from 'lucide-react';
-import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
-import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SafeHTML } from '@/components/ui/safe-html';
+import { Edit2 } from 'lucide-react';
+import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
+import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { FireIcon } from '@/components/atoms/FireIcon';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -92,67 +88,39 @@ export const DailyGoalTaskItem = ({
         />
 
         {/* View Mode */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            >
-              <span className="break-words w-full whitespace-pre-wrap">
-                {title}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold break-words flex-1 mr-2">
-                  {title}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={currentDayOfWeek?.toString()}
-                    onValueChange={(value) =>
-                      handleMoveToDayOfWeek(parseInt(value) as DayOfWeekType)
-                    }
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Move to day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(DayOfWeek).map((value) => (
-                        <SelectItem
-                          key={value}
-                          value={value.toString()}
-                          disabled={value === currentDayOfWeek}
-                        >
-                          {getDayName(value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <GoalEditPopover
-                    title={title}
-                    details={details}
-                    onSave={async (newTitle: string, newDetails?: string) => {
-                      await onUpdateTitle(goal._id, newTitle, newDetails);
-                    }}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    }
-                  />
-                </div>
-              </div>
-              {details && <SafeHTML html={details} className="mt-2 text-sm" />}
+        <GoalDetailsPopover
+          title={title}
+          details={details}
+          onSave={async (newTitle: string, newDetails?: string) => {
+            await onUpdateTitle(goal._id, newTitle, newDetails);
+          }}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          additionalContent={
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <Select
+                value={currentDayOfWeek?.toString()}
+                onValueChange={(value) =>
+                  handleMoveToDayOfWeek(parseInt(value) as DayOfWeekType)
+                }
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Move to day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(DayOfWeek).map((value) => (
+                    <SelectItem
+                      key={value}
+                      value={value.toString()}
+                      disabled={value === currentDayOfWeek}
+                    >
+                      {getDayName(value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </PopoverContent>
-        </Popover>
+          }
+        />
 
         <div className="flex items-center gap-1">
           {isOptimistic ? (

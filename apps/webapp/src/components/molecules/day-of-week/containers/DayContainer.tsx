@@ -1,5 +1,4 @@
 import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -20,6 +19,10 @@ import { DayHeader } from '../components/DayHeader';
 import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
 import { WeeklyGoalTaskItem } from '../components/WeeklyGoalTaskItem';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
+import {
+  GoalDetailsContent,
+  GoalDetailsPopover,
+} from '@/components/molecules/goal-details';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
@@ -118,44 +121,11 @@ const WeeklyGoalSection = ({
 
   return (
     <div>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1"
-          >
-            <span className="break-words w-full whitespace-pre-wrap text-gray-600">
-              {weeklyGoal.title}
-            </span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-4">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <h3 className="font-semibold break-words flex-1 mr-2">
-                {weeklyGoal.title}
-              </h3>
-              <GoalEditPopover
-                title={weeklyGoal.title}
-                details={weeklyGoal.details}
-                onSave={handleSave}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                }
-              />
-            </div>
-            {weeklyGoal.details && (
-              <SafeHTML html={weeklyGoal.details} className="mt-2 text-sm" />
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+      <GoalDetailsPopover
+        title={weeklyGoal.title}
+        details={weeklyGoal.details}
+        onSave={handleSave}
+      />
 
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
