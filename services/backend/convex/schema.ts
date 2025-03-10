@@ -107,4 +107,12 @@ export default defineSchema({
     status: v.union(v.literal('active'), v.literal('consumed')),
     durationMs: v.optional(v.number()), // Duration of the sync session in milliseconds
   }).index('by_passphrase', ['passphrase']),
+
+  fireGoals: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    createdAt: v.number(), // Unix timestamp
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_goal', ['userId', 'goalId']),
 });
