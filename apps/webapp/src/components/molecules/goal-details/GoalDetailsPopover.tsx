@@ -1,15 +1,15 @@
-import React, { ReactNode } from 'react';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Edit2 } from 'lucide-react';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { GoalDetailsContent } from './GoalDetailsContent';
-import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { Edit2 } from 'lucide-react';
+import React, { ReactNode } from 'react';
+import { GoalDetailsContent } from './GoalDetailsContent';
 
 interface GoalDetailsPopoverProps {
   title: string;

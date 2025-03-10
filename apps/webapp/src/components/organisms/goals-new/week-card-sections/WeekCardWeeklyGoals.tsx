@@ -1,4 +1,8 @@
 import {
+  GoalDetailsContent,
+  GoalDetailsPopover,
+} from '@/components/molecules/goal-details';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -15,22 +19,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { SafeHTML } from '@/components/ui/safe-html';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast';
 import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
-import { forwardRef, useMemo, useState, useCallback } from 'react';
+import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
 import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  GoalDetailsContent,
-  GoalDetailsPopover,
-} from '@/components/molecules/goal-details';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
