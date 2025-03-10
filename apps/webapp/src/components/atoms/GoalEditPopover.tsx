@@ -128,7 +128,7 @@ export function GoalEditPopover({
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
       <PopoverContent
-        className="w-[400px] p-4 space-y-4"
+        className="w-[400px] max-w-[calc(100vw)] p-4 space-y-4"
         onKeyDown={handleFormShortcut}
       >
         <div className="space-y-2">

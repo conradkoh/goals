@@ -61,7 +61,7 @@ export function GoalDetailsContent({
         open={isFullViewOpen}
         onOpenChange={(open) => !open && setIsFullViewOpen(false)}
       >
-        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col p-6 mx-4">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold break-words">
               {title}
