@@ -45,7 +45,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[450px] max-w-[calc(100vw-32px)] p-5">
-        <div className="space-y-5">
+        <div className="space-y-2">
           <div className="flex items-start justify-between gap-3">
             <h3 className="font-semibold text-lg break-words flex-1">
               {title}
