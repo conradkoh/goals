@@ -315,17 +315,42 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
               {/* Weekly Goals */}
               <div className="space-y-2 ml-4">
-                {weeklyGoals.map(
-                  ({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
-                    <div key={weeklyGoal._id.toString()}>
-                      {/* Weekly Goal */}
-                      {isWeeklyOnFire && (
+                {/* First, render all weekly goals that are on fire */}
+                {weeklyGoals
+                  .filter(({ isWeeklyOnFire }) => isWeeklyOnFire)
+                  .map(({ weeklyGoal }) => (
+                    <div
+                      key={`on-fire-${weeklyGoal._id.toString()}`}
+                      className="mb-1"
+                    >
+                      <WeeklyGoalTaskItem
+                        goal={weeklyGoal}
+                        onUpdateTitle={handleUpdateGoalTitle}
+                        isOnFire={true}
+                        toggleFireStatus={toggleFireStatus}
+                      />
+                    </div>
+                  ))}
+
+                {/* Then, render all daily goals grouped by their weekly parent */}
+                {weeklyGoals
+                  .filter(({ dailyGoals }) => dailyGoals.length > 0)
+                  .map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
+                    <div key={`daily-${weeklyGoal._id.toString()}`}>
+                      {/* Only show the weekly goal title if it's not already shown above */}
+                      {!isWeeklyOnFire && dailyGoals.length > 0 && (
                         <div className="mb-1">
-                          <WeeklyGoalTaskItem
-                            goal={weeklyGoal}
-                            onUpdateTitle={handleUpdateGoalTitle}
-                            isOnFire={true}
-                            toggleFireStatus={toggleFireStatus}
+                          <GoalDetailsPopover
+                            title={weeklyGoal.title}
+                            details={weeklyGoal.details}
+                            onSave={(title, details) =>
+                              handleUpdateGoalTitle(
+                                weeklyGoal._id,
+                                title,
+                                details
+                              )
+                            }
+                            triggerClassName="p-0 h-auto hover:bg-transparent font-medium justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-700 hover:text-red-800 hover:no-underline"
                           />
                         </div>
                       )}
@@ -345,8 +370,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                         </div>
                       )}
                     </div>
-                  )
-                )}
+                  ))}
               </div>
             </div>
           )
