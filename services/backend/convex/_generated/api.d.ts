@@ -17,7 +17,6 @@ import type * as auth from "../auth.js";
 import type * as dashboard from "../dashboard.js";
 import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
-import type * as migrations from "../migrations.js";
 import type * as sync from "../sync.js";
 
 /**
@@ -33,7 +32,6 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   fireGoal: typeof fireGoal;
   goal: typeof goal;
-  migrations: typeof migrations;
   sync: typeof sync;
 }>;
 export declare const api: FilterApi<
