@@ -489,7 +489,6 @@ export async function updateQuarterlyGoals(
           quarter: to.quarter,
           weekNumber: to.weekNumber,
           goalId: item.goalId,
-          progress: '',
           isComplete: false,
           ...newState,
         });
@@ -566,7 +565,6 @@ export async function copyWeeklyGoal(
     quarter: to.quarter,
     weekNumber: to.weekNumber,
     goalId: targetWeekGoalId, // Point to the new goal
-    progress: '',
     isStarred: false,
     isPinned: false,
     isComplete: false,

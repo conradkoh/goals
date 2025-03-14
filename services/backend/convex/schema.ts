@@ -59,7 +59,7 @@ export default defineSchema({
     // others
     goalId: v.id('goals'),
     weekNumber: v.number(),
-    progress: v.string(),
+    progress: v.optional(v.string()),
     // quarterly goals
     isStarred: v.boolean(),
     isPinned: v.boolean(),
