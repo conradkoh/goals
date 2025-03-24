@@ -92,7 +92,52 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   args: T
 ): Promise<MoveGoalsFromWeekResult<T>> {
   const { userId, from, to, dryRun } = args;
+
+  // Pre-fetch all required data
   const previousWeekGoals = await getGoalsForWeek(ctx, userId, from);
+
+  // Pre-fetch all goal documents using Promise.all instead of getAll
+  const goalIds = previousWeekGoals.map((state) => state.goalId);
+  const goalPromises = goalIds.map((id) => ctx.db.get(id));
+  const goals = await Promise.all(goalPromises);
+
+  // Create a map for quick access
+  const goalsMap = new Map<Id<'goals'>, Doc<'goals'>>();
+  const weeklyGoals: Doc<'goals'>[] = [];
+
+  goals.forEach((goal) => {
+    if (goal) {
+      goalsMap.set(goal._id, goal);
+      if (goal.depth === GoalDepth.Weekly) {
+        weeklyGoals.push(goal);
+      }
+    }
+  });
+
+  // Pre-fetch all child goals for weekly goals in a single batch
+  const childGoalsMap = await getBatchChildGoals(
+    ctx,
+    userId,
+    weeklyGoals,
+    from.year,
+    from.quarter
+  );
+
+  // Pre-fetch parent goals (quarterly goals) for weekly goals
+  const parentIds = goals
+    .filter((goal) => goal?.parentId)
+    .map((goal) => goal!.parentId!);
+  const uniqueParentIds = [...new Set(parentIds)];
+  const parentGoalPromises = uniqueParentIds.map((id) => ctx.db.get(id));
+  const parentGoals = await Promise.all(parentGoalPromises);
+
+  // Create a map of parent goals
+  const parentGoalsMap = new Map<Id<'goals'>, Doc<'goals'>>();
+  parentGoals.forEach((goal) => {
+    if (goal) {
+      parentGoalsMap.set(goal._id, goal);
+    }
+  });
 
   const result: ProcessGoalResult = {
     quarterlyGoalsToUpdate: [],
@@ -103,7 +148,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   // Process each goal from the previous week in parallel
   await Promise.all(
     previousWeekGoals.map(async (weeklyState) => {
-      const goal = await ctx.db.get(weeklyState.goalId);
+      const goal = goalsMap.get(weeklyState.goalId);
       if (!goal) return; // Skip if goal does not exist
 
       const processedGoal = await processGoal(
@@ -111,7 +156,9 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
         userId,
         goal,
         weeklyState,
-        from
+        from,
+        parentGoalsMap,
+        childGoalsMap
       );
       result.weekStatesToCopy.push(...processedGoal.weekStatesToCopy);
       result.dailyGoalsToMove.push(...processedGoal.dailyGoalsToMove);
@@ -131,12 +178,16 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     )) as MoveGoalsFromWeekResult<T>;
   }
 
+  // Pre-fetch goals for the target week to avoid repeated queries
+  const targetWeekGoals = await getGoalsForWeek(ctx, userId, to);
+
   // Perform the actual updates
   const copiedWeekStates = await copyWeeklyGoals(
     ctx,
     userId,
     result.weekStatesToCopy,
-    to
+    to,
+    targetWeekGoals
   );
 
   // Update quarterly goals with their starred/pinned states
@@ -208,6 +259,58 @@ async function getChildGoals(
     )
     .filter((q) => q.eq(q.field('parentId'), parentGoal._id))
     .collect();
+}
+
+/**
+ * Get all child goals for multiple parent goals at once to reduce database operations
+ * @param ctx - The database context
+ * @param userId - The user ID
+ * @param parentGoals - The parent goals
+ * @param year - The year for filtering goals
+ * @param quarter - The quarter for filtering goals
+ */
+async function getBatchChildGoals(
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  parentGoals: Doc<'goals'>[],
+  year: number,
+  quarter: number
+): Promise<Map<Id<'goals'>, Doc<'goals'>[]>> {
+  if (parentGoals.length === 0) {
+    return new Map<Id<'goals'>, Doc<'goals'>[]>();
+  }
+
+  // Get all children in a single query
+  const allChildren = await ctx.db
+    .query('goals')
+    .withIndex('by_user_and_year_and_quarter', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+    )
+    .filter((q) =>
+      q.or(
+        ...parentGoals.map((parent) => q.eq(q.field('parentId'), parent._id))
+      )
+    )
+    .collect();
+
+  // Create a map of parent IDs to their children
+  const childrenByParent = new Map<Id<'goals'>, Doc<'goals'>[]>();
+
+  // Initialize the map with empty arrays for each parent
+  parentGoals.forEach((parent) => {
+    childrenByParent.set(parent._id, []);
+  });
+
+  // Group children by their parent
+  allChildren.forEach((child) => {
+    if (child.parentId) {
+      const children = childrenByParent.get(child.parentId) || [];
+      children.push(child);
+      childrenByParent.set(child.parentId, children);
+    }
+  });
+
+  return childrenByParent;
 }
 
 async function getDailyGoalState(
@@ -296,7 +399,9 @@ export async function processGoal(
   userId: Id<'users'>,
   goal: Doc<'goals'>,
   weeklyState: Doc<'goalStateByWeek'>,
-  from: TimePeriod
+  from: TimePeriod,
+  parentGoalsMap?: Map<Id<'goals'>, Doc<'goals'>>,
+  childGoalsMap?: Map<Id<'goals'>, Doc<'goals'>[]>
 ): Promise<ProcessGoalResult> {
   const result: ProcessGoalResult = {
     quarterlyGoalsToUpdate: [],
@@ -314,16 +419,25 @@ export async function processGoal(
       break;
     }
     case GoalDepth.Weekly: {
-      const quarterlyGoal = goal.parentId
-        ? await ctx.db.get(goal.parentId)
-        : null;
+      let quarterlyGoal: Doc<'goals'> | null = null;
+
+      // Use pre-fetched parent goal if available
+      if (goal.parentId) {
+        if (parentGoalsMap && parentGoalsMap.has(goal.parentId)) {
+          quarterlyGoal = parentGoalsMap.get(goal.parentId) || null;
+        } else {
+          quarterlyGoal = await ctx.db.get(goal.parentId);
+        }
+      }
+
       const { weeklyGoals, dailyGoals } = await processWeeklyGoal(
         ctx,
         userId,
         goal,
         weeklyState,
         from,
-        quarterlyGoal
+        quarterlyGoal,
+        childGoalsMap
       );
       result.weekStatesToCopy = weeklyGoals;
       result.dailyGoalsToMove = dailyGoals;
@@ -344,7 +458,8 @@ export async function processWeeklyGoal(
   goal: Doc<'goals'>,
   weeklyState: Doc<'goalStateByWeek'>,
   from: TimePeriod,
-  quarterlyGoal: Doc<'goals'> | null
+  quarterlyGoal: Doc<'goals'> | null,
+  childGoalsMap?: Map<Id<'goals'>, Doc<'goals'>[]>
 ): Promise<{ weeklyGoals: WeekStateToCopy[]; dailyGoals: DailyGoalToMove[] }> {
   if (goal.depth !== GoalDepth.Weekly) {
     throw new Error(
@@ -352,8 +467,13 @@ export async function processWeeklyGoal(
     );
   }
 
-  // Get all daily goals
-  const dailyGoals = await getChildGoals(ctx, userId, goal);
+  // Get all daily goals - use pre-fetched data if available
+  let dailyGoals: Doc<'goals'>[] = [];
+  if (childGoalsMap && childGoalsMap.has(goal._id)) {
+    dailyGoals = childGoalsMap.get(goal._id) || [];
+  } else {
+    dailyGoals = await getChildGoals(ctx, userId, goal);
+  }
 
   if (dailyGoals.length === 0 && !weeklyState.isComplete) {
     // If there are no daily goals and the weekly goal is incomplete, carry it over
@@ -531,89 +651,128 @@ export async function copyWeeklyGoals(
   ctx: MutationCtx,
   userId: Id<'users'>,
   weekStatesToCopy: WeekStateToCopy[],
-  to: TimePeriod
+  to: TimePeriod,
+  targetWeekGoals?: Doc<'goalStateByWeek'>[]
 ) {
-  return await Promise.all(
+  if (weekStatesToCopy.length === 0) {
+    return [];
+  }
+
+  // Create all new goals first in a batch
+  const goalInsertions = await Promise.all(
     weekStatesToCopy.map(async (item) => {
-      const { weeklyGoal, weekState } = await copyWeeklyGoal(
-        ctx,
-        userId,
-        item,
-        to
+      // Create a new carry over object with incremented numWeeks
+      const carryOver: CarryOver = {
+        type: 'week',
+        numWeeks: (item.weekState.carryOver?.numWeeks ?? 0) + 1,
+        fromGoal: {
+          previousGoalId: item.originalGoal._id,
+          rootGoalId:
+            item.weekState.carryOver?.fromGoal.rootGoalId ??
+            item.originalGoal._id,
+        },
+      };
+
+      // Extract only the fields we want to copy
+      const { _id, _creationTime, ...goalFieldsToCopy } = item.originalGoal;
+
+      // Check if this goal was already cloned based on the carry over information
+      const existingGoalState = targetWeekGoals?.find(
+        (goal) => goal.carryOver?.fromGoal.rootGoalId === item.originalGoal._id
       );
-      await migrateDailyGoals(ctx, item.dailyGoalsToMove, weeklyGoal, to);
-      return weeklyGoal;
+
+      if (existingGoalState) {
+        // Goal already exists, return its ID
+        return {
+          weekStateToCopy: item,
+          targetWeekGoalId: existingGoalState.goalId,
+          carryOver,
+          isNew: false,
+        };
+      } else {
+        // Create new goal with carry over information
+        const newGoalId = await ctx.db.insert('goals', {
+          ...goalFieldsToCopy,
+          carryOver,
+          parentId: item.quarterlyGoalId,
+          inPath: item.quarterlyGoalId ? `/${item.quarterlyGoalId}` : '/',
+        });
+
+        return {
+          weekStateToCopy: item,
+          targetWeekGoalId: newGoalId,
+          carryOver,
+          isNew: true,
+        };
+      }
     })
   );
-}
 
-export async function copyWeeklyGoal(
-  ctx: MutationCtx,
-  userId: Id<'users'>,
-  weekStateToCopy: WeekStateToCopy,
-  to: TimePeriod
-) {
-  // Create a new carry over object with incremented numWeeks
-  const carryOver: CarryOver = {
-    type: 'week',
-    numWeeks: (weekStateToCopy.weekState.carryOver?.numWeeks ?? 0) + 1,
-    fromGoal: {
-      previousGoalId: weekStateToCopy.originalGoal._id,
-      rootGoalId:
-        weekStateToCopy.weekState.carryOver?.fromGoal.rootGoalId ??
-        weekStateToCopy.originalGoal._id,
-    },
-  };
+  // Create all weekly states in a batch
+  const stateInsertions = await Promise.all(
+    goalInsertions.map(
+      async ({ weekStateToCopy, targetWeekGoalId, carryOver }) => {
+        // Create weekly state that points to the new goal
+        const newWeeklyStateId = await ctx.db.insert('goalStateByWeek', {
+          userId,
+          year: to.year,
+          quarter: to.quarter,
+          weekNumber: to.weekNumber,
+          goalId: targetWeekGoalId, // Point to the new goal
+          isStarred: false,
+          isPinned: false,
+          isComplete: false,
+          carryOver,
+        });
 
-  // Extract only the fields we want to copy
-  const { _id, _creationTime, ...goalFieldsToCopy } =
-    weekStateToCopy.originalGoal;
+        return {
+          weekStateToCopy,
+          targetWeekGoalId,
+          newWeeklyStateId,
+        };
+      }
+    )
+  );
 
-  // Check if this goal was already cloned based on the carry over information
-  const goalsForTargetWeek = await getGoalsForWeek(ctx, userId, to);
-  let targetWeekGoalId = goalsForTargetWeek.find(
-    (goal) =>
-      goal.carryOver?.fromGoal.rootGoalId === weekStateToCopy.originalGoal._id
-  )?.goalId;
+  // Fetch all the created goals and states at once
+  const allGoalIds = goalInsertions.map((item) => item.targetWeekGoalId);
+  const allStateIds = stateInsertions.map((item) => item.newWeeklyStateId);
 
-  if (!targetWeekGoalId) {
-    // Create new goal with carry over information
-    targetWeekGoalId = await ctx.db.insert('goals', {
-      ...goalFieldsToCopy,
-      carryOver,
-      parentId: weekStateToCopy.quarterlyGoalId,
-      inPath: weekStateToCopy.quarterlyGoalId
-        ? `/${weekStateToCopy.quarterlyGoalId}`
-        : '/',
-    });
-  }
-
-  // Create weekly state that points to the new goal
-  const newWeeklyStateId = await ctx.db.insert('goalStateByWeek', {
-    userId,
-    year: to.year,
-    quarter: to.quarter,
-    weekNumber: to.weekNumber,
-    goalId: targetWeekGoalId, // Point to the new goal
-    isStarred: false,
-    isPinned: false,
-    isComplete: false,
-    carryOver,
-  });
-
-  const [weeklyGoal, weeklyState] = await Promise.all([
-    ctx.db.get(targetWeekGoalId),
-    ctx.db.get(newWeeklyStateId),
+  // Batch fetch all the newly created entities
+  const [allGoals, allStates] = await Promise.all([
+    Promise.all(allGoalIds.map((id) => ctx.db.get(id))),
+    Promise.all(allStateIds.map((id) => ctx.db.get(id))),
   ]);
 
-  if (!weeklyGoal || !weeklyState) {
-    throw new Error('Failed to copy weekly goal or weekly state');
-  }
+  // Create a map for efficient lookup
+  const goalsMap = new Map<Id<'goals'>, Doc<'goals'>>();
+  const statesMap = new Map<Id<'goalStateByWeek'>, Doc<'goalStateByWeek'>>();
 
-  return {
-    weeklyGoal,
-    weekState: weeklyState,
-  };
+  allGoals.forEach((goal) => {
+    if (goal) goalsMap.set(goal._id, goal);
+  });
+
+  allStates.forEach((state) => {
+    if (state) statesMap.set(state._id, state);
+  });
+
+  // Process daily goals migrations in parallel for each weekly goal
+  await Promise.all(
+    stateInsertions.map(async ({ weekStateToCopy, targetWeekGoalId }) => {
+      const weeklyGoal = goalsMap.get(targetWeekGoalId);
+      if (weeklyGoal) {
+        await migrateDailyGoals(
+          ctx,
+          weekStateToCopy.dailyGoalsToMove,
+          weeklyGoal,
+          to
+        );
+      }
+    })
+  );
+
+  // Return the created weekly goals
+  return allGoals.filter(Boolean) as Doc<'goals'>[];
 }
 
 export async function migrateDailyGoals(
