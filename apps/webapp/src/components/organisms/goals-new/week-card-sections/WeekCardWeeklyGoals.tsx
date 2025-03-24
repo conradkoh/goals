@@ -168,7 +168,7 @@ const WeeklyGoal = ({
                     }
                   />
                   <DeleteGoalIconButton
-                    requireConfirmation={true}
+                    requireConfirmation={goal.children.length > 0}
                     goalId={goal._id}
                   />
                 </>
