@@ -7,6 +7,7 @@ import { Id, Doc } from './_generated/dataModel';
 import { internal } from './_generated/api';
 import { getNextPath, joinPath } from '../src/util/path';
 import { ConvexError } from 'convex/values';
+import { api } from './_generated/api';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -333,6 +334,18 @@ export const deleteGoal = mutation({
 
     //delete all goals including itself
     const goalIds = [...childGoals.map((g) => g._id), goalId];
+
+    // First, delete all associated goal states
+    const goalStates = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
+      .filter((q) => q.or(...goalIds.map((id) => q.eq(q.field('goalId'), id))))
+      .collect();
+
+    // Delete all goal states
+    await Promise.all(goalStates.map((state) => ctx.db.delete(state._id)));
+
+    // Then delete the goals themselves
     await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
 
     return goalId;
@@ -396,3 +409,80 @@ type GoalPreviewNode = {
   children: GoalPreviewNode[];
   weeks?: number[];
 };
+
+// Define the return types for our cleanupOrphanedGoalStates mutation
+type OrphanedStatePreview = {
+  _id: Id<'goalStateByWeek'>;
+  goalId: Id<'goals'>;
+  year: number;
+  quarter: number;
+  weekNumber: number;
+};
+
+type CleanupOrphanedGoalStatesDryRunResult = {
+  isDryRun: true;
+  orphanedStates: OrphanedStatePreview[];
+  count: number;
+};
+
+type CleanupOrphanedGoalStatesCommitResult = {
+  isDryRun: false;
+  deletedCount: number;
+};
+
+type CleanupOrphanedGoalStatesResult =
+  | CleanupOrphanedGoalStatesDryRunResult
+  | CleanupOrphanedGoalStatesCommitResult;
+
+export const cleanupOrphanedGoalStatesForUser = internalMutation({
+  args: {
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args): Promise<CleanupOrphanedGoalStatesResult> => {
+    const { dryRun = true } = args;
+
+    // Get all goal states for the user
+    const goalStates = await ctx.db.query('goalStateByWeek').collect();
+
+    // Get all unique goal IDs from the states
+    const uniqueGoalIds = [...new Set(goalStates.map((state) => state.goalId))];
+
+    // Get all existing goals for these IDs
+    const existingGoals = await Promise.all(
+      uniqueGoalIds.map((id) => ctx.db.get(id))
+    );
+
+    // Create a set of existing goal IDs for quick lookup
+    const existingGoalIds = new Set(
+      existingGoals.filter(Boolean).map((goal) => goal!._id)
+    );
+
+    // Find orphaned goal states (where the goal doesn't exist)
+    const orphanedStates = goalStates.filter(
+      (state) => !existingGoalIds.has(state.goalId)
+    );
+
+    // If this is a dry run, just return the orphaned states without deleting
+    if (dryRun) {
+      return {
+        isDryRun: true,
+        orphanedStates: orphanedStates.map((state) => ({
+          _id: state._id,
+          goalId: state.goalId,
+          year: state.year,
+          quarter: state.quarter,
+          weekNumber: state.weekNumber,
+        })),
+        count: orphanedStates.length,
+      };
+    }
+
+    // Otherwise, delete the orphaned states
+    await Promise.all(orphanedStates.map((state) => ctx.db.delete(state._id)));
+
+    return {
+      isDryRun: false,
+      deletedCount: orphanedStates.length,
+    };
+  },
+});
