@@ -247,23 +247,34 @@ async function processQuarterlyGoal(
       .filter((q) => q.eq(q.field('parentId'), goal._id))
       .collect();
 
-    // Check if any weekly goals are incomplete
-    const hasIncompleteWeeklyGoals = await Promise.all(
-      weeklyGoalItems.map(async (weeklyGoal) => {
-        const state = await ctx.db
-          .query('goalStateByWeek')
-          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-            q
-              .eq('userId', goal.userId)
-              .eq('year', goal.year)
-              .eq('quarter', goal.quarter)
-              .eq('weekNumber', weeklyState.weekNumber)
+    if (weeklyGoalItems.length === 0) {
+      return [];
+    }
+
+    // Get all states for these weekly goals in a single query
+    const weeklyStates = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', goal.userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('weekNumber', weeklyState.weekNumber)
+      )
+      .filter((q) =>
+        q.or(
+          ...weeklyGoalItems.map((weeklyGoal) =>
+            q.eq(q.field('goalId'), weeklyGoal._id)
           )
-          .filter((q) => q.eq(q.field('goalId'), weeklyGoal._id))
-          .first();
-        return !state?.isComplete;
-      })
-    ).then((results) => results.some((isIncomplete) => isIncomplete));
+        )
+      )
+      .collect();
+
+    // Check if any weekly goals are incomplete using the fetched states
+    const hasIncompleteWeeklyGoals = weeklyGoalItems.some((weeklyGoal) => {
+      const state = weeklyStates.find((s) => s.goalId === weeklyGoal._id);
+      return !state?.isComplete;
+    });
 
     // Only update if there are incomplete weekly goals
     if (hasIncompleteWeeklyGoals) {
@@ -341,76 +352,95 @@ export async function processWeeklyGoal(
     );
   }
 
+  // Get all daily goals
   const dailyGoals = await getChildGoals(ctx, userId, goal);
 
-  // If the weekly goal is incomplete and has no daily goals, or if it has incomplete daily goals,
-  // we should carry it over
-  const hasIncompleteDailyGoals =
-    dailyGoals.length > 0 &&
-    (await Promise.all(
-      dailyGoals.map(async (dailyGoal: Doc<'goals'>) => {
-        const dailyState = await getDailyGoalState(
-          ctx,
-          userId,
-          from,
-          dailyGoal._id
-        );
-        return !dailyState?.isComplete;
-      })
-    ).then((results) => results.some((isIncomplete) => isIncomplete)));
+  if (dailyGoals.length === 0 && !weeklyState.isComplete) {
+    // If there are no daily goals and the weekly goal is incomplete, carry it over
+    return createWeeklyGoalCarryOver(goal, weeklyState, quarterlyGoal, []);
+  }
 
-  if (
-    !weeklyState.isComplete ||
-    (dailyGoals.length === 0 && !weeklyState.isComplete) ||
-    hasIncompleteDailyGoals
-  ) {
-    // For carry over:
-    // - If the goal was not previously carried over (carryOver undefined), both rootGoalId and previousGoalId should be the current goal's ID
-    // - If the goal was carried over, preserve the rootGoalId from the previous carry over, and set previousGoalId to the current goal's ID
-    const rootGoalId = weeklyState.carryOver?.fromGoal.rootGoalId ?? goal._id;
+  if (dailyGoals.length > 0) {
+    // Get all daily goal states in a single query
+    const dailyStates = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', from.year)
+          .eq('quarter', from.quarter)
+          .eq('weekNumber', from.weekNumber)
+      )
+      .filter((q) =>
+        q.or(
+          ...dailyGoals.map((dailyGoal) =>
+            q.eq(q.field('goalId'), dailyGoal._id)
+          )
+        )
+      )
+      .collect();
 
-    const weeklyGoalToCopy: WeekStateToCopy = {
-      originalGoal: goal,
-      weekState: weeklyState,
-      carryOver: {
-        type: 'week',
-        numWeeks: (weeklyState.carryOver?.numWeeks ?? 0) + 1,
-        fromGoal: {
-          previousGoalId: goal._id,
-          rootGoalId: rootGoalId,
-        },
-      },
-      quarterlyGoalId: quarterlyGoal?._id,
-      dailyGoalsToMove: [],
-    };
+    // Check for incomplete daily goals
+    const incompleteDailyGoals = dailyGoals.filter((dailyGoal) => {
+      const state = dailyStates.find((s) => s.goalId === dailyGoal._id);
+      return !state?.isComplete;
+    });
 
-    const dailyGoalsToMove: DailyGoalToMove[] = [];
-    for (const dailyGoal of dailyGoals) {
-      const dailyState = await getDailyGoalState(
-        ctx,
-        userId,
-        from,
-        dailyGoal._id
-      );
-      if (dailyState && !dailyState.isComplete) {
-        const dailyGoalToMove: DailyGoalToMove = {
+    if (incompleteDailyGoals.length > 0 || !weeklyState.isComplete) {
+      // Create daily goals to move
+      const dailyGoalsToMove = incompleteDailyGoals.map((dailyGoal) => {
+        const dailyState = dailyStates.find((s) => s.goalId === dailyGoal._id);
+        if (!dailyState) {
+          throw new Error(`State not found for daily goal: ${dailyGoal._id}`);
+        }
+        return {
           goal: dailyGoal,
           weekState: dailyState,
           parentWeeklyGoal: goal,
           parentQuarterlyGoal: quarterlyGoal ?? undefined,
         };
-        dailyGoalsToMove.push(dailyGoalToMove);
-        weeklyGoalToCopy.dailyGoalsToMove.push(dailyGoalToMove);
-      }
-    }
+      });
 
-    return {
-      weeklyGoals: [weeklyGoalToCopy],
-      dailyGoals: dailyGoalsToMove,
-    };
+      return createWeeklyGoalCarryOver(
+        goal,
+        weeklyState,
+        quarterlyGoal,
+        dailyGoalsToMove
+      );
+    }
   }
 
   return { weeklyGoals: [], dailyGoals: [] };
+}
+
+// Helper function to create the weekly goal carry over structure
+function createWeeklyGoalCarryOver(
+  goal: Doc<'goals'>,
+  weeklyState: Doc<'goalStateByWeek'>,
+  quarterlyGoal: Doc<'goals'> | null,
+  dailyGoalsToMove: DailyGoalToMove[]
+): { weeklyGoals: WeekStateToCopy[]; dailyGoals: DailyGoalToMove[] } {
+  const rootGoalId = weeklyState.carryOver?.fromGoal.rootGoalId ?? goal._id;
+
+  const weeklyGoalToCopy: WeekStateToCopy = {
+    originalGoal: goal,
+    weekState: weeklyState,
+    carryOver: {
+      type: 'week',
+      numWeeks: (weeklyState.carryOver?.numWeeks ?? 0) + 1,
+      fromGoal: {
+        previousGoalId: goal._id,
+        rootGoalId: rootGoalId,
+      },
+    },
+    quarterlyGoalId: quarterlyGoal?._id,
+    dailyGoalsToMove,
+  };
+
+  return {
+    weeklyGoals: [weeklyGoalToCopy],
+    dailyGoals: dailyGoalsToMove,
+  };
 }
 
 export async function generateDryRunPreview(
