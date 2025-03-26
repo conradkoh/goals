@@ -5,6 +5,7 @@ import {
 } from '@/components/ui/collapsible-minimal';
 import { Check } from 'lucide-react';
 import { DayContainer, DayContainerProps } from './DayContainer';
+import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 
 export interface PastDaysContainerProps {
   days: Array<
@@ -47,15 +48,17 @@ export const PastDaysContainer = ({
       </CollapsibleMinimalTrigger>
       <CollapsibleMinimalContent>
         {days.map((day) => (
-          <DayContainer
-            key={day.dayOfWeek}
-            {...day}
-            onUpdateGoalTitle={onUpdateGoalTitle}
-            onDeleteGoal={onDeleteGoal}
-            onCreateDailyGoal={onCreateGoal}
-            isCreating={isCreating}
-            sortDailyGoals={sortDailyGoals}
-          />
+          <FireGoalsProvider key={`fire-provider-${day.dayOfWeek}`}>
+            <DayContainer
+              key={`day-container-${day.dayOfWeek}`}
+              {...day}
+              onUpdateGoalTitle={onUpdateGoalTitle}
+              onDeleteGoal={onDeleteGoal}
+              onCreateDailyGoal={onCreateGoal}
+              isCreating={isCreating}
+              sortDailyGoals={sortDailyGoals}
+            />
+          </FireGoalsProvider>
         ))}
       </CollapsibleMinimalContent>
     </CollapsibleMinimal>

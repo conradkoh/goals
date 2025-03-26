@@ -30,6 +30,8 @@ import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
 import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
+import { FireIcon } from '@/components/atoms/FireIcon';
+import { useFireGoals } from '@/contexts/FireGoalsContext';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -62,6 +64,7 @@ const WeeklyGoal = ({
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
 }) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
+  const { fireGoals, toggleFireStatus } = useFireGoals();
   const isComplete = goal.state?.isComplete ?? false;
   const [showUpdateChildrenDialog, setShowUpdateChildrenDialog] =
     useState(false);
@@ -73,6 +76,8 @@ const WeeklyGoal = ({
   const isSoftComplete =
     goal.children.length > 0 &&
     goal.children.every((child) => child.state?.isComplete);
+
+  const isOnFire = fireGoals.has(goal._id.toString());
 
   const handleToggleCompletion = async (newState: boolean) => {
     // If toggling to complete and there are incomplete children, show dialog
@@ -155,6 +160,11 @@ const WeeklyGoal = ({
                 <Spinner className="h-4 w-4" />
               ) : (
                 <>
+                  <FireIcon
+                    goalId={goal._id}
+                    isOnFire={isOnFire}
+                    toggleFireStatus={toggleFireStatus}
+                  />
                   <GoalEditPopover
                     title={goal.title}
                     details={goal.details}

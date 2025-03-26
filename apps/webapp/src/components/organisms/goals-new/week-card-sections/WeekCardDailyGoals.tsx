@@ -29,6 +29,7 @@ import {
 import { PastDaysContainer } from '@/components/molecules/day-of-week/containers/PastDaysContainer';
 import { GoalSelector } from '@/components/atoms/GoalSelector';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -532,40 +533,44 @@ export const WeekCardDailyGoals = forwardRef<
         </div>
         <div className="space-y-2">
           {currentDay && (
-            <DayContainer
-              dayOfWeek={currentDay.dayOfWeek}
-              weekNumber={weekNumber}
-              dateTimestamp={currentDay.dateTimestamp}
-              weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
-              onUpdateGoalTitle={handleUpdateGoalTitle}
-              onDeleteGoal={handleDeleteGoal}
-              onCreateDailyGoal={handleCreateGoal}
-              onCreateWeeklyGoal={handleCreateWeeklyGoal}
-              isCreating={
-                isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
-              }
-              sortDailyGoals={sortDailyGoals}
-              mode={mode}
-            />
+            <FireGoalsProvider>
+              <DayContainer
+                dayOfWeek={currentDay.dayOfWeek}
+                weekNumber={weekNumber}
+                dateTimestamp={currentDay.dateTimestamp}
+                weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
+                onUpdateGoalTitle={handleUpdateGoalTitle}
+                onDeleteGoal={handleDeleteGoal}
+                onCreateDailyGoal={handleCreateGoal}
+                onCreateWeeklyGoal={handleCreateWeeklyGoal}
+                isCreating={
+                  isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+                }
+                sortDailyGoals={sortDailyGoals}
+                mode={mode}
+              />
+            </FireGoalsProvider>
           )}
 
           {futureDays.map((day) => (
-            <DayContainer
-              key={day.dayOfWeek}
-              dayOfWeek={day.dayOfWeek}
-              weekNumber={weekNumber}
-              dateTimestamp={day.dateTimestamp}
-              weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
-              onUpdateGoalTitle={handleUpdateGoalTitle}
-              onDeleteGoal={handleDeleteGoal}
-              onCreateDailyGoal={handleCreateGoal}
-              onCreateWeeklyGoal={handleCreateWeeklyGoal}
-              isCreating={
-                isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
-              }
-              sortDailyGoals={sortDailyGoals}
-              mode={mode}
-            />
+            <FireGoalsProvider key={`fire-provider-${day.dayOfWeek}`}>
+              <DayContainer
+                key={`day-container-${day.dayOfWeek}`}
+                dayOfWeek={day.dayOfWeek}
+                weekNumber={weekNumber}
+                dateTimestamp={day.dateTimestamp}
+                weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
+                onUpdateGoalTitle={handleUpdateGoalTitle}
+                onDeleteGoal={handleDeleteGoal}
+                onCreateDailyGoal={handleCreateGoal}
+                onCreateWeeklyGoal={handleCreateWeeklyGoal}
+                isCreating={
+                  isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+                }
+                sortDailyGoals={sortDailyGoals}
+                mode={mode}
+              />
+            </FireGoalsProvider>
           ))}
         </div>
       </div>

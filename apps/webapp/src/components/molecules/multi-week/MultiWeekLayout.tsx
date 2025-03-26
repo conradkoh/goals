@@ -14,6 +14,7 @@ import { WeekCard } from '../week/WeekCard';
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
 import { DateTime } from 'luxon';
+import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 
 // Week card content component
 const WeekCardContent = ({
@@ -92,12 +93,14 @@ const WeekCardContent = ({
           </WeekCardSection>
 
           <WeekCardSection title="🚀 Weekly Goals">
-            <WeekCardWeeklyGoals
-              weekNumber={week.weekNumber}
-              year={week.year}
-              quarter={week.quarter}
-              isLoading={isLoading}
-            />
+            <FireGoalsProvider>
+              <WeekCardWeeklyGoals
+                weekNumber={week.weekNumber}
+                year={week.year}
+                quarter={week.quarter}
+                isLoading={isLoading}
+              />
+            </FireGoalsProvider>
           </WeekCardSection>
 
           <WeekCardSection title="🔍 Daily Goals">

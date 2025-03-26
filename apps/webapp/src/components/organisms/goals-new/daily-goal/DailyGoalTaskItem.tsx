@@ -20,6 +20,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { useFireGoals } from '@/contexts/FireGoalsContext';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -42,6 +43,12 @@ export const DailyGoalTaskItem = ({
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType
     | undefined;
+
+  // Get the fire goals context for use when props aren't provided
+  const fireGoalsContext = useFireGoals();
+  const effectiveIsOnFire = isOnFire || fireGoalsContext.isOnFire(goal._id);
+  const effectiveToggleFireStatus =
+    toggleFireStatus || fireGoalsContext.toggleFireStatus;
 
   // Get real-time updates from direct subscription
   const liveGoalDetails = useDailyGoal(goal._id, {
@@ -80,8 +87,12 @@ export const DailyGoalTaskItem = ({
             });
 
             // If the goal is marked as complete and it's on fire, remove it from the onFire section
-            if (checked === true && isOnFire && toggleFireStatus) {
-              toggleFireStatus(goal._id);
+            if (
+              checked === true &&
+              effectiveIsOnFire &&
+              effectiveToggleFireStatus
+            ) {
+              effectiveToggleFireStatus(goal._id);
             }
           }}
           className="flex-shrink-0"
@@ -127,13 +138,11 @@ export const DailyGoalTaskItem = ({
             <Spinner className="h-3.5 w-3.5" />
           ) : (
             <>
-              {toggleFireStatus && (
-                <FireIcon
-                  goalId={goal._id}
-                  isOnFire={isOnFire}
-                  toggleFireStatus={toggleFireStatus}
-                />
-              )}
+              <FireIcon
+                goalId={goal._id}
+                isOnFire={effectiveIsOnFire}
+                toggleFireStatus={effectiveToggleFireStatus}
+              />
               <GoalEditPopover
                 title={title}
                 details={details}

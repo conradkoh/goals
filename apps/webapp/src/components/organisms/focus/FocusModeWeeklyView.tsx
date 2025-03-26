@@ -30,6 +30,7 @@ import {
   useMoveGoalsForWeekContext,
 } from '@/hooks/useMoveGoalsForWeekContext';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
+import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
@@ -129,7 +130,7 @@ const FocusModeWeeklyViewInner = ({
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="font-semibold mb-4">🚀 Weekly Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
-          {weeklyGoalsComponent}
+          <FireGoalsProvider>{weeklyGoalsComponent}</FireGoalsProvider>
         </WeekProviderWithoutDashboard>
       </div>
 
