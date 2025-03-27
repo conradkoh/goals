@@ -20,7 +20,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
-import { useFireGoals } from '@/contexts/FireGoalsContext';
+import { useFireGoalStatus } from '@/contexts/FireGoalsContext';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
@@ -29,26 +29,19 @@ interface DailyGoalItemProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  isOnFire?: boolean;
-  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const DailyGoalTaskItem = ({
   goal,
   onUpdateTitle,
-  isOnFire = false,
-  toggleFireStatus,
 }: DailyGoalItemProps) => {
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType
     | undefined;
 
-  // Get the fire goals context for use when props aren't provided
-  const fireGoalsContext = useFireGoals();
-  const effectiveIsOnFire = isOnFire || fireGoalsContext.isOnFire(goal._id);
-  const effectiveToggleFireStatus =
-    toggleFireStatus || fireGoalsContext.toggleFireStatus;
+  // Use the custom hook for fire goal status
+  const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
 
   // Get real-time updates from direct subscription
   const liveGoalDetails = useDailyGoal(goal._id, {
@@ -87,12 +80,8 @@ export const DailyGoalTaskItem = ({
             });
 
             // If the goal is marked as complete and it's on fire, remove it from the onFire section
-            if (
-              checked === true &&
-              effectiveIsOnFire &&
-              effectiveToggleFireStatus
-            ) {
-              effectiveToggleFireStatus(goal._id);
+            if (checked === true && isOnFire) {
+              toggleFireStatus(goal._id);
             }
           }}
           className="flex-shrink-0"
@@ -100,12 +89,23 @@ export const DailyGoalTaskItem = ({
 
         {/* View Mode */}
         <GoalDetailsPopover
-          title={title}
-          details={details}
+          goal={goal}
           onSave={async (newTitle: string, newDetails?: string) => {
             await onUpdateTitle(goal._id, newTitle, newDetails);
           }}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          onToggleComplete={async (checked) => {
+            await toggleGoalCompletion({
+              goalId: goal._id,
+              weekNumber,
+              isComplete: checked,
+            });
+
+            // If the goal is marked as complete and it's on fire, remove it from the onFire section
+            if (checked && isOnFire) {
+              toggleFireStatus(goal._id);
+            }
+          }}
           additionalContent={
             <div className="flex items-center gap-2 pt-2 border-t">
               <Select
@@ -138,11 +138,7 @@ export const DailyGoalTaskItem = ({
             <Spinner className="h-3.5 w-3.5" />
           ) : (
             <>
-              <FireIcon
-                goalId={goal._id}
-                isOnFire={effectiveIsOnFire}
-                toggleFireStatus={effectiveToggleFireStatus}
-              />
+              <FireIcon goalId={goal._id} className="" />
               <GoalEditPopover
                 title={title}
                 details={details}

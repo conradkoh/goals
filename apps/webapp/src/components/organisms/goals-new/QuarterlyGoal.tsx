@@ -99,28 +99,11 @@ export function QuarterlyGoal({
 
           {/* View Mode */}
           <GoalDetailsPopover
-            title={goal.title}
-            details={goal.details}
+            goal={goal}
             onSave={handleSaveTitle}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             titleClassName="text-gray-600 flex items-center"
-            additionalContent={
-              <div className="flex items-center space-x-2 pt-2 border-t">
-                <Checkbox
-                  id={`complete-${goal._id}`}
-                  checked={isComplete}
-                  onCheckedChange={(checked) =>
-                    handleToggleCompletion(checked === true)
-                  }
-                />
-                <label
-                  htmlFor={`complete-${goal._id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Mark as complete
-                </label>
-              </div>
-            }
+            onToggleComplete={handleToggleCompletion}
           />
 
           {/* Edit Mode */}

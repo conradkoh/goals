@@ -165,8 +165,6 @@ const FocusModeDailyViewInner = ({
         selectedDayOfWeek={selectedDayOfWeek}
         onUpdateGoalTitle={handleUpdateGoalTitle}
         onDeleteGoal={handleDeleteGoal}
-        fireGoals={fireGoals}
-        toggleFireStatus={toggleFireStatus}
         isFocusModeEnabled={isFocusModeEnabled}
         toggleFocusMode={toggleFocusMode}
       />
@@ -178,8 +176,6 @@ const FocusModeDailyViewInner = ({
             year={year}
             quarter={quarter}
             selectedDayOfWeek={selectedDayOfWeek}
-            fireGoals={fireGoals}
-            toggleFireStatus={toggleFireStatus}
           />
         </div>
       )}

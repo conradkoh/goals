@@ -16,6 +16,7 @@ import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { useCallback } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { useFireGoalStatus } from '@/contexts/FireGoalsContext';
 
 export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
@@ -24,19 +25,18 @@ export interface WeeklyGoalTaskItemProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  isOnFire?: boolean;
-  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const WeeklyGoalTaskItem = ({
   goal,
   onUpdateTitle,
-  isOnFire = false,
-  toggleFireStatus,
 }: WeeklyGoalTaskItemProps) => {
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.state?.isComplete ?? false;
+
+  // Use the custom hook for fire goal status
+  const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
 
   const handleToggleCompletion = useCallback(
     async (newState: boolean) => {
@@ -48,7 +48,7 @@ export const WeeklyGoalTaskItem = ({
       });
 
       // If the goal is marked as complete and it's on fire, remove it from the onFire section
-      if (newState && isOnFire && toggleFireStatus) {
+      if (newState && isOnFire) {
         toggleFireStatus(goal._id);
       }
     },
@@ -81,10 +81,10 @@ export const WeeklyGoalTaskItem = ({
           />
 
           <GoalDetailsPopover
-            title={goal.title}
-            details={goal.details}
+            goal={goal}
             onSave={handleUpdateTitle}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            onToggleComplete={handleToggleCompletion}
           />
 
           <div className="flex items-center gap-1">
@@ -92,13 +92,7 @@ export const WeeklyGoalTaskItem = ({
               <Spinner className="h-4 w-4" />
             ) : (
               <>
-                {toggleFireStatus && (
-                  <FireIcon
-                    goalId={goal._id}
-                    isOnFire={isOnFire}
-                    toggleFireStatus={toggleFireStatus}
-                  />
-                )}
+                <FireIcon goalId={goal._id} />
                 <GoalEditPopover
                   title={goal.title}
                   details={goal.details}

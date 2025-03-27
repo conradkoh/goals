@@ -22,6 +22,20 @@ export const useFireGoals = (): FireGoalsContextType => {
   return context;
 };
 
+/**
+ * A hook to simplify working with fire goal status for a specific goal
+ * @param goalId The ID of the goal to check
+ * @returns Object with isOnFire status and toggleFireStatus function for the goal
+ */
+export const useFireGoalStatus = (goalId: Id<'goals'>) => {
+  const { isOnFire, toggleFireStatus } = useFireGoals();
+
+  return {
+    isOnFire: isOnFire(goalId),
+    toggleFireStatus: (id: Id<'goals'>) => toggleFireStatus(id),
+  };
+};
+
 interface FireGoalsProviderProps {
   children: ReactNode;
 }

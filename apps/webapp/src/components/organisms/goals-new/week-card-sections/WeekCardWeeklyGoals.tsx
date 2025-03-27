@@ -147,12 +147,12 @@ const WeeklyGoal = ({
 
             {/* View Mode */}
             <GoalDetailsPopover
-              title={goal.title}
-              details={goal.details}
+              goal={goal}
               onSave={async (title, details) => {
                 await onUpdateTitle(goal._id, title, details);
               }}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+              onToggleComplete={handleToggleCompletion}
             />
 
             <div className="flex items-center gap-1">
@@ -160,11 +160,7 @@ const WeeklyGoal = ({
                 <Spinner className="h-4 w-4" />
               ) : (
                 <>
-                  <FireIcon
-                    goalId={goal._id}
-                    isOnFire={isOnFire}
-                    toggleFireStatus={toggleFireStatus}
-                  />
+                  <FireIcon goalId={goal._id} />
                   <GoalEditPopover
                     title={goal.title}
                     details={goal.details}
@@ -320,8 +316,12 @@ export const WeekCardWeeklyGoals = forwardRef<
   HTMLDivElement,
   WeekCardWeeklyGoalsProps
 >(({ weekNumber, year, quarter, isLoading = false }, ref) => {
-  const { updateQuarterlyGoalTitle } = useWeek();
-  const { quarterlyGoals, deleteGoalOptimistic } = useWeek();
+  const {
+    updateQuarterlyGoalTitle,
+    quarterlyGoals,
+    deleteGoalOptimistic,
+    toggleGoalCompletion,
+  } = useWeek();
 
   // Filter and sort important quarterly goals
   const importantQuarterlyGoals = useMemo(() => {
@@ -367,6 +367,19 @@ export const WeekCardWeeklyGoals = forwardRef<
     [deleteGoalOptimistic]
   );
 
+  // Move handleToggleQuarterlyCompletion outside the map function
+  const handleToggleQuarterlyCompletion = useCallback(
+    async (goalId: Id<'goals'>, newState: boolean) => {
+      await toggleGoalCompletion({
+        goalId,
+        weekNumber,
+        isComplete: newState,
+        updateChildren: false,
+      });
+    },
+    [weekNumber, toggleGoalCompletion]
+  );
+
   // If loading, show skeleton
   if (isLoading) {
     return <WeeklyGoalsSkeleton />;
@@ -384,6 +397,7 @@ export const WeekCardWeeklyGoals = forwardRef<
             const weeklyGoals = goal.children;
             const isStarred = goal.state?.isStarred ?? false;
             const isPinned = goal.state?.isPinned ?? false;
+            const isComplete = goal.state?.isComplete ?? false;
             const isAllWeeklyGoalsComplete =
               weeklyGoals.length > 0 &&
               weeklyGoals.every((goal) => goal.state?.isComplete);
@@ -403,53 +417,20 @@ export const WeekCardWeeklyGoals = forwardRef<
                       (isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50')
                   )}
                 >
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
-                      >
-                        <span className="break-words w-full whitespace-pre-wrap">
-                          {goal.title}
-                        </span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[400px] p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between">
-                          <h3 className="font-semibold break-words flex-1 mr-2">
-                            {goal.title}
-                          </h3>
-                          <GoalEditPopover
-                            title={goal.title}
-                            details={goal.details}
-                            onSave={async (title, details) => {
-                              await handleUpdateWeeklyGoalTitle(
-                                goal._id,
-                                title,
-                                details
-                              );
-                            }}
-                            trigger={
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            }
-                          />
-                        </div>
-                        {goal.details && (
-                          <GoalDetailsContent
-                            title={goal.title}
-                            details={goal.details}
-                          />
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  <GoalDetailsPopover
+                    goal={goal}
+                    onSave={async (title, details) => {
+                      await handleUpdateWeeklyGoalTitle(
+                        goal._id,
+                        title,
+                        details
+                      );
+                    }}
+                    triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
+                    onToggleComplete={(newState) =>
+                      handleToggleQuarterlyCompletion(goal._id, newState)
+                    }
+                  />
                 </div>
                 <WeeklyGoalGroup
                   quarterlyGoal={goal}

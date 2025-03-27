@@ -1,20 +1,17 @@
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFireGoalStatus } from '@/contexts/FireGoalsContext';
 
 interface FireIconProps {
   goalId: Id<'goals'>;
   className?: string;
-  isOnFire: boolean;
-  toggleFireStatus: (goalId: Id<'goals'>) => void;
 }
 
-export const FireIcon: React.FC<FireIconProps> = ({
-  goalId,
-  className,
-  isOnFire,
-  toggleFireStatus,
-}) => {
+export const FireIcon: React.FC<FireIconProps> = ({ goalId, className }) => {
+  // Use the custom hook for fire goal status
+  const { isOnFire, toggleFireStatus } = useFireGoalStatus(goalId);
+
   return (
     <button
       onClick={(e) => {

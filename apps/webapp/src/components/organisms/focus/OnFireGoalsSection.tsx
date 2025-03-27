@@ -9,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useFireGoals } from '@/contexts/FireGoalsContext';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -29,8 +30,6 @@ interface OnFireGoalsSectionProps {
     details?: string
   ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
-  fireGoals: Set<string>;
-  toggleFireStatus: (goalId: Id<'goals'>) => void;
   isFocusModeEnabled?: boolean;
   toggleFocusMode?: () => void;
 }
@@ -40,12 +39,11 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   selectedDayOfWeek,
   onUpdateGoalTitle,
   onDeleteGoal,
-  fireGoals,
-  toggleFireStatus,
   isFocusModeEnabled = false,
   toggleFocusMode,
 }) => {
   const { weeklyGoals, toggleGoalCompletion, weekNumber } = useWeek();
+  const { fireGoals, toggleFireStatus } = useFireGoals();
 
   // Group on-fire goals by quarterly goal
   const onFireGoalsByQuarterly = useMemo(() => {
@@ -280,8 +278,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                   <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                 )}
                 <GoalDetailsPopover
-                  title={quarterlyGoal.title}
-                  details={quarterlyGoal.details}
+                  goal={quarterlyGoal}
                   onSave={(title, details) =>
                     handleUpdateGoalTitle(quarterlyGoal._id, title, details)
                   }
@@ -290,26 +287,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     'break-words w-full whitespace-pre-wrap flex items-center',
                     quarterlyGoal.state?.isComplete ? 'flex items-center' : ''
                   )}
-                  additionalContent={
-                    <div className="flex items-center space-x-2 pt-2 border-t">
-                      <Checkbox
-                        id={`complete-onfire-${quarterlyGoal._id}`}
-                        checked={quarterlyGoal.state?.isComplete ?? false}
-                        onCheckedChange={(checked) =>
-                          handleToggleGoalCompletion(
-                            quarterlyGoal._id,
-                            checked === true
-                          )
-                        }
-                      />
-                      <label
-                        htmlFor={`complete-onfire-${quarterlyGoal._id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        Mark as complete
-                      </label>
-                    </div>
-                  }
                 />
               </div>
 
@@ -326,8 +303,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                       <WeeklyGoalTaskItem
                         goal={weeklyGoal}
                         onUpdateTitle={handleUpdateGoalTitle}
-                        isOnFire={true}
-                        toggleFireStatus={toggleFireStatus}
                       />
                     </div>
                   ))}
@@ -341,8 +316,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                       {!isWeeklyOnFire && dailyGoals.length > 0 && (
                         <div className="mb-1">
                           <GoalDetailsPopover
-                            title={weeklyGoal.title}
-                            details={weeklyGoal.details}
+                            goal={weeklyGoal}
                             onSave={(title, details) =>
                               handleUpdateGoalTitle(
                                 weeklyGoal._id,
@@ -363,8 +337,6 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                               key={dailyGoal._id.toString()}
                               goal={dailyGoal}
                               onUpdateTitle={handleUpdateGoalTitle}
-                              isOnFire={true}
-                              toggleFireStatus={toggleFireStatus}
                             />
                           ))}
                         </div>

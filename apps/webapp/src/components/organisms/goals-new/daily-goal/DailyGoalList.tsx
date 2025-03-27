@@ -17,6 +17,7 @@ import { Edit2, Pin, Star, Check } from 'lucide-react';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
 import { useWeek } from '@/hooks/useWeek';
 import { Checkbox } from '@/components/ui/checkbox';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -182,44 +183,19 @@ export const DailyGoalGroupHeader = ({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            >
-              <span className="break-words w-full whitespace-pre-wrap">
-                {weeklyGoal.title}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold break-words flex-1 mr-2">
-                  {weeklyGoal.title}
-                </h3>
-                <GoalEditPopover
-                  title={weeklyGoal.title}
-                  details={weeklyGoal.details}
-                  onSave={handleSaveWeeklyGoalTitle}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              </div>
-              {weeklyGoal.details && (
-                <SafeHTML html={weeklyGoal.details} className="mt-2 text-sm" />
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+        <GoalDetailsPopover
+          goal={weeklyGoal}
+          onSave={handleSaveWeeklyGoalTitle}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          onToggleComplete={async (newState) => {
+            await toggleGoalCompletion({
+              goalId: weeklyGoal._id,
+              weekNumber,
+              isComplete: newState,
+              updateChildren: false,
+            });
+          }}
+        />
       </div>
       <div className="flex items-center gap-1.5 text-sm text-gray-500">
         {isStarred && (
@@ -229,62 +205,12 @@ export const DailyGoalGroupHeader = ({
           <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
         )}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            >
-              <span className="break-words w-full whitespace-pre-wrap">
-                {quarterlyGoal.title}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold break-words flex-1 mr-2">
-                  {quarterlyGoal.title}
-                </h3>
-                <GoalEditPopover
-                  title={quarterlyGoal.title}
-                  details={quarterlyGoal.details}
-                  onSave={handleSaveQuarterlyGoalTitle}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              </div>
-              {quarterlyGoal.details && (
-                <SafeHTML
-                  html={quarterlyGoal.details}
-                  className="mt-2 text-sm"
-                />
-              )}
-              <div className="flex items-center space-x-2 pt-2 border-t">
-                <Checkbox
-                  id={`complete-group-${quarterlyGoal._id}`}
-                  checked={isComplete}
-                  onCheckedChange={(checked) =>
-                    handleToggleCompletion(checked === true)
-                  }
-                />
-                <label
-                  htmlFor={`complete-group-${quarterlyGoal._id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Mark as complete
-                </label>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <GoalDetailsPopover
+          goal={quarterlyGoal}
+          onSave={handleSaveQuarterlyGoalTitle}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          onToggleComplete={handleToggleCompletion}
+        />
       </div>
     </div>
   );

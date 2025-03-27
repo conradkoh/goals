@@ -80,8 +80,6 @@ interface WeeklyGoalSectionProps {
     title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
-  fireGoals?: Set<string>;
-  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 const WeeklyGoalSection = ({
@@ -95,17 +93,9 @@ const WeeklyGoalSection = ({
   onCreateDailyGoal,
   onCreateWeeklyGoal,
   isCreating,
-  fireGoals,
-  toggleFireStatus,
 }: WeeklyGoalSectionProps) => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
-
-  // Use the FireGoals context as a fallback
-  const fireGoalsContext = useFireGoals();
-  const effectiveFireGoals = fireGoals || fireGoalsContext.fireGoals;
-  const effectiveToggleFireStatus =
-    toggleFireStatus || fireGoalsContext.toggleFireStatus;
 
   // Filter daily goals for this day of week
   const dailyGoals = weeklyGoal.children.filter(
@@ -122,12 +112,15 @@ const WeeklyGoalSection = ({
   const sortedDailyGoals = sortDailyGoals(dailyGoals);
 
   // Handle saving edits
-  const handleSave = async (title: string, details?: string) => {
-    await onUpdateTitle(weeklyGoal._id, title, details);
-  };
+  const handleSave = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateTitle(weeklyGoal._id, title, details);
+    },
+    [weeklyGoal._id, onUpdateTitle]
+  );
 
   // Handle creating a new daily goal
-  const handleCreateGoal = async () => {
+  const handleCreateGoal = useCallback(async () => {
     if (newTaskTitle.trim() === '') return;
     setIsAddingTask(true);
     try {
@@ -138,7 +131,7 @@ const WeeklyGoalSection = ({
     } finally {
       setIsAddingTask(false);
     }
-  };
+  }, [weeklyGoal._id, newTaskTitle, onCreateDailyGoal]);
 
   // Determine if we should show the add task input
   // In focus mode, always show. In plan mode, only show when the user is adding a task
@@ -147,22 +140,15 @@ const WeeklyGoalSection = ({
   return (
     <div>
       <GoalDetailsPopover
-        title={weeklyGoal.title}
-        details={weeklyGoal.details}
+        goal={weeklyGoal}
         onSave={handleSave}
+        triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
       />
 
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
           <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalTaskItem
-              goal={dailyGoal}
-              onUpdateTitle={onUpdateTitle}
-              isOnFire={
-                effectiveFireGoals?.has(dailyGoal._id.toString()) || false
-              }
-              toggleFireStatus={effectiveToggleFireStatus}
-            />
+            <DailyGoalTaskItem goal={dailyGoal} onUpdateTitle={onUpdateTitle} />
           </div>
         ))}
 
@@ -203,8 +189,6 @@ interface QuarterlyGoalSectionProps {
     title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
-  fireGoals?: Set<string>;
-  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 const QuarterlyGoalSection = ({
@@ -218,15 +202,7 @@ const QuarterlyGoalSection = ({
   onCreateDailyGoal,
   onCreateWeeklyGoal,
   isCreating,
-  fireGoals,
-  toggleFireStatus,
 }: QuarterlyGoalSectionProps) => {
-  // Use the FireGoals context as a fallback
-  const fireGoalsContext = useFireGoals();
-  const effectiveFireGoals = fireGoals || fireGoalsContext.fireGoals;
-  const effectiveToggleFireStatus =
-    toggleFireStatus || fireGoalsContext.toggleFireStatus;
-
   const isStarred = useMemo(
     () => quarterlyGoal.state?.isStarred ?? false,
     [quarterlyGoal.state?.isStarred]
@@ -339,10 +315,6 @@ const QuarterlyGoalSection = ({
                 key={weeklyGoal._id.toString()}
                 goal={weeklyGoal}
                 onUpdateTitle={onUpdateTitle}
-                isOnFire={
-                  effectiveFireGoals?.has(weeklyGoal._id.toString()) || false
-                }
-                toggleFireStatus={effectiveToggleFireStatus}
               />
             ))}
             <AddTaskInput
@@ -366,8 +338,6 @@ const QuarterlyGoalSection = ({
               onCreateDailyGoal={onCreateDailyGoal}
               onCreateWeeklyGoal={onCreateWeeklyGoal}
               isCreating={isCreating}
-              fireGoals={effectiveFireGoals}
-              toggleFireStatus={effectiveToggleFireStatus}
             />
           ))}
         </div>
@@ -404,8 +374,6 @@ export interface DayContainerProps {
     goals: GoalWithDetailsAndChildren[]
   ) => GoalWithDetailsAndChildren[];
   mode?: DayContainerMode;
-  fireGoals?: Set<string>;
-  toggleFireStatus?: (goalId: Id<'goals'>) => void;
 }
 
 export const DayContainer = ({
@@ -420,17 +388,7 @@ export const DayContainer = ({
   isCreating = {},
   sortDailyGoals,
   mode = 'plan',
-  fireGoals: propFireGoals,
-  toggleFireStatus: propToggleFireStatus,
 }: DayContainerProps) => {
-  // Get fireGoals from context if not provided as props
-  const {
-    fireGoals: contextFireGoals,
-    toggleFireStatus: contextToggleFireStatus,
-  } = useFireGoals();
-  const fireGoals = propFireGoals || contextFireGoals;
-  const toggleFireStatus = propToggleFireStatus || contextToggleFireStatus;
-
   // Memoize the callback functions to prevent unnecessary re-renders
   const handleUpdateGoalTitle = useCallback(
     (goalId: Id<'goals'>, title: string, details?: string) => {
@@ -527,8 +485,6 @@ export const DayContainer = ({
               onCreateDailyGoal={handleCreateDailyGoal}
               onCreateWeeklyGoal={handleCreateWeeklyGoal}
               isCreating={isCreating}
-              fireGoals={fireGoals}
-              toggleFireStatus={toggleFireStatus}
             />
           )
         )}
