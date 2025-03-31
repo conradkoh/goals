@@ -8,12 +8,16 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { Edit2 } from 'lucide-react';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek } from '@/lib/constants';
+import { DateTime } from 'luxon';
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
@@ -34,13 +38,62 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   additionalContent,
   onToggleComplete,
 }) => {
-  // Determine if we should show child goals based on depth
+  const {
+    weekNumber,
+    year,
+    createWeeklyGoalOptimistic,
+    createDailyGoalOptimistic,
+  } = useWeek();
+
+  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
+  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
+  const [selectedDayOfWeek] = useState<DayOfWeek>(DayOfWeek.MONDAY);
+
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
   const isWeeklyGoal = goal?.depth === 1;
   const isComplete = goal.state?.isComplete ?? false;
 
-  // Create the popover content that will be wrapped with FireGoalsProvider
+  const handleCreateWeeklyGoal = async () => {
+    const trimmedTitle = newWeeklyGoalTitle.trim();
+    if (trimmedTitle && isQuarterlyGoal) {
+      try {
+        setNewWeeklyGoalTitle('');
+        await createWeeklyGoalOptimistic(goal._id, trimmedTitle);
+      } catch (error) {
+        console.error('Failed to create weekly goal:', error);
+        setNewWeeklyGoalTitle(trimmedTitle);
+      }
+    }
+  };
+
+  const handleCreateDailyGoal = async () => {
+    const trimmedTitle = newDailyGoalTitle.trim();
+    if (trimmedTitle && isWeeklyGoal) {
+      try {
+        setNewDailyGoalTitle('');
+
+        const dateTimestamp = DateTime.fromObject({
+          weekNumber,
+          weekYear: year,
+        })
+          .startOf('week')
+          .plus({ days: selectedDayOfWeek - 1 })
+          .toMillis();
+
+        await createDailyGoalOptimistic(
+          goal._id,
+          trimmedTitle,
+          selectedDayOfWeek,
+          dateTimestamp
+        );
+      } catch (error) {
+        console.error('Failed to create daily goal:', error);
+        setNewDailyGoalTitle(trimmedTitle);
+      }
+    }
+  };
+
   const popoverContent = (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
@@ -72,7 +125,6 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         />
       </div>
 
-      {/* Details section */}
       {goal.details && (
         <>
           <Separator className="my-2" />
@@ -82,34 +134,58 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         </>
       )}
 
-      {/* Additional content section */}
       {additionalContent && (
         <>
-          {/* Only add separator if there's content above */}
           <Separator className="my-2" />
           <div className="pt-1">{additionalContent}</div>
         </>
       )}
 
-      {/* Child goals section */}
       {shouldShowChildGoals &&
         goal &&
-        goal.children &&
-        goal.children.length > 0 && (
+        ((goal.children && goal.children.length > 0) ||
+          isQuarterlyGoal ||
+          isWeeklyGoal) && (
           <>
             <Separator className="my-2" />
-            <div className="pt-1">
+            <div className="pt-1 space-y-3">
               {isQuarterlyGoal && (
-                <GoalDetailsChildrenList
-                  parentGoal={goal}
-                  title="Weekly Goals"
-                />
+                <>
+                  {goal.children && goal.children.length > 0 && (
+                    <GoalDetailsChildrenList
+                      parentGoal={goal}
+                      title="Weekly Goals"
+                    />
+                  )}
+                  <div className="pl-4 pt-1">
+                    <CreateGoalInput
+                      placeholder="Add a new weekly goal..."
+                      value={newWeeklyGoalTitle}
+                      onChange={setNewWeeklyGoalTitle}
+                      onSubmit={handleCreateWeeklyGoal}
+                      onEscape={() => setNewWeeklyGoalTitle('')}
+                    />
+                  </div>
+                </>
               )}
               {isWeeklyGoal && (
-                <GoalDetailsChildrenList
-                  parentGoal={goal}
-                  title="Daily Goals"
-                />
+                <>
+                  {goal.children && goal.children.length > 0 && (
+                    <GoalDetailsChildrenList
+                      parentGoal={goal}
+                      title="Daily Goals"
+                    />
+                  )}
+                  <div className="pl-4 pt-1">
+                    <CreateGoalInput
+                      placeholder="Add a new daily goal..."
+                      value={newDailyGoalTitle}
+                      onChange={setNewDailyGoalTitle}
+                      onSubmit={handleCreateDailyGoal}
+                      onEscape={() => setNewDailyGoalTitle('')}
+                    />
+                  </div>
+                </>
               )}
             </div>
           </>
