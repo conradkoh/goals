@@ -4,7 +4,7 @@ import { Doc, Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { ConvexError } from 'convex/values';
 import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
-import { getNextPath, joinPath } from '../src/util/path';
+import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
 import { DateTime } from 'luxon';
 import { DayOfWeek, getDayName } from '../src/constants';
 import { api } from './_generated/api';
@@ -75,6 +75,16 @@ export const createQuarterlyGoal = mutation({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
+    // Validate the path for quarterly goals
+    const inPath = '/';
+    const depth = 0;
+    if (!validateGoalPath(depth, inPath)) {
+      throw new ConvexError({
+        code: 'INVALID_STATE',
+        message: `Invalid path "${inPath}" for quarterly goal`,
+      });
+    }
+
     // Create the quarterly goal
     const goalId = await ctx.db.insert('goals', {
       userId,
@@ -82,8 +92,8 @@ export const createQuarterlyGoal = mutation({
       quarter,
       title,
       details,
-      inPath: '/',
-      depth: 0, // 0 for quarterly goals
+      inPath,
+      depth, // 0 for quarterly goals
     });
 
     // Calculate all week numbers in this quarter
@@ -240,6 +250,23 @@ export const createWeeklyGoal = mutation({
     if (!parentGoal) {
       throw new ConvexError('Parent goal not found');
     }
+    if (parentGoal.depth !== 0) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Parent must be a quarterly goal (depth 0)',
+      });
+    }
+
+    // Construct the path
+    const inPath = joinPath('/', parentGoal._id);
+
+    // Validate the path
+    if (!validateGoalPath(1, inPath)) {
+      throw new ConvexError({
+        code: 'INVALID_STATE',
+        message: `Invalid path "${inPath}" for weekly goal`,
+      });
+    }
 
     // Create the weekly goal
     const goalId = await ctx.db.insert('goals', {
@@ -249,10 +276,7 @@ export const createWeeklyGoal = mutation({
       title,
       details,
       parentId,
-      inPath:
-        parentGoal.inPath === '/'
-          ? `/${parentGoal._id}`
-          : parentGoal.inPath + '/' + parentGoal._id,
+      inPath,
       depth: 1, // 1 for weekly goals
     });
 
@@ -297,28 +321,55 @@ export const createDailyGoal = mutation({
     }
     const { userId } = session;
 
-    const parentGoal = await ctx.db.get(args.parentId);
-    if (!parentGoal) {
+    // Get the weekly parent goal
+    const weeklyParent = await ctx.db.get(args.parentId);
+    if (!weeklyParent) {
       throw new Error('Parent goal not found');
+    }
+    if (weeklyParent.depth !== 1) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Parent must be a weekly goal (depth 1)',
+      });
+    }
+
+    // Get the quarterly parent goal
+    const quarterlyParentId = weeklyParent.parentId;
+    if (!quarterlyParentId) {
+      throw new ConvexError({
+        code: 'INVALID_STATE',
+        message: 'Weekly goal has no quarterly parent',
+      });
+    }
+
+    // Construct the path
+    const inPath = joinPath('/', quarterlyParentId, weeklyParent._id);
+
+    // Validate the path
+    if (!validateGoalPath(2, inPath)) {
+      throw new ConvexError({
+        code: 'INVALID_STATE',
+        message: `Invalid path "${inPath}" for daily goal`,
+      });
     }
 
     // Create the goal
     const goalId = await ctx.db.insert('goals', {
       userId,
-      year: parentGoal.year,
-      quarter: parentGoal.quarter,
+      year: weeklyParent.year,
+      quarter: weeklyParent.quarter,
       title: args.title,
       details: args.details,
       parentId: args.parentId,
-      inPath: joinPath(parentGoal.inPath, parentGoal._id),
+      inPath,
       depth: 2, // Daily goals are depth 2
     });
 
     // Create the weekly goal data
     await ctx.db.insert('goalStateByWeek', {
       userId,
-      year: parentGoal.year,
-      quarter: parentGoal.quarter,
+      year: weeklyParent.year,
+      quarter: weeklyParent.quarter,
       weekNumber: args.weekNumber,
       goalId,
       isStarred: false,
