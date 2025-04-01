@@ -586,22 +586,22 @@ export const moveGoalsFromQuarter = action({
       };
     }
 
-    // === STAGE 2: If not a dry run, migrate each goal individually ===
-    const migrationResults = await Promise.all(
-      quarterlyGoals.map(async (goal: QuarterlyGoalPreview) => {
-        try {
-          return await ctx.runMutation(api.goal.moveQuarterlyGoal, {
-            sessionId,
-            goalId: goal.id,
-            from,
-            to,
-          });
-        } catch (error) {
-          console.error(`Failed to migrate goal ${goal.id}:`, error);
-          return { error: `Failed to migrate goal: ${error}` };
-        }
-      })
-    );
+    // === STAGE 2: If not a dry run, migrate each goal SEQUENTIALLY ===
+    const migrationResults = [];
+    for (const goal of quarterlyGoals) {
+      try {
+        const result = await ctx.runMutation(api.goal.moveQuarterlyGoal, {
+          sessionId,
+          goalId: goal.id,
+          from,
+          to,
+        });
+        migrationResults.push(result);
+      } catch (error) {
+        console.error(`Failed to migrate goal ${goal.id}:`, error);
+        migrationResults.push({ error: `Failed to migrate goal: ${error}` });
+      }
+    }
 
     return {
       quarterlyGoalsToCopy: quarterlyGoals,
