@@ -192,8 +192,9 @@ export const QuarterGoalMovePreview = ({
                       <span className="font-medium text-gray-900">
                         Weekly Goals
                       </span>{' '}
-                      that are incomplete will be copied to this quarter with
-                      their weekly assignments
+                      that are incomplete from the final week of the previous
+                      quarter (e.g., week 13 for Q1) will be copied to this
+                      quarter with their weekly assignments
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
@@ -204,7 +205,8 @@ export const QuarterGoalMovePreview = ({
                       <span className="font-medium text-gray-900">
                         Daily Goals
                       </span>{' '}
-                      that are incomplete will be copied with their day
+                      that are associated with moved weekly goals from the final
+                      week and are incomplete will be copied with their day
                       assignments
                     </p>
                   </div>

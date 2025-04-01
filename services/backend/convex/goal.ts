@@ -14,6 +14,13 @@ import { getNextPath, joinPath } from '../src/util/path';
 import { ConvexError } from 'convex/values';
 import { api } from './_generated/api';
 import { DateTime } from 'luxon';
+import {
+  getQuarterDateRange,
+  getFirstWeekOfQuarter,
+  getFinalWeeksOfQuarter,
+  isInFinalWeeks,
+  debugQuarterCalculations,
+} from '../src/usecase/quarter';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -521,9 +528,10 @@ export const moveGoalsFromQuarter = action({
       quarter: v.number(),
     }),
     dryRun: v.optional(v.boolean()),
+    debug: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<any> => {
-    const { sessionId, from, to, dryRun = false } = args;
+    const { sessionId, from, to, dryRun = false, debug = false } = args;
     // Auth check
     const user = await ctx.runQuery(api.auth.getUser, { sessionId });
     if (!user) {
@@ -537,6 +545,27 @@ export const moveGoalsFromQuarter = action({
     // Validate that we're not moving goals to the same quarter
     if (from.year === to.year && from.quarter === to.quarter) {
       throw new ConvexError('Cannot move goals to the same quarter');
+    }
+
+    // Debug log information about the quarters and weeks if debug flag is set
+    if (debug) {
+      const fromDateInfo = debugQuarterCalculations(
+        DateTime.local(from.year, (from.quarter - 1) * 3 + 1, 1)
+      );
+      const toDateInfo = debugQuarterCalculations(
+        DateTime.local(to.year, (to.quarter - 1) * 3 + 1, 1)
+      );
+
+      console.log('FROM QUARTER:', fromDateInfo.calendarInfo);
+      console.log(
+        'FROM QUARTER FINAL WEEKS:',
+        fromDateInfo.currentQuarter.finalWeeks
+      );
+      console.log('TO QUARTER:', toDateInfo.calendarInfo);
+      console.log(
+        'TO QUARTER FIRST WEEK:',
+        getFirstWeekOfQuarter(to.year, to.quarter)
+      );
     }
 
     // === STAGE 1: Query only for incomplete quarterly goals from the previous quarter ===
@@ -704,11 +733,19 @@ export const moveQuarterlyGoal = mutation({
     const firstState =
       quarterlyGoalStates.length > 0 ? quarterlyGoalStates[0] : null;
 
-    // Calculate week numbers for the target quarter
-    const startDate = DateTime.local(to.year, (to.quarter - 1) * 3 + 1, 1);
-    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-    const startWeek = startDate.weekNumber;
+    // Get the first week of the target quarter
+    const firstWeekInfo = getFirstWeekOfQuarter(to.year, to.quarter);
+    const startWeek = firstWeekInfo.weekNumber;
+
+    // Get date range for the target quarter to calculate all weeks
+    const { startDate, endDate } = getQuarterDateRange(to.year, to.quarter);
     const endWeek = endDate.weekNumber;
+
+    // Get the final weeks of the source quarter for filtering weekly goals
+    const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(
+      from.year,
+      from.quarter
+    );
 
     // Create a new quarterly goal in the target quarter
     const newQuarterlyGoalId = await ctx.db.insert('goals', {
@@ -779,12 +816,38 @@ export const moveQuarterlyGoal = mutation({
       )
       .collect();
 
-    // Filter for incomplete weekly goals
+    // First, group goal states by goal ID for more efficient processing
+    const statesByGoalId = weeklyGoalStates.reduce(
+      (acc: Record<Id<'goals'>, any[]>, state: any) => {
+        if (!acc[state.goalId]) {
+          acc[state.goalId] = [];
+        }
+        acc[state.goalId].push(state);
+        return acc;
+      },
+      {} as Record<Id<'goals'>, any[]>
+    );
+
+    // Filter for incomplete weekly goals from the FINAL WEEK(S) of the quarter only
     const incompleteWeeklyGoals = weeklyGoals.filter((goal) => {
-      const states = weeklyGoalStates.filter(
-        (state) => state.goalId === goal._id
+      const states = statesByGoalId[goal._id] || [];
+
+      // A goal can appear in multiple weeks - we only want to migrate it
+      // if it's in any of the final weeks of the quarter and is incomplete
+
+      // Check if any states match our final weeks of the quarter
+      const finalWeekStates = states.filter((state: any) =>
+        isInFinalWeeks(
+          { weekNumber: state.weekNumber, year: state.year },
+          finalWeeksOfSourceQuarter
+        )
       );
-      return states.length === 0 || states.some((state) => !state.isComplete);
+
+      // Only include if there are states in the final weeks and at least one is incomplete
+      return (
+        finalWeekStates.length > 0 &&
+        finalWeekStates.some((state: any) => !state.isComplete)
+      );
     });
 
     // Copy each incomplete weekly goal in parallel

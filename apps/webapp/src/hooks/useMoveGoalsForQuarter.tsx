@@ -153,7 +153,7 @@ export const useMoveGoalsForQuarter = ({
       setShowConfirmDialog(false);
       toast({
         title: 'Goals moved',
-        description: `Moved incomplete goals from Q${prevQuarter.quarter} ${prevQuarter.year} to Q${quarter} ${year}.`,
+        description: `Moved incomplete goals from the final week of Q${prevQuarter.quarter} ${prevQuarter.year} to Q${quarter} ${year}.`,
         variant: 'default',
       });
     } catch (error) {
