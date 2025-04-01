@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { useMutation } from 'convex/react';
+import { useAction } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
+import { Id } from '@services/backend/convex/_generated/dataModel';
 import { DayOfWeek } from '@services/backend/src/constants';
 import { useSession } from '@/modules/auth/useSession';
 import { toast } from '../components/ui/use-toast';
-import { Id } from '@services/backend/convex/_generated/dataModel';
 import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
 
 // Types for the return values from the preview call
@@ -60,9 +60,6 @@ export const useMoveGoalsForQuarter = ({
   quarter,
 }: UseMoveGoalsForQuarterProps): UseMoveGoalsForQuarterReturn => {
   const { sessionId } = useSession();
-  const moveGoalsFromQuarterMutation = useMutation(
-    api.goal.moveGoalsFromQuarter
-  );
   const [isMovingGoals, setIsMovingGoals] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<{
@@ -70,6 +67,9 @@ export const useMoveGoalsForQuarter = ({
     weeklyGoals: WeeklyGoalToCopy[];
     dailyGoals: DailyGoalToCopy[];
   } | null>(null);
+
+  // Use the Convex action to move goals
+  const moveGoalsAction = useAction(api.goal.moveGoalsFromQuarter);
 
   // Determine if this is the first quarter
   const isFirstQuarter = quarter === 1 && year === new Date().getFullYear() - 1;
@@ -89,7 +89,12 @@ export const useMoveGoalsForQuarter = ({
     try {
       const prevQuarter = getPreviousQuarter();
 
-      const previewData = await moveGoalsFromQuarterMutation({
+      if (!sessionId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Use the new action instead of the mutation
+      const previewData = await moveGoalsAction({
         sessionId,
         from: {
           year: prevQuarter.year,
@@ -102,10 +107,13 @@ export const useMoveGoalsForQuarter = ({
         dryRun: true,
       });
 
+      // Adapt the response format for backward compatibility
       setPreview({
         quarterlyGoals: previewData.quarterlyGoalsToCopy || [],
-        weeklyGoals: previewData.weeklyGoalsToCopy || [],
-        dailyGoals: previewData.dailyGoalsToCopy || [],
+        // Since our new implementation only shows quarterly goals,
+        // provide empty arrays for weekly and daily goals
+        weeklyGoals: [],
+        dailyGoals: [],
       });
       setShowConfirmDialog(true);
     } catch (error) {
@@ -124,7 +132,12 @@ export const useMoveGoalsForQuarter = ({
       setIsMovingGoals(true);
       const prevQuarter = getPreviousQuarter();
 
-      const result = await moveGoalsFromQuarterMutation({
+      if (!sessionId) {
+        throw new Error('User not authenticated');
+      }
+
+      // Use the new action instead of the mutation
+      const result = await moveGoalsAction({
         sessionId,
         from: {
           year: prevQuarter.year,
@@ -178,3 +191,5 @@ export const useMoveGoalsForQuarter = ({
     dialog,
   };
 };
+
+export default useMoveGoalsForQuarter;
