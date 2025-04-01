@@ -9,6 +9,7 @@ import { DayOfWeek } from '@/lib/constants';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
 
 interface DashboardFocusViewProps {
   viewMode: ViewMode;
@@ -45,6 +46,17 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     selectedYear,
     selectedQuarter as 1 | 2 | 3 | 4
   );
+
+  // Use the hook for the "Pull from previous quarter" functionality
+  const {
+    isFirstQuarter,
+    isMovingGoals,
+    handlePreviewGoals,
+    dialog: quarterMoveDialog,
+  } = useMoveGoalsForQuarter({
+    year: selectedYear,
+    quarter: selectedQuarter as 1 | 2 | 3 | 4,
+  });
 
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
@@ -114,6 +126,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           selectedQuarter={selectedQuarter}
           onViewModeChange={onViewModeChange}
           onYearQuarterChange={onYearQuarterChange}
+          // Pass props for QuarterActionMenu
+          isFirstQuarter={isFirstQuarter}
+          isMovingGoals={isMovingGoals}
+          handlePreviewGoals={handlePreviewGoals}
         />
       </div>
       <div className="w-full h-full">
@@ -122,6 +138,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             <FocusModeQuarterlyView
               year={selectedYear}
               quarter={selectedQuarter}
+              hideActionMenu={true} /* Hide the existing action menu */
             />
           </div>
         )}
@@ -164,6 +181,9 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Render the quarter move dialog */}
+      {quarterMoveDialog}
     </div>
   );
 };

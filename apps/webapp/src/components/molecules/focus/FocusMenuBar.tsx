@@ -6,10 +6,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import { ViewMode } from '@/components/molecules/focus/constants';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 
 export type FocusMenuBarProps = {
   viewMode?: ViewMode;
@@ -23,6 +24,10 @@ export type FocusMenuBarProps = {
   selectedYear?: number;
   selectedQuarter?: 1 | 2 | 3 | 4;
   onYearQuarterChange?: (year: number, quarter: number) => void;
+  // Props for QuarterActionMenu
+  isFirstQuarter?: boolean;
+  isMovingGoals?: boolean;
+  handlePreviewGoals?: () => void;
 };
 
 /**
@@ -41,6 +46,10 @@ export const FocusMenuBar = ({
   selectedYear,
   selectedQuarter,
   onYearQuarterChange,
+  // QuarterActionMenu props
+  isFirstQuarter,
+  isMovingGoals,
+  handlePreviewGoals,
 }: FocusMenuBarProps) => {
   // Generate years (current year - 1 to current year + 2)
   const years = selectedYear
@@ -56,14 +65,27 @@ export const FocusMenuBar = ({
   // Show navigation controls for daily and weekly views
   const showNavigationControls = viewMode === 'daily' || viewMode === 'weekly';
 
+  // Only show the QuarterActionMenu in quarterly view
+  const showQuarterActionMenu = viewMode === 'quarterly' && handlePreviewGoals;
+
+  // Determine if the quarter action button should be disabled
+  const isActionMenuDisabled = isFirstQuarter || isMovingGoals;
+
+  // Tooltip content for the QuarterActionMenu
+  const tooltipContent = isFirstQuarter
+    ? 'Cannot pull goals from previous quarter as this is the first quarter'
+    : isMovingGoals
+    ? 'Moving goals...'
+    : "Can't pull from previous quarter";
+
   return (
     <div className="bg-background p-3 border-b">
       <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
         <div
           id="focus-menu-bar"
-          className="flex items-center justify-center sm:justify-start gap-3"
+          className="flex items-center justify-center w-full"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {showYearQuarterSelectors &&
               selectedYear &&
               selectedQuarter &&
@@ -163,6 +185,21 @@ export const FocusMenuBar = ({
                 <SelectItem value="daily">Daily View</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Quarter Action Menu - with vertical dots icon */}
+            {showQuarterActionMenu && (
+              <QuarterActionMenu
+                isDisabled={isActionMenuDisabled}
+                isFirstQuarter={isFirstQuarter}
+                isMovingGoals={isMovingGoals}
+                handlePreviewGoals={handlePreviewGoals}
+                tooltipContent={tooltipContent}
+                buttonSize="icon"
+                buttonVariant="ghost"
+                showLabel={false}
+                menuIcon={<MoreVertical className="h-4 w-4" />}
+              />
+            )}
           </div>
         </div>
       </div>
