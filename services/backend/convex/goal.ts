@@ -725,8 +725,9 @@ export const moveQuarterlyGoal = mutation({
     // Get quarterly goal states to check starred/pinned status
     const quarterlyGoalStates = await ctx.db
       .query('goalStateByWeek')
-      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
-      .filter((q) => q.eq(q.field('goalId'), goalId))
+      .withIndex('by_user_and_goal', (q) =>
+        q.eq('userId', userId).eq('goalId', goalId)
+      )
       .collect();
 
     // Find the first state to get starred/pinned info
