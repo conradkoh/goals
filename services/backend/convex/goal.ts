@@ -632,40 +632,59 @@ export const getIncompleteQuarterlyGoals = internalQuery({
       .filter((q) => q.eq(q.field('depth'), 0)) // Quarterly goals have depth 0
       .collect();
 
+    // Get the final weeks of the source quarter
+    const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(year, quarter);
+
+    // Find the latest week number from final weeks
+    const latestWeek = finalWeeksOfSourceQuarter.reduce(
+      (latest, week) => Math.max(latest, week.weekNumber),
+      0
+    );
+
     // Get the goal states for these quarterly goals to check completion status
     const quarterlyGoalIds = quarterlyGoals.map((goal) => goal._id);
     const quarterlyGoalStates = await ctx.db
       .query('goalStateByWeek')
-      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', year)
+          .eq('quarter', quarter)
+          .eq('weekNumber', latestWeek)
+      )
       .filter((q) =>
-        q.or(...quarterlyGoalIds.map((id) => q.eq(q.field('goalId'), id)))
+        q.and(
+          q.or(...quarterlyGoalIds.map((id) => q.eq(q.field('goalId'), id))),
+          q.eq(q.field('year'), year)
+        )
       )
       .collect();
 
-    // Group states by goal ID and check if all weeks are complete
+    // Create a map of goalId -> latest state to handle any duplicates
+    const latestStateByGoalId = quarterlyGoalStates.reduce((acc, state) => {
+      const existing = acc[state.goalId];
+      if (!existing || existing._creationTime < state._creationTime) {
+        acc[state.goalId] = state;
+      }
+      return acc;
+    }, {} as Record<Id<'goals'>, Doc<'goalStateByWeek'>>);
+
+    // Filter goals to only include those with an incomplete state in the latest week
+    // or those with no state in the latest week (which we consider incomplete)
     const incompleteQuarterlyGoals = quarterlyGoals.filter((goal) => {
-      const states = quarterlyGoalStates.filter(
-        (state) => state.goalId === goal._id
-      );
-      // A goal is incomplete if any of its states are incomplete
-      return states.length === 0 || states.some((state) => !state.isComplete);
+      const latestState = latestStateByGoalId[goal._id];
+      return latestState && !latestState.isComplete;
     });
 
     // Format response data
     return incompleteQuarterlyGoals.map((goal) => {
-      // Find the states for this goal
-      const states = quarterlyGoalStates.filter(
-        (state) => state.goalId === goal._id
-      );
-      // Use the first state to get starred/pinned info
-      const firstState = states.length > 0 ? states[0] : null;
-
+      const latestState = latestStateByGoalId[goal._id];
       return {
         id: goal._id,
         title: goal.title,
         details: goal.details,
-        isStarred: firstState?.isStarred || false,
-        isPinned: firstState?.isPinned || false,
+        isStarred: latestState?.isStarred || false,
+        isPinned: latestState?.isPinned || false,
       };
     });
   },
@@ -721,32 +740,45 @@ export const moveQuarterlyGoal = mutation({
         message: 'Goal does not belong to the specified source quarter',
       });
     }
+    // Get the final weeks of the source quarter for filtering weekly goals
+    const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(
+      from.year,
+      from.quarter
+    );
 
+    // Find the latest week number from final weeks
+    const latestWeek = finalWeeksOfSourceQuarter.reduce(
+      (latest, week) => Math.max(latest, week.weekNumber),
+      0
+    );
     // Get quarterly goal states to check starred/pinned status
     const quarterlyGoalStates = await ctx.db
       .query('goalStateByWeek')
-      .withIndex('by_user_and_goal', (q) =>
-        q.eq('userId', userId).eq('goalId', goalId)
+      .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('goalId', goalId)
+          .eq('year', from.year)
+          .eq('quarter', from.quarter)
+          .eq('weekNumber', latestWeek)
       )
       .collect();
 
     // Find the first state to get starred/pinned info
-    const firstState =
-      quarterlyGoalStates.length > 0 ? quarterlyGoalStates[0] : null;
+    const firstState = quarterlyGoalStates.reduce((first, state) => {
+      if (!first || state._creationTime < first._creationTime) {
+        return state;
+      }
+      return first;
+    }, null as Doc<'goalStateByWeek'> | null);
 
     // Get the first week of the target quarter
     const firstWeekInfo = getFirstWeekOfQuarter(to.year, to.quarter);
     const startWeek = firstWeekInfo.weekNumber;
 
     // Get date range for the target quarter to calculate all weeks
-    const { startDate, endDate } = getQuarterDateRange(to.year, to.quarter);
+    const { endDate } = getQuarterDateRange(to.year, to.quarter);
     const endWeek = endDate.weekNumber;
-
-    // Get the final weeks of the source quarter for filtering weekly goals
-    const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(
-      from.year,
-      from.quarter
-    );
 
     // Create a new quarterly goal in the target quarter
     const newQuarterlyGoalId = await ctx.db.insert('goals', {
@@ -807,48 +839,37 @@ export const moveQuarterlyGoal = mutation({
     // Create map to track new weekly goal IDs
     const weeklyGoalIdMap = new Map<Id<'goals'>, Id<'goals'>>();
 
-    // Find all weekly goals that are incomplete
+    // Find states for weekly goals in the latest week
     const weeklyGoalIds = weeklyGoals.map((goal) => goal._id);
     const weeklyGoalStates = await ctx.db
       .query('goalStateByWeek')
-      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
+      .withIndex('by_user_and_year_and_quarter_and_week_and_daily', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', from.year)
+          .eq('quarter', from.quarter)
+          .eq('weekNumber', latestWeek)
+      )
       .filter((q) =>
         q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id)))
       )
       .collect();
+    // Create a map of goalId -> latest state to handle any duplicates
+    const latestStateByGoalId = weeklyGoalStates.reduce((acc, state) => {
+      const existing = acc[state.goalId];
+      if (!existing || existing._creationTime < state._creationTime) {
+        acc[state.goalId] = state;
+      }
+      return acc;
+    }, {} as Record<Id<'goals'>, Doc<'goalStateByWeek'>>);
 
-    // First, group goal states by goal ID for more efficient processing
-    const statesByGoalId = weeklyGoalStates.reduce(
-      (acc: Record<Id<'goals'>, any[]>, state: any) => {
-        if (!acc[state.goalId]) {
-          acc[state.goalId] = [];
-        }
-        acc[state.goalId].push(state);
-        return acc;
-      },
-      {} as Record<Id<'goals'>, any[]>
-    );
-
-    // Filter for incomplete weekly goals from the FINAL WEEK(S) of the quarter only
+    // Filter for incomplete weekly goals from the latest week
     const incompleteWeeklyGoals = weeklyGoals.filter((goal) => {
-      const states = statesByGoalId[goal._id] || [];
-
-      // A goal can appear in multiple weeks - we only want to migrate it
-      // if it's in any of the final weeks of the quarter and is incomplete
-
-      // Check if any states match our final weeks of the quarter
-      const finalWeekStates = states.filter((state: any) =>
-        isInFinalWeeks(
-          { weekNumber: state.weekNumber, year: state.year },
-          finalWeeksOfSourceQuarter
-        )
-      );
-
-      // Only include if there are states in the final weeks and at least one is incomplete
-      return (
-        finalWeekStates.length > 0 &&
-        finalWeekStates.some((state: any) => !state.isComplete)
-      );
+      const latestState = latestStateByGoalId[goal._id];
+      if (latestState === undefined) {
+        console.error('failed to find state for goal: ', goal._id);
+      }
+      return latestState && !latestState.isComplete;
     });
 
     // Copy each incomplete weekly goal in parallel
@@ -918,7 +939,7 @@ export const moveQuarterlyGoal = mutation({
         )
         .collect();
 
-      // Find states for these daily goals
+      // Find states for daily goals in the latest week
       const dailyGoalIds = dailyGoals.map((goal) => goal._id);
       if (dailyGoalIds.length === 0) return;
 
@@ -926,25 +947,47 @@ export const moveQuarterlyGoal = mutation({
         .query('goalStateByWeek')
         .withIndex('by_user_and_goal', (q) => q.eq('userId', userId))
         .filter((q) =>
-          q.or(...dailyGoalIds.map((id) => q.eq(q.field('goalId'), id)))
+          q.and(
+            q.or(...dailyGoalIds.map((id) => q.eq(q.field('goalId'), id))),
+            q.eq(q.field('weekNumber'), latestWeek),
+            q.eq(q.field('year'), from.year)
+          )
         )
         .collect();
 
+      // Create a map of goalId -> latest state to handle any duplicates
+      const latestStateByGoalId = new Map();
+      dailyGoalStates.forEach((state) => {
+        const goalId = state.goalId;
+        // If we haven't seen this goal yet, add its state
+        if (!latestStateByGoalId.has(goalId)) {
+          latestStateByGoalId.set(goalId, state);
+        } else {
+          // If we already have a state for this goal
+          const existingState = latestStateByGoalId.get(goalId);
+          if (existingState.weekNumber < state.weekNumber) {
+            // Keep the one with the higher week number
+            latestStateByGoalId.set(goalId, state);
+          } else if (existingState.weekNumber === state.weekNumber) {
+            // If same week number, keep the one with the more recent _creationTime
+            if (existingState._creationTime < state._creationTime) {
+              latestStateByGoalId.set(goalId, state);
+            }
+          }
+        }
+      });
+
       // Filter for incomplete daily goals
       const incompleteDailyGoals = dailyGoals.filter((goal) => {
-        const states = dailyGoalStates.filter(
-          (state) => state.goalId === goal._id
-        );
-        return states.length === 0 || states.some((state) => !state.isComplete);
+        const latestState = latestStateByGoalId.get(goal._id);
+        return !latestState || !latestState.isComplete;
       });
 
       // Process all daily goals for this weekly goal in parallel
       const innerDailyGoalPromises = incompleteDailyGoals.map(
         async (dailyGoal) => {
           // Find state for this daily goal to get day of week
-          const dailyState = dailyGoalStates.find(
-            (state) => state.goalId === dailyGoal._id
-          );
+          const dailyState = latestStateByGoalId.get(dailyGoal._id);
 
           // Create the new daily goal
           const newDailyGoalId = await ctx.db.insert('goals', {

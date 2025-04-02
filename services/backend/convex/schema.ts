@@ -90,6 +90,13 @@ export default defineSchema({
       'weekNumber',
     ])
     .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_user_and_goal_and_year_and_quarter_and_week', [
+      'userId',
+      'goalId',
+      'year',
+      'quarter',
+      'weekNumber',
+    ])
     .index('by_user_and_year_and_quarter_and_week_and_daily', [
       'userId',
       'year',
