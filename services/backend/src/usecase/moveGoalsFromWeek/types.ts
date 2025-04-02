@@ -1,49 +1,127 @@
 import { Id, Doc } from '../../../convex/_generated/dataModel';
-// Enum representing the depth of goals
+import { DayOfWeek } from '../../../src/constants';
+
+// Core domain types
 export enum GoalDepth {
-  Quarterly = 0, // Represents quarterly goals
-  Weekly = 1, // Represents weekly goals
-  Daily = 2, // Represents daily goals
+  Quarterly = 0,
+  Weekly = 1,
+  Daily = 2,
 }
 
-// Type representing the carry-over information for goals
 export type CarryOver = {
-  type: 'week'; // Type of carry-over, currently only supports 'week'
-  numWeeks: number; // Number of weeks to carry over
+  type: 'week';
+  numWeeks: number;
   fromGoal: {
     previousGoalId: Id<'goals'>;
     rootGoalId: Id<'goals'>;
-  }; // ID of the goal from which to carry over
+  };
 };
 
-// Type representing a weekly goal that needs to be copied
-export type WeekStateToCopy = {
-  originalGoal: Doc<'goals'>; // The original goal document
-  weekState: Doc<'goalStateByWeek'>; // The weekly state document of the goal
-  carryOver: CarryOver; // Carry-over information for the goal
-  quarterlyGoalId?: Id<'goals'>; // Link to parent quarterly goal, can be null
-  dailyGoalsToMove: DailyGoalToMove[]; // Daily goals that need to be moved with this weekly goal
+// Input types
+export type TimePeriod = {
+  year: number;
+  quarter: number;
+  weekNumber: number;
+  dayOfWeek?: DayOfWeek;
 };
 
-// Type representing a daily goal that needs to be moved
+export type MoveGoalsFromWeekArgs = {
+  userId: Id<'users'>;
+  from: TimePeriod;
+  to: TimePeriod;
+  dryRun: boolean;
+};
+
+// Internal processing types
+export type WeeklyGoalWithState = {
+  goal: Doc<'goals'>;
+  state: Doc<'goalStateByWeek'>;
+  dailyGoals: DailyGoalToMove[];
+};
+
+export type TargetWeekContext = {
+  userId: Id<'users'>;
+  year: number;
+  quarter: number;
+  weekNumber: number;
+  dayOfWeek?: DayOfWeek;
+  existingGoals: Doc<'goalStateByWeek'>[];
+};
+
 export type DailyGoalToMove = {
-  goal: Doc<'goals'>; // The goal document to be moved
-  weekState: Doc<'goalStateByWeek'>; // The weekly state document of the goal
-  parentWeeklyGoal: Doc<'goals'>; // The parent weekly goal document
-  parentQuarterlyGoal?: Doc<'goals'>; // Added: Link to parent quarterly goal, can be null
+  goal: Doc<'goals'>;
+  weekState: Doc<'goalStateByWeek'>;
+  parentWeeklyGoal: Doc<'goals'>;
+  parentQuarterlyGoal?: Doc<'goals'>;
 };
 
-// Type representing a quarterly goal that needs to be updated
 export type QuarterlyGoalToUpdate = {
-  goalId: Id<'goals'>; // ID of the goal to be updated
-  title: string; // Title of the goal
-  isStarred: boolean; // Indicates if the goal is starred
-  isPinned: boolean; // Indicates if the goal is pinned
+  goalId: Id<'goals'>;
+  title: string;
+  isStarred: boolean;
+  isPinned: boolean;
 };
 
-// Type representing the result of processing goals
+// Result types
 export type ProcessGoalResult = {
-  weekStatesToCopy: WeekStateToCopy[]; // Array of weekly goals to copy
-  dailyGoalsToMove: DailyGoalToMove[]; // Array of daily goals to move
-  quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[]; // Array of quarterly goals to update
+  weekStatesToCopy: WeekStateToCopy[];
+  dailyGoalsToMove: DailyGoalToMove[];
+  quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[];
 };
+
+export type WeekStateToCopy = {
+  originalGoal: Doc<'goals'>;
+  weekState: Doc<'goalStateByWeek'>;
+  carryOver: CarryOver;
+  quarterlyGoalId?: Id<'goals'>;
+  dailyGoalsToMove: DailyGoalToMove[];
+};
+
+// Summary types used in API responses
+export type GoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+};
+
+export type WeekStateSummary = {
+  title: string;
+  carryOver: CarryOver;
+  dailyGoalsCount: number;
+  quarterlyGoalId?: Id<'goals'>;
+};
+
+export type DailyGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  weeklyGoalId: Id<'goals'>;
+  weeklyGoalTitle: string;
+  quarterlyGoalId?: Id<'goals'>;
+  quarterlyGoalTitle?: string;
+};
+
+export type QuarterlyGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  isStarred: boolean;
+  isPinned: boolean;
+};
+
+export type BaseGoalMoveResult = {
+  weekStatesToCopy: WeekStateSummary[];
+  dailyGoalsToMove: DailyGoalSummary[];
+  quarterlyGoalsToUpdate: QuarterlyGoalSummary[];
+};
+
+export type DryRunResult = BaseGoalMoveResult & {
+  isDryRun: true;
+  canPull: true;
+};
+
+export type UpdateResult = BaseGoalMoveResult & {
+  weekStatesCopied: number;
+  dailyGoalsMoved: number;
+  quarterlyGoalsUpdated: number;
+};
+
+export type MoveGoalsFromWeekResult<T extends MoveGoalsFromWeekArgs> =
+  T['dryRun'] extends true ? DryRunResult : UpdateResult;
