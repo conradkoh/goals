@@ -65,7 +65,7 @@ export default defineSchema({
     isStarred: v.boolean(),
     isPinned: v.boolean(),
     // weekly goals
-    isComplete: v.boolean(),
+    isComplete: v.optional(v.boolean()),
     completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
     // daily goals
     daily: v.optional(
