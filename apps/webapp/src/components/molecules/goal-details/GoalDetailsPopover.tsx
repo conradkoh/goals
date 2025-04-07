@@ -125,6 +125,14 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         />
       </div>
 
+      {/* Display completion date if the goal is complete */}
+      {isComplete && goal.completedAt && (
+        <div className="text-xs text-muted-foreground mt-1">
+          Completed on{' '}
+          {DateTime.fromMillis(goal.completedAt).toFormat('LLL d, yyyy')}
+        </div>
+      )}
+
       {goal.details && (
         <>
           <Separator className="my-2" />
