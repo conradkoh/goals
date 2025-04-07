@@ -299,10 +299,9 @@ async function processQuarterlyGoal(
       )
       .collect();
 
-    // Check if any weekly goals are incomplete using the fetched states
+    // Check if any weekly goals are incomplete using the goals directly
     const hasIncompleteWeeklyGoals = weeklyGoalItems.some((weeklyGoal) => {
-      const state = weeklyStates.find((s) => s.goalId === weeklyGoal._id);
-      return !state?.isComplete;
+      return !weeklyGoal.isComplete;
     });
 
     // Only update if there are incomplete weekly goals
@@ -407,7 +406,7 @@ export async function processWeeklyGoal(
     );
   }
 
-  if (dailyGoals.length === 0 && !weeklyState.isComplete) {
+  if (dailyGoals.length === 0 && !goal.isComplete) {
     // If there are no daily goals and the weekly goal is incomplete, carry it over
     return createWeeklyGoalCarryOver(goal, weeklyState, quarterlyGoal, []);
   }
@@ -434,11 +433,10 @@ export async function processWeeklyGoal(
 
     // Check for incomplete daily goals
     const incompleteDailyGoals = dailyGoals.filter((dailyGoal) => {
-      const state = dailyStates.find((s) => s.goalId === dailyGoal._id);
-      return !state?.isComplete;
+      return !dailyGoal.isComplete;
     });
 
-    if (incompleteDailyGoals.length > 0 || !weeklyState.isComplete) {
+    if (incompleteDailyGoals.length > 0 || !goal.isComplete) {
       // Create daily goals to move
       const dailyGoalsToMove = incompleteDailyGoals.map((dailyGoal) => {
         const dailyState = dailyStates.find((s) => s.goalId === dailyGoal._id);
@@ -571,7 +569,6 @@ export async function updateQuarterlyGoals(
           quarter: to.quarter,
           weekNumber: to.weekNumber,
           goalId: item.goalId,
-          isComplete: false,
           ...newState,
         });
       }
@@ -675,7 +672,6 @@ export async function copyWeeklyGoals(
           goalId: targetWeekGoalId,
           isStarred: false,
           isPinned: false,
-          isComplete: false,
           carryOver,
         });
 
@@ -749,7 +745,6 @@ export async function migrateDailyGoals(
         goalId: dailyGoal.goal._id,
         isStarred: false,
         isPinned: false,
-        isComplete: false,
         daily:
           targetWeek.dayOfWeek !== undefined
             ? {

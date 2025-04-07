@@ -64,9 +64,6 @@ export default defineSchema({
     // quarterly goals
     isStarred: v.boolean(),
     isPinned: v.boolean(),
-    // weekly goals
-    isComplete: v.optional(v.boolean()),
-    completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
     // daily goals
     daily: v.optional(
       v.object({
@@ -106,8 +103,7 @@ export default defineSchema({
       'weekNumber',
       'daily.dayOfWeek',
       'goalId',
-    ])
-    .index('by_completion_status', ['isComplete']),
+    ]),
 
   syncSessions: defineTable({
     userId: v.id('users'),

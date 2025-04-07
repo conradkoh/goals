@@ -10,9 +10,12 @@ import { useGoalActions } from './useGoalActions';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { toast } from '@/components/ui/use-toast';
 
-// Update the type to include isOptimistic flag
+// Modify how we extend GoalWithDetailsAndChildren to add isOptimistic flag
 export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
   isOptimistic?: boolean;
+  // Explicitly define isComplete and completedAt here since they've been moved from state to the goal object
+  isComplete: boolean;
+  completedAt?: number;
 };
 
 interface WeekContextValue {
@@ -177,7 +180,6 @@ export const WeekProviderWithoutDashboard = ({
             quarter: weekData.quarter,
             goalId: tempId,
             weekNumber: weekData.weekNumber,
-            isComplete: false,
             isStarred: false,
             isPinned: false,
           },
@@ -262,7 +264,6 @@ export const WeekProviderWithoutDashboard = ({
             quarter: weekData.quarter,
             goalId: tempId,
             weekNumber: weekData.weekNumber,
-            isComplete: false,
             isStarred: false,
             isPinned: false,
             daily: {

@@ -113,7 +113,6 @@ export const createQuarterlyGoal = mutation({
         weekNumber: weekNum,
         isStarred: weekNum === weekNumber ? isStarred ?? false : false,
         isPinned: weekNum === weekNumber ? isPinned ?? false : false,
-        isComplete: false,
       });
     }
 
@@ -291,7 +290,6 @@ export const createWeeklyGoal = mutation({
       weekNumber,
       isStarred: false,
       isPinned: false,
-      isComplete: false,
     });
 
     return goalId;
@@ -377,7 +375,6 @@ export const createDailyGoal = mutation({
       goalId,
       isStarred: false,
       isPinned: false,
-      isComplete: false,
       daily: {
         dayOfWeek: args.dayOfWeek,
         ...(args.dateTimestamp ? { dateTimestamp: args.dateTimestamp } : {}),
@@ -436,18 +433,15 @@ export const toggleGoalCompletion = mutation({
       });
     }
 
-    const completedAt = isComplete ? Date.now() : undefined;
-
     // Update the completion status in goalStateByWeek (for backward compatibility)
     await ctx.db.patch(weeklyGoal._id, {
-      isComplete,
-      completedAt,
+      // Remove isComplete and completedAt fields as they've been migrated to the goals table
     });
 
     // Also update the goal table directly
     await ctx.db.patch(goalId, {
       isComplete,
-      completedAt,
+      completedAt: isComplete ? Date.now() : undefined,
     });
 
     // If this is a weekly goal (depth 1) and updateChildren is true, update all child goals
@@ -481,15 +475,14 @@ export const toggleGoalCompletion = mutation({
 
           if (childWeeklyGoal) {
             await ctx.db.patch(childWeeklyGoal._id, {
-              isComplete,
-              completedAt,
+              // Remove isComplete and completedAt fields as they've been migrated to the goals table
             });
           }
 
           // Update the child goal record directly as well
           await ctx.db.patch(childGoal._id, {
             isComplete,
-            completedAt,
+            completedAt: isComplete ? Date.now() : undefined,
           });
         })
       );
@@ -609,10 +602,10 @@ export const useDailyGoal = query({
     return {
       title: goal.title,
       details: goal.details,
-      isComplete: weeklyGoal?.isComplete ?? false,
+      isComplete: goal.isComplete,
       isPinned: weeklyGoal?.isPinned ?? false,
       isStarred: weeklyGoal?.isStarred ?? false,
-      completedAt: weeklyGoal?.completedAt,
+      completedAt: goal.completedAt,
       weekNumber: weeklyGoal?.weekNumber,
       dayOfWeek: weeklyGoal?.daily?.dayOfWeek,
     };

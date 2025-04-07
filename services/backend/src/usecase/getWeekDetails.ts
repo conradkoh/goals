@@ -82,28 +82,24 @@ export const getWeekGoalsTree = async (
     delete nodeWithoutCompletionStatus.completedAt;
 
     if (weekState) {
-      // Prioritize the goal's completion status but keep it in the state object
-      // This way frontend code that uses goal.state.isComplete doesn't need to change
-      const enhancedState = {
-        ...weekState,
-        // Use the goal's values if available, otherwise keep the state values
-        isComplete:
-          n.isComplete !== undefined ? n.isComplete : weekState.isComplete,
-        completedAt:
-          n.completedAt !== undefined ? n.completedAt : weekState.completedAt,
-      };
-
+      // We no longer need to add isComplete and completedAt to the state
+      // as these fields have been moved to the goal table
       return {
         ...nodeWithoutCompletionStatus,
-        state: enhancedState,
+        state: weekState,
+        // Keep isComplete and completedAt from the goal directly for compatibility
+        isComplete: n.isComplete,
+        completedAt: n.completedAt,
       };
     }
 
     // If no weekly state exists, we keep the state as undefined
-    // but must keep isComplete since it's now mandatory
     return {
       ...nodeWithoutCompletionStatus,
       state: undefined,
+      // Keep isComplete and completedAt from the goal directly for compatibility
+      isComplete: n.isComplete,
+      completedAt: n.completedAt,
     };
   });
 

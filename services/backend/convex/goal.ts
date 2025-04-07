@@ -123,9 +123,19 @@ export const moveGoalsFromDay = mutation({
       )
       .collect();
 
+    // Get goal objects for all the goal states
+    const goalObjects = await Promise.all(
+      allGoalStates.map(async (weeklyGoal) => {
+        const goal = await ctx.db.get(weeklyGoal.goalId);
+        return { weeklyGoal, goal };
+      })
+    );
+
     // Filter to only include incomplete goals if moveOnlyIncomplete is true
     const filteredGoalStates = moveOnlyIncomplete
-      ? allGoalStates.filter((weeklyGoal) => !weeklyGoal.isComplete)
+      ? goalObjects
+          .filter(({ goal }) => goal && !goal.isComplete)
+          .map(({ weeklyGoal }) => weeklyGoal)
       : allGoalStates;
 
     // Get full details for each goal
@@ -672,8 +682,8 @@ export const getIncompleteQuarterlyGoals = internalQuery({
     // Filter goals to only include those with an incomplete state in the latest week
     // or those with no state in the latest week (which we consider incomplete)
     const incompleteQuarterlyGoals = quarterlyGoals.filter((goal) => {
-      const latestState = latestStateByGoalId[goal._id];
-      return latestState && !latestState.isComplete;
+      // Check the goal's isComplete field directly since it's been migrated from goalStateByWeek
+      return !goal.isComplete;
     });
 
     // Format response data
@@ -816,7 +826,6 @@ export const moveQuarterlyGoal = mutation({
             weekNum === startWeek ? firstState?.isStarred || false : false,
           isPinned:
             weekNum === startWeek ? firstState?.isPinned || false : false,
-          isComplete: false,
         })
       );
     }
@@ -864,14 +873,17 @@ export const moveQuarterlyGoal = mutation({
       return acc;
     }, {} as Record<Id<'goals'>, Doc<'goalStateByWeek'>>);
 
-    // Filter for incomplete weekly goals from the latest week
-    const incompleteWeeklyGoals = weeklyGoals.filter((goal) => {
-      const latestState = latestStateByGoalId[goal._id];
-      if (latestState === undefined) {
-        console.error('failed to find state for goal: ', goal._id);
-      }
-      return latestState && !latestState.isComplete;
-    });
+    // Get full details for each weekly goal including whether they're complete
+    const goalsWithCompletion = await Promise.all(
+      weeklyGoals.map(async (goal) => {
+        return goal;
+      })
+    );
+
+    // Filter for incomplete weekly goals based on direct completion status
+    const incompleteWeeklyGoals = goalsWithCompletion.filter(
+      (goal) => !goal.isComplete
+    );
 
     // Copy each incomplete weekly goal in parallel
     const weeklyGoalPromises = incompleteWeeklyGoals.map(async (weeklyGoal) => {
@@ -909,7 +921,6 @@ export const moveQuarterlyGoal = mutation({
         weekNumber: startWeek, // Use the first week of the quarter
         isStarred: false,
         isPinned: false,
-        isComplete: false,
       });
 
       return { originalId: weeklyGoal._id, newId: newWeeklyGoalId };
@@ -941,8 +952,20 @@ export const moveQuarterlyGoal = mutation({
         )
         .collect();
 
-      // Find states for daily goals in the latest week
-      const dailyGoalIds = dailyGoals.map((goal) => goal._id);
+      // Get full details for each daily goal including whether they're complete
+      const dailyGoalsWithCompletion = await Promise.all(
+        dailyGoals.map(async (goal) => {
+          return goal;
+        })
+      );
+
+      // Filter for incomplete daily goals based on direct completion status
+      const incompleteDailyGoals = dailyGoalsWithCompletion.filter(
+        (goal) => !goal.isComplete
+      );
+
+      // Find states for daily goals to get the day of week
+      const dailyGoalIds = incompleteDailyGoals.map((goal) => goal._id);
       if (dailyGoalIds.length === 0) return;
 
       const dailyGoalStates = await ctx.db
@@ -957,39 +980,33 @@ export const moveQuarterlyGoal = mutation({
         )
         .collect();
 
-      // Create a map of goalId -> latest state to handle any duplicates
-      const latestStateByGoalId = new Map();
+      // Create a map of goalId -> latest state to get day information
+      const dailyStateMap = new Map();
       dailyGoalStates.forEach((state) => {
         const goalId = state.goalId;
         // If we haven't seen this goal yet, add its state
-        if (!latestStateByGoalId.has(goalId)) {
-          latestStateByGoalId.set(goalId, state);
+        if (!dailyStateMap.has(goalId)) {
+          dailyStateMap.set(goalId, state);
         } else {
           // If we already have a state for this goal
-          const existingState = latestStateByGoalId.get(goalId);
+          const existingState = dailyStateMap.get(goalId);
           if (existingState.weekNumber < state.weekNumber) {
             // Keep the one with the higher week number
-            latestStateByGoalId.set(goalId, state);
+            dailyStateMap.set(goalId, state);
           } else if (existingState.weekNumber === state.weekNumber) {
             // If same week number, keep the one with the more recent _creationTime
             if (existingState._creationTime < state._creationTime) {
-              latestStateByGoalId.set(goalId, state);
+              dailyStateMap.set(goalId, state);
             }
           }
         }
-      });
-
-      // Filter for incomplete daily goals
-      const incompleteDailyGoals = dailyGoals.filter((goal) => {
-        const latestState = latestStateByGoalId.get(goal._id);
-        return !latestState || !latestState.isComplete;
       });
 
       // Process all daily goals for this weekly goal in parallel
       const innerDailyGoalPromises = incompleteDailyGoals.map(
         async (dailyGoal) => {
           // Find state for this daily goal to get day of week
-          const dailyState = latestStateByGoalId.get(dailyGoal._id);
+          const dailyState = dailyStateMap.get(dailyGoal._id);
 
           // Create the new daily goal
           const newDailyGoalId = await ctx.db.insert('goals', {
@@ -1022,7 +1039,6 @@ export const moveQuarterlyGoal = mutation({
             weekNumber: startWeek, // Use the first week of the quarter
             isStarred: false,
             isPinned: false,
-            isComplete: false,
             // Preserve the day of week if available
             daily: dailyState?.daily || { dayOfWeek: 1 }, // Default to Monday if not specified
           });

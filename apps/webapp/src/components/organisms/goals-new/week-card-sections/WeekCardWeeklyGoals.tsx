@@ -32,6 +32,7 @@ import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { useFireGoals } from '@/contexts/FireGoalsContext';
+import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -49,6 +50,12 @@ const WeeklyGoalsSkeleton = () => (
   </div>
 );
 
+// Helper function to safely get isComplete from goal
+function getIsComplete(goal: GoalWithDetailsAndChildren): boolean {
+  // Access isComplete directly from the goal object
+  return 'isComplete' in goal ? goal.isComplete : false;
+}
+
 // Internal component for rendering a weekly goal
 const WeeklyGoal = ({
   goal,
@@ -65,7 +72,7 @@ const WeeklyGoal = ({
 }) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const { fireGoals, toggleFireStatus } = useFireGoals();
-  const isComplete = goal.isComplete;
+  const isComplete = getIsComplete(goal);
   const [showUpdateChildrenDialog, setShowUpdateChildrenDialog] =
     useState(false);
   const [pendingCompletionState, setPendingCompletionState] = useState<
@@ -75,7 +82,7 @@ const WeeklyGoal = ({
   // Calculate if all children are complete
   const isSoftComplete =
     goal.children.length > 0 &&
-    goal.children.every((child) => child.isComplete);
+    goal.children.every((child) => getIsComplete(child));
 
   const isOnFire = fireGoals.has(goal._id.toString());
 
@@ -83,7 +90,7 @@ const WeeklyGoal = ({
     // If toggling to complete and there are incomplete children, show dialog
     if (newState && goal.children.length > 0) {
       const hasIncompleteChildren = goal.children.some(
-        (child) => !child.isComplete
+        (child) => !getIsComplete(child)
       );
       if (hasIncompleteChildren) {
         setPendingCompletionState(newState);
@@ -397,10 +404,10 @@ export const WeekCardWeeklyGoals = forwardRef<
             const weeklyGoals = goal.children;
             const isStarred = goal.state?.isStarred ?? false;
             const isPinned = goal.state?.isPinned ?? false;
-            const isComplete = goal.isComplete;
+            const isComplete = getIsComplete(goal);
             const isAllWeeklyGoalsComplete =
               weeklyGoals.length > 0 &&
-              weeklyGoals.every((goal) => goal.isComplete);
+              weeklyGoals.every((goal) => getIsComplete(goal));
 
             return (
               <div

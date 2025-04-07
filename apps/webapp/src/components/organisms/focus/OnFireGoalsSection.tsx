@@ -285,7 +285,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
                   titleClassName={cn(
                     'break-words w-full whitespace-pre-wrap flex items-center',
-                    quarterlyGoal.state?.isComplete ? 'flex items-center' : ''
+                    quarterlyGoal.isComplete ? 'flex items-center' : ''
                   )}
                 />
               </div>
