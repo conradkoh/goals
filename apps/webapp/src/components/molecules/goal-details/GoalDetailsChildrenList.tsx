@@ -15,7 +15,7 @@ export function GoalDetailsChildrenList({
   parentGoal,
   title,
 }: GoalDetailsChildrenListProps) {
-  const { updateQuarterlyGoalTitle } = useWeek();
+  const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
   const { fireGoals, isOnFire, toggleFireStatus } = useFireGoals();
 
   // If there are no children, don't render anything
@@ -33,6 +33,14 @@ export function GoalDetailsChildrenList({
       });
     },
     [updateQuarterlyGoalTitle]
+  );
+
+  // Handle goal deletion
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      await deleteGoalOptimistic(goalId);
+    },
+    [deleteGoalOptimistic]
   );
 
   const isQuarterlyParent = parentGoal.depth === 0;
@@ -56,6 +64,7 @@ export function GoalDetailsChildrenList({
               <DailyGoalTaskItem
                 goal={child}
                 onUpdateTitle={handleUpdateTitle}
+                onDelete={() => handleDeleteGoal(child._id)}
               />
             )}
 
@@ -70,6 +79,7 @@ export function GoalDetailsChildrenList({
                       key={grandchild._id}
                       goal={grandchild}
                       onUpdateTitle={handleUpdateTitle}
+                      onDelete={() => handleDeleteGoal(grandchild._id)}
                     />
                   ))}
                 </div>

@@ -76,9 +76,9 @@ export const getWeekGoalsTree = async (
     // Get the weekly state for this goal
     const weekState = weekStatesMap.get(n._id);
 
-    // Create a shallow copy of the node without isComplete and completedAt
+    // Create a shallow copy of the node but keep isComplete field
     const nodeWithoutCompletionStatus = { ...n };
-    delete nodeWithoutCompletionStatus.isComplete;
+    // We can safely delete completedAt as it's optional
     delete nodeWithoutCompletionStatus.completedAt;
 
     if (weekState) {
@@ -100,7 +100,7 @@ export const getWeekGoalsTree = async (
     }
 
     // If no weekly state exists, we keep the state as undefined
-    // This maintains compatibility with existing frontend code
+    // but must keep isComplete since it's now mandatory
     return {
       ...nodeWithoutCompletionStatus,
       state: undefined,

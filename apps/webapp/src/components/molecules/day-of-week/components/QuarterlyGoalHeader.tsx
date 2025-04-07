@@ -23,7 +23,7 @@ export const QuarterlyGoalHeader = ({
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = goal.state?.isStarred ?? false;
   const isPinned = goal.state?.isPinned ?? false;
-  const isComplete = goal.state?.isComplete ?? false;
+  const isComplete = goal.isComplete;
 
   const handleToggleCompletion = useCallback(
     async (newState: boolean) => {

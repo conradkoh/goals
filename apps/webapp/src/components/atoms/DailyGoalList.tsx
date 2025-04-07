@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DailyGoalTaskItem } from '../organisms/goals-new/daily-goal/DailyGoalTaskItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -41,6 +41,7 @@ export const DailyGoalList = ({
           key={goal._id}
           goal={goal}
           onUpdateTitle={onUpdateGoalTitle}
+          onDelete={() => onDeleteGoal(goal._id)}
         />
       ))}
     </div>
@@ -289,9 +290,12 @@ export const DailyGoalGroupContainer = ({
 
   const sortedDailyGoals = sortGoals(dailyGoals);
 
-  const isSoftComplete =
-    sortedDailyGoals.length > 0 &&
-    sortedDailyGoals.every((goal) => goal.state?.isComplete);
+  const isSoftComplete = useMemo(
+    () =>
+      sortedDailyGoals.length > 0 &&
+      sortedDailyGoals.every((goal) => goal.isComplete),
+    [sortedDailyGoals]
+  );
 
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;

@@ -33,7 +33,7 @@ export const WeeklyGoalTaskItem = ({
 }: WeeklyGoalTaskItemProps) => {
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
-  const isComplete = goal.state?.isComplete ?? false;
+  const isComplete = goal.isComplete;
 
   // Use the custom hook for fire goal status
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);

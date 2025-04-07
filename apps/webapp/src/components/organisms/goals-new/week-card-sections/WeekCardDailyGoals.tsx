@@ -25,6 +25,7 @@ import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import {
   DayContainer,
   DayContainerMode,
+  wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
 import { PastDaysContainer } from '@/components/molecules/day-of-week/containers/PastDaysContainer';
 import { GoalSelector } from '@/components/atoms/GoalSelector';
@@ -184,7 +185,7 @@ export const WeekCardDailyGoals = forwardRef<
             pastDayNumbers.includes(goal.state.daily.dayOfWeek)
           ) {
             totalTasks++;
-            if (goal.state.isComplete) {
+            if (goal.isComplete) {
               completedTasks++;
             }
           }
@@ -207,8 +208,8 @@ export const WeekCardDailyGoals = forwardRef<
       (goals: GoalWithDetailsAndChildren[]) => {
         return [...goals].sort((a, b) => {
           // First sort by completion status
-          if (!a.state?.isComplete && b.state?.isComplete) return -1;
-          if (a.state?.isComplete && !b.state?.isComplete) return 1;
+          if (!a.isComplete && b.isComplete) return -1;
+          if (a.isComplete && !b.isComplete) return 1;
 
           // Get parent weekly goals
           const weeklyGoalA = weeklyGoals.find((g) => g._id === a.parentId);
@@ -327,9 +328,29 @@ export const WeekCardDailyGoals = forwardRef<
         .filter((weeklyGoal) => {
           // Check if weekly goal has a valid parent
           if (!weeklyGoal.parentId) {
-            console.debug(`Weekly goal ${weeklyGoal._id} has no parentId`);
             return false;
           }
+
+          // Filter out completed weekly goals unless they were completed today
+          if (weeklyGoal.isComplete) {
+            // Get the current day's date timestamp
+            const currentDayData = (
+              days as Array<{
+                dayOfWeek: DayOfWeekType;
+                date: string;
+                dateTimestamp: number;
+              }>
+            ).find((day) => day.dayOfWeek === selectedDayOfWeek);
+
+            if (
+              currentDayData &&
+              wasCompletedToday(weeklyGoal, currentDayData.dateTimestamp)
+            ) {
+              return true; // Include goals completed today
+            }
+            return false; // Filter out other completed goals
+          }
+
           return true;
         })
         .map((weeklyGoal) => {
@@ -364,10 +385,8 @@ export const WeekCardDailyGoals = forwardRef<
       Object.values(groupedByQuarterlyGoal).forEach((group) => {
         group.sort((a, b) => {
           // First by completion status
-          if (!a.weeklyGoal.state?.isComplete && b.weeklyGoal.state?.isComplete)
-            return -1;
-          if (a.weeklyGoal.state?.isComplete && !b.weeklyGoal.state?.isComplete)
-            return 1;
+          if (!a.weeklyGoal.isComplete && b.weeklyGoal.isComplete) return -1;
+          if (a.weeklyGoal.isComplete && !b.weeklyGoal.isComplete) return 1;
 
           // Then by title
           return a.weeklyGoal.title.localeCompare(b.weeklyGoal.title);
@@ -398,7 +417,7 @@ export const WeekCardDailyGoals = forwardRef<
           return a.title.localeCompare(b.title);
         })
         .flatMap(([, group]) => group);
-    }, [weeklyGoals, quarterlyGoals]);
+    }, [weeklyGoals, quarterlyGoals, selectedDayOfWeek, days]);
 
     const handleUpdateGoalTitle = useCallback(
       (goalId: Id<'goals'>, title: string, details?: string) => {

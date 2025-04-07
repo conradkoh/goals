@@ -29,13 +29,21 @@ interface DailyGoalItemProps {
     title: string,
     details?: string
   ) => Promise<void>;
+  onDelete: (goalId: Id<'goals'>) => void;
+  inSidebar?: boolean;
+  className?: string;
 }
 
 export const DailyGoalTaskItem = ({
   goal,
   onUpdateTitle,
+  onDelete,
+  inSidebar = false,
+  className,
 }: DailyGoalItemProps) => {
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
+  const { isComplete = goal.isComplete, completedAt = goal.completedAt } = goal;
+  const isOptimistic = isOptimisticId(goal._id);
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType
     | undefined;
@@ -50,13 +58,7 @@ export const DailyGoalTaskItem = ({
   });
 
   // Use the most up-to-date data, falling back to context data if subscription isn't ready
-  const {
-    title = goal.title,
-    details = goal.details,
-    isComplete = goal.state?.isComplete ?? false,
-  } = liveGoalDetails ?? {};
-
-  const isOptimistic = isOptimisticId(goal._id);
+  const { title = goal.title, details = goal.details } = liveGoalDetails ?? {};
 
   const handleMoveToDayOfWeek = async (newDayOfWeek: DayOfWeekType) => {
     if (!currentDayOfWeek || newDayOfWeek === currentDayOfWeek) return;

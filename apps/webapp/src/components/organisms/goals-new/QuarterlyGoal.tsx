@@ -35,10 +35,10 @@ export function QuarterlyGoal({
   onUpdateTitle,
 }: QuarterlyGoalProps) {
   const { toggleGoalCompletion, weekNumber } = useWeek();
-  const isComplete = goal.state?.isComplete ?? false;
+  const isComplete = goal.isComplete;
   const isAllWeeklyGoalsComplete =
     goal.children.length > 0 &&
-    goal.children.every((child) => child.state?.isComplete);
+    goal.children.every((child) => child.isComplete);
 
   const handleToggleStar = useCallback(() => {
     onToggleStatus(

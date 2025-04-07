@@ -12,8 +12,9 @@ export const migrateCompletionStatusToGoals = internalMutation({
     let totalGoals = goals.length;
     let updatedGoals = 0;
 
+    // Process each goal
     for (const goal of goals) {
-      // For each goal, find all states in goalStateByWeek
+      // Get all states for this goal, ordered by weekNumber
       const states = await ctx.db
         .query('goalStateByWeek')
         .withIndex('by_user_and_goal', (q) =>
@@ -21,32 +22,20 @@ export const migrateCompletionStatusToGoals = internalMutation({
         )
         .collect();
 
-      if (states.length === 0) {
-        continue; // No states found for this goal
-      }
+      // Sort states by weekNumber in descending order to get the latest state first
+      const sortedStates = states.sort((a, b) => b.weekNumber - a.weekNumber);
 
-      // Filter states with defined isComplete values
-      const statesWithCompletionStatus = states.filter(
-        (state) => state.isComplete !== undefined
+      // Find the latest state that has a boolean isComplete value
+      const latestStateWithCompletion = sortedStates.find(
+        (state) => typeof state.isComplete === 'boolean'
       );
 
-      // Default values if no states have defined completion status
-      let isComplete = false;
-      let completedAt = undefined;
+      // Set the completion status
+      const isComplete = latestStateWithCompletion
+        ? Boolean(latestStateWithCompletion.isComplete)
+        : false;
 
-      if (statesWithCompletionStatus.length > 0) {
-        // Find the latest state with a defined isComplete value
-        let latestStateWithCompletion = statesWithCompletionStatus[0];
-
-        for (const state of statesWithCompletionStatus) {
-          if (state.weekNumber > latestStateWithCompletion.weekNumber) {
-            latestStateWithCompletion = state;
-          }
-        }
-
-        isComplete = latestStateWithCompletion.isComplete;
-        completedAt = latestStateWithCompletion.completedAt;
-      }
+      const completedAt = latestStateWithCompletion?.completedAt;
 
       // Update the goal with the determined completion status
       await ctx.db.patch(goal._id, {

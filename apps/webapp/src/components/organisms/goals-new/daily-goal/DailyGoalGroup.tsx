@@ -14,7 +14,7 @@ import {
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2, Star, Pin } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 export interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
@@ -55,8 +55,10 @@ export const DailyGoalGroup = ({
 
   const dailyGoals = sortGoals(unsortedDailyGoals);
 
-  const isSoftComplete =
-    dailyGoals.length > 0 && dailyGoals.every((goal) => goal.state?.isComplete);
+  const isSoftComplete = useMemo(
+    () => dailyGoals.length > 0 && dailyGoals.every((goal) => goal.isComplete),
+    [dailyGoals]
+  );
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -137,6 +139,7 @@ export const DailyGoalGroup = ({
                 key={goal._id}
                 goal={goal}
                 onUpdateTitle={onUpdateGoalTitle}
+                onDelete={() => onDeleteGoal(goal._id)}
               />
             ))}
           </div>

@@ -34,24 +34,17 @@ import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
-  goal: GoalWithOptimisticStatus,
-  todayTimestamp: number
+  goal: GoalWithDetailsAndChildren,
+  dateTimestamp: number
 ): boolean => {
-  if (!goal.state?.isComplete || !goal.state?.completedAt) return false;
-
-  // Get the start of today
-  const startOfToday = DateTime.fromMillis(todayTimestamp)
-    .startOf('day')
-    .toMillis();
-  // Get the end of today
-  const endOfToday = DateTime.fromMillis(todayTimestamp)
-    .endOf('day')
-    .toMillis();
-
-  // Check if the goal was completed today
+  if (!goal.isComplete || !goal.completedAt) return false;
+  const completedAt = DateTime.fromMillis(goal.completedAt);
+  const date = DateTime.fromMillis(dateTimestamp);
   return (
-    goal.state.completedAt >= startOfToday &&
-    goal.state.completedAt <= endOfToday
+    completedAt.get('year') === date.get('year') &&
+    completedAt.get('quarter') === date.get('quarter') &&
+    completedAt.get('weekNumber') === date.get('weekNumber') &&
+    completedAt.get('day') === date.get('day')
   );
 };
 
@@ -148,7 +141,11 @@ const WeeklyGoalSection = ({
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
           <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalTaskItem goal={dailyGoal} onUpdateTitle={onUpdateTitle} />
+            <DailyGoalTaskItem
+              goal={dailyGoal}
+              onUpdateTitle={onUpdateTitle}
+              onDelete={() => onDelete(dailyGoal._id)}
+            />
           </div>
         ))}
 
@@ -235,17 +232,17 @@ const QuarterlyGoalSection = ({
           const hasChildrenInWeek = weekly.children.length > 0;
           if (hasChildrenInWeek) return false;
 
-          const completedAt = weekly.state.completedAt
-            ? DateTime.fromMillis(weekly.state?.completedAt)
+          const completedAt = weekly.completedAt
+            ? DateTime.fromMillis(weekly.completedAt)
             : null;
 
           //exclusion condition 2: weekly goal is complete but no completion date (for legacy records)
-          if (weekly.state?.isComplete && !completedAt) {
+          if (weekly.isComplete && !completedAt) {
             return false;
           }
           // exclusion condition 3: weekly goal is complete in a day other than the current day
           const isCompleteInOtherDays =
-            weekly.state?.isComplete &&
+            weekly.isComplete &&
             completedAt &&
             completedAt?.get('year') === DateTime.now().get('year') &&
             completedAt?.get('quarter') === DateTime.now().get('quarter') &&
@@ -276,7 +273,7 @@ const QuarterlyGoalSection = ({
   const isSoftComplete = useMemo(
     () =>
       allDailyGoals.length > 0 &&
-      allDailyGoals.every((goal) => goal.state?.isComplete),
+      allDailyGoals.every((goal) => goal.isComplete),
     [allDailyGoals]
   );
 

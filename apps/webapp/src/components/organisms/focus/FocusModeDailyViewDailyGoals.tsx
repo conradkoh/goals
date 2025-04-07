@@ -58,8 +58,8 @@ export const FocusModeDailyViewDailyGoals = ({
   const sortDailyGoals = (goals: GoalWithDetailsAndChildren[]) => {
     return [...goals].sort((a, b) => {
       // First sort by completion status
-      if (!a.state?.isComplete && b.state?.isComplete) return -1;
-      if (a.state?.isComplete && !b.state?.isComplete) return 1;
+      if (!a.isComplete && b.isComplete) return -1;
+      if (a.isComplete && !b.isComplete) return 1;
 
       // Get parent weekly goals
       const weeklyGoalA = weeklyGoals.find((g) => g._id === a.parentId);
@@ -119,7 +119,7 @@ export const FocusModeDailyViewDailyGoals = ({
         }
 
         // Filter out completed weekly goals unless they were completed today
-        if (weeklyGoal.state?.isComplete) {
+        if (weeklyGoal.isComplete) {
           // Get the current day's date timestamp
           const currentDayData = (
             days as Array<{
@@ -171,10 +171,8 @@ export const FocusModeDailyViewDailyGoals = ({
     Object.values(groupedByQuarterlyGoal).forEach((group) => {
       group.sort((a, b) => {
         // First by completion status (already filtered for incomplete, but keeping for future flexibility)
-        if (!a.weeklyGoal.state?.isComplete && b.weeklyGoal.state?.isComplete)
-          return -1;
-        if (a.weeklyGoal.state?.isComplete && !b.weeklyGoal.state?.isComplete)
-          return 1;
+        if (!a.weeklyGoal.isComplete && b.weeklyGoal.isComplete) return -1;
+        if (a.weeklyGoal.isComplete && !b.weeklyGoal.isComplete) return 1;
 
         // Then by title
         return a.weeklyGoal.title.localeCompare(b.weeklyGoal.title);

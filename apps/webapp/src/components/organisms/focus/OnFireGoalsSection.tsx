@@ -337,6 +337,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                               key={dailyGoal._id.toString()}
                               goal={dailyGoal}
                               onUpdateTitle={handleUpdateGoalTitle}
+                              onDelete={() => onDeleteGoal(dailyGoal._id)}
                             />
                           ))}
                         </div>

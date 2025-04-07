@@ -31,6 +31,7 @@ describe('useWeek', () => {
           depth: 0,
           children: [],
           path: '/quarterly1',
+          isComplete: false,
         },
         // Weekly goals for Quarterly goal 1 - intentionally out of alphabetical order
         {
@@ -46,6 +47,7 @@ describe('useWeek', () => {
           depth: 1,
           children: [],
           path: '/quarterly1/weekly2',
+          isComplete: false,
           state: {
             _id: 'weekly_state2' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200001,
@@ -72,6 +74,7 @@ describe('useWeek', () => {
           depth: 1,
           children: [],
           path: '/quarterly1/weekly1',
+          isComplete: false,
           state: {
             _id: 'weekly_state1' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200002,
@@ -98,6 +101,7 @@ describe('useWeek', () => {
           depth: 1,
           children: [],
           path: '/quarterly1/weekly3',
+          isComplete: false,
           state: {
             _id: 'weekly_state3' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200003,
@@ -125,6 +129,7 @@ describe('useWeek', () => {
           depth: 0,
           children: [],
           path: '/quarterly2',
+          isComplete: false,
         },
         // Weekly goals for Quarterly goal 2 - also out of alphabetical order
         {
@@ -140,6 +145,7 @@ describe('useWeek', () => {
           depth: 1,
           children: [],
           path: '/quarterly2/weekly5',
+          isComplete: false,
           state: {
             _id: 'weekly_state5' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200005,
@@ -166,6 +172,7 @@ describe('useWeek', () => {
           depth: 1,
           children: [],
           path: '/quarterly2/weekly4',
+          isComplete: false,
           state: {
             _id: 'weekly_state4' as Id<'goalStateByWeek'>,
             _creationTime: 1609459200006,

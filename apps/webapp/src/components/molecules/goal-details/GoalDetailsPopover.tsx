@@ -52,7 +52,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
   const isWeeklyGoal = goal?.depth === 1;
-  const isComplete = goal.state?.isComplete ?? false;
+  const isComplete = goal.isComplete;
 
   const handleCreateWeeklyGoal = async () => {
     const trimmedTitle = newWeeklyGoalTitle.trim();

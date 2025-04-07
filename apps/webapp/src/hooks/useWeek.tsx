@@ -131,9 +131,8 @@ export const WeekProviderWithoutDashboard = ({
     // Always calculate stats on the frontend now that backend stats are removed
     const stats = {
       totalTasks: dailyGoalsWithStatus.length,
-      completedTasks: dailyGoalsWithStatus.filter(
-        (goal) => goal.state?.isComplete
-      ).length,
+      completedTasks: dailyGoalsWithStatus.filter((goal) => goal.isComplete)
+        .length,
     };
 
     return {
@@ -169,6 +168,7 @@ export const WeekProviderWithoutDashboard = ({
           children: [],
           path: '',
           isOptimistic: true,
+          isComplete: false,
           state: {
             _id: `optimistic_weekly_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),
@@ -253,6 +253,7 @@ export const WeekProviderWithoutDashboard = ({
           children: [],
           path: '',
           isOptimistic: true,
+          isComplete: false,
           state: {
             _id: `optimistic_daily_${tempId}` as Id<'goalStateByWeek'>,
             _creationTime: Date.now(),

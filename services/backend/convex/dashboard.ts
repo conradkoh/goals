@@ -94,6 +94,7 @@ export const createQuarterlyGoal = mutation({
       details,
       inPath,
       depth, // 0 for quarterly goals
+      isComplete: false,
     });
 
     // Calculate all week numbers in this quarter
@@ -278,6 +279,7 @@ export const createWeeklyGoal = mutation({
       parentId,
       inPath,
       depth: 1, // 1 for weekly goals
+      isComplete: false,
     });
 
     // Create initial weekly state
@@ -363,6 +365,7 @@ export const createDailyGoal = mutation({
       parentId: args.parentId,
       inPath,
       depth: 2, // Daily goals are depth 2
+      isComplete: false,
     });
 
     // Create the weekly goal data

@@ -789,6 +789,7 @@ export const moveQuarterlyGoal = mutation({
       details: quarterlyGoal.details,
       inPath: '/',
       depth: 0, // Quarterly goals have depth 0
+      isComplete: false,
       // Add a reference to the original goal
       carryOver: {
         type: 'week',
@@ -884,6 +885,7 @@ export const moveQuarterlyGoal = mutation({
         inPath: `/${newQuarterlyGoalId}`,
         parentId: newQuarterlyGoalId,
         depth: 1, // Weekly goals have depth 1
+        isComplete: false,
         // Add a reference to the original goal
         carryOver: {
           type: 'week',
@@ -999,6 +1001,7 @@ export const moveQuarterlyGoal = mutation({
             inPath: `/${newQuarterlyGoalId}/${newWeeklyGoalId}`,
             parentId: newWeeklyGoalId,
             depth: 2, // Daily goals have depth 2
+            isComplete: false,
             // Add a reference to the original goal
             carryOver: {
               type: 'week',

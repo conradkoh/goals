@@ -26,12 +26,14 @@ export interface DailyGoalListProps {
     title: string,
     details?: string
   ) => Promise<void>;
+  onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
 
 export const DailyGoalList = ({
   goals,
   onUpdateGoalTitle,
+  onDeleteGoal = () => Promise.resolve(),
   className,
 }: DailyGoalListProps) => {
   return (
@@ -41,6 +43,7 @@ export const DailyGoalList = ({
           key={goal._id}
           goal={goal}
           onUpdateTitle={onUpdateGoalTitle}
+          onDelete={() => onDeleteGoal(goal._id)}
         />
       ))}
     </div>
@@ -90,7 +93,11 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList goals={goals} onUpdateGoalTitle={onUpdateGoalTitle} />
+      <DailyGoalList
+        goals={goals}
+        onUpdateGoalTitle={onUpdateGoalTitle}
+        onDeleteGoal={onDeleteGoal}
+      />
       <div
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isInputFocused && setIsHovering(false)}
@@ -152,7 +159,7 @@ export const DailyGoalGroupHeader = ({
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
-  const isComplete = quarterlyGoal.state?.isComplete ?? false;
+  const isComplete = quarterlyGoal.isComplete;
 
   const handleToggleCompletion = useCallback(
     async (newState: boolean) => {
@@ -259,7 +266,7 @@ export const DailyGoalGroupContainer = ({
   const isSoftComplete = useMemo(
     () =>
       sortedDailyGoals.length > 0 &&
-      sortedDailyGoals.every((goal) => goal.state?.isComplete),
+      sortedDailyGoals.every((goal) => goal.isComplete),
     [sortedDailyGoals]
   );
 

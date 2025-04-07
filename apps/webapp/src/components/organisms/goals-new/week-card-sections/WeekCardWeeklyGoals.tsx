@@ -65,7 +65,7 @@ const WeeklyGoal = ({
 }) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const { fireGoals, toggleFireStatus } = useFireGoals();
-  const isComplete = goal.state?.isComplete ?? false;
+  const isComplete = goal.isComplete;
   const [showUpdateChildrenDialog, setShowUpdateChildrenDialog] =
     useState(false);
   const [pendingCompletionState, setPendingCompletionState] = useState<
@@ -75,7 +75,7 @@ const WeeklyGoal = ({
   // Calculate if all children are complete
   const isSoftComplete =
     goal.children.length > 0 &&
-    goal.children.every((child) => child.state?.isComplete);
+    goal.children.every((child) => child.isComplete);
 
   const isOnFire = fireGoals.has(goal._id.toString());
 
@@ -83,7 +83,7 @@ const WeeklyGoal = ({
     // If toggling to complete and there are incomplete children, show dialog
     if (newState && goal.children.length > 0) {
       const hasIncompleteChildren = goal.children.some(
-        (child) => !(child.state?.isComplete ?? false)
+        (child) => !child.isComplete
       );
       if (hasIncompleteChildren) {
         setPendingCompletionState(newState);
@@ -397,10 +397,10 @@ export const WeekCardWeeklyGoals = forwardRef<
             const weeklyGoals = goal.children;
             const isStarred = goal.state?.isStarred ?? false;
             const isPinned = goal.state?.isPinned ?? false;
-            const isComplete = goal.state?.isComplete ?? false;
+            const isComplete = goal.isComplete;
             const isAllWeeklyGoalsComplete =
               weeklyGoals.length > 0 &&
-              weeklyGoals.every((goal) => goal.state?.isComplete);
+              weeklyGoals.every((goal) => goal.isComplete);
 
             return (
               <div

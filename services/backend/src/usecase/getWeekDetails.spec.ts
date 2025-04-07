@@ -17,6 +17,7 @@ describe('buildGoalTree', () => {
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 1',
+        isComplete: false,
       },
       {
         _id: 'weekly1' as Id<'goals'>,
@@ -28,6 +29,7 @@ describe('buildGoalTree', () => {
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
         title: 'Weekly Goal 1',
+        isComplete: false,
       },
       {
         _id: 'weekly2' as Id<'goals'>,
@@ -39,6 +41,7 @@ describe('buildGoalTree', () => {
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
         title: 'Weekly Goal 2',
+        isComplete: false,
       },
     ];
 
@@ -71,6 +74,7 @@ describe('buildGoalTree', () => {
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 1',
+        isComplete: false,
       },
       {
         _id: 'quarterly2' as Id<'goals'>,
@@ -81,6 +85,7 @@ describe('buildGoalTree', () => {
         depth: 0,
         inPath: '/',
         title: 'Quarterly Goal 2',
+        isComplete: false,
       },
       {
         _id: 'weekly1' as Id<'goals'>,
@@ -92,6 +97,7 @@ describe('buildGoalTree', () => {
         inPath: '/quarterly1',
         parentId: 'quarterly1' as Id<'goals'>,
         title: 'Weekly Goal 1',
+        isComplete: false,
       },
       {
         _id: 'weekly2' as Id<'goals'>,
@@ -103,6 +109,7 @@ describe('buildGoalTree', () => {
         inPath: '/quarterly2',
         parentId: 'quarterly2' as Id<'goals'>,
         title: 'Weekly Goal 2',
+        isComplete: false,
       },
     ];
 
@@ -127,6 +134,7 @@ describe('buildGoalTree', () => {
         depth: 1,
         inPath: '/quarterly1',
         title: 'Weekly Goal 1',
+        isComplete: false,
       },
     ];
 
@@ -150,6 +158,7 @@ describe('buildGoalTree', () => {
         inPath: '/quarterly1',
         parentId: 'nonexistent' as Id<'goals'>,
         title: 'Weekly Goal 1',
+        isComplete: false,
       },
     ];
 

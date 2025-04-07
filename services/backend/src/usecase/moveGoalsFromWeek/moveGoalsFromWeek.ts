@@ -647,6 +647,7 @@ export async function copyWeeklyGoals(
             carryOver,
             parentId: goal.parentId,
             inPath: goal.parentId ? `/${goal.parentId}` : '/',
+            isComplete: false,
           });
 
           return {
