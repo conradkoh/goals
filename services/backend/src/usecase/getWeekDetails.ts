@@ -73,21 +73,44 @@ export const getWeekGoalsTree = async (
 
   // Organize goals by depth, root goals (depth 0) are quarterly goals
   const { tree: quarterlyGoals, index } = buildGoalTree(goals, (n) => {
-    // augment the tree with weekly goal data
+    // Get the weekly state for this goal
+    const weekState = weekStatesMap.get(n._id);
+
+    // Create a shallow copy of the node without isComplete and completedAt
+    const nodeWithoutCompletionStatus = { ...n };
+    delete nodeWithoutCompletionStatus.isComplete;
+    delete nodeWithoutCompletionStatus.completedAt;
+
+    if (weekState) {
+      // Prioritize the goal's completion status but keep it in the state object
+      // This way frontend code that uses goal.state.isComplete doesn't need to change
+      const enhancedState = {
+        ...weekState,
+        // Use the goal's values if available, otherwise keep the state values
+        isComplete:
+          n.isComplete !== undefined ? n.isComplete : weekState.isComplete,
+        completedAt:
+          n.completedAt !== undefined ? n.completedAt : weekState.completedAt,
+      };
+
+      return {
+        ...nodeWithoutCompletionStatus,
+        state: enhancedState,
+      };
+    }
+
+    // If no weekly state exists, we keep the state as undefined
+    // This maintains compatibility with existing frontend code
     return {
-      //add data from the weekly goals (timeseries)
-      ...n,
-      state: weekStatesMap.get(n._id),
+      ...nodeWithoutCompletionStatus,
+      state: undefined,
     };
   });
-
-  // We've removed the stats calculation as it's handled on the frontend
 
   return {
     quarterlyGoals,
     weekNumber,
     allGoals: Object.values(index),
-    // stats field is now optional and not included
   };
 };
 

@@ -433,10 +433,18 @@ export const toggleGoalCompletion = mutation({
       });
     }
 
-    // Update the completion status
+    const completedAt = isComplete ? Date.now() : undefined;
+
+    // Update the completion status in goalStateByWeek (for backward compatibility)
     await ctx.db.patch(weeklyGoal._id, {
       isComplete,
-      completedAt: isComplete ? Date.now() : undefined,
+      completedAt,
+    });
+
+    // Also update the goal table directly
+    await ctx.db.patch(goalId, {
+      isComplete,
+      completedAt,
     });
 
     // If this is a weekly goal (depth 1) and updateChildren is true, update all child goals
@@ -453,7 +461,7 @@ export const toggleGoalCompletion = mutation({
         .filter((q) => q.eq(q.field('parentId'), goalId))
         .collect();
 
-      // Update all child goals' weekly states in parallel
+      // Update all child goals' weekly states and goal records in parallel
       await Promise.all(
         childGoals.map(async (childGoal) => {
           const childWeeklyGoal = await ctx.db
@@ -471,9 +479,15 @@ export const toggleGoalCompletion = mutation({
           if (childWeeklyGoal) {
             await ctx.db.patch(childWeeklyGoal._id, {
               isComplete,
-              completedAt: isComplete ? Date.now() : undefined,
+              completedAt,
             });
           }
+
+          // Update the child goal record directly as well
+          await ctx.db.patch(childGoal._id, {
+            isComplete,
+            completedAt,
+          });
         })
       );
     }

@@ -47,6 +47,8 @@ export default defineSchema({
     inPath: v.string(), //recursive structure
     depth: v.number(), // 0 for quarterly, 1 for weekly, 2 for daily
     carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
+    isComplete: v.optional(v.boolean()), // Whether the goal is complete
+    completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
   }).index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter']),
 
   // timeseries data for snapshotting
