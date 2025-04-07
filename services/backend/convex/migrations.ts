@@ -57,13 +57,20 @@ export const migrateCompletionStatusToGoals = internalMutation({
 export const clearCompletionStatusBatch = internalMutation({
   handler: async (ctx) => {
     // Get a batch of 100 goalStateByWeek records
-    const states = await ctx.db.query('goalStateByWeek').take(1000);
-
+    const statesToUpdateFalse = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_completion_status', (q) => q.eq('isComplete', false))
+      .take(100);
+    const statesToUpdateTrue = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_completion_status', (q) => q.eq('isComplete', true))
+      .take(100);
+    const statesToUpdate = [...statesToUpdateFalse, ...statesToUpdateTrue];
     let processedCount = 0;
 
     // Process each record in the batch
     await Promise.all(
-      states.map(async (state) => {
+      statesToUpdate.map(async (state) => {
         // Now both fields are optional, so we can set them to undefined
         await ctx.db.patch(state._id, {
           isComplete: undefined,
@@ -75,7 +82,7 @@ export const clearCompletionStatusBatch = internalMutation({
 
     return {
       processedCount,
-      hasMore: states.length === 1000, // If we got 100 records, there might be more
+      hasMore: statesToUpdate.length === 100, // If we got 100 records, there might be more
       message: `Cleared completion status data from ${processedCount} goalStateByWeek records`,
     };
   },
