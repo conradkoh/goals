@@ -10,6 +10,7 @@ import {
   PlayCircle,
   Menu,
   X,
+  Keyboard,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,11 @@ export default function DocsLayout({
       title: 'Installation Guide',
       href: '/docs/installation',
       icon: <Download className="h-4 w-4" />,
+    },
+    {
+      title: 'Keyboard Shortcuts',
+      href: '/docs/keyboard-shortcuts',
+      icon: <Keyboard className="h-4 w-4" />,
     },
   ];
 

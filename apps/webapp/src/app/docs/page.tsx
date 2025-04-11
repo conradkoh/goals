@@ -6,6 +6,7 @@ import {
   ArrowRight,
   PlayCircle,
   HelpCircle,
+  Keyboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -76,6 +77,30 @@ export default function DocsPage() {
             </DocListItem>
             <DocListItem variant="indigo">
               Organizing daily tasks for maximum productivity
+            </DocListItem>
+          </DocList>
+        </DocCard>
+
+        <DocCard
+          title="Keyboard Shortcuts"
+          description="Work more efficiently with keyboard shortcuts"
+          icon={<Keyboard className="h-5 w-5" />}
+          href="/docs/keyboard-shortcuts"
+          variant="blue"
+        >
+          <p className="text-sm text-slate-600 mb-4">
+            Master Goals with keyboard shortcuts to navigate and perform actions
+            quickly without using the mouse.
+          </p>
+          <DocList>
+            <DocListItem variant="blue">
+              View switching between daily, weekly, and quarterly views
+            </DocListItem>
+            <DocListItem variant="blue">
+              Global navigation shortcuts
+            </DocListItem>
+            <DocListItem variant="blue">
+              Form and text editing shortcuts
             </DocListItem>
           </DocList>
         </DocCard>

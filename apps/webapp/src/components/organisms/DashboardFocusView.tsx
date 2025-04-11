@@ -10,6 +10,7 @@ import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
 import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
+import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
 
 interface DashboardFocusViewProps {
   viewMode: ViewMode;
@@ -113,6 +114,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   return (
     <div id="db-focus-view" className="w-full h-full">
+      <ViewModeKeyboardShortcuts onViewModeChange={onViewModeChange} />
       <div className="w-full">
         <FocusMenuBar
           viewMode={viewMode}
