@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Pin, Star } from 'lucide-react';
 import React, { ReactNode, useState } from 'react';
 import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
@@ -18,6 +18,10 @@ import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { DateTime } from 'luxon';
+import {
+  GoalStarPin,
+  GoalStarPinContainer,
+} from '@/components/atoms/GoalStarPin';
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
@@ -41,8 +45,10 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   const {
     weekNumber,
     year,
+    quarter,
     createWeeklyGoalOptimistic,
     createDailyGoalOptimistic,
+    updateQuarterlyGoalStatus,
   } = useWeek();
 
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
@@ -53,6 +59,34 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   const isQuarterlyGoal = goal?.depth === 0;
   const isWeeklyGoal = goal?.depth === 1;
   const isComplete = goal.isComplete;
+  const isStarred = goal.state?.isStarred || false;
+  const isPinned = goal.state?.isPinned || false;
+
+  const handleToggleStar = async () => {
+    if (isQuarterlyGoal) {
+      await updateQuarterlyGoalStatus({
+        goalId: goal._id,
+        weekNumber,
+        year,
+        quarter,
+        isStarred: !isStarred,
+        isPinned: false, // Always set pinned to false when starring
+      });
+    }
+  };
+
+  const handleTogglePin = async () => {
+    if (isQuarterlyGoal) {
+      await updateQuarterlyGoalStatus({
+        goalId: goal._id,
+        weekNumber,
+        year,
+        quarter,
+        isStarred: false, // Always set starred to false when pinning
+        isPinned: !isPinned,
+      });
+    }
+  };
 
   const handleCreateWeeklyGoal = async () => {
     const trimmedTitle = newWeeklyGoalTitle.trim();
@@ -108,22 +142,54 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
             {goal.title}
           </h3>
         </div>
-        <GoalEditPopover
-          title={goal.title}
-          details={goal.details}
-          onSave={onSave}
-          trigger={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
-              <Edit2 className="h-3.5 w-3.5" />
-              <span>Edit</span>
-            </Button>
-          }
-        />
+        <div className="flex items-center gap-2">
+          {isQuarterlyGoal && (
+            <GoalStarPinContainer>
+              <GoalStarPin
+                value={{
+                  isStarred,
+                  isPinned,
+                }}
+                onStarred={handleToggleStar}
+                onPinned={handleTogglePin}
+              />
+            </GoalStarPinContainer>
+          )}
+          <GoalEditPopover
+            title={goal.title}
+            details={goal.details}
+            onSave={onSave}
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                <span>Edit</span>
+              </Button>
+            }
+          />
+        </div>
       </div>
+
+      {/* Status indicators */}
+      {isQuarterlyGoal && (isStarred || isPinned) && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {isStarred && (
+            <div className="flex items-center gap-1">
+              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+              <span>Starred</span>
+            </div>
+          )}
+          {isPinned && (
+            <div className="flex items-center gap-1">
+              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+              <span>Pinned</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Display completion date if the goal is complete */}
       {isComplete && goal.completedAt && (
@@ -202,7 +268,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   );
 
   return (
-    <Popover>
+    <Popover key={`goal-details-${goal._id.toString()}`}>
       <PopoverTrigger asChild>
         <Button variant={buttonVariant} className={triggerClassName}>
           <span

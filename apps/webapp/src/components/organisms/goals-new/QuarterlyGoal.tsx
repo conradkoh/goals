@@ -7,7 +7,7 @@ import { Check, Edit2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { DeleteGoalIconButton } from '../../atoms/DeleteGoalIconButton';
 import { GoalEditPopover } from '../../atoms/GoalEditPopover';
-import { GoalStarPin } from '../../atoms/GoalStarPin';
+import { GoalStarPin, GoalStarPinContainer } from '../../atoms/GoalStarPin';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useWeek } from '@/hooks/useWeek';
 import {
@@ -88,14 +88,16 @@ export function QuarterlyGoal({
         )}
       >
         <div className="flex items-center gap-2 group/title">
-          <GoalStarPin
-            value={{
-              isStarred: goal.state?.isStarred || false,
-              isPinned: goal.state?.isPinned || false,
-            }}
-            onStarred={handleToggleStar}
-            onPinned={handleTogglePin}
-          />
+          <GoalStarPinContainer>
+            <GoalStarPin
+              value={{
+                isStarred: goal.state?.isStarred || false,
+                isPinned: goal.state?.isPinned || false,
+              }}
+              onStarred={handleToggleStar}
+              onPinned={handleTogglePin}
+            />
+          </GoalStarPinContainer>
 
           {/* View Mode */}
           <GoalDetailsPopover

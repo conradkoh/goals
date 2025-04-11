@@ -1,5 +1,19 @@
 import { Star, Pin } from 'lucide-react';
+import React from 'react';
 
+// Example usage:
+/*
+import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+
+// Then in your component:
+<GoalStarPinContainer>
+  <GoalStarPin
+    value={{ isStarred: goal.isStarred, isPinned: goal.isPinned }}
+    onStarred={handleStarred}
+    onPinned={handlePinned}
+  />
+</GoalStarPinContainer>
+*/
 interface GoalStarPinProps {
   value: {
     isStarred: boolean;
@@ -24,6 +38,17 @@ const ActionButton = ({
   >
     {icon}
   </button>
+);
+
+/**
+ * Container component that provides the necessary 'group' class for hover effects
+ * Use this to wrap your GoalStarPin component
+ */
+export const GoalStarPinContainer: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = '' }) => (
+  <div className={`group ${className}`}>{children}</div>
 );
 
 export const GoalStarPin = ({
