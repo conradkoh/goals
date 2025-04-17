@@ -85,12 +85,27 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
         });
       }
 
-      // Add weekly goal with its on-fire daily goals
-      result.get(quarterlyId)!.weeklyGoals.push({
-        weeklyGoal,
-        dailyGoals: onFireDailyGoals,
-        isWeeklyOnFire,
-      });
+      // Find existing weekly goal entry or create a new one
+      let weeklyGoalEntry = result.get(quarterlyId)!.weeklyGoals.find(
+        entry => entry.weeklyGoal._id === weeklyGoal._id
+      );
+      
+      if (!weeklyGoalEntry) {
+        weeklyGoalEntry = {
+          weeklyGoal,
+          dailyGoals: [],
+          isWeeklyOnFire,
+        };
+        result.get(quarterlyId)!.weeklyGoals.push(weeklyGoalEntry);
+      } else {
+        // Update fire status if it wasn't already set
+        weeklyGoalEntry.isWeeklyOnFire = weeklyGoalEntry.isWeeklyOnFire || isWeeklyOnFire;
+      }
+      
+      // Add daily goals to the weekly goal entry
+      if (onFireDailyGoals.length > 0) {
+        weeklyGoalEntry.dailyGoals.push(...onFireDailyGoals);
+      }
     });
 
     // Process standalone weekly goals that are on fire (those without daily goals for the selected day)
@@ -118,12 +133,22 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
             });
           }
 
-          // Add weekly goal
-          result.get(quarterlyId)!.weeklyGoals.push({
-            weeklyGoal,
-            dailyGoals: [],
-            isWeeklyOnFire: true,
-          });
+          // Check if this weekly goal is already in the list
+          const existingEntry = result.get(quarterlyId)!.weeklyGoals.find(
+            entry => entry.weeklyGoal._id === weeklyGoal._id
+          );
+          
+          if (!existingEntry) {
+            // Add weekly goal
+            result.get(quarterlyId)!.weeklyGoals.push({
+              weeklyGoal,
+              dailyGoals: [],
+              isWeeklyOnFire: true,
+            });
+          } else {
+            // Update fire status
+            existingEntry.isWeeklyOnFire = true;
+          }
         }
       });
 
@@ -292,58 +317,34 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
               {/* Weekly Goals */}
               <div className="space-y-2 ml-4">
-                {/* First, render all weekly goals that are on fire */}
-                {weeklyGoals
-                  .filter(({ isWeeklyOnFire }) => isWeeklyOnFire)
-                  .map(({ weeklyGoal }) => (
-                    <div
-                      key={`on-fire-${weeklyGoal._id.toString()}`}
-                      className="mb-1"
-                    >
-                      <WeeklyGoalTaskItem
-                        goal={weeklyGoal}
-                        onUpdateTitle={handleUpdateGoalTitle}
-                      />
-                    </div>
-                  ))}
+                {/* Render all weekly goals with their associated daily goals */}
+                {weeklyGoals.map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
+                  <div key={`weekly-${weeklyGoal._id.toString()}`}>
+                    {/* Always show the weekly goal if it's on fire or has daily goals */}
+                    {(isWeeklyOnFire || dailyGoals.length > 0) && (
+                      <div className="mb-1">
+                        <WeeklyGoalTaskItem
+                          goal={weeklyGoal}
+                          onUpdateTitle={handleUpdateGoalTitle}
+                        />
+                      </div>
+                    )}
 
-                {/* Then, render all daily goals grouped by their weekly parent */}
-                {weeklyGoals
-                  .filter(({ dailyGoals }) => dailyGoals.length > 0)
-                  .map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
-                    <div key={`daily-${weeklyGoal._id.toString()}`}>
-                      {/* Only show the weekly goal title if it's not already shown above */}
-                      {!isWeeklyOnFire && dailyGoals.length > 0 && (
-                        <div className="mb-1">
-                          <GoalDetailsPopover
-                            goal={weeklyGoal}
-                            onSave={(title, details) =>
-                              handleUpdateGoalTitle(
-                                weeklyGoal._id,
-                                title,
-                                details
-                              )
-                            }
-                            triggerClassName="p-0 h-auto hover:bg-transparent font-medium justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-700 hover:text-red-800 hover:no-underline"
+                    {/* Daily Goals */}
+                    {dailyGoals.length > 0 && (
+                      <div className="space-y-1 ml-4">
+                        {dailyGoals.map((dailyGoal) => (
+                          <DailyGoalTaskItem
+                            key={dailyGoal._id.toString()}
+                            goal={dailyGoal}
+                            onUpdateTitle={handleUpdateGoalTitle}
+                            onDelete={() => onDeleteGoal(dailyGoal._id)}
                           />
-                        </div>
-                      )}
-
-                      {/* Daily Goals */}
-                      {dailyGoals.length > 0 && (
-                        <div className="space-y-1 ml-4">
-                          {dailyGoals.map((dailyGoal) => (
-                            <DailyGoalTaskItem
-                              key={dailyGoal._id.toString()}
-                              goal={dailyGoal}
-                              onUpdateTitle={handleUpdateGoalTitle}
-                              onDelete={() => onDeleteGoal(dailyGoal._id)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )

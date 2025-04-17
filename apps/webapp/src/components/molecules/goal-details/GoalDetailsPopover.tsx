@@ -16,12 +16,20 @@ import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek } from '@/lib/constants';
+import { DayOfWeek, getDayName } from '@/lib/constants';
 import { DateTime } from 'luxon';
 import {
   GoalStarPin,
   GoalStarPinContainer,
 } from '@/components/atoms/GoalStarPin';
+import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
@@ -50,10 +58,13 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     createDailyGoalOptimistic,
     updateQuarterlyGoalStatus,
   } = useWeek();
+  const currentDateTime = useCurrentDateTime();
 
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
   const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
-  const [selectedDayOfWeek] = useState<DayOfWeek>(DayOfWeek.MONDAY);
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
+    () => (currentDateTime.weekday as DayOfWeek)
+  );
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
@@ -257,7 +268,27 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                       onChange={setNewDailyGoalTitle}
                       onSubmit={handleCreateDailyGoal}
                       onEscape={() => setNewDailyGoalTitle('')}
-                    />
+                    >
+                      <div className="mt-2">
+                        <Select
+                          value={selectedDayOfWeek.toString()}
+                          onValueChange={(value) =>
+                            setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                          }
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Select day" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(DayOfWeek).map((value) => (
+                              <SelectItem key={value} value={value.toString()}>
+                                {getDayName(value)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CreateGoalInput>
                   </div>
                 </>
               )}
