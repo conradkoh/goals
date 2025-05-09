@@ -20,7 +20,6 @@ import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
 const WeekCardContent = ({
   week,
   isCurrentWeek,
-  handleFocusClick,
 }: {
   week: {
     year: number;
@@ -29,7 +28,6 @@ const WeekCardContent = ({
     weekData: WeekData;
   };
   isCurrentWeek: boolean;
-  handleFocusClick: (weekNumber: number, year: number, quarter: number) => void;
 }) => {
   // Fetch the actual week data from the backend
   const weekDataFromBackend = useWeekWithoutDashboard({
@@ -62,12 +60,6 @@ const WeekCardContent = ({
   // Loading state is determined by weekDataFromBackend being undefined
   const isLoading = weekDataFromBackend === undefined;
 
-  // Memoize the focus click handler
-  const handleFocusClickMemo = useCallback(
-    () => handleFocusClick(week.weekNumber, week.year, week.quarter),
-    [handleFocusClick, week.weekNumber, week.year, week.quarter]
-  );
-
   return (
     <WeekCard
       year={week.year}
@@ -76,7 +68,6 @@ const WeekCardContent = ({
       mondayDate={mondayDateString}
       weekNumber={week.weekNumber}
       isCurrentWeek={isCurrentWeek}
-      onFocusClick={handleFocusClickMemo}
       weekData={weekData}
     >
       <WeekProviderWithoutDashboard
@@ -122,7 +113,6 @@ WeekCardContent.displayName = 'WeekCardContent';
 
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
-  const router = useRouter();
 
   // Get the current week number using Luxon
   const currentDateTime = DateTime.now();
@@ -151,14 +141,6 @@ export const MultiWeekLayout = memo(() => {
   });
   const sensors = useSensors(mouseSensor);
 
-  // Handle focus click to navigate to the focus page
-  const handleFocusClick = useCallback(
-    (weekNumber: number, year: number, quarter: number) => {
-      router.push(`/focus?year=${year}&quarter=${quarter}&week=${weekNumber}`);
-    },
-    [router]
-  );
-
   return (
     <div className="flex flex-col h-full">
       <DndContext sensors={sensors}>
@@ -174,7 +156,6 @@ export const MultiWeekLayout = memo(() => {
                 key={`${week.year}-${week.quarter}-${week.weekNumber}`}
                 week={week}
                 isCurrentWeek={isCurrentWeek}
-                handleFocusClick={handleFocusClick}
               />
             );
           })}

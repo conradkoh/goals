@@ -16,7 +16,6 @@ interface WeekCardProps {
   weekNumber: number;
   isCurrentWeek?: boolean;
   children?: React.ReactNode;
-  onFocusClick?: () => void;
   weekData: WeekData;
   year: number;
   quarter: number;
@@ -29,7 +28,6 @@ const WeekCardInner = ({
   weekNumber,
   isCurrentWeek,
   children,
-  onFocusClick,
   weekData,
 }: Omit<WeekCardProps, 'year' | 'quarter'>) => {
   const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
@@ -77,14 +75,6 @@ const WeekCardInner = ({
               </span>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onFocusClick}
-                title="Focus Mode"
-              >
-                <Focus className="h-4 w-4" />
-              </Button>
               <WeekActionMenu {...weekActionMenuProps} />
             </div>
           </div>
