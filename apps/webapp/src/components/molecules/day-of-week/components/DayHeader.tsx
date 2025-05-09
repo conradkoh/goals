@@ -4,6 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Tooltip,
@@ -13,7 +14,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { History } from 'lucide-react';
+import { History, CalendarDays } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 import { TaskMovePreview } from './TaskMovePreview';
@@ -52,6 +53,7 @@ export const DayHeader = ({
       };
     }>;
   } | null>(null);
+  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] = useState(false);
 
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
@@ -76,48 +78,113 @@ export const DayHeader = ({
     }
   };
 
+  // Get all past days in the week
+  const getAllPastDaysOfWeek = (currentDay: DayOfWeek): DayOfWeek[] => {
+    const pastDays: DayOfWeek[] = [];
+    let day = currentDay;
+    
+    while (day > DayOfWeek.MONDAY) {
+      const previousDay = getPreviousDayOfWeek(day);
+      pastDays.push(previousDay);
+      day = previousDay;
+    }
+    
+    return pastDays;
+  };
+
   // Format the date string
   const formattedDate = DateTime.fromMillis(dateTimestamp).toFormat('MMM d');
 
-  const handlePreviewTasks = async () => {
+  const handlePreviewTasks = async (fromAllPastDays = false) => {
     if (isMonday) return;
+    
+    setIsPullingFromAllPastDays(fromAllPastDays);
+    
     try {
       const year = DateTime.fromMillis(dateTimestamp).year;
       const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
-      const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
-
-      // Use the moveGoalsFromDay function
-      const previewData = await moveGoalsFromDay({
-        from: {
-          year,
-          quarter,
-          weekNumber,
-          dayOfWeek: previousDayOfWeek,
-        },
-        to: {
-          year,
-          quarter,
-          weekNumber,
-          dayOfWeek,
-        },
-        dryRun: true,
-        moveOnlyIncomplete: true,
-      });
-
-      // Check if we have preview data
-      if ('canMove' in previewData && previewData.canMove) {
-        setPreview({
-          previousDay: previewData.sourceDay.name,
-          targetDay: previewData.targetDay.name,
-          tasks: previewData.tasks,
+      
+      if (fromAllPastDays) {
+        // Get all past days in the week
+        const pastDays = getAllPastDaysOfWeek(dayOfWeek);
+        let allTasks: any[] = [];
+        let hasAnyTasks = false;
+        
+        // Preview tasks from each past day
+        for (const pastDay of pastDays) {
+          const previewData = await moveGoalsFromDay({
+            from: {
+              year,
+              quarter,
+              weekNumber,
+              dayOfWeek: pastDay,
+            },
+            to: {
+              year,
+              quarter,
+              weekNumber,
+              dayOfWeek,
+            },
+            dryRun: true,
+            moveOnlyIncomplete: true,
+          });
+          
+          if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
+            allTasks = [...allTasks, ...previewData.tasks];
+            hasAnyTasks = true;
+          }
+        }
+        
+        if (hasAnyTasks) {
+          setPreview({
+            previousDay: "all past days",
+            targetDay: getDayName(dayOfWeek),
+            tasks: allTasks,
+          });
+          setShowConfirmDialog(true);
+        } else {
+          toast({
+            title: 'Cannot move tasks',
+            description: 'No incomplete tasks to move from previous days',
+            variant: 'default',
+          });
+        }
+      } else {
+        // Original functionality for single previous day
+        const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
+        
+        const previewData = await moveGoalsFromDay({
+          from: {
+            year,
+            quarter,
+            weekNumber,
+            dayOfWeek: previousDayOfWeek,
+          },
+          to: {
+            year,
+            quarter,
+            weekNumber,
+            dayOfWeek,
+          },
+          dryRun: true,
+          moveOnlyIncomplete: true,
         });
-        setShowConfirmDialog(true);
-      } else if (!('canMove' in previewData) || !previewData.canMove) {
-        toast({
-          title: 'Cannot move tasks',
-          description: 'No incomplete tasks to move',
-          variant: 'default',
-        });
+
+        // Check if we have preview data
+        if ('canMove' in previewData && previewData.canMove) {
+          setPreview({
+            previousDay: previewData.sourceDay.name,
+            targetDay: previewData.targetDay.name,
+            tasks: previewData.tasks,
+          });
+          setShowConfirmDialog(true);
+        } else if (!('canMove' in previewData) || !previewData.canMove) {
+          toast({
+            title: 'Cannot move tasks',
+            description: 'No incomplete tasks to move',
+            variant: 'default',
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to preview tasks:', error);
@@ -135,34 +202,72 @@ export const DayHeader = ({
       setIsMovingTasks(true);
       const year = DateTime.fromMillis(dateTimestamp).year;
       const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
-      const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
+      
+      if (isPullingFromAllPastDays) {
+        // Handle pulling from all past days
+        const pastDays = getAllPastDaysOfWeek(dayOfWeek);
+        let totalTasksMoved = 0;
+        
+        // Move tasks from each past day
+        for (const pastDay of pastDays) {
+          const result = await moveGoalsFromDay({
+            from: {
+              year,
+              quarter,
+              weekNumber,
+              dayOfWeek: pastDay,
+            },
+            to: {
+              year,
+              quarter,
+              weekNumber,
+              dayOfWeek,
+            },
+            dryRun: false,
+            moveOnlyIncomplete: true,
+          });
+          
+          if (result && typeof result === 'object' && 'tasksMoved' in result && typeof result.tasksMoved === 'number') {
+            totalTasksMoved += result.tasksMoved;
+          }
+        }
+        
+        setShowConfirmDialog(false);
+        toast({
+          title: 'Tasks moved',
+          description: `Moved ${totalTasksMoved} incomplete tasks from all previous days to ${getDayName(dayOfWeek)}.`,
+          variant: 'default',
+        });
+      } else {
+        // Original functionality for single previous day
+        const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
 
-      // Use the moveGoalsFromDay function for the actual move operation
-      await moveGoalsFromDay({
-        from: {
-          year,
-          quarter,
-          weekNumber,
-          dayOfWeek: previousDayOfWeek,
-        },
-        to: {
-          year,
-          quarter,
-          weekNumber,
-          dayOfWeek,
-        },
-        dryRun: false,
-        moveOnlyIncomplete: true,
-      });
+        await moveGoalsFromDay({
+          from: {
+            year,
+            quarter,
+            weekNumber,
+            dayOfWeek: previousDayOfWeek,
+          },
+          to: {
+            year,
+            quarter,
+            weekNumber,
+            dayOfWeek,
+          },
+          dryRun: false,
+          moveOnlyIncomplete: true,
+        });
 
-      setShowConfirmDialog(false);
-      toast({
-        title: 'Tasks moved',
-        description: `Moved incomplete tasks from ${getDayName(
-          previousDayOfWeek
-        )} to ${getDayName(dayOfWeek)}.`,
-        variant: 'default',
-      });
+        setShowConfirmDialog(false);
+        toast({
+          title: 'Tasks moved',
+          description: `Moved incomplete tasks from ${getDayName(
+            previousDayOfWeek
+          )} to ${getDayName(dayOfWeek)}.`,
+          variant: 'default',
+        });
+      }
     } catch (error) {
       console.error('Failed to move tasks:', error);
       toast({
@@ -227,18 +332,35 @@ export const DayHeader = ({
                     </Tooltip>
                   </TooltipProvider>
                 ) : (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={handlePreviewTasks}
-                  >
-                    <History className="mr-2 h-4 w-4" />
-                    <div className="flex flex-col w-full items-center">
-                      <span>Pull Incomplete</span>
-                      <span className="text-gray-500 text-xs">
-                        from previous day
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => handlePreviewTasks(false)}
+                    >
+                      <History className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col w-full items-center">
+                        <span>Pull Incomplete</span>
+                        <span className="text-gray-500 text-xs">
+                          from previous day
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => handlePreviewTasks(true)}
+                    >
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      <div className="flex flex-col w-full items-center">
+                        <span>Pull Incomplete</span>
+                        <span className="text-gray-500 text-xs">
+                          from all past days in week
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
