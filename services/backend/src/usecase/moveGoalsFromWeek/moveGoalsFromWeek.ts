@@ -712,6 +712,33 @@ export async function copyWeeklyGoals(
     })
   );
 
+  // Preserve fire goal status for newly created goals and clean up old ones
+  await Promise.all(
+    goalInsertions
+      .filter(({ isNew }) => isNew) // Only process newly created goals
+      .map(async ({ goal, targetWeekGoalId }) => {
+        // Check if the original goal has fire status
+        const existingFireGoal = await ctx.db
+          .query('fireGoals')
+          .withIndex('by_user_and_goal', (q) =>
+            q.eq('userId', targetWeek.userId).eq('goalId', goal._id)
+          )
+          .first();
+
+        if (existingFireGoal) {
+          // Create fire goal entry for the new goal
+          await ctx.db.insert('fireGoals', {
+            userId: targetWeek.userId,
+            goalId: targetWeekGoalId,
+            createdAt: Date.now(),
+          });
+
+          // Remove fire goal status from the original goal since it's been carried over
+          await ctx.db.delete(existingFireGoal._id);
+        }
+      })
+  );
+
   // Return the created weekly goals
   return allGoals.filter(Boolean) as Doc<'goals'>[];
 }

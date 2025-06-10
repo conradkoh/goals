@@ -275,6 +275,73 @@ describe('moveGoalsFromWeek', () => {
       })
     );
   });
+
+  test('fire goal status is preserved during carry-over', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+
+    // Create test data
+    const quarterlyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Quarterly
+    );
+    const weeklyGoalId = await createMockGoal(
+      ctx,
+      sessionId,
+      GoalDepth.Weekly,
+      quarterlyGoalId
+    );
+
+    // Set the weekly goal as a fire goal
+    await ctx.mutation(api.fireGoal.toggleFireStatus, {
+      sessionId,
+      goalId: weeklyGoalId,
+    });
+
+    // Verify the goal is on fire
+    const fireGoalsBefore = await ctx.query(api.fireGoal.getFireGoals, {
+      sessionId,
+    });
+    expect(fireGoalsBefore).toContain(weeklyGoalId);
+
+    // Move goals from week 1 to week 2
+    const moveResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 1 },
+      to: { year: 2024, quarter: 1, weekNumber: 2 },
+      dryRun: false,
+    });
+
+    expect(moveResult.weekStatesCopied).toBe(1);
+
+    // Get the goals in week 2
+    const weekTwoGoals = await ctx.query(api.dashboard.getWeek, {
+      sessionId,
+      year: 2024,
+      quarter: 1,
+      weekNumber: 2,
+    });
+
+    // Find the carried over weekly goal
+    const quarterlyGoal = weekTwoGoals.tree.quarterlyGoals.find(
+      (qg: GoalWithDetailsAndChildren) => qg._id === quarterlyGoalId
+    );
+    const carriedOverWeeklyGoal = quarterlyGoal?.children.find(
+      (wg: GoalWithDetailsAndChildren) =>
+        wg.carryOver?.fromGoal.previousGoalId === weeklyGoalId
+    );
+
+    expect(carriedOverWeeklyGoal).toBeDefined();
+    expect(carriedOverWeeklyGoal?._id).toBeDefined();
+
+    // Verify the carried over goal is still on fire
+    const fireGoalsAfter = await ctx.query(api.fireGoal.getFireGoals, {
+      sessionId,
+    });
+    expect(fireGoalsAfter).toContain(carriedOverWeeklyGoal!._id);
+    expect(fireGoalsAfter).toHaveLength(1); // Should only have the new goal, not the old one
+  });
 });
 
 describe('moveGoalsFromDay', () => {
