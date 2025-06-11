@@ -17,7 +17,7 @@ import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { History, CalendarDays } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
-import { TaskMovePreview } from './TaskMovePreview';
+import { TaskMovePreview, TaskMovePreviewData } from './TaskMovePreview';
 import { toast } from '@/components/ui/use-toast';
 
 interface DayHeaderProps {
@@ -34,26 +34,9 @@ export const DayHeader = ({
   const { moveGoalsFromDay } = useWeek();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [preview, setPreview] = useState<{
-    previousDay: string;
-    targetDay: string;
-    tasks: Array<{
-      id: string;
-      title: string;
-      details?: string;
-      quarterlyGoal: {
-        id: string;
-        title: string;
-        isStarred?: boolean;
-        isPinned?: boolean;
-      };
-      weeklyGoal: {
-        id: string;
-        title: string;
-      };
-    }>;
-  } | null>(null);
-  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] = useState(false);
+  const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
+  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] =
+    useState(false);
 
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
@@ -82,13 +65,13 @@ export const DayHeader = ({
   const getAllPastDaysOfWeek = (currentDay: DayOfWeek): DayOfWeek[] => {
     const pastDays: DayOfWeek[] = [];
     let day = currentDay;
-    
+
     while (day > DayOfWeek.MONDAY) {
       const previousDay = getPreviousDayOfWeek(day);
       pastDays.push(previousDay);
       day = previousDay;
     }
-    
+
     return pastDays;
   };
 
@@ -97,19 +80,19 @@ export const DayHeader = ({
 
   const handlePreviewTasks = async (fromAllPastDays = false) => {
     if (isMonday) return;
-    
+
     setIsPullingFromAllPastDays(fromAllPastDays);
-    
+
     try {
       const year = DateTime.fromMillis(dateTimestamp).year;
       const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
-      
+
       if (fromAllPastDays) {
         // Get all past days in the week
         const pastDays = getAllPastDaysOfWeek(dayOfWeek);
         let allTasks: any[] = [];
         let hasAnyTasks = false;
-        
+
         // Preview tasks from each past day
         for (const pastDay of pastDays) {
           const previewData = await moveGoalsFromDay({
@@ -128,16 +111,20 @@ export const DayHeader = ({
             dryRun: true,
             moveOnlyIncomplete: true,
           });
-          
-          if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
+
+          if (
+            'canMove' in previewData &&
+            previewData.canMove &&
+            previewData.tasks.length > 0
+          ) {
             allTasks = [...allTasks, ...previewData.tasks];
             hasAnyTasks = true;
           }
         }
-        
+
         if (hasAnyTasks) {
           setPreview({
-            previousDay: "all past days",
+            previousDay: 'all past days',
             targetDay: getDayName(dayOfWeek),
             tasks: allTasks,
           });
@@ -152,7 +139,7 @@ export const DayHeader = ({
       } else {
         // Original functionality for single previous day
         const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
-        
+
         const previewData = await moveGoalsFromDay({
           from: {
             year,
@@ -202,12 +189,12 @@ export const DayHeader = ({
       setIsMovingTasks(true);
       const year = DateTime.fromMillis(dateTimestamp).year;
       const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
-      
+
       if (isPullingFromAllPastDays) {
         // Handle pulling from all past days
         const pastDays = getAllPastDaysOfWeek(dayOfWeek);
         let totalTasksMoved = 0;
-        
+
         // Move tasks from each past day
         for (const pastDay of pastDays) {
           const result = await moveGoalsFromDay({
@@ -226,16 +213,23 @@ export const DayHeader = ({
             dryRun: false,
             moveOnlyIncomplete: true,
           });
-          
-          if (result && typeof result === 'object' && 'tasksMoved' in result && typeof result.tasksMoved === 'number') {
+
+          if (
+            result &&
+            typeof result === 'object' &&
+            'tasksMoved' in result &&
+            typeof result.tasksMoved === 'number'
+          ) {
             totalTasksMoved += result.tasksMoved;
           }
         }
-        
+
         setShowConfirmDialog(false);
         toast({
           title: 'Tasks moved',
-          description: `Moved ${totalTasksMoved} incomplete tasks from all previous days to ${getDayName(dayOfWeek)}.`,
+          description: `Moved ${totalTasksMoved} incomplete tasks from all previous days to ${getDayName(
+            dayOfWeek
+          )}.`,
           variant: 'default',
         });
       } else {
@@ -345,9 +339,9 @@ export const DayHeader = ({
                         </span>
                       </div>
                     </DropdownMenuItem>
-                    
+
                     <DropdownMenuSeparator />
-                    
+
                     <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={() => handlePreviewTasks(true)}

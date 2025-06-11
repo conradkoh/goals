@@ -10,8 +10,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { History, Pin, Star } from 'lucide-react';
+import React from 'react';
 
-interface PreviewTask {
+export interface PreviewTask {
   id: string;
   title: string;
   details?: string;
@@ -27,15 +28,17 @@ interface PreviewTask {
   };
 }
 
+export interface TaskMovePreviewData {
+  previousDay: string;
+  targetDay: string;
+  tasks: PreviewTask[];
+}
+
 interface TaskMovePreviewProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  preview: {
-    previousDay: string;
-    targetDay: string;
-    tasks: Array<PreviewTask>;
-  } | null;
-  onConfirm: () => Promise<void>;
+  preview: TaskMovePreviewData | null;
+  onConfirm: () => void;
 }
 
 export const TaskMovePreview = ({

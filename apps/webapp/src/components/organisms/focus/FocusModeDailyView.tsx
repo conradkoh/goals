@@ -8,6 +8,7 @@ import { DayOfWeek } from '@/lib/constants';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
+import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionMenu';
 import { useCallback, useMemo, useState } from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
@@ -147,6 +148,14 @@ const FocusModeDailyViewInner = ({
     return hasVisibleFireGoalsForCurrentDay && isFocusModeEnabled;
   }, [hasVisibleFireGoalsForCurrentDay, isFocusModeEnabled]);
 
+  // Get current day data for the action menu
+  const currentDay = useMemo(() => {
+    const currentDayData = weekData.days?.find(
+      (day) => day.dayOfWeek === selectedDayOfWeek
+    );
+    return currentDayData;
+  }, [weekData.days, selectedDayOfWeek]);
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
       <div className="flex justify-end mb-2 gap-2">
@@ -159,6 +168,15 @@ const FocusModeDailyViewInner = ({
           onJumpToCurrentDay={onJumpToCurrent}
         />
       </div>
+
+      {/* Task Pull Action Menu - above urgent items section */}
+      {currentDay && (
+        <TaskPullActionMenu
+          dayOfWeek={selectedDayOfWeek}
+          weekNumber={weekNumber}
+          dateTimestamp={currentDay.dateTimestamp}
+        />
+      )}
 
       <OnFireGoalsSection
         weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay()}
