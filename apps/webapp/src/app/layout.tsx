@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ConvexClientProvider } from '@/components/atoms/contexts/ConvexClientProvider';
+import { ClientOnly } from '@/components/atoms/ClientOnly';
+import { SessionProvider } from '@/modules/auth/SessionContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -54,7 +56,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ConvexClientProvider>
+          <ClientOnly>
+
+          <SessionProvider>
+            {children}
+          </SessionProvider>
+          </ClientOnly>
+        </ConvexClientProvider>
       </body>
     </html>
   );

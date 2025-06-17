@@ -7,7 +7,8 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Edit2, Pin, Star } from 'lucide-react';
+import { Edit2, Pin, Star, FileText } from 'lucide-react';
+import { QuarterlyGoalSummaryPopover } from '@/components/molecules/quarterly-summary';
 import React, { ReactNode, useState } from 'react';
 import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
@@ -165,6 +166,21 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                 onPinned={handleTogglePin}
               />
             </GoalStarPinContainer>
+          )}
+          {isQuarterlyGoal && (
+            <QuarterlyGoalSummaryPopover
+              quarterlyGoal={goal}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>View Summary</span>
+                </Button>
+              }
+            />
           )}
           <GoalEditPopover
             title={goal.title}

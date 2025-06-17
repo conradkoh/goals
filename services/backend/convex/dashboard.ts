@@ -654,3 +654,115 @@ export const getWeek = query({
     };
   },
 });
+
+// Get comprehensive quarterly goal summary with all weekly and daily goals
+export const getQuarterlyGoalSummary = query({
+  args: {
+    sessionId: v.id('sessions'),
+    quarterlyGoalId: v.id('goals'),
+    year: v.number(),
+    quarter: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, quarterlyGoalId, year, quarter } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Verify the quarterly goal exists and belongs to the user
+    const quarterlyGoal = await ctx.db.get(quarterlyGoalId);
+    if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Quarterly goal not found',
+      });
+    }
+
+    // Verify it's actually a quarterly goal (depth 0)
+    if (quarterlyGoal.depth !== 0) {
+      throw new ConvexError({
+        code: 'INVALID_STATE',
+        message: 'Goal is not a quarterly goal',
+      });
+    }
+
+    // Calculate the start and end dates of the quarter
+    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
+    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
+    const startWeek = startDate.weekNumber;
+    const endWeek = endDate.weekNumber;
+
+    // Get details for all weeks in the quarter
+    const weekPromises = [];
+    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+      weekPromises.push(
+        getWeekGoalsTree(ctx, {
+          userId,
+          year,
+          quarter,
+          weekNumber: weekNum,
+        })
+      );
+    }
+
+    const weekResults = await Promise.all(weekPromises);
+
+    // Find the quarterly goal in each week's data and extract its weekly/daily goals
+    const weeklyGoalsByWeek: Record<number, any[]> = {};
+    let quarterlyGoalDetails = null;
+
+    for (const weekTree of weekResults) {
+      const targetQuarterlyGoal = weekTree.quarterlyGoals.find(
+        (qg) => qg._id === quarterlyGoalId
+      );
+
+      if (targetQuarterlyGoal) {
+        // Store quarterly goal details (from first occurrence)
+        if (!quarterlyGoalDetails) {
+          quarterlyGoalDetails = {
+            _id: targetQuarterlyGoal._id,
+            title: targetQuarterlyGoal.title,
+            details: targetQuarterlyGoal.details,
+            isComplete: targetQuarterlyGoal.isComplete,
+            completedAt: targetQuarterlyGoal.completedAt,
+            state: targetQuarterlyGoal.state,
+          };
+        }
+
+        // Store weekly goals for this week
+        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
+          (weeklyGoal) => ({
+            ...weeklyGoal,
+            weekNumber: weekTree.weekNumber,
+            // Calculate week date range as timestamps
+            weekStartTimestamp: DateTime.fromObject({
+              weekNumber: weekTree.weekNumber,
+              weekYear: year,
+            }).startOf('week').toMillis(),
+            weekEndTimestamp: DateTime.fromObject({
+              weekNumber: weekTree.weekNumber,
+              weekYear: year,
+            }).endOf('week').toMillis(),
+          })
+        );
+      }
+    }
+
+    if (!quarterlyGoalDetails) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Quarterly goal not found in any week data',
+      });
+    }
+
+    return {
+      quarterlyGoal: quarterlyGoalDetails,
+      weeklyGoalsByWeek,
+      quarter,
+      year,
+      weekRange: {
+        startWeek,
+        endWeek,
+      },
+    };
+  },
+});

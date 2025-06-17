@@ -3,9 +3,7 @@
 import { User, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
-import { ClientOnly } from '@/components/atoms/ClientOnly';
 import { DashboardProvider } from '@/hooks/useDashboard';
-import { SessionProvider } from '@/modules/auth/SessionContext';
 import { useSession } from '@/modules/auth/useSession';
 import { api } from '@services/backend/convex/_generated/api';
 import { useQuery } from 'convex/react';
@@ -24,8 +22,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClientOnly>
-      <SessionProvider>
         <DashboardProvider>
           <div
             id="dashboard-layout"
@@ -36,8 +32,6 @@ export default function DashboardLayout({
           </div>
           <Toaster />
         </DashboardProvider>
-      </SessionProvider>
-    </ClientOnly>
   );
 }
 

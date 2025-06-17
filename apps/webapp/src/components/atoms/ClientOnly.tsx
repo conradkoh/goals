@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useState } from 'react';
 /**
  * ClientOnly component that renders its children only on the client side.
