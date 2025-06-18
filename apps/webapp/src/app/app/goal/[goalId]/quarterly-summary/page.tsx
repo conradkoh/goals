@@ -47,12 +47,12 @@ export default function QuarterlySummaryPage() {
     if (window.history.length > 1) {
       router.back();
     } else {
-      router.push('/dashboard');
+      router.push('/app/dashboard');
     }
   }, [router]);
 
   const handleGoHome = React.useCallback(() => {
-    router.push('/dashboard');
+          router.push('/app/dashboard');
   }, [router]);
 
   return (

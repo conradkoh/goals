@@ -45,7 +45,7 @@ export function QuarterlyGoalSummaryPopover({
   const goalActions = useSummaryGoalActions();
 
   // Generate the full-screen page URL with year and quarter params
-  const fullScreenUrl = `/goal/${quarterlyGoal._id}/quarterly-summary?year=${year}&quarter=${quarter}`;
+  const fullScreenUrl = `/app/goal/${quarterlyGoal._id}/quarterly-summary?year=${year}&quarter=${quarter}`;
 
   return (
     <Popover>
