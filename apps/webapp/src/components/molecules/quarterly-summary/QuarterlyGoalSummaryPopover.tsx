@@ -53,11 +53,11 @@ export function QuarterlyGoalSummaryPopover({
         {trigger}
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[800px] max-w-[calc(100vw-32px)] max-h-[80vh] overflow-y-auto p-0"
+        className="w-[800px] max-w-[calc(100vw-32px)] max-h-[min(600px,calc(100vh-100px))] p-0 flex flex-col"
         side="bottom"
         align="start"
       >
-        <div className="sticky top-0 bg-background border-b p-4 flex items-center justify-between z-10">
+        <div className="flex-shrink-0 bg-background border-b p-4 flex items-center justify-between">
           <h3 className="font-semibold text-lg">Quarterly Goal Summary</h3>
           <Button
             variant="outline"
@@ -77,7 +77,7 @@ export function QuarterlyGoalSummaryPopover({
           </Button>
         </div>
         
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <QuarterlyGoalSummaryView
             quarterlyGoalId={quarterlyGoal._id}
             year={year}

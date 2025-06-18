@@ -1,7 +1,7 @@
 import React from 'react';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
-import { WeeklySummarySection } from './WeeklySummarySection';
+import { WeekSection } from './WeekSection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -96,12 +96,26 @@ export function QuarterlyGoalSummaryView({
       : null;
   }, [quarterlyGoal?.completedAt]);
 
-  // Get all weeks with goals, sorted by week number
-  const weeksWithGoals = React.useMemo(() => {
-    return Object.keys(weeklyGoalsByWeek || {})
+  // Group weekly goals by week number and sort weeks
+  const weeksByNumber = React.useMemo(() => {
+    if (!weeklyGoalsByWeek) return [];
+    
+    const weekMap: Record<number, any[]> = {};
+    
+    Object.entries(weeklyGoalsByWeek).forEach(([weekNum, goals]) => {
+      const weekNumber = Number(weekNum);
+      if (goals && goals.length > 0) {
+        weekMap[weekNumber] = goals;
+      }
+    });
+    
+    return Object.keys(weekMap)
       .map(Number)
       .sort()
-      .filter(weekNum => (weeklyGoalsByWeek || {})[weekNum]?.length > 0);
+      .map(weekNum => ({
+        weekNumber: weekNum,
+        weeklyGoals: weekMap[weekNum],
+      }));
   }, [weeklyGoalsByWeek]);
 
   // Calculate summary stats
@@ -223,7 +237,7 @@ export function QuarterlyGoalSummaryView({
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-700">
-              {weeksWithGoals.length}
+              {weeksByNumber.length}
             </div>
             <div className="text-xs text-purple-600">Active Weeks</div>
           </div>
@@ -237,23 +251,21 @@ export function QuarterlyGoalSummaryView({
       </div>
 
       {/* Weekly Goals Sections */}
-      {weeksWithGoals.length > 0 ? (
+      {weeksByNumber.length > 0 ? (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Weekly Goals ({totalWeeklyGoals})
           </h2>
           
-          {weeksWithGoals.map(weekNumber => (
-            <div key={weekNumber} className="space-y-3">
-              {(weeklyGoalsByWeek?.[weekNumber] || []).map(weeklyGoal => (
-                <WeeklySummarySection
-                  key={weeklyGoal._id}
-                  weeklyGoal={weeklyGoal}
-                  goalActions={goalActions}
-                  disableStrikethrough={true}
-                />
-              ))}
-            </div>
+          {weeksByNumber.map(({ weekNumber, weeklyGoals }) => (
+            <WeekSection
+              key={weekNumber}
+              weekNumber={weekNumber}
+              year={year}
+              weeklyGoals={weeklyGoals}
+              goalActions={goalActions}
+              disableStrikethrough={true}
+            />
           ))}
         </div>
       ) : (
