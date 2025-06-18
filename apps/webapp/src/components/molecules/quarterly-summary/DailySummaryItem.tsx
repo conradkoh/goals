@@ -33,6 +33,10 @@ interface DailySummaryItemProps {
    * Optional CSS class name for the component.
    */
   className?: string;
+  /**
+   * Whether to disable strikethrough for completed goals.
+   */
+  disableStrikethrough?: boolean;
 }
 
 /**
@@ -49,6 +53,7 @@ export function DailySummaryItem({
   weekNumber,
   goalActions,
   className,
+  disableStrikethrough,
 }: DailySummaryItemProps) {
   const isComplete = dailyGoal.isComplete;
   const dayName = React.useMemo(() => getDayName(dayOfWeek), [dayOfWeek]);
@@ -108,7 +113,7 @@ export function DailySummaryItem({
         <h4
           className={cn(
             'font-medium text-sm leading-tight mb-1',
-            isComplete && 'line-through text-muted-foreground'
+            !disableStrikethrough && isComplete && 'line-through text-muted-foreground'
           )}
         >
           {dailyGoal.title}
@@ -118,7 +123,7 @@ export function DailySummaryItem({
           <div
             className={cn(
               'text-xs text-muted-foreground leading-relaxed',
-              isComplete && 'line-through'
+              !disableStrikethrough && isComplete && 'line-through'
             )}
             dangerouslySetInnerHTML={{ __html: dailyGoal.details }}
           />

@@ -183,7 +183,7 @@ export function QuarterlyGoalSummaryView({
             <h1
               className={cn(
                 'text-2xl font-bold text-gray-900 mb-2 leading-tight',
-                isComplete && 'line-through text-gray-500'
+                isComplete && 'text-gray-500'
               )}
             >
               {quarterlyGoal?.title}
@@ -199,7 +199,7 @@ export function QuarterlyGoalSummaryView({
               <div
                 className={cn(
                   'text-gray-700 leading-relaxed',
-                  isComplete && 'line-through text-gray-500'
+                  isComplete && 'text-gray-500'
                 )}
                 dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
               />
@@ -250,6 +250,7 @@ export function QuarterlyGoalSummaryView({
                   key={weeklyGoal._id}
                   weeklyGoal={weeklyGoal}
                   goalActions={goalActions}
+                  disableStrikethrough={true}
                 />
               ))}
             </div>

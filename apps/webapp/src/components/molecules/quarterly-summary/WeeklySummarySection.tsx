@@ -31,6 +31,10 @@ interface WeeklySummarySectionProps {
    * Optional CSS class name for the component.
    */
   className?: string;
+  /**
+   * Whether to disable strikethrough for completed goals.
+   */
+  disableStrikethrough?: boolean;
 }
 
 /**
@@ -45,6 +49,7 @@ export function WeeklySummarySection({
   weeklyGoal,
   goalActions,
   className,
+  disableStrikethrough,
 }: WeeklySummarySectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   
@@ -123,7 +128,7 @@ export function WeeklySummarySection({
             <h3
               className={cn(
                 'font-semibold text-base leading-tight mb-1',
-                isComplete && 'line-through text-muted-foreground'
+                !disableStrikethrough && isComplete && 'line-through text-muted-foreground'
               )}
             >
               {weeklyGoal.title}
@@ -133,7 +138,7 @@ export function WeeklySummarySection({
               <div
                 className={cn(
                   'text-sm text-muted-foreground leading-relaxed',
-                  isComplete && 'line-through'
+                  !disableStrikethrough && isComplete && 'line-through'
                 )}
                 dangerouslySetInnerHTML={{ __html: weeklyGoal.details }}
               />
@@ -206,6 +211,7 @@ export function WeeklySummarySection({
                       dayOfWeek={dayOfWeek}
                       weekNumber={weeklyGoal.weekNumber}
                       goalActions={goalActions}
+                      disableStrikethrough={disableStrikethrough}
                     />
                   ))}
                 </div>
