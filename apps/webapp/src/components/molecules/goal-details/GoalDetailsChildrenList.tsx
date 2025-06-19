@@ -1,6 +1,6 @@
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { useWeek } from '@/hooks/useWeek';
 import { useCallback } from 'react';

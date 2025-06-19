@@ -1,6 +1,6 @@
-import { WeekCardDailyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '@/components/organisms/goals-new/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
 import {
   WeekData,
   WeekProviderWithoutDashboard,

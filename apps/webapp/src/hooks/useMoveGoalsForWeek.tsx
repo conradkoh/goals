@@ -3,7 +3,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
 import { useSession } from '@/modules/auth/useSession';
 import { toast } from '@/components/ui/use-toast';
-import { WeekCardPreviewDialog } from '@/components/organisms/goals-new/week-card-sections/WeekCardPreviewDialog';
+import { WeekCardPreviewDialog } from '@/components/organisms/WeekCardPreviewDialog';
 import { DayOfWeek } from '@services/backend/src/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 

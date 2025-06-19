@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { Edit2 } from 'lucide-react';
-import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
-import { DeleteGoalIconButton } from '../DeleteGoalIconButton';
+import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { Spinner } from '@/components/ui/spinner';
 import { isOptimisticId } from '@/hooks/useOptimistic';
