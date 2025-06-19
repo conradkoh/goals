@@ -44,6 +44,20 @@ export default function QuarterlySummaryPage() {
     quarter,
   });
 
+  // Set page title based on goal name
+  React.useEffect(() => {
+    const originalTitle = document.title;
+    
+    if (summaryData?.quarterlyGoal.title) {
+      document.title = `${summaryData.quarterlyGoal.title} - Q${quarter} ${year} Summary`;
+    }
+    
+    // Cleanup: restore original title when component unmounts
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [summaryData?.quarterlyGoal.title, quarter, year]);
+
   const handleGoBack = React.useCallback(() => {
     if (window.history.length > 1) {
       router.back();
