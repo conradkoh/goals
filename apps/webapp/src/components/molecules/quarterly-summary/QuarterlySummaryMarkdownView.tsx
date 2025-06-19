@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Copy, Check } from 'lucide-react';
 import { QuarterlyGoalSummary } from '@services/backend/src/usecase/getWeekDetails';
 import { generateQuarterlySummaryMarkdown } from '@/lib/markdown/quarterlyMarkdown';
@@ -22,10 +23,11 @@ export function QuarterlySummaryMarkdownView({
 }: QuarterlySummaryMarkdownViewProps) {
   const { copyToClipboard, isCopying } = useClipboard();
   const [justCopied, setJustCopied] = React.useState(false);
+  const [omitIncomplete, setOmitIncomplete] = React.useState(false);
 
   const markdownContent = React.useMemo(() => {
-    return generateQuarterlySummaryMarkdown(summaryData);
-  }, [summaryData]);
+    return generateQuarterlySummaryMarkdown(summaryData, { omitIncomplete });
+  }, [summaryData, omitIncomplete]);
 
   const handleCopy = React.useCallback(async () => {
     const success = await copyToClipboard(
@@ -41,37 +43,54 @@ export function QuarterlySummaryMarkdownView({
 
   return (
     <Card className={cn('relative', className)}>
-      {/* Header with copy button */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Markdown Export</h3>
-          <p className="text-sm text-gray-600">
-            Copy this markdown to share or save your quarterly summary
-          </p>
+      {/* Header with options and copy button */}
+      <div className="p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Markdown Export</h3>
+            <p className="text-sm text-gray-600">
+              Copy this markdown to share or save your quarterly summary
+            </p>
+          </div>
+          
+          <Button
+            onClick={handleCopy}
+            disabled={isCopying}
+            variant={justCopied ? "default" : "outline"}
+            size="sm"
+            className={cn(
+              "transition-all duration-200",
+              justCopied && "bg-green-600 hover:bg-green-700 text-white"
+            )}
+          >
+            {justCopied ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4 mr-2" />
+                {isCopying ? 'Copying...' : 'Copy'}
+              </>
+            )}
+          </Button>
         </div>
         
-        <Button
-          onClick={handleCopy}
-          disabled={isCopying}
-          variant={justCopied ? "default" : "outline"}
-          size="sm"
-          className={cn(
-            "transition-all duration-200",
-            justCopied && "bg-green-600 hover:bg-green-700 text-white"
-          )}
-        >
-          {justCopied ? (
-            <>
-              <Check className="h-4 w-4 mr-2" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="h-4 w-4 mr-2" />
-              {isCopying ? 'Copying...' : 'Copy'}
-            </>
-          )}
-        </Button>
+        {/* Options */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="omit-incomplete"
+            checked={omitIncomplete}
+            onCheckedChange={(checked) => setOmitIncomplete(checked === true)}
+          />
+          <label
+            htmlFor="omit-incomplete"
+            className="text-sm font-medium text-gray-700 cursor-pointer"
+          >
+            Show only completed goals
+          </label>
+        </div>
       </div>
 
       {/* Markdown content */}
