@@ -92,11 +92,15 @@ export default function MultiGoalQuarterlySummaryPage() {
 
   const handleSelectionChange = React.useCallback((goalIds: Id<'goals'>[]) => {
     setSelectedGoalIds(goalIds);
-    // Auto-switch to summary view if goals are selected and we're in selection mode
-    if (goalIds.length > 0 && viewMode === 'selection') {
+    // Note: Removed auto-switch to summary view to allow goal curation
+    // Users can manually switch to summary view using the toggle buttons
+  }, []);
+
+  const handleGenerateSummary = React.useCallback(() => {
+    if (selectedGoalIds.length > 0) {
       setViewMode('summary');
     }
-  }, [viewMode]);
+  }, [selectedGoalIds]);
 
   const canShowSummary = selectedGoalIds.length > 0;
 
@@ -188,6 +192,8 @@ export default function MultiGoalQuarterlySummaryPage() {
             quarter={quarter}
             selectedGoalIds={selectedGoalIds}
             onSelectionChange={handleSelectionChange}
+            onGenerateSummary={handleGenerateSummary}
+            showGenerateButton={true}
             className="bg-white rounded-lg shadow-sm border p-6"
           />
         )}

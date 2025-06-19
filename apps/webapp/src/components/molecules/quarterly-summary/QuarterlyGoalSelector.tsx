@@ -14,6 +14,8 @@ interface QuarterlyGoalSelectorProps {
   selectedGoalIds: Id<'goals'>[];
   onSelectionChange: (ids: Id<'goals'>[]) => void;
   className?: string;
+  onGenerateSummary?: () => void;
+  showGenerateButton: boolean;
 }
 
 function QuarterlyGoalSelectorSkeleton() {
@@ -39,6 +41,8 @@ export function QuarterlyGoalSelector({
   selectedGoalIds,
   onSelectionChange,
   className,
+  onGenerateSummary,
+  showGenerateButton,
 }: QuarterlyGoalSelectorProps) {
   const { goals, isLoading, error } = useQuarterlyGoalsList({ year, quarter });
 
@@ -169,10 +173,17 @@ export function QuarterlyGoalSelector({
         })}
       </div>
 
-      {/* Selection summary */}
+      {/* Selection summary and generate button */}
       {selectedGoalIds.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          {selectedGoalIds.length} goal{selectedGoalIds.length === 1 ? '' : 's'} selected for summary
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            {selectedGoalIds.length} goal{selectedGoalIds.length === 1 ? '' : 's'} selected for summary
+          </div>
+          {showGenerateButton && onGenerateSummary && (
+            <Button onClick={onGenerateSummary} className="ml-4">
+              Generate Summary
+            </Button>
+          )}
         </div>
       )}
     </div>
