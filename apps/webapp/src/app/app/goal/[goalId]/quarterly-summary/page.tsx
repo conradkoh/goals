@@ -3,9 +3,9 @@
 import React from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalSummaryView } from '@/components/molecules/quarterly-summary';
+import { QuarterlyGoalSummaryView, QuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home, FileText, Eye } from 'lucide-react';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { DateTime } from 'luxon';
@@ -21,6 +21,7 @@ export default function QuarterlySummaryPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [viewMode, setViewMode] = React.useState<'summary' | 'markdown'>('summary');
   
   // Get year and quarter from URL params, fallback to current date
   const { year, quarter } = React.useMemo(() => {
@@ -95,8 +96,31 @@ export default function QuarterlySummaryPage() {
               </div>
             </div>
 
-            {/* Quarter Badge */}
-            <div className="flex items-center gap-2">
+            {/* View Toggle and Quarter Badge */}
+            <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'summary' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('summary')}
+                  className="h-8 px-3"
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Summary
+                </Button>
+                <Button
+                  variant={viewMode === 'markdown' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('markdown')}
+                  className="h-8 px-3"
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  Markdown
+                </Button>
+              </div>
+              
+              {/* Quarter Badge */}
               <span className="text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                 Q{quarter} {year}
               </span>
@@ -107,13 +131,22 @@ export default function QuarterlySummaryPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <QuarterlyGoalSummaryView
-          quarterlyGoalId={goalId}
-          year={year}
-          quarter={quarter}
-          goalActions={goalActions}
-          className="bg-white rounded-lg shadow-sm border p-6"
-        />
+        {viewMode === 'summary' ? (
+          <QuarterlyGoalSummaryView
+            quarterlyGoalId={goalId}
+            year={year}
+            quarter={quarter}
+            goalActions={goalActions}
+            className="bg-white rounded-lg shadow-sm border p-6"
+          />
+        ) : (
+          summaryData && (
+            <QuarterlySummaryMarkdownView
+              summaryData={summaryData}
+              className="shadow-sm border"
+            />
+          )
+        )}
       </div>
     </div>
   );

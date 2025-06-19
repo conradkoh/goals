@@ -1,0 +1,95 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Copy, Check } from 'lucide-react';
+import { QuarterlyGoalSummary } from '@services/backend/src/usecase/getWeekDetails';
+import { generateQuarterlySummaryMarkdown } from '@/lib/markdown/quarterlyMarkdown';
+import { useClipboard } from '@/hooks/useClipboard';
+import { cn } from '@/lib/utils';
+
+interface QuarterlySummaryMarkdownViewProps {
+  summaryData: QuarterlyGoalSummary;
+  className?: string;
+}
+
+/**
+ * Component that displays the quarterly summary in markdown format.
+ * Provides a read-only view of the markdown content with copy to clipboard functionality.
+ */
+export function QuarterlySummaryMarkdownView({
+  summaryData,
+  className,
+}: QuarterlySummaryMarkdownViewProps) {
+  const { copyToClipboard, isCopying } = useClipboard();
+  const [justCopied, setJustCopied] = React.useState(false);
+
+  const markdownContent = React.useMemo(() => {
+    return generateQuarterlySummaryMarkdown(summaryData);
+  }, [summaryData]);
+
+  const handleCopy = React.useCallback(async () => {
+    const success = await copyToClipboard(
+      markdownContent,
+      'Quarterly summary markdown copied to clipboard!'
+    );
+    
+    if (success) {
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2000);
+    }
+  }, [copyToClipboard, markdownContent]);
+
+  return (
+    <Card className={cn('relative', className)}>
+      {/* Header with copy button */}
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Markdown Export</h3>
+          <p className="text-sm text-gray-600">
+            Copy this markdown to share or save your quarterly summary
+          </p>
+        </div>
+        
+        <Button
+          onClick={handleCopy}
+          disabled={isCopying}
+          variant={justCopied ? "default" : "outline"}
+          size="sm"
+          className={cn(
+            "transition-all duration-200",
+            justCopied && "bg-green-600 hover:bg-green-700 text-white"
+          )}
+        >
+          {justCopied ? (
+            <>
+              <Check className="h-4 w-4 mr-2" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4 mr-2" />
+              {isCopying ? 'Copying...' : 'Copy'}
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Markdown content */}
+      <div className="p-4">
+        <div className="relative">
+          <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 border rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
+            <code className="text-gray-800">{markdownContent}</code>
+          </pre>
+          
+          {/* Fade overlay at bottom when scrollable */}
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none rounded-b-lg" />
+        </div>
+        
+        {/* Character count */}
+        <div className="mt-3 text-xs text-gray-500 text-right">
+          {markdownContent.length.toLocaleString()} characters
+        </div>
+      </div>
+    </Card>
+  );
+} 
