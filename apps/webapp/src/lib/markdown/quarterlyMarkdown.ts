@@ -67,7 +67,7 @@ export function generateQuarterlySummaryMarkdown(
   lines.push(`- **Daily Goals:** ${completedDailyGoals}/${totalDailyGoals} completed`);
   lines.push('');
   
-  // Group weekly goals by week number and sort, applying filtering if needed
+  // Group weekly goals by week number and sort in chronological order, applying filtering if needed
   const weekNumbers = Object.keys(weeklyGoalsByWeek)
     .map(Number)
     .filter(weekNum => {
@@ -82,7 +82,18 @@ export function generateQuarterlySummaryMarkdown(
       
       return true;
     })
-    .sort();
+    .sort((a, b) => {
+      // Sort by actual week start timestamp if available, otherwise by week number
+      const goalsA = weeklyGoalsByWeek[a];
+      const goalsB = weeklyGoalsByWeek[b];
+      
+      if (goalsA?.[0]?.weekStartTimestamp && goalsB?.[0]?.weekStartTimestamp) {
+        return goalsA[0].weekStartTimestamp - goalsB[0].weekStartTimestamp;
+      }
+      
+      // Fallback to week number comparison
+      return a - b;
+    });
   
   // Add weekly goals sections
   if (weekNumbers.length > 0) {
