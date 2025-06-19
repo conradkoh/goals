@@ -69,10 +69,10 @@ export function WeeklySummarySection({
   }, [goalActions, weeklyGoal._id]);
 
   const handleDelete = React.useCallback(async () => {
-    if (goalActions && confirm(`Are you sure you want to delete "${weeklyGoal.title}"? This will also delete all daily goals under it.`)) {
+    if (goalActions) {
       await goalActions.handleDeleteGoal(weeklyGoal._id);
     }
-  }, [goalActions, weeklyGoal._id, weeklyGoal.title]);
+  }, [goalActions, weeklyGoal._id]);
   
   // Format week date range
   const { weekStart, weekEnd, weekDateRange } = React.useMemo(() => {

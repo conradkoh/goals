@@ -78,10 +78,10 @@ export function DailySummaryItem({
   }, [goalActions, dailyGoal._id]);
 
   const handleDelete = React.useCallback(async () => {
-    if (goalActions && confirm(`Are you sure you want to delete "${dailyGoal.title}"?`)) {
+    if (goalActions) {
       await goalActions.handleDeleteGoal(dailyGoal._id);
     }
-  }, [goalActions, dailyGoal._id, dailyGoal.title]);
+  }, [goalActions, dailyGoal._id]);
 
   return (
     <div
