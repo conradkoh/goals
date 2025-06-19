@@ -1,5 +1,8 @@
 export { QuarterlyGoalSummaryView } from './QuarterlyGoalSummaryView';
 export { QuarterlySummaryMarkdownView } from './QuarterlySummaryMarkdownView';
+export { MultiQuarterlyGoalSummaryView } from './MultiQuarterlyGoalSummaryView';
+export { MultiQuarterlySummaryMarkdownView } from './MultiQuarterlySummaryMarkdownView';
+export { QuarterlyGoalSelector } from './QuarterlyGoalSelector';
 export { WeeklySummarySection } from './WeeklySummarySection';
 export { WeekSection } from './WeekSection';
 export { WeeklyTaskItem } from './WeeklyTaskItem';

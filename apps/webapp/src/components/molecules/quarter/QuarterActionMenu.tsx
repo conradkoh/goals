@@ -15,7 +15,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { ArrowDownToLine, History } from 'lucide-react';
+import { ArrowDownToLine, History, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export interface QuarterActionMenuProps {
   isDisabled?: boolean;
@@ -29,6 +30,8 @@ export interface QuarterActionMenuProps {
   className?: string;
   showLabel?: boolean;
   menuIcon?: React.ReactNode;
+  year: number;
+  quarter: number;
 }
 
 export const QuarterActionMenu = React.memo(
@@ -44,7 +47,20 @@ export const QuarterActionMenu = React.memo(
     className,
     showLabel = false,
     menuIcon,
+    year,
+    quarter,
   }: QuarterActionMenuProps) => {
+    const router = useRouter();
+
+    // Handle generate summary navigation
+    const handleGenerateSummary = React.useCallback(() => {
+      if (year && quarter) {
+        const params = new URLSearchParams();
+        params.set('year', year.toString());
+        params.set('quarter', quarter.toString());
+        router.push(`/app/goal/quarterly-summary?${params.toString()}`);
+      }
+    }, [router, year, quarter]);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -99,8 +115,21 @@ export const QuarterActionMenu = React.memo(
           ) : (
             <>
               <DropdownMenuLabel className="font-semibold px-3 py-2">
-                Pull from Previous Quarter
+                Quarter Actions
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onClick={handleGenerateSummary}
+                disabled={!year || !quarter}
+                className="flex items-center"
+              >
+                <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">
+                  Generate Summary
+                </span>
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem

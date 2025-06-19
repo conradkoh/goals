@@ -10,14 +10,12 @@ import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionM
 export interface FocusModeQuarterlyViewProps {
   year?: number;
   quarter?: number;
-  hideActionMenu?: boolean;
 }
 
 // Inner component that uses the context
 const FocusModeQuarterlyViewInner = ({
   year = new Date().getFullYear(),
   quarter = Math.floor(new Date().getMonth() / 3) + 1,
-  hideActionMenu = false,
 }: FocusModeQuarterlyViewProps) => {
   // Get the context for moving goals
   const {
@@ -66,6 +64,8 @@ const FocusModeQuarterlyViewInner = ({
       tooltipContent,
       buttonSize: 'default' as const,
       showLabel: true,
+      year,
+      quarter,
     }),
     [
       isDisabled,
@@ -73,6 +73,8 @@ const FocusModeQuarterlyViewInner = ({
       isMovingGoals,
       handlePreviewGoals,
       tooltipContent,
+      year,
+      quarter,
     ]
   );
 
@@ -82,11 +84,6 @@ const FocusModeQuarterlyViewInner = ({
       className="w-full h-full"
       key={instanceKey}
     >
-      {!hideActionMenu && (
-        <div className="flex justify-end mb-4 px-4">
-          <QuarterActionMenu {...quarterActionMenuProps} />
-        </div>
-      )}
 
       <MultiWeekGenerator startDate={startOfQuarter} endDate={endOfQuarter}>
         <MultiWeekLayout />
@@ -102,7 +99,6 @@ export const FocusModeQuarterlyView = memo(
   ({
     year = new Date().getFullYear(),
     quarter = Math.floor(new Date().getMonth() / 3) + 1,
-    hideActionMenu = false,
   }: FocusModeQuarterlyViewProps) => {
     return (
       <MoveGoalsForQuarterProvider
@@ -112,7 +108,6 @@ export const FocusModeQuarterlyView = memo(
         <FocusModeQuarterlyViewInner
           year={year}
           quarter={quarter}
-          hideActionMenu={hideActionMenu}
         />
       </MoveGoalsForQuarterProvider>
     );
