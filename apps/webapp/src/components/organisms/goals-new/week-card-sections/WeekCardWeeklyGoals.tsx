@@ -28,7 +28,7 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
-import { DeleteGoalIconButton } from '../../../atoms/DeleteGoalIconButton';
+import { DeleteGoalIconButton } from '../DeleteGoalIconButton';
 import { GoalEditPopover } from '../../../atoms/GoalEditPopover';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { useFireGoals } from '@/contexts/FireGoalsContext';
