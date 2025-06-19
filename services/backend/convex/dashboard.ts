@@ -688,51 +688,20 @@ export const getQuarterlyGoalSummary = query({
     // Calculate the start and end dates of the quarter
     const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
     const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-    
-    // Handle week numbers properly across year boundaries
     const startWeek = startDate.weekNumber;
     const endWeek = endDate.weekNumber;
-    
+
     // Get details for all weeks in the quarter
     const weekPromises = [];
-    
-    // Handle case where quarter spans across years (e.g., Q1 of new year)
-    if (endWeek < startWeek) {
-      // Quarter spans across years
-      // Add weeks from start of quarter to end of year
-      for (let weekNum = startWeek; weekNum <= 52; weekNum++) {
-        weekPromises.push(
-          getWeekGoalsTree(ctx, {
-            userId,
-            year: year - 1, // Previous year for these weeks
-            quarter,
-            weekNumber: weekNum,
-          })
-        );
-      }
-      // Add weeks from start of year to end of quarter
-      for (let weekNum = 1; weekNum <= endWeek; weekNum++) {
-        weekPromises.push(
-          getWeekGoalsTree(ctx, {
-            userId,
-            year,
-            quarter,
-            weekNumber: weekNum,
-          })
-        );
-      }
-    } else {
-      // Normal case: quarter within the same year
-      for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
-        weekPromises.push(
-          getWeekGoalsTree(ctx, {
-            userId,
-            year,
-            quarter,
-            weekNumber: weekNum,
-          })
-        );
-      }
+    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+      weekPromises.push(
+        getWeekGoalsTree(ctx, {
+          userId,
+          year,
+          quarter,
+          weekNumber: weekNum,
+        })
+      );
     }
 
     const weekResults = await Promise.all(weekPromises);

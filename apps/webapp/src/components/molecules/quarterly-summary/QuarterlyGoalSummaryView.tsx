@@ -96,7 +96,7 @@ export function QuarterlyGoalSummaryView({
       : null;
   }, [quarterlyGoal?.completedAt]);
 
-  // Group weekly goals by week number and sort weeks in chronological order
+  // Group weekly goals by week number and sort weeks
   const weeksByNumber = React.useMemo(() => {
     if (!weeklyGoalsByWeek) return [];
     
@@ -111,18 +111,7 @@ export function QuarterlyGoalSummaryView({
     
     return Object.keys(weekMap)
       .map(Number)
-      .sort((a, b) => {
-        // Sort by actual week start timestamp if available, otherwise by week number
-        const goalsA = weekMap[a];
-        const goalsB = weekMap[b];
-        
-        if (goalsA?.[0]?.weekStartTimestamp && goalsB?.[0]?.weekStartTimestamp) {
-          return goalsA[0].weekStartTimestamp - goalsB[0].weekStartTimestamp;
-        }
-        
-        // Fallback to week number comparison
-        return a - b;
-      })
+      .sort((a, b) => a - b)
       .map(weekNum => ({
         weekNumber: weekNum,
         weeklyGoals: weekMap[weekNum],
