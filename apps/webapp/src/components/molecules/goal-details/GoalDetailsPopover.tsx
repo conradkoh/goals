@@ -5,9 +5,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Edit2, Pin, Star, FileText } from 'lucide-react';
+import { Edit2, Pin, Star, FileText, Maximize2, MoreHorizontal } from 'lucide-react';
 import { QuarterlyGoalSummaryPopover } from '@/components/molecules/quarterly-summary';
 import React, { ReactNode, useState } from 'react';
 import { GoalDetailsContent } from './GoalDetailsContent';
@@ -31,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
@@ -40,6 +48,7 @@ interface GoalDetailsPopoverProps {
   titleClassName?: string;
   additionalContent?: ReactNode;
   onToggleComplete?: (isComplete: boolean) => Promise<void>;
+  showFullScreenButton?: boolean;
 }
 
 export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
@@ -50,7 +59,9 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   titleClassName = 'text-gray-600',
   additionalContent,
   onToggleComplete,
+  showFullScreenButton = true,
 }) => {
+  const router = useRouter();
   const {
     weekNumber,
     year,
@@ -98,6 +109,10 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         isPinned: !isPinned,
       });
     }
+  };
+
+  const handleFullScreenNavigation = () => {
+    router.push(`/app/goal/${goal._id}/details`);
   };
 
   const handleCreateWeeklyGoal = async () => {
@@ -167,36 +182,55 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               />
             </GoalStarPinContainer>
           )}
-          {isQuarterlyGoal && (
-            <QuarterlyGoalSummaryPopover
-              quarterlyGoal={goal}
-              trigger={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>View Summary</span>
-                </Button>
-              }
-            />
-          )}
-          <GoalEditPopover
-            title={goal.title}
-            details={goal.details}
-            onSave={onSave}
-            trigger={
+          
+          {/* Action Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
               >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
-            }
-          />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {isQuarterlyGoal && (
+                <QuarterlyGoalSummaryPopover
+                  quarterlyGoal={goal}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <FileText className="h-3.5 w-3.5 mr-2" />
+                      <span>View Summary</span>
+                    </DropdownMenuItem>
+                  }
+                />
+              )}
+              
+              {showFullScreenButton && (
+                <DropdownMenuItem onClick={handleFullScreenNavigation}>
+                  <Maximize2 className="h-3.5 w-3.5 mr-2" />
+                  <span>Open in Full Screen</span>
+                </DropdownMenuItem>
+              )}
+              
+              {(isQuarterlyGoal || showFullScreenButton) && (
+                <DropdownMenuSeparator />
+              )}
+              
+              <GoalEditPopover
+                title={goal.title}
+                details={goal.details}
+                onSave={onSave}
+                trigger={
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Edit2 className="h-3.5 w-3.5 mr-2" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -249,16 +283,20 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
           isWeeklyGoal) && (
           <>
             <Separator className="my-2" />
-            <div className="pt-1 space-y-3">
+            <div className="space-y-3">
               {isQuarterlyGoal && (
                 <>
                   {goal.children && goal.children.length > 0 && (
-                    <GoalDetailsChildrenList
-                      parentGoal={goal}
-                      title="Weekly Goals"
-                    />
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Weekly Goals</h4>
+                      <GoalDetailsChildrenList
+                        parentGoal={goal}
+                        title="Weekly Goals"
+                      />
+                    </div>
                   )}
-                  <div className="pl-4 pt-1">
+                  <div className="pl-4">
+                    <h4 className="font-medium text-sm mb-2">Add Weekly Goal</h4>
                     <CreateGoalInput
                       placeholder="Add a new weekly goal..."
                       value={newWeeklyGoalTitle}
@@ -272,12 +310,16 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               {isWeeklyGoal && (
                 <>
                   {goal.children && goal.children.length > 0 && (
-                    <GoalDetailsChildrenList
-                      parentGoal={goal}
-                      title="Daily Goals"
-                    />
+                    <div>
+                      <h4 className="font-medium text-sm mb-2">Daily Goals</h4>
+                      <GoalDetailsChildrenList
+                        parentGoal={goal}
+                        title="Daily Goals"
+                      />
+                    </div>
                   )}
-                  <div className="pl-4 pt-1">
+                  <div className="pl-4">
+                    <h4 className="font-medium text-sm mb-2">Add Daily Goal</h4>
                     <CreateGoalInput
                       placeholder="Add a new daily goal..."
                       value={newDailyGoalTitle}
@@ -286,13 +328,16 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                       onEscape={() => setNewDailyGoalTitle('')}
                     >
                       <div className="mt-2">
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                          Day of Week
+                        </label>
                         <Select
                           value={selectedDayOfWeek.toString()}
                           onValueChange={(value) =>
                             setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
                           }
                         >
-                          <SelectTrigger className="h-9 text-xs">
+                          <SelectTrigger className="h-8 text-xs">
                             <SelectValue placeholder="Select day" />
                           </SelectTrigger>
                           <SelectContent>
