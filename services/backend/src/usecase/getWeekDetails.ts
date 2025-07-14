@@ -28,6 +28,48 @@ export type TWithChildren<T> = T & {
   children: TWithChildren<T>[];
 };
 
+// Quarterly goal summary data structure
+export type QuarterlyGoalSummary = {
+  quarterlyGoal: {
+    _id: Id<'goals'>;
+    title: string;
+    details?: string;
+    isComplete: boolean;
+    completedAt?: number;
+    state?: Doc<'goalStateByWeek'>;
+  };
+  weeklyGoalsByWeek: Record<number, Array<GoalWithDetailsAndChildren & {
+    weekNumber: number;
+    weekStartTimestamp: number;
+    weekEndTimestamp: number;
+  }>>;
+  quarter: number;
+  year: number;
+  weekRange: {
+    startWeek: number;
+    endWeek: number;
+  };
+};
+
+// Multiple quarterly goals summary data structure
+export type MultipleQuarterlyGoalsSummary = {
+  quarterlyGoals: QuarterlyGoalSummary[];
+  year: number;
+  quarter: number;
+  weekRange: {
+    startWeek: number;
+    endWeek: number;
+  };
+};
+
+// Quarterly goal option for selection UI
+export type QuarterlyGoalOption = {
+  _id: Id<'goals'>;
+  title: string;
+  isComplete: boolean;
+  selected: boolean;
+};
+
 /**
  * Retrieves the details of the specified week, including associated goals.
  *

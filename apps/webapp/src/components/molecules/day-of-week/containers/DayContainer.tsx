@@ -1,4 +1,4 @@
-import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import {
   Popover,

@@ -159,7 +159,7 @@ export const DashboardProvider = ({
         newParams.set('focusMode', params.focusMode.toString());
       }
 
-      router.push(`/dashboard?${newParams.toString()}`);
+      router.push(`/app/dashboard?${newParams.toString()}`);
     },
     [router, searchParams]
   );

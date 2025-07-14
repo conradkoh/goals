@@ -4,7 +4,7 @@ import { useSession } from '@/modules/auth/useSession';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { GoalDeletePreviewDialog } from '../organisms/goals-new/week-card-sections/GoalDeletePreviewDialog';
+import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
 import { useWeek } from '@/hooks/useWeek';
 
 interface GoalPreviewNode {
@@ -106,4 +106,4 @@ export const DeleteGoalIconButton = ({
       />
     </>
   );
-};
+}; 

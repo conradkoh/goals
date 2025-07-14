@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect } from 'react';
-import { DashboardFocusView } from '../../components/organisms/DashboardFocusView';
+import { DashboardFocusView } from '../../../components/organisms/DashboardFocusView';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSearchParams } from 'next/navigation';
 import { useScreenSize } from '@/hooks/useScreenSize';

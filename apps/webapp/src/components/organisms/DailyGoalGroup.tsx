@@ -1,5 +1,5 @@
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { DailyGoalTaskItem } from '@/components/organisms/goals-new/daily-goal/DailyGoalTaskItem';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import { SafeHTML } from '@/components/ui/safe-html';

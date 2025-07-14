@@ -1,7 +1,7 @@
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '../goals-new/week-card-sections/WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '../goals-new/week-card-sections/WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '../goals-new/week-card-sections/WeekCardWeeklyGoals';
+import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

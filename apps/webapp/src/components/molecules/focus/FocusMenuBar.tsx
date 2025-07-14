@@ -21,8 +21,8 @@ export type FocusMenuBarProps = {
   isAtMaxBound?: boolean;
   onPrevious?: () => void;
   onNext?: () => void;
-  selectedYear?: number;
-  selectedQuarter?: 1 | 2 | 3 | 4;
+  selectedYear: number;
+  selectedQuarter: 1 | 2 | 3 | 4;
   onYearQuarterChange?: (year: number, quarter: number) => void;
   // Props for QuarterActionMenu
   isFirstQuarter?: boolean;
@@ -198,6 +198,8 @@ export const FocusMenuBar = ({
                 buttonVariant="ghost"
                 showLabel={false}
                 menuIcon={<MoreVertical className="h-4 w-4" />}
+                year={selectedYear}
+                quarter={selectedQuarter}
               />
             )}
           </div>

@@ -128,7 +128,7 @@ export default function DocsPage() {
             size="sm"
             className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-medium whitespace-nowrap"
           >
-            <Link href="/dashboard" className="flex items-center gap-1.5">
+            <Link href="/app/dashboard" className="flex items-center gap-1.5">
               Go to Dashboard
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>

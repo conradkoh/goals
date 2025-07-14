@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CreateGoalInput } from '../../../atoms/CreateGoalInput';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { useWeek } from '@/hooks/useWeek';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
@@ -8,7 +8,7 @@ import {
   CollapsibleMinimalTrigger,
   CollapsibleMinimalContent,
 } from '@/components/ui/collapsible-minimal';
-import { QuarterlyGoal } from '../QuarterlyGoal';
+import { QuarterlyGoal } from './QuarterlyGoal';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeekCardQuarterlyGoalsProps {

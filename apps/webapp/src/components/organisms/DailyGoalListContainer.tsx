@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { CreateGoalInput } from '../../atoms/CreateGoalInput';
-import { DailyGoalList } from './daily-goal/DailyGoalList';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+import { DailyGoalList } from './DailyGoalList';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Id } from '@services/backend/convex/_generated/dataModel';
 import { cn } from '@/lib/utils';

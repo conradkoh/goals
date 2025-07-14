@@ -5,9 +5,9 @@ import { Id } from '@services/backend/convex/_generated/dataModel';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Check, Edit2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { DeleteGoalIconButton } from '../../atoms/DeleteGoalIconButton';
-import { GoalEditPopover } from '../../atoms/GoalEditPopover';
-import { GoalStarPin, GoalStarPinContainer } from '../../atoms/GoalStarPin';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
+import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { GoalStarPin, GoalStarPinContainer } from '../atoms/GoalStarPin';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useWeek } from '@/hooks/useWeek';
 import {

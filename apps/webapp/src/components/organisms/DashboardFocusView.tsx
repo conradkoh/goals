@@ -140,7 +140,6 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             <FocusModeQuarterlyView
               year={selectedYear}
               quarter={selectedQuarter}
-              hideActionMenu={true} /* Hide the existing action menu */
             />
           </div>
         )}

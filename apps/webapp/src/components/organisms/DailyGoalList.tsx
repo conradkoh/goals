@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailyGoalTaskItem } from '../organisms/goals-new/daily-goal/DailyGoalTaskItem';
+import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 import { Id } from '@services/backend/convex/_generated/dataModel';
-import { CreateGoalInput } from './CreateGoalInput';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { DayOfWeekType } from '@/lib/constants';
@@ -13,9 +13,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Pin, Star } from 'lucide-react';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { GoalDetailsContent } from '@/components/molecules/goal-details';
+import { Edit2, Pin, Star, Check } from 'lucide-react';
+import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { useWeek } from '@/hooks/useWeek';
+import { Checkbox } from '@/components/ui/checkbox';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -24,14 +26,14 @@ export interface DailyGoalListProps {
     title: string,
     details?: string
   ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
+  onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
 
 export const DailyGoalList = ({
   goals,
   onUpdateGoalTitle,
-  onDeleteGoal,
+  onDeleteGoal = () => Promise.resolve(),
   className,
 }: DailyGoalListProps) => {
   return (
@@ -154,105 +156,69 @@ export const DailyGoalGroupHeader = ({
   quarterlyGoal,
   onUpdateGoalTitle,
 }: DailyGoalGroupHeaderProps) => {
+  const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
   const isPinned = quarterlyGoal.state?.isPinned ?? false;
+  const isComplete = quarterlyGoal.isComplete;
+
+  const handleToggleCompletion = useCallback(
+    async (newState: boolean) => {
+      await toggleGoalCompletion({
+        goalId: quarterlyGoal._id,
+        weekNumber,
+        isComplete: newState,
+        updateChildren: false,
+      });
+    },
+    [quarterlyGoal._id, weekNumber, toggleGoalCompletion]
+  );
+
+  const handleSaveWeeklyGoalTitle = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateGoalTitle(weeklyGoal._id, title, details);
+    },
+    [weeklyGoal._id, onUpdateGoalTitle]
+  );
+
+  const handleSaveQuarterlyGoalTitle = useCallback(
+    async (title: string, details?: string) => {
+      await onUpdateGoalTitle(quarterlyGoal._id, title, details);
+    },
+    [quarterlyGoal._id, onUpdateGoalTitle]
+  );
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-1.5">
+    <div>
+      <div className="flex items-center justify-between">
+        <GoalDetailsPopover
+          goal={weeklyGoal}
+          onSave={handleSaveWeeklyGoalTitle}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          onToggleComplete={async (newState) => {
+            await toggleGoalCompletion({
+              goalId: weeklyGoal._id,
+              weekNumber,
+              isComplete: newState,
+              updateChildren: false,
+            });
+          }}
+        />
+      </div>
+      <div className="flex items-center gap-1.5 text-sm text-gray-500">
         {isStarred && (
-          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
         )}
         {isPinned && (
-          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
+          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
         )}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              className="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            >
-              <span className="break-words w-full whitespace-pre-wrap">
-                {quarterlyGoal.title}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[400px] p-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <h3 className="font-semibold break-words flex-1 mr-2">
-                  {quarterlyGoal.title}
-                </h3>
-                <GoalEditPopover
-                  title={quarterlyGoal.title}
-                  details={quarterlyGoal.details}
-                  onSave={async (title, details) => {
-                    await onUpdateGoalTitle(quarterlyGoal._id, title, details);
-                  }}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  }
-                />
-              </div>
-              {quarterlyGoal.details && (
-                <GoalDetailsContent
-                  title={quarterlyGoal.title}
-                  details={quarterlyGoal.details}
-                />
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+        {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
+        <GoalDetailsPopover
+          goal={quarterlyGoal}
+          onSave={handleSaveQuarterlyGoalTitle}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          onToggleComplete={handleToggleCompletion}
+        />
       </div>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          >
-            <span className="break-words w-full whitespace-pre-wrap text-gray-600">
-              {weeklyGoal.title}
-            </span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-4">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <h3 className="font-semibold break-words flex-1 mr-2">
-                {weeklyGoal.title}
-              </h3>
-              <GoalEditPopover
-                title={weeklyGoal.title}
-                details={weeklyGoal.details}
-                onSave={async (title, details) => {
-                  await onUpdateGoalTitle(weeklyGoal._id, title, details);
-                }}
-                trigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                }
-              />
-            </div>
-            {weeklyGoal.details && (
-              <GoalDetailsContent
-                title={weeklyGoal.title}
-                details={weeklyGoal.details}
-              />
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 };
@@ -284,11 +250,18 @@ export const DailyGoalGroupContainer = ({
   isCreating = false,
   sortGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
 }: DailyGoalGroupContainerProps) => {
-  const dailyGoals = weeklyGoal.children.filter(
-    (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+  const dailyGoals = useMemo(
+    () =>
+      weeklyGoal.children.filter(
+        (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
+      ),
+    [weeklyGoal.children, dayOfWeek]
   );
 
-  const sortedDailyGoals = sortGoals(dailyGoals);
+  const sortedDailyGoals = useMemo(
+    () => sortGoals(dailyGoals),
+    [dailyGoals, sortGoals]
+  );
 
   const isSoftComplete = useMemo(
     () =>
@@ -297,30 +270,45 @@ export const DailyGoalGroupContainer = ({
     [sortedDailyGoals]
   );
 
-  const isStarred = quarterlyGoal.state?.isStarred ?? false;
-  const isPinned = quarterlyGoal.state?.isPinned ?? false;
+  const handleUpdateGoalTitle = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
+      await onUpdateGoalTitle(goalId, title, details);
+    },
+    [onUpdateGoalTitle]
+  );
+
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      await onDeleteGoal(goalId);
+    },
+    [onDeleteGoal]
+  );
+
+  const handleCreateGoal = useCallback(
+    async (title: string) => {
+      await onCreateGoal(title);
+    },
+    [onCreateGoal]
+  );
 
   return (
     <div>
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : '',
-          isPinned ? 'bg-blue-50' : '',
-          isStarred && !isPinned ? 'bg-yellow-50' : '',
-          !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
+          isSoftComplete ? 'bg-green-50' : ''
         )}
       >
         <DailyGoalGroupHeader
           weeklyGoal={weeklyGoal}
           quarterlyGoal={quarterlyGoal}
-          onUpdateGoalTitle={onUpdateGoalTitle}
+          onUpdateGoalTitle={handleUpdateGoalTitle}
         />
         <DailyGoalListContainer
           goals={sortedDailyGoals}
-          onUpdateGoalTitle={onUpdateGoalTitle}
-          onDeleteGoal={onDeleteGoal}
-          onCreateGoal={onCreateGoal}
+          onUpdateGoalTitle={handleUpdateGoalTitle}
+          onDeleteGoal={handleDeleteGoal}
+          onCreateGoal={handleCreateGoal}
           createInputPlaceholder="Add a task..."
           isCreating={isCreating}
         />
@@ -328,21 +316,3 @@ export const DailyGoalGroupContainer = ({
     </div>
   );
 };
-
-export interface DailyGoalGroupProps {
-  weeklyGoal: GoalWithDetailsAndChildren;
-  quarterlyGoal: GoalWithDetailsAndChildren;
-  dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
-  onCreateGoal: (title: string) => Promise<void>;
-  isCreating?: boolean;
-  className?: string;
-  sortGoals?: (
-    goals: GoalWithDetailsAndChildren[]
-  ) => GoalWithDetailsAndChildren[];
-}
