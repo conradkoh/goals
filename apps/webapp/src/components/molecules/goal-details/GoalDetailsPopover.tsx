@@ -1,4 +1,3 @@
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -7,9 +6,20 @@ import {
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { Edit2, Pin, Star, FileText } from 'lucide-react';
-import { QuarterlyGoalSummaryPopover } from '@/components/molecules/quarterly-summary';
+import { Pin, Star } from 'lucide-react';
+import { GoalActionMenu } from './GoalActionMenu';
+import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 import React, { ReactNode, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { useToast } from '@/components/ui/use-toast';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
@@ -64,8 +74,111 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
   const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
-    () => (currentDateTime.weekday as DayOfWeek)
+    () => currentDateTime.weekday as DayOfWeek
   );
+
+// Component that renders the edit modal content using context
+const GoalEditModalContent: React.FC<{
+  onSave: (title: string, details?: string) => Promise<void>;
+}> = ({ onSave }) => {
+  const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const [editTitle, setEditTitle] = useState('');
+  const [editDetails, setEditDetails] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleKeyDown = useFormSubmitShortcut({
+    onSubmit: handleSave,
+    shouldPreventDefault: true,
+  });
+
+  React.useEffect(() => {
+    if (isEditing && editingGoal) {
+      setEditTitle(editingGoal.title);
+      setEditDetails(editingGoal.details || '');
+    }
+  }, [isEditing, editingGoal]);
+
+  async function handleSave() {
+    if (!editingGoal || isSubmitting) return;
+
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      toast({
+        title: 'Error',
+        description: 'Goal title cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await onSave(trimmedTitle, editDetails);
+      stopEditing();
+      toast({
+        title: 'Success',
+        description: 'Goal updated successfully',
+      });
+    } catch (error) {
+      console.error('Failed to save goal:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save goal. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleCancel = () => {
+    stopEditing();
+    setEditTitle('');
+    setEditDetails('');
+  };
+
+  return (
+    <Dialog open={isEditing} onOpenChange={(open) => !open && stopEditing()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Goal</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 py-4" onKeyDown={handleKeyDown}>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Title</label>
+            <Input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Enter goal title..."
+              autoFocus
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Details</label>
+            <RichTextEditor
+              value={editDetails}
+              onChange={setEditDetails}
+              placeholder="Add goal details..."
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
@@ -167,35 +280,10 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               />
             </GoalStarPinContainer>
           )}
-          {isQuarterlyGoal && (
-            <QuarterlyGoalSummaryPopover
-              quarterlyGoal={goal}
-              trigger={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>View Summary</span>
-                </Button>
-              }
-            />
-          )}
-          <GoalEditPopover
-            title={goal.title}
-            details={goal.details}
+          <GoalActionMenu
+            goal={goal}
             onSave={onSave}
-            trigger={
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
-              </Button>
-            }
+            isQuarterlyGoal={isQuarterlyGoal}
           />
         </div>
       </div>
@@ -315,22 +403,27 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   );
 
   return (
-    <Popover key={`goal-details-${goal._id.toString()}`}>
-      <PopoverTrigger asChild>
-        <Button variant={buttonVariant} className={triggerClassName}>
-          <span
-            className={cn(
-              'break-words w-full whitespace-pre-wrap',
-              titleClassName
-            )}
-          >
-            {goal.title}
-          </span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[450px] max-w-[calc(100vw-32px)] p-5">
-        <FireGoalsProvider>{popoverContent}</FireGoalsProvider>
-      </PopoverContent>
-    </Popover>
+    <GoalEditProvider>
+      <Popover key={`goal-details-${goal._id.toString()}`}>
+        <PopoverTrigger asChild>
+          <Button variant={buttonVariant} className={triggerClassName}>
+            <span
+              className={cn(
+                'break-words w-full whitespace-pre-wrap',
+                titleClassName
+              )}
+            >
+              {goal.title}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[450px] max-w-[calc(100vw-32px)] p-5">
+          <FireGoalsProvider>
+            {popoverContent}
+          </FireGoalsProvider>
+        </PopoverContent>
+      </Popover>
+      <GoalEditModalContent onSave={onSave} />
+    </GoalEditProvider>
   );
 };
