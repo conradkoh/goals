@@ -6,12 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { QuarterlyGoalSummaryPopover } from '@/components/molecules/quarterly-summary';
 import { useGoalEditContext } from './GoalEditContext';
 import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2, FileText, MoreVertical, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { GoalDetailsFullScreenModal } from './GoalDetailsFullScreenModal';
+import { useRouter } from 'next/navigation';
+import { useWeek } from '@/hooks/useWeek';
 
 interface GoalActionMenuProps {
   goal: GoalWithDetailsAndChildren;
@@ -27,6 +28,8 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
   className,
 }) => {
   const { startEditing } = useGoalEditContext();
+  const router = useRouter();
+  const { year, quarter } = useWeek();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFullScreenModalOpen, setIsFullScreenModalOpen] = useState(false);
 
@@ -36,8 +39,10 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
   };
 
   const handleSummaryClick = () => {
-    // Keep the dropdown open when summary is clicked
-    // This is handled by the QuarterlyGoalSummaryPopover component
+    // Navigate directly to the quarterly summary page
+    const summaryUrl = `/app/goal/${goal._id}/quarterly-summary?year=${year}&quarter=${quarter}`;
+    router.push(summaryUrl);
+    setIsDropdownOpen(false);
   };
 
   const handleFullScreenClick = () => {
@@ -72,21 +77,16 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
             <span>View Full Details</span>
           </DropdownMenuItem>
           {isQuarterlyGoal && (
-            <QuarterlyGoalSummaryPopover
-              quarterlyGoal={goal}
-              trigger={
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleSummaryClick();
-                  }}
-                  className="flex items-center cursor-pointer"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  <span>View Summary</span>
-                </DropdownMenuItem>
-              }
-            />
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleSummaryClick();
+              }}
+              className="flex items-center cursor-pointer"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              <span>View Summary</span>
+            </DropdownMenuItem>
           )}
           <DropdownMenuItem
             onSelect={(e) => {
