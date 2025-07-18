@@ -75,7 +75,24 @@ export const DashboardProvider = ({
   const { isMobile } = useScreenSize();
 
   // Use reactive current date
-  const currentDate = useCurrentDateTime();
+  const currentDateTime = useCurrentDateTime();
+
+  // Memoize date-related values to prevent unnecessary re-renders when time changes but date stays the same
+  const currentDate = useMemo(() => {
+    return {
+      year: currentDateTime.year,
+      month: currentDateTime.month,
+      monthLong: currentDateTime.monthLong,
+      day: currentDateTime.day,
+      weekdayLong: currentDateTime.weekdayLong,
+      weekday: currentDateTime.weekday,
+    };
+  }, [
+    currentDateTime.year,
+    currentDateTime.month,
+    currentDateTime.day,
+    currentDateTime.weekday,
+  ]);
 
   // Derive all date-related values from currentDate
   const currentYear = currentDate.year;
@@ -280,7 +297,7 @@ export const DashboardProvider = ({
   const value = useMemo(
     () => ({
       // Current date values
-      currentDate,
+      currentDate: currentDateTime,
       currentYear,
       currentQuarter,
       currentWeekNumber,
