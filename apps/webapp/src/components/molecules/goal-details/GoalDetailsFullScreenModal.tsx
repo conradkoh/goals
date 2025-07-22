@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Pin, Star, X } from 'lucide-react';
@@ -27,7 +27,6 @@ import {
   GoalStarPin,
   GoalStarPinContainer,
 } from '@/components/atoms/GoalStarPin';
-import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import {
   Select,
   SelectContent,
@@ -52,6 +51,7 @@ const GoalEditModalContent: React.FC<{
   const [editTitle, setEditTitle] = useState('');
   const [editDetails, setEditDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
   const handleKeyDown = useFormSubmitShortcut({
@@ -59,12 +59,25 @@ const GoalEditModalContent: React.FC<{
     shouldPreventDefault: true,
   });
 
+  // Initialize form data and preserve it across re-renders
   React.useEffect(() => {
-    if (isEditing && editingGoal) {
+    if (
+      isEditing &&
+      editingGoal &&
+      (!hasInitialized || editingGoal._id !== editingGoal._id)
+    ) {
       setEditTitle(editingGoal.title);
       setEditDetails(editingGoal.details || '');
+      setHasInitialized(true);
     }
-  }, [isEditing, editingGoal]);
+  }, [isEditing, editingGoal, hasInitialized]);
+
+  // Reset initialization flag when modal closes
+  React.useEffect(() => {
+    if (!isEditing) {
+      setHasInitialized(false);
+    }
+  }, [isEditing]);
 
   async function handleSave() {
     if (!editingGoal || isSubmitting) return;
@@ -83,6 +96,10 @@ const GoalEditModalContent: React.FC<{
     try {
       await onSave(trimmedTitle, editDetails);
       stopEditing();
+      // Clear form state after successful save
+      setEditTitle('');
+      setEditDetails('');
+      setHasInitialized(false);
       toast({
         title: 'Success',
         description: 'Goal updated successfully',
@@ -101,8 +118,7 @@ const GoalEditModalContent: React.FC<{
 
   const handleCancel = () => {
     stopEditing();
-    setEditTitle('');
-    setEditDetails('');
+    // Don't clear form state immediately - let the useEffect handle it
   };
 
   return (
@@ -158,12 +174,16 @@ export const GoalDetailsFullScreenModal: React.FC<
     createDailyGoalOptimistic,
     updateQuarterlyGoalStatus,
   } = useWeek();
-  const currentDateTime = useCurrentDateTime();
+
+  // Memoize the current weekday to avoid re-renders from minute timer updates
+  const currentWeekday = useMemo(() => {
+    return DateTime.now().weekday as DayOfWeek;
+  }, []); // Empty dependency array - we only need the initial weekday
 
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
   const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
-    () => currentDateTime.weekday as DayOfWeek
+    () => currentWeekday
   );
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);

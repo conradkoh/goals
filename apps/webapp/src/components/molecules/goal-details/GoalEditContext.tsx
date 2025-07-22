@@ -8,12 +8,16 @@ interface GoalEditContextType {
   stopEditing: () => void;
 }
 
-const GoalEditContext = createContext<GoalEditContextType | undefined>(undefined);
+const GoalEditContext = createContext<GoalEditContextType | undefined>(
+  undefined
+);
 
 export function useGoalEditContext() {
   const context = useContext(GoalEditContext);
   if (context === undefined) {
-    throw new Error('useGoalEditContext must be used within a GoalEditProvider');
+    throw new Error(
+      'useGoalEditContext must be used within a GoalEditProvider'
+    );
   }
   return context;
 }
@@ -24,7 +28,8 @@ interface GoalEditProviderProps {
 
 export function GoalEditProvider({ children }: GoalEditProviderProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<GoalWithDetailsAndChildren | null>(null);
+  const [editingGoal, setEditingGoal] =
+    useState<GoalWithDetailsAndChildren | null>(null);
 
   const startEditing = (goal: GoalWithDetailsAndChildren) => {
     setEditingGoal(goal);

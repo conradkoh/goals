@@ -7,7 +7,7 @@ import { FunctionReference } from 'convex/server';
 import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { createContext, useCallback, useContext, useMemo } from 'react';
-import { useCurrentDateTime } from './useCurrentDateTime';
+import { useCurrentDateInfo } from './useCurrentDateTime';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
 
 export const useDashboard = () => {
@@ -20,7 +20,16 @@ export const useDashboard = () => {
 
 interface DashboardContextValue {
   // Current date values
-  currentDate: DateTime;
+  currentDate: {
+    year: number;
+    month: number;
+    monthLong: string;
+    day: number;
+    weekdayLong: string;
+    weekday: DayOfWeek;
+    quarter: 1 | 2 | 3 | 4;
+    weekNumber: number;
+  };
   currentYear: number;
   currentQuarter: 1 | 2 | 3 | 4;
   currentWeekNumber: number;
@@ -74,25 +83,8 @@ export const DashboardProvider = ({
   const router = useRouter();
   const { isMobile } = useScreenSize();
 
-  // Use reactive current date
-  const currentDateTime = useCurrentDateTime();
-
-  // Memoize date-related values to prevent unnecessary re-renders when time changes but date stays the same
-  const currentDate = useMemo(() => {
-    return {
-      year: currentDateTime.year,
-      month: currentDateTime.month,
-      monthLong: currentDateTime.monthLong,
-      day: currentDateTime.day,
-      weekdayLong: currentDateTime.weekdayLong,
-      weekday: currentDateTime.weekday,
-    };
-  }, [
-    currentDateTime.year,
-    currentDateTime.month,
-    currentDateTime.day,
-    currentDateTime.weekday,
-  ]);
+  // Use reactive current date - already optimized to update daily
+  const currentDate = useCurrentDateInfo();
 
   // Derive all date-related values from currentDate
   const currentYear = currentDate.year;
@@ -100,7 +92,7 @@ export const DashboardProvider = ({
   const currentMonthName = currentDate.monthLong;
   const currentDayOfMonth = currentDate.day;
   const currentDayName = currentDate.weekdayLong;
-  const currentQuarter = Math.ceil(currentDate.month / 3) as 1 | 2 | 3 | 4;
+  const currentQuarter = currentDate.quarter;
 
   // Get year and quarter from URL or use current values
   const selectedYear = searchParams.get('year')
@@ -297,7 +289,7 @@ export const DashboardProvider = ({
   const value = useMemo(
     () => ({
       // Current date values
-      currentDate: currentDateTime,
+      currentDate: currentDate,
       currentYear,
       currentQuarter,
       currentWeekNumber,

@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { DayOfWeek } from '@/lib/constants';
 import { CalendarClock } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
+import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 
 export interface JumpToCurrentButtonProps {
@@ -62,20 +62,18 @@ export const JumpToCurrentButton = ({
   className = '',
 }: JumpToCurrentButtonProps) => {
   // Get current date information
-  const currentDateTime = useCurrentDateTime();
-  const { currentWeekNumber } = useQuarterWeekInfo(
+  const { weekNumber: currentWeekNumber, weekday: currentDay } =
+    useCurrentWeekInfo();
+  const { currentWeekNumber: quarterCurrentWeekNumber } = useQuarterWeekInfo(
     year,
     quarter as 1 | 2 | 3 | 4
   );
 
   // Calculate if we're on the current view
-  const today = currentDateTime;
-  const currentDay = today.weekday as DayOfWeek;
-
   const isCurrentView =
     viewMode === 'daily'
-      ? selectedWeek === currentWeekNumber && selectedDay === currentDay
-      : selectedWeek === currentWeekNumber;
+      ? selectedWeek === quarterCurrentWeekNumber && selectedDay === currentDay
+      : selectedWeek === quarterCurrentWeekNumber;
 
   // Don't show the button if we're already on the current view
   if (isCurrentView) {
@@ -85,9 +83,9 @@ export const JumpToCurrentButton = ({
   // Determine which callback to use based on view mode
   const handleJumpToCurrent = () => {
     if (viewMode === 'daily' && onJumpToCurrentDay) {
-      onJumpToCurrentDay(currentWeekNumber, currentDay);
+      onJumpToCurrentDay(quarterCurrentWeekNumber, currentDay);
     } else if (viewMode === 'weekly' && onJumpToCurrentWeek) {
-      onJumpToCurrentWeek(currentWeekNumber);
+      onJumpToCurrentWeek(quarterCurrentWeekNumber);
     }
   };
 

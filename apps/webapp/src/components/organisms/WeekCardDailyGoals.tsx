@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
-import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
 import { Id } from '@services/backend/convex/_generated/dataModel';
@@ -94,12 +93,21 @@ export const WeekCardDailyGoals = forwardRef<
       createDailyGoalOptimistic,
       createWeeklyGoalOptimistic,
     } = useWeek();
-    const currentDateTime = useCurrentDateTime();
+
+    // Memoize current time properties to avoid re-renders from minute timer
+    const currentTimeProperties = useMemo(() => {
+      const currentDateTime = DateTime.now();
+      return {
+        weekNumber: currentDateTime.weekNumber,
+        weekday: currentDateTime.weekday as DayOfWeek,
+      };
+    }, []); // Empty dependency - we only need initial values for comparison
+
     const [newGoalTitle, setNewGoalTitle] = useState('');
     const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
       () => {
-        const todayWeekNumber = currentDateTime.weekNumber;
-        const todayDayOfWeek = currentDateTime.weekday as DayOfWeek;
+        const todayWeekNumber = currentTimeProperties.weekNumber;
+        const todayDayOfWeek = currentTimeProperties.weekday;
 
         if (selectedDayOverride) {
           return selectedDayOverride;
@@ -119,8 +127,8 @@ export const WeekCardDailyGoals = forwardRef<
 
     // Sort and categorize days
     const { currentDay, futureDays, pastDays } = useMemo(() => {
-      const todayWeekNumber = currentDateTime.weekNumber;
-      const todayDayOfWeek = currentDateTime.weekday as DayOfWeekType;
+      const todayWeekNumber = currentTimeProperties.weekNumber;
+      const todayDayOfWeek = currentTimeProperties.weekday as DayOfWeekType;
       const sortedDays = [...(days as DayData[])];
 
       if (selectedDayOverride) {
@@ -163,8 +171,8 @@ export const WeekCardDailyGoals = forwardRef<
       days,
       weekNumber,
       selectedDayOverride,
-      currentDateTime.weekNumber,
-      currentDateTime.weekday,
+      currentTimeProperties.weekNumber,
+      currentTimeProperties.weekday,
     ]);
 
     // Calculate past days summary

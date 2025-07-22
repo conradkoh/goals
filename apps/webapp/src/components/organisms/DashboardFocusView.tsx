@@ -7,7 +7,6 @@ import { ViewMode } from '@/components/molecules/focus/constants';
 import { useWeekWithoutDashboard } from '@/hooks/useWeek';
 import { DayOfWeek } from '@/lib/constants';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
-import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
 import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
@@ -42,7 +41,6 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     handleDayNavigation,
     isFocusModeEnabled,
   } = useDashboard();
-  const currentDateTime = useCurrentDateTime();
   const { currentWeekNumber } = useQuarterWeekInfo(
     selectedYear,
     selectedQuarter as 1 | 2 | 3 | 4

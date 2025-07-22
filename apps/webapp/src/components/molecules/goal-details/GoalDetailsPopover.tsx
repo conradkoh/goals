@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { Pin, Star } from 'lucide-react';
 import { GoalActionMenu } from './GoalActionMenu';
 import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useToast } from '@/components/ui/use-toast';
@@ -33,7 +33,6 @@ import {
   GoalStarPin,
   GoalStarPinContainer,
 } from '@/components/atoms/GoalStarPin';
-import { useCurrentDateTime } from '@/hooks/useCurrentDateTime';
 import {
   Select,
   SelectContent,
@@ -69,116 +68,137 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     createDailyGoalOptimistic,
     updateQuarterlyGoalStatus,
   } = useWeek();
-  const currentDateTime = useCurrentDateTime();
+
+  // Memoize the current weekday to avoid re-renders from minute timer updates
+  const currentWeekday = useMemo(() => {
+    return DateTime.now().weekday as DayOfWeek;
+  }, []); // Empty dependency array - we only need the initial weekday
 
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
   const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
-    () => currentDateTime.weekday as DayOfWeek
+    () => currentWeekday
   );
 
-// Component that renders the edit modal content using context
-const GoalEditModalContent: React.FC<{
-  onSave: (title: string, details?: string) => Promise<void>;
-}> = ({ onSave }) => {
-  const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const [editTitle, setEditTitle] = useState('');
-  const [editDetails, setEditDetails] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  // Component that renders the edit modal content using context
+  const GoalEditModalContent: React.FC<{
+    onSave: (title: string, details?: string) => Promise<void>;
+  }> = ({ onSave }) => {
+    const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+    const [editTitle, setEditTitle] = useState('');
+    const [editDetails, setEditDetails] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasInitialized, setHasInitialized] = useState(false);
+    const { toast } = useToast();
 
-  const handleKeyDown = useFormSubmitShortcut({
-    onSubmit: handleSave,
-    shouldPreventDefault: true,
-  });
+    const handleKeyDown = useFormSubmitShortcut({
+      onSubmit: handleSave,
+      shouldPreventDefault: true,
+    });
 
-  React.useEffect(() => {
-    if (isEditing && editingGoal) {
-      setEditTitle(editingGoal.title);
-      setEditDetails(editingGoal.details || '');
+    // Initialize form data and preserve it across re-renders
+    React.useEffect(() => {
+      if (
+        isEditing &&
+        editingGoal &&
+        (!hasInitialized || editingGoal._id !== editingGoal._id)
+      ) {
+        setEditTitle(editingGoal.title);
+        setEditDetails(editingGoal.details || '');
+        setHasInitialized(true);
+      }
+    }, [isEditing, editingGoal, hasInitialized]);
+
+    // Reset initialization flag when modal closes
+    React.useEffect(() => {
+      if (!isEditing) {
+        setHasInitialized(false);
+      }
+    }, [isEditing]);
+
+    async function handleSave() {
+      if (!editingGoal || isSubmitting) return;
+
+      const trimmedTitle = editTitle.trim();
+      if (!trimmedTitle) {
+        toast({
+          title: 'Error',
+          description: 'Goal title cannot be empty',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        await onSave(trimmedTitle, editDetails);
+        stopEditing();
+        // Clear form state after successful save
+        setEditTitle('');
+        setEditDetails('');
+        setHasInitialized(false);
+        toast({
+          title: 'Success',
+          description: 'Goal updated successfully',
+        });
+      } catch (error) {
+        console.error('Failed to save goal:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to save goal. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-  }, [isEditing, editingGoal]);
 
-  async function handleSave() {
-    if (!editingGoal || isSubmitting) return;
-
-    const trimmedTitle = editTitle.trim();
-    if (!trimmedTitle) {
-      toast({
-        title: 'Error',
-        description: 'Goal title cannot be empty',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await onSave(trimmedTitle, editDetails);
+    const handleCancel = () => {
       stopEditing();
-      toast({
-        title: 'Success',
-        description: 'Goal updated successfully',
-      });
-    } catch (error) {
-      console.error('Failed to save goal:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save goal. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+      // Don't clear form state immediately - let the useEffect handle it
+    };
 
-  const handleCancel = () => {
-    stopEditing();
-    setEditTitle('');
-    setEditDetails('');
+    return (
+      <Dialog open={isEditing} onOpenChange={(open) => !open && stopEditing()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4" onKeyDown={handleKeyDown}>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Enter goal title..."
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Details</label>
+              <RichTextEditor
+                value={editDetails}
+                onChange={setEditDetails}
+                placeholder="Add goal details..."
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   };
-
-  return (
-    <Dialog open={isEditing} onOpenChange={(open) => !open && stopEditing()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Goal</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-6 py-4" onKeyDown={handleKeyDown}>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="Enter goal title..."
-              autoFocus
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Details</label>
-            <RichTextEditor
-              value={editDetails}
-              onChange={setEditDetails}
-              placeholder="Add goal details..."
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
@@ -418,9 +438,7 @@ const GoalEditModalContent: React.FC<{
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[450px] max-w-[calc(100vw-32px)] p-5">
-          <FireGoalsProvider>
-            {popoverContent}
-          </FireGoalsProvider>
+          <FireGoalsProvider>{popoverContent}</FireGoalsProvider>
         </PopoverContent>
       </Popover>
       <GoalEditModalContent onSave={onSave} />

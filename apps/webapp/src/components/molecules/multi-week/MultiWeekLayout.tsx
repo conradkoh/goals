@@ -15,6 +15,7 @@ import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
 import { DateTime } from 'luxon';
 import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
+import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 
 // Week card content component
 const WeekCardContent = ({
@@ -114,11 +115,12 @@ WeekCardContent.displayName = 'WeekCardContent';
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
 
-  // Get the current week number using Luxon
-  const currentDateTime = DateTime.now();
-  const currentWeekNumber = currentDateTime.weekNumber;
-  const currentYear = currentDateTime.year;
-  const currentQuarter = Math.ceil(currentDateTime.month / 3);
+  // Get the current week/year/quarter info using our optimized hook
+  const {
+    year: currentYear,
+    quarter: currentQuarter,
+    weekNumber: currentWeekNumber,
+  } = useCurrentDateInfo();
 
   // Find the index of the current week in our weeks array
   const currentIndex = useMemo(() => {

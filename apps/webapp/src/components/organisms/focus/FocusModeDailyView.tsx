@@ -84,6 +84,11 @@ const FocusModeDailyViewInner = ({
       );
   }, [weekData]);
 
+  // Memoize the prepared weekly goals to avoid recalculation on every render
+  const weeklyGoalsWithQuarterly = useMemo(() => {
+    return preparedWeeklyGoalsForDay();
+  }, [preparedWeeklyGoalsForDay]);
+
   // Determine if there are any fire goals to display
   const hasFireGoals = useMemo(() => {
     return fireGoals.size > 0;
@@ -92,8 +97,6 @@ const FocusModeDailyViewInner = ({
   // Check if there are any fire goals for the current day
   const hasVisibleFireGoalsForCurrentDay = useMemo(() => {
     if (fireGoals.size === 0) return false;
-
-    const weeklyGoalsWithQuarterly = preparedWeeklyGoalsForDay();
 
     // Check if any weekly goals are on fire
     const hasOnFireWeeklyGoals = weeklyGoalsWithQuarterly.some(
@@ -113,7 +116,7 @@ const FocusModeDailyViewInner = ({
     );
 
     return hasOnFireDailyGoals;
-  }, [fireGoals, preparedWeeklyGoalsForDay, selectedDayOfWeek]);
+  }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek]);
 
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
@@ -179,7 +182,7 @@ const FocusModeDailyViewInner = ({
       )}
 
       <OnFireGoalsSection
-        weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay()}
+        weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
         selectedDayOfWeek={selectedDayOfWeek}
         onUpdateGoalTitle={handleUpdateGoalTitle}
         onDeleteGoal={handleDeleteGoal}
