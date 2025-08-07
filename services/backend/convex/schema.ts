@@ -120,4 +120,13 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_and_goal', ['userId', 'goalId']),
+
+  pendingGoals: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    description: v.string(), // Description explaining why the goal is pending
+    createdAt: v.number(), // Unix timestamp when status was set
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_goal', ['userId', 'goalId']),
 });

@@ -4,14 +4,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/use-toast';
-import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DateTime } from 'luxon';
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/use-toast";
+import { useWeek } from "@/hooks/useWeek";
+import { DayOfWeek, DayOfWeekType, getDayName } from "@/lib/constants";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { DateTime } from "luxon";
 import {
   forwardRef,
   useEffect,
@@ -19,17 +19,17 @@ import {
   useMemo,
   useState,
   useCallback,
-} from 'react';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+} from "react";
+import { CreateGoalInput } from "@/components/atoms/CreateGoalInput";
 import {
   DayContainer,
   DayContainerMode,
   wasCompletedToday,
-} from '@/components/molecules/day-of-week/containers/DayContainer';
-import { PastDaysContainer } from '@/components/molecules/day-of-week/containers/PastDaysContainer';
-import { GoalSelector } from '@/components/atoms/GoalSelector';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
+} from "@/components/molecules/day-of-week/containers/DayContainer";
+import { PastDaysContainer } from "@/components/molecules/day-of-week/containers/PastDaysContainer";
+import { GoalSelector } from "@/components/atoms/GoalSelector";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
 
 export interface WeekCardDailyGoalsProps {
   weekNumber: number;
@@ -78,7 +78,7 @@ export const WeekCardDailyGoals = forwardRef<
       year,
       quarter,
       selectedDayOverride,
-      mode = 'plan',
+      mode = "plan",
       isLoading = false,
     }: WeekCardDailyGoalsProps,
     ref
@@ -103,7 +103,7 @@ export const WeekCardDailyGoals = forwardRef<
       };
     }, []); // Empty dependency - we only need initial values for comparison
 
-    const [newGoalTitle, setNewGoalTitle] = useState('');
+    const [newGoalTitle, setNewGoalTitle] = useState("");
     const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
       () => {
         const todayWeekNumber = currentTimeProperties.weekNumber;
@@ -122,7 +122,7 @@ export const WeekCardDailyGoals = forwardRef<
       }
     );
     const [selectedWeeklyGoalId, setSelectedWeeklyGoalId] =
-      useState<Id<'goals'>>();
+      useState<Id<"goals">>();
     const [isCreating, setIsCreating] = useState(false);
 
     // Sort and categorize days
@@ -291,14 +291,14 @@ export const WeekCardDailyGoals = forwardRef<
 
       const titleToCreate = newGoalTitle.trim();
       try {
-        setNewGoalTitle('');
+        setNewGoalTitle("");
         setIsCreating(true);
 
         const dateTimestamp = DateTime.fromObject({
           weekNumber,
           weekYear: year,
         })
-          .startOf('week')
+          .startOf("week")
           .plus({ days: selectedDayOfWeek - 1 })
           .toMillis();
 
@@ -309,13 +309,13 @@ export const WeekCardDailyGoals = forwardRef<
           dateTimestamp
         );
       } catch (error) {
-        console.error('Failed to create daily goal:', error);
+        console.error("Failed to create daily goal:", error);
         setNewGoalTitle(titleToCreate);
         toast({
-          variant: 'destructive',
-          title: 'Failed to create goal',
+          variant: "destructive",
+          title: "Failed to create goal",
           description:
-            'There was an error creating your goal. Please try again.',
+            "There was an error creating your goal. Please try again.",
         });
       } finally {
         setIsCreating(false);
@@ -428,14 +428,14 @@ export const WeekCardDailyGoals = forwardRef<
     }, [weeklyGoals, quarterlyGoals, selectedDayOfWeek, days]);
 
     const handleUpdateGoalTitle = useCallback(
-      (goalId: Id<'goals'>, title: string, details?: string) => {
+      (goalId: Id<"goals">, title: string, details?: string) => {
         return updateQuarterlyGoalTitle({ goalId, title, details });
       },
       [updateQuarterlyGoalTitle]
     );
 
     const handleDeleteGoal = useCallback(
-      async (goalId: Id<'goals'>): Promise<void> => {
+      async (goalId: Id<"goals">): Promise<void> => {
         await deleteGoalOptimistic(goalId);
       },
       [deleteGoalOptimistic]
@@ -443,7 +443,7 @@ export const WeekCardDailyGoals = forwardRef<
 
     const handleCreateGoal = useCallback(
       async (
-        weeklyGoalId: Id<'goals'>,
+        weeklyGoalId: Id<"goals">,
         title: string,
         forDayOfWeek?: DayOfWeek
       ): Promise<void> => {
@@ -454,7 +454,7 @@ export const WeekCardDailyGoals = forwardRef<
           weekNumber,
           weekYear: year,
         })
-          .startOf('week')
+          .startOf("week")
           .plus({ days: dayOfWeekToUse - 1 })
           .toMillis();
 
@@ -470,16 +470,16 @@ export const WeekCardDailyGoals = forwardRef<
 
     // Add handleCreateWeeklyGoal function
     const handleCreateWeeklyGoal = useCallback(
-      async (quarterlyGoalId: Id<'goals'>, title: string): Promise<void> => {
+      async (quarterlyGoalId: Id<"goals">, title: string): Promise<void> => {
         try {
           await createWeeklyGoalOptimistic(quarterlyGoalId, title);
         } catch (error) {
-          console.error('Failed to create weekly goal:', error);
+          console.error("Failed to create weekly goal:", error);
           toast({
-            variant: 'destructive',
-            title: 'Failed to create weekly goal',
+            variant: "destructive",
+            title: "Failed to create weekly goal",
             description:
-              'There was an error creating your weekly goal. Please try again.',
+              "There was an error creating your weekly goal. Please try again.",
           });
         }
       },
@@ -507,7 +507,7 @@ export const WeekCardDailyGoals = forwardRef<
             onDeleteGoal={handleDeleteGoal}
             onCreateGoal={handleCreateGoal}
             isCreating={
-              isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+              isCreating ? { [selectedWeeklyGoalId ?? ""]: true } : {}
             }
             completedTasks={pastDaysSummary.completedTasks}
             totalTasks={pastDaysSummary.totalTasks}
@@ -571,7 +571,7 @@ export const WeekCardDailyGoals = forwardRef<
                 onCreateDailyGoal={handleCreateGoal}
                 onCreateWeeklyGoal={handleCreateWeeklyGoal}
                 isCreating={
-                  isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+                  isCreating ? { [selectedWeeklyGoalId ?? ""]: true } : {}
                 }
                 sortDailyGoals={sortDailyGoals}
                 mode={mode}
@@ -592,7 +592,7 @@ export const WeekCardDailyGoals = forwardRef<
                 onCreateDailyGoal={handleCreateGoal}
                 onCreateWeeklyGoal={handleCreateWeeklyGoal}
                 isCreating={
-                  isCreating ? { [selectedWeeklyGoalId ?? '']: true } : {}
+                  isCreating ? { [selectedWeeklyGoalId ?? ""]: true } : {}
                 }
                 sortDailyGoals={sortDailyGoals}
                 mode={mode}
@@ -605,4 +605,4 @@ export const WeekCardDailyGoals = forwardRef<
   }
 );
 
-WeekCardDailyGoals.displayName = 'WeekCardDailyGoals';
+WeekCardDailyGoals.displayName = "WeekCardDailyGoals";

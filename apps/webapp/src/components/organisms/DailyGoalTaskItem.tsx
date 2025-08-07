@@ -1,35 +1,39 @@
-import { useDailyGoal } from '@/hooks/useDailyGoal';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useWeek } from '@/hooks/useWeek';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import { useDailyGoal } from "@/hooks/useDailyGoal";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { useWeek } from "@/hooks/useWeek";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2 } from 'lucide-react';
-import { GoalEditPopover } from '../atoms/GoalEditPopover';
-import { DeleteGoalIconButton } from './DeleteGoalIconButton';
-import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { Spinner } from '@/components/ui/spinner';
-import { isOptimisticId } from '@/hooks/useOptimistic';
-import { FireIcon } from '@/components/atoms/FireIcon';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
-import { useFireGoalStatus } from '@/contexts/FireGoalsContext';
+} from "@/components/ui/select";
+
+import { Edit2 } from "lucide-react";
+import { GoalEditPopover } from "../atoms/GoalEditPopover";
+import { DeleteGoalIconButton } from "./DeleteGoalIconButton";
+import { DayOfWeek, DayOfWeekType, getDayName } from "@/lib/constants";
+import { Spinner } from "@/components/ui/spinner";
+import { isOptimisticId } from "@/hooks/useOptimistic";
+import { FireIcon } from "@/components/atoms/FireIcon";
+import { PendingIcon } from "@/components/atoms/PendingIcon";
+import { GoalDetailsPopover } from "@/components/molecules/goal-details";
+import {
+  useFireGoalStatus,
+  usePendingGoalStatus,
+} from "@/contexts/GoalStatusContext";
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => void;
+  onDelete: (goalId: Id<"goals">) => void;
   inSidebar?: boolean;
   className?: string;
 }
@@ -37,12 +41,12 @@ interface DailyGoalItemProps {
 export const DailyGoalTaskItem = ({
   goal,
   onUpdateTitle,
-  onDelete,
-  inSidebar = false,
-  className,
+  onDelete: _onDelete,
+  inSidebar: _inSidebar = false,
+  className: _className,
 }: DailyGoalItemProps) => {
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
-  const { isComplete = goal.isComplete, completedAt = goal.completedAt } = goal;
+  const { isComplete = goal.isComplete } = goal;
   const isOptimistic = isOptimisticId(goal._id);
   const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
     | DayOfWeekType
@@ -50,6 +54,9 @@ export const DailyGoalTaskItem = ({
 
   // Use the custom hook for fire goal status
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
+
+  // Use the custom hook for pending goal status
+  const { isPending: _isPending } = usePendingGoalStatus(goal._id);
 
   // Get real-time updates from direct subscription
   const liveGoalDetails = useDailyGoal(goal._id, {
@@ -141,6 +148,7 @@ export const DailyGoalTaskItem = ({
           ) : (
             <>
               <FireIcon goalId={goal._id} className="" />
+              <PendingIcon goalId={goal._id} className="" />
               <GoalEditPopover
                 title={title}
                 details={details}

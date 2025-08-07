@@ -1,32 +1,32 @@
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithOptimisticStatus } from '@/hooks/useWeek';
-import { useWeek } from '@/hooks/useWeek';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
-import { Spinner } from '@/components/ui/spinner';
-import { Edit2 } from 'lucide-react';
-import { FireIcon } from '@/components/atoms/FireIcon';
-import { useCallback } from 'react';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
-import { useFireGoalStatus } from '@/contexts/FireGoalsContext';
+import React, { useCallback } from "react";
+import { Edit2 } from "lucide-react";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { GoalWithOptimisticStatus } from "@/hooks/useWeek";
+import { useWeek } from "@/hooks/useWeek";
+import { Checkbox } from "@/components/ui/checkbox";
+import { GoalEditPopover } from "@/components/atoms/GoalEditPopover";
+import { DeleteGoalIconButton } from "@/components/organisms/DeleteGoalIconButton";
+import { Spinner } from "@/components/ui/spinner";
+import { FireIcon } from "@/components/atoms/FireIcon";
+import { PendingIcon } from "@/components/atoms/PendingIcon";
+import { GoalDetailsPopover } from "@/components/molecules/goal-details";
+import { useFireGoalStatus } from "@/contexts/GoalStatusContext";
 
+/**
+ * Props for the weekly goal task item component.
+ */
 export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
 }
 
+/**
+ * Displays a weekly goal as a task item with completion checkbox and action buttons.
+ */
 export const WeeklyGoalTaskItem = ({
   goal,
   onUpdateTitle,
@@ -35,10 +35,12 @@ export const WeeklyGoalTaskItem = ({
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.isComplete;
 
-  // Use the custom hook for fire goal status
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
 
-  const handleToggleCompletion = useCallback(
+  /**
+   * Handles toggling the completion status of the goal.
+   */
+  const _handleToggleCompletion = useCallback(
     async (newState: boolean) => {
       await toggleGoalCompletion({
         goalId: goal._id,
@@ -47,7 +49,6 @@ export const WeeklyGoalTaskItem = ({
         updateChildren: false,
       });
 
-      // If the goal is marked as complete and it's on fire, remove it from the onFire section
       if (newState && isOnFire) {
         toggleFireStatus(goal._id);
       }
@@ -61,11 +62,24 @@ export const WeeklyGoalTaskItem = ({
     ]
   );
 
-  const handleUpdateTitle = useCallback(
+  /**
+   * Handles updating the goal title and details.
+   */
+  const _handleUpdateTitle = useCallback(
     async (title: string, details?: string) => {
       await onUpdateTitle(goal._id, title, details);
     },
     [onUpdateTitle, goal._id]
+  );
+
+  /**
+   * Handles checkbox change events for goal completion.
+   */
+  const _handleCheckboxChange = useCallback(
+    (checked: boolean | "indeterminate") => {
+      _handleToggleCompletion(checked === true);
+    },
+    [_handleToggleCompletion]
   );
 
   return (
@@ -74,17 +88,15 @@ export const WeeklyGoalTaskItem = ({
         <div className="text-sm flex items-center gap-2 group/title">
           <Checkbox
             checked={isComplete}
-            onCheckedChange={(checked) =>
-              handleToggleCompletion(checked === true)
-            }
+            onCheckedChange={_handleCheckboxChange}
             className="flex-shrink-0"
           />
 
           <GoalDetailsPopover
             goal={goal}
-            onSave={handleUpdateTitle}
+            onSave={_handleUpdateTitle}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            onToggleComplete={handleToggleCompletion}
+            onToggleComplete={_handleToggleCompletion}
           />
 
           <div className="flex items-center gap-1">
@@ -93,10 +105,11 @@ export const WeeklyGoalTaskItem = ({
             ) : (
               <>
                 <FireIcon goalId={goal._id} />
+                <PendingIcon goalId={goal._id} />
                 <GoalEditPopover
                   title={goal.title}
                   details={goal.details}
-                  onSave={handleUpdateTitle}
+                  onSave={_handleUpdateTitle}
                   trigger={
                     <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
                       <Edit2 className="h-3.5 w-3.5" />

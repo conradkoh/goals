@@ -1,8 +1,8 @@
-import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
-import { Button } from '@/components/ui/button';
+import { WeekData, WeekProviderWithoutDashboard } from "@/hooks/useWeek";
+import { WeekCardDailyGoals } from "../WeekCardDailyGoals";
+import { WeekCardQuarterlyGoals } from "../WeekCardQuarterlyGoals";
+import { WeekCardWeeklyGoals } from "../WeekCardWeeklyGoals";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,23 +14,23 @@ import {
   DropdownMenuSubContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   History,
   ArrowDownToLine,
   Calendar,
   ArrowRightLeft,
   MoveHorizontal,
-} from 'lucide-react';
-import { useMemo } from 'react';
-import { DayOfWeek } from '@services/backend/src/constants';
-import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
+} from "lucide-react";
+import { useMemo } from "react";
+import { DayOfWeek } from "@services/backend/src/constants";
+import { WeekActionMenu } from "@/components/molecules/week/WeekActionMenu";
 import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
-} from '@/hooks/useMoveGoalsForWeekContext';
-import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
-import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
+} from "@/hooks/useMoveGoalsForWeekContext";
+import { JumpToCurrentButton } from "@/components/molecules/focus/JumpToCurrentButton";
+import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
@@ -58,7 +58,7 @@ const FocusModeWeeklyViewInner = ({
       isFirstWeek,
       isMovingTasks,
       handlePreviewTasks,
-      buttonSize: 'icon' as const,
+      buttonSize: "icon" as const,
       showLabel: false,
     }),
     [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks]

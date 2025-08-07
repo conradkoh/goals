@@ -1,51 +1,51 @@
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { Pin, Star } from 'lucide-react';
-import { GoalActionMenu } from './GoalActionMenu';
-import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
-import React, { ReactNode, useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useToast } from '@/components/ui/use-toast';
-import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { Pin, Star } from "lucide-react";
+import { GoalActionMenu } from "./GoalActionMenu";
+import { GoalEditProvider, useGoalEditContext } from "./GoalEditContext";
+import React, { ReactNode, useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useToast } from "@/components/ui/use-toast";
+import { useFormSubmitShortcut } from "@/hooks/useFormSubmitShortcut";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { GoalDetailsContent } from './GoalDetailsContent';
-import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, getDayName } from '@/lib/constants';
-import { DateTime } from 'luxon';
+} from "@/components/ui/dialog";
+import { GoalDetailsContent } from "./GoalDetailsContent";
+import { GoalDetailsChildrenList } from "./GoalDetailsChildrenList";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CreateGoalInput } from "@/components/atoms/CreateGoalInput";
+import { useWeek } from "@/hooks/useWeek";
+import { DayOfWeek, getDayName } from "@/lib/constants";
+import { DateTime } from "luxon";
 import {
   GoalStarPin,
   GoalStarPinContainer,
-} from '@/components/atoms/GoalStarPin';
+} from "@/components/atoms/GoalStarPin";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
   onSave: (title: string, details?: string) => Promise<void>;
   triggerClassName?: string;
-  buttonVariant?: 'default' | 'ghost' | 'outline';
+  buttonVariant?: "default" | "ghost" | "outline";
   titleClassName?: string;
   additionalContent?: ReactNode;
   onToggleComplete?: (isComplete: boolean) => Promise<void>;
@@ -54,9 +54,9 @@ interface GoalDetailsPopoverProps {
 export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   goal,
   onSave,
-  triggerClassName = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
-  buttonVariant = 'ghost',
-  titleClassName = 'text-gray-600',
+  triggerClassName = "p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1",
+  buttonVariant = "ghost",
+  titleClassName = "text-gray-600",
   additionalContent,
   onToggleComplete,
 }) => {
@@ -74,8 +74,8 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     return DateTime.now().weekday as DayOfWeek;
   }, []); // Empty dependency array - we only need the initial weekday
 
-  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
-  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
+  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState("");
+  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState("");
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
     () => currentWeekday
   );
@@ -85,8 +85,8 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     onSave: (title: string, details?: string) => Promise<void>;
   }> = ({ onSave }) => {
     const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-    const [editTitle, setEditTitle] = useState('');
-    const [editDetails, setEditDetails] = useState('');
+    const [editTitle, setEditTitle] = useState("");
+    const [editDetails, setEditDetails] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
     const { toast } = useToast();
@@ -104,7 +104,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         (!hasInitialized || editingGoal._id !== editingGoal._id)
       ) {
         setEditTitle(editingGoal.title);
-        setEditDetails(editingGoal.details || '');
+        setEditDetails(editingGoal.details || "");
         setHasInitialized(true);
       }
     }, [isEditing, editingGoal, hasInitialized]);
@@ -122,9 +122,9 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
       const trimmedTitle = editTitle.trim();
       if (!trimmedTitle) {
         toast({
-          title: 'Error',
-          description: 'Goal title cannot be empty',
-          variant: 'destructive',
+          title: "Error",
+          description: "Goal title cannot be empty",
+          variant: "destructive",
         });
         return;
       }
@@ -134,19 +134,19 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         await onSave(trimmedTitle, editDetails);
         stopEditing();
         // Clear form state after successful save
-        setEditTitle('');
-        setEditDetails('');
+        setEditTitle("");
+        setEditDetails("");
         setHasInitialized(false);
         toast({
-          title: 'Success',
-          description: 'Goal updated successfully',
+          title: "Success",
+          description: "Goal updated successfully",
         });
       } catch (error) {
-        console.error('Failed to save goal:', error);
+        console.error("Failed to save goal:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to save goal. Please try again.',
-          variant: 'destructive',
+          title: "Error",
+          description: "Failed to save goal. Please try again.",
+          variant: "destructive",
         });
       } finally {
         setIsSubmitting(false);
@@ -191,7 +191,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                 Cancel
               </Button>
               <Button onClick={handleSave} disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save'}
+                {isSubmitting ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
@@ -237,10 +237,10 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     const trimmedTitle = newWeeklyGoalTitle.trim();
     if (trimmedTitle && isQuarterlyGoal) {
       try {
-        setNewWeeklyGoalTitle('');
+        setNewWeeklyGoalTitle("");
         await createWeeklyGoalOptimistic(goal._id, trimmedTitle);
       } catch (error) {
-        console.error('Failed to create weekly goal:', error);
+        console.error("Failed to create weekly goal:", error);
         setNewWeeklyGoalTitle(trimmedTitle);
       }
     }
@@ -250,13 +250,13 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     const trimmedTitle = newDailyGoalTitle.trim();
     if (trimmedTitle && isWeeklyGoal) {
       try {
-        setNewDailyGoalTitle('');
+        setNewDailyGoalTitle("");
 
         const dateTimestamp = DateTime.fromObject({
           weekNumber,
           weekYear: year,
         })
-          .startOf('week')
+          .startOf("week")
           .plus({ days: selectedDayOfWeek - 1 })
           .toMillis();
 
@@ -267,7 +267,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
           dateTimestamp
         );
       } catch (error) {
-        console.error('Failed to create daily goal:', error);
+        console.error("Failed to create daily goal:", error);
         setNewDailyGoalTitle(trimmedTitle);
       }
     }
@@ -329,8 +329,8 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
       {/* Display completion date if the goal is complete */}
       {isComplete && goal.completedAt && (
         <div className="text-xs text-muted-foreground mt-1">
-          Completed on{' '}
-          {DateTime.fromMillis(goal.completedAt).toFormat('LLL d, yyyy')}
+          Completed on{" "}
+          {DateTime.fromMillis(goal.completedAt).toFormat("LLL d, yyyy")}
         </div>
       )}
 
@@ -372,7 +372,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                       value={newWeeklyGoalTitle}
                       onChange={setNewWeeklyGoalTitle}
                       onSubmit={handleCreateWeeklyGoal}
-                      onEscape={() => setNewWeeklyGoalTitle('')}
+                      onEscape={() => setNewWeeklyGoalTitle("")}
                     />
                   </div>
                 </>
@@ -391,7 +391,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
                       value={newDailyGoalTitle}
                       onChange={setNewDailyGoalTitle}
                       onSubmit={handleCreateDailyGoal}
-                      onEscape={() => setNewDailyGoalTitle('')}
+                      onEscape={() => setNewDailyGoalTitle("")}
                     >
                       <div className="mt-2">
                         <Select
@@ -429,7 +429,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
           <Button variant={buttonVariant} className={triggerClassName}>
             <span
               className={cn(
-                'break-words w-full whitespace-pre-wrap',
+                "break-words w-full whitespace-pre-wrap",
                 titleClassName
               )}
             >

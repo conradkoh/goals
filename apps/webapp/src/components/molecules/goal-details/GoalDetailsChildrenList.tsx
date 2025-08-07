@@ -1,10 +1,10 @@
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
-import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
-import { useWeek } from '@/hooks/useWeek';
-import { useCallback } from 'react';
-import { useFireGoals } from '@/contexts/FireGoalsContext';
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { DailyGoalTaskItem } from "@/components/organisms/DailyGoalTaskItem";
+import { WeeklyGoalTaskItem } from "@/components/molecules/day-of-week/components/WeeklyGoalTaskItem";
+import { useWeek } from "@/hooks/useWeek";
+import { useCallback } from "react";
+import { useFireGoals } from "@/contexts/GoalStatusContext";
 
 interface GoalDetailsChildrenListProps {
   parentGoal: GoalWithDetailsAndChildren;
@@ -25,7 +25,7 @@ export function GoalDetailsChildrenList({
 
   // Handle title update for child goals
   const handleUpdateTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+    async (goalId: Id<"goals">, title: string, details?: string) => {
       await updateQuarterlyGoalTitle({
         goalId,
         title,
@@ -37,7 +37,7 @@ export function GoalDetailsChildrenList({
 
   // Handle goal deletion
   const handleDeleteGoal = useCallback(
-    async (goalId: Id<'goals'>) => {
+    async (goalId: Id<"goals">) => {
       await deleteGoalOptimistic(goalId);
     },
     [deleteGoalOptimistic]

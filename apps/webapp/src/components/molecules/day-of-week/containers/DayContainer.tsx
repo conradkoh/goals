@@ -1,18 +1,18 @@
-import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
-import { Button } from '@/components/ui/button';
+import { DailyGoalTaskItem } from "@/components/organisms/DailyGoalTaskItem";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { GoalWithOptimisticStatus } from '@/hooks/useWeek';
-import { DayOfWeek } from '@/lib/constants';
-import { cn } from '@/lib/utils';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2 } from 'lucide-react';
-import { DateTime } from 'luxon';
+} from "@/components/ui/popover";
+import { SafeHTML } from "@/components/ui/safe-html";
+import { GoalWithOptimisticStatus } from "@/hooks/useWeek";
+import { DayOfWeek } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { Edit2 } from "lucide-react";
+import { DateTime } from "luxon";
 import {
   useCallback,
   useMemo,
@@ -20,17 +20,17 @@ import {
   useRef,
   useEffect,
   Fragment,
-} from 'react';
-import { AddTaskInput } from '@/components/atoms/AddTaskInput';
-import { DayHeader } from '../components/DayHeader';
+} from "react";
+import { AddTaskInput } from "@/components/atoms/AddTaskInput";
+import { DayHeader } from "../components/DayHeader";
 import {
   GoalDetailsContent,
   GoalDetailsPopover,
-} from '@/components/molecules/goal-details';
-import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
-import { WeeklyGoalTaskItem } from '../components/WeeklyGoalTaskItem';
-import { ConditionalRender } from '@/components/atoms/ConditionalRender';
-import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
+} from "@/components/molecules/goal-details";
+import { QuarterlyGoalHeader } from "../components/QuarterlyGoalHeader";
+import { WeeklyGoalTaskItem } from "../components/WeeklyGoalTaskItem";
+import { ConditionalRender } from "@/components/atoms/ConditionalRender";
+import { FireGoalsProvider, useFireGoals } from "@/contexts/GoalStatusContext";
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
@@ -41,14 +41,14 @@ export const wasCompletedToday = (
   const completedAt = DateTime.fromMillis(goal.completedAt);
   const date = DateTime.fromMillis(dateTimestamp);
   return (
-    completedAt.get('year') === date.get('year') &&
-    completedAt.get('quarter') === date.get('quarter') &&
-    completedAt.get('weekNumber') === date.get('weekNumber') &&
-    completedAt.get('day') === date.get('day')
+    completedAt.get("year") === date.get("year") &&
+    completedAt.get("quarter") === date.get("quarter") &&
+    completedAt.get("weekNumber") === date.get("weekNumber") &&
+    completedAt.get("day") === date.get("day")
   );
 };
 
-export type DayContainerMode = 'plan' | 'focus';
+export type DayContainerMode = "plan" | "focus";
 
 interface WeeklyGoalSectionProps {
   weeklyGoal: GoalWithDetailsAndChildren;
@@ -58,18 +58,18 @@ interface WeeklyGoalSectionProps {
     goals: GoalWithDetailsAndChildren[]
   ) => GoalWithDetailsAndChildren[];
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  onDelete: (goalId: Id<"goals">) => Promise<void>;
   onCreateDailyGoal: (
-    weeklyGoalId: Id<'goals'>,
+    weeklyGoalId: Id<"goals">,
     title: string,
     forDayOfWeek?: DayOfWeek
   ) => Promise<void>;
   onCreateWeeklyGoal: (
-    quarterlyGoalId: Id<'goals'>,
+    quarterlyGoalId: Id<"goals">,
     title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
@@ -87,7 +87,7 @@ const WeeklyGoalSection = ({
   onCreateWeeklyGoal,
   isCreating,
 }: WeeklyGoalSectionProps) => {
-  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
 
   // Filter daily goals for this day of week
@@ -97,7 +97,7 @@ const WeeklyGoalSection = ({
 
   // In 'focus' mode, we only show weekly goals that have daily goals for today
   // In 'plan' mode, we show all weekly goals
-  if (mode === 'focus' && dailyGoals.length === 0) {
+  if (mode === "focus" && dailyGoals.length === 0) {
     return null;
   }
 
@@ -114,13 +114,13 @@ const WeeklyGoalSection = ({
 
   // Handle creating a new daily goal
   const handleCreateGoal = useCallback(async () => {
-    if (newTaskTitle.trim() === '') return;
+    if (newTaskTitle.trim() === "") return;
     setIsAddingTask(true);
     try {
       await onCreateDailyGoal(weeklyGoal._id, newTaskTitle.trim());
-      setNewTaskTitle('');
+      setNewTaskTitle("");
     } catch (error) {
-      console.error('Failed to create daily goal', error);
+      console.error("Failed to create daily goal", error);
     } finally {
       setIsAddingTask(false);
     }
@@ -128,7 +128,7 @@ const WeeklyGoalSection = ({
 
   // Determine if we should show the add task input
   // In focus mode, always show. In plan mode, only show when the user is adding a task
-  const shouldShowAddTask = mode === 'focus' || isAddingTask;
+  const shouldShowAddTask = mode === "focus" || isAddingTask;
 
   return (
     <div>
@@ -171,18 +171,18 @@ interface QuarterlyGoalSectionProps {
     goals: GoalWithDetailsAndChildren[]
   ) => GoalWithDetailsAndChildren[];
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  onDelete: (goalId: Id<"goals">) => Promise<void>;
   onCreateDailyGoal: (
-    weeklyGoalId: Id<'goals'>,
+    weeklyGoalId: Id<"goals">,
     title: string,
     forDayOfWeek?: DayOfWeek
   ) => Promise<void>;
   onCreateWeeklyGoal: (
-    quarterlyGoalId: Id<'goals'>,
+    quarterlyGoalId: Id<"goals">,
     title: string
   ) => Promise<void>;
   isCreating: Record<string, boolean>;
@@ -213,7 +213,7 @@ const QuarterlyGoalSection = ({
   const { weeklyGoalsForChecklist, weeklyGoalsForQuarterlySection } =
     useMemo(() => {
       // In plan mode, show all weekly goals
-      if (mode === 'plan') {
+      if (mode === "plan") {
         return {
           weeklyGoalsForChecklist: weeklyGoals.filter((weekly) => {
             if (!weekly.state) return false;
@@ -244,9 +244,9 @@ const QuarterlyGoalSection = ({
           const isCompleteInOtherDays =
             weekly.isComplete &&
             completedAt &&
-            completedAt?.get('year') === DateTime.now().get('year') &&
-            completedAt?.get('quarter') === DateTime.now().get('quarter') &&
-            completedAt?.get('weekNumber') !== DateTime.now().get('weekNumber');
+            completedAt?.get("year") === DateTime.now().get("year") &&
+            completedAt?.get("quarter") === DateTime.now().get("quarter") &&
+            completedAt?.get("weekNumber") !== DateTime.now().get("weekNumber");
           if (isCompleteInOtherDays) return false;
 
           return true;
@@ -279,7 +279,7 @@ const QuarterlyGoalSection = ({
 
   // Check if there are goals to display in focus mode
   const shouldRender = useMemo(() => {
-    if (mode !== 'focus') return true;
+    if (mode !== "focus") return true;
     // In focus mode, always render the quarterly goal section
     return true;
   }, [mode]);
@@ -292,18 +292,18 @@ const QuarterlyGoalSection = ({
     <div className="mb-2">
       <div
         className={cn(
-          'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : '',
-          isPinned ? 'bg-blue-50' : '',
-          isStarred && !isPinned ? 'bg-yellow-50' : '',
-          !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
+          "rounded-md px-3 py-2 transition-colors",
+          isSoftComplete ? "bg-green-50" : "",
+          isPinned ? "bg-blue-50" : "",
+          isStarred && !isPinned ? "bg-yellow-50" : "",
+          !isStarred && !isPinned && !isSoftComplete ? "bg-white" : ""
         )}
       >
         <QuarterlyGoalHeader
           goal={quarterlyGoal}
           onUpdateTitle={onUpdateTitle}
         />
-        <ConditionalRender condition={mode === 'focus'}>
+        <ConditionalRender condition={mode === "focus"}>
           {/* this adhoc checklist always renders in the focus mode */}
           <div className="ml-1 space-y-1 border-b border-gray-100">
             <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
@@ -352,18 +352,18 @@ export interface DayContainerProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
+  onDeleteGoal: (goalId: Id<"goals">) => Promise<void>;
   onCreateDailyGoal: (
-    weeklyGoalId: Id<'goals'>,
+    weeklyGoalId: Id<"goals">,
     title: string,
     forDayOfWeek?: DayOfWeek
   ) => Promise<void>;
   onCreateWeeklyGoal: (
-    quarterlyGoalId: Id<'goals'>,
+    quarterlyGoalId: Id<"goals">,
     title: string
   ) => Promise<void>;
   isCreating?: Record<string, boolean>;
@@ -384,32 +384,32 @@ export const DayContainer = ({
   onCreateWeeklyGoal,
   isCreating = {},
   sortDailyGoals,
-  mode = 'plan',
+  mode = "plan",
 }: DayContainerProps) => {
   // Memoize the callback functions to prevent unnecessary re-renders
   const handleUpdateGoalTitle = useCallback(
-    (goalId: Id<'goals'>, title: string, details?: string) => {
+    (goalId: Id<"goals">, title: string, details?: string) => {
       return onUpdateGoalTitle(goalId, title, details);
     },
     [onUpdateGoalTitle]
   );
 
   const handleDeleteGoal = useCallback(
-    (goalId: Id<'goals'>) => {
+    (goalId: Id<"goals">) => {
       return onDeleteGoal(goalId);
     },
     [onDeleteGoal]
   );
 
   const handleCreateDailyGoal = useCallback(
-    (weeklyGoalId: Id<'goals'>, title: string) => {
+    (weeklyGoalId: Id<"goals">, title: string) => {
       return onCreateDailyGoal(weeklyGoalId, title, dayOfWeek);
     },
     [onCreateDailyGoal, dayOfWeek]
   );
 
   const handleCreateWeeklyGoal = useCallback(
-    (quarterlyGoalId: Id<'goals'>, title: string) => {
+    (quarterlyGoalId: Id<"goals">, title: string) => {
       return onCreateWeeklyGoal(quarterlyGoalId, title);
     },
     [onCreateWeeklyGoal]

@@ -1,18 +1,22 @@
-import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
+import { FocusModeDailyViewDailyGoals } from "@/components/organisms/focus/FocusModeDailyViewDailyGoals";
 import {
   WeekData,
   WeekProviderWithoutDashboard,
   useWeek,
-} from '@/hooks/useWeek';
-import { DayOfWeek } from '@/lib/constants';
-import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
-import { FireGoalsProvider, useFireGoals } from '@/contexts/FireGoalsContext';
-import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
-import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionMenu';
-import { useCallback, useMemo, useState } from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useDashboard } from '@/hooks/useDashboard';
+} from "@/hooks/useWeek";
+import { DayOfWeek } from "@/lib/constants";
+import { JumpToCurrentButton } from "@/components/molecules/focus/JumpToCurrentButton";
+import {
+  GoalStatusProvider,
+  useGoalStatus,
+} from "@/contexts/GoalStatusContext";
+import { OnFireGoalsSection } from "@/components/organisms/focus/OnFireGoalsSection";
+import { PendingGoalsSection } from "@/components/organisms/focus/PendingGoalsSection";
+import { TaskPullActionMenu } from "@/components/molecules/focus/TaskPullActionMenu";
+import { useCallback, useMemo, useState } from "react";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { useDashboard } from "@/hooks/useDashboard";
 
 interface FocusModeDailyViewProps {
   year: number;
@@ -34,7 +38,7 @@ const FocusModeDailyViewInner = ({
   onJumpToCurrent,
   isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
-  const { fireGoals, toggleFireStatus, isOnFire } = useFireGoals();
+  const { fireGoals, toggleFireStatus, isOnFire } = useGoalStatus();
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
   const { toggleFocusMode } = useDashboard();
 
@@ -120,7 +124,7 @@ const FocusModeDailyViewInner = ({
 
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+    async (goalId: Id<"goals">, title: string, details?: string) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
@@ -128,18 +132,18 @@ const FocusModeDailyViewInner = ({
           details,
         });
       } catch (error) {
-        console.error('Failed to update goal title:', error);
+        console.error("Failed to update goal title:", error);
       }
     },
     [updateQuarterlyGoalTitle]
   );
 
   const handleDeleteGoal = useCallback(
-    async (goalId: Id<'goals'>) => {
+    async (goalId: Id<"goals">) => {
       try {
         await deleteGoalOptimistic(goalId);
       } catch (error) {
-        console.error('Failed to delete goal:', error);
+        console.error("Failed to delete goal:", error);
       }
     },
     [deleteGoalOptimistic]
@@ -190,6 +194,13 @@ const FocusModeDailyViewInner = ({
         toggleFocusMode={toggleFocusMode}
       />
 
+      <PendingGoalsSection
+        weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
+        selectedDayOfWeek={selectedDayOfWeek}
+        onUpdateGoalTitle={handleUpdateGoalTitle}
+        onDeleteGoal={handleDeleteGoal}
+      />
+
       {!shouldHideContent && (
         <div data-testid="focus-mode-daily-goals">
           <FocusModeDailyViewDailyGoals
@@ -208,9 +219,9 @@ const FocusModeDailyViewInner = ({
 export const FocusModeDailyView = (props: FocusModeDailyViewProps) => {
   return (
     <WeekProviderWithoutDashboard weekData={props.weekData}>
-      <FireGoalsProvider>
+      <GoalStatusProvider>
         <FocusModeDailyViewInner {...props} />
-      </FireGoalsProvider>
+      </GoalStatusProvider>
     </WeekProviderWithoutDashboard>
   );
 };

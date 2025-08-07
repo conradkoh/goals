@@ -1,7 +1,7 @@
 import {
   GoalDetailsContent,
   GoalDetailsPopover,
-} from '@/components/molecules/goal-details';
+} from "@/components/molecules/goal-details";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,28 +11,28 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Spinner } from '@/components/ui/spinner';
-import { useToast } from '@/components/ui/use-toast';
-import { GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
-import { cn } from '@/lib/utils';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { Edit2 } from 'lucide-react';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { DeleteGoalIconButton } from './DeleteGoalIconButton';
-import { GoalEditPopover } from '../atoms/GoalEditPopover';
-import { FireIcon } from '@/components/atoms/FireIcon';
-import { useFireGoals } from '@/contexts/FireGoalsContext';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+} from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { useToast } from "@/components/ui/use-toast";
+import { GoalWithOptimisticStatus, useWeek } from "@/hooks/useWeek";
+import { cn } from "@/lib/utils";
+import { Id } from "@services/backend/convex/_generated/dataModel";
+import { Edit2 } from "lucide-react";
+import { forwardRef, useCallback, useMemo, useState } from "react";
+import { CreateGoalInput } from "../atoms/CreateGoalInput";
+import { DeleteGoalIconButton } from "./DeleteGoalIconButton";
+import { GoalEditPopover } from "../atoms/GoalEditPopover";
+import { FireIcon } from "@/components/atoms/FireIcon";
+import { useFireGoals } from "@/contexts/GoalStatusContext";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;
@@ -53,7 +53,7 @@ const WeeklyGoalsSkeleton = () => (
 // Helper function to safely get isComplete from goal
 function getIsComplete(goal: GoalWithDetailsAndChildren): boolean {
   // Access isComplete directly from the goal object
-  return 'isComplete' in goal ? goal.isComplete : false;
+  return "isComplete" in goal ? goal.isComplete : false;
 }
 
 // Internal component for rendering a weekly goal
@@ -64,11 +64,11 @@ const WeeklyGoal = ({
 }: {
   goal: GoalWithOptimisticStatus;
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  onDelete: (goalId: Id<"goals">) => Promise<void>;
 }) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const { fireGoals, toggleFireStatus } = useFireGoals();
@@ -138,8 +138,8 @@ const WeeklyGoal = ({
     <>
       <div
         className={cn(
-          'group rounded-sm',
-          isSoftComplete ? 'bg-green-50' : 'hover:bg-gray-50/50'
+          "group rounded-sm",
+          isSoftComplete ? "bg-green-50" : "hover:bg-gray-50/50"
         )}
       >
         <div className="px-2 py-1">
@@ -231,16 +231,16 @@ const WeeklyGoalGroup = ({
   quarterlyGoal: GoalWithOptimisticStatus;
   weeklyGoals: GoalWithOptimisticStatus[];
   onUpdateTitle: (
-    goalId: Id<'goals'>,
+    goalId: Id<"goals">,
     title: string,
     details?: string
   ) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => Promise<void>;
+  onDelete: (goalId: Id<"goals">) => Promise<void>;
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [newGoalTitle, setNewGoalTitle] = useState('');
-  const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
+  const [newGoalTitle, setNewGoalTitle] = useState("");
+  const [previousTitle, setPreviousTitle] = useState(""); // Store previous title for error recovery
   const { createWeeklyGoalOptimistic } = useWeek();
   const { toast } = useToast();
 
@@ -251,7 +251,7 @@ const WeeklyGoalGroup = ({
     // Store the current title for potential error recovery
     setPreviousTitle(trimmedTitle);
     // Clear input immediately
-    setNewGoalTitle('');
+    setNewGoalTitle("");
 
     try {
       await createWeeklyGoalOptimistic(quarterlyGoal._id, trimmedTitle);
@@ -261,18 +261,18 @@ const WeeklyGoalGroup = ({
       setNewGoalTitle(previousTitle);
       // Show error toast
       toast({
-        variant: 'destructive',
-        title: 'Failed to create goal',
-        description: 'There was an error creating your goal. Please try again.',
+        variant: "destructive",
+        title: "Failed to create goal",
+        description: "There was an error creating your goal. Please try again.",
       });
-      console.error('Failed to create weekly goal:', error);
+      console.error("Failed to create weekly goal:", error);
     }
   };
 
   const handleEscape = () => {
     setIsCreating(false);
-    setNewGoalTitle(''); // Clear the input
-    setPreviousTitle(''); // Clear the stored title
+    setNewGoalTitle(""); // Clear the input
+    setPreviousTitle(""); // Clear the stored title
   };
 
   return (
@@ -292,10 +292,10 @@ const WeeklyGoalGroup = ({
       >
         <div
           className={cn(
-            'transition-opacity duration-150',
+            "transition-opacity duration-150",
             isCreating || isHovering
-              ? 'opacity-100 pointer-events-auto'
-              : 'opacity-0 pointer-events-none'
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
           )}
         >
           <CreateGoalInput
@@ -347,7 +347,7 @@ export const WeekCardWeeklyGoals = forwardRef<
   }, [quarterlyGoals]);
 
   const handleUpdateWeeklyGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+    async (goalId: Id<"goals">, title: string, details?: string) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
@@ -355,7 +355,7 @@ export const WeekCardWeeklyGoals = forwardRef<
           details,
         });
       } catch (error) {
-        console.error('Failed to update weekly goal title:', error);
+        console.error("Failed to update weekly goal title:", error);
         throw error;
       }
     },
@@ -363,11 +363,11 @@ export const WeekCardWeeklyGoals = forwardRef<
   );
 
   const handleDeleteWeeklyGoal = useCallback(
-    async (goalId: Id<'goals'>) => {
+    async (goalId: Id<"goals">) => {
       try {
         await deleteGoalOptimistic(goalId);
       } catch (error) {
-        console.error('Failed to delete weekly goal:', error);
+        console.error("Failed to delete weekly goal:", error);
         throw error;
       }
     },
@@ -376,7 +376,7 @@ export const WeekCardWeeklyGoals = forwardRef<
 
   // Move handleToggleQuarterlyCompletion outside the map function
   const handleToggleQuarterlyCompletion = useCallback(
-    async (goalId: Id<'goals'>, newState: boolean) => {
+    async (goalId: Id<"goals">, newState: boolean) => {
       await toggleGoalCompletion({
         goalId,
         weekNumber,
@@ -413,15 +413,15 @@ export const WeekCardWeeklyGoals = forwardRef<
               <div
                 key={goal._id}
                 className={cn(
-                  'px-3 space-y-2 rounded-md',
-                  isAllWeeklyGoalsComplete ? 'bg-green-50' : ''
+                  "px-3 space-y-2 rounded-md",
+                  isAllWeeklyGoalsComplete ? "bg-green-50" : ""
                 )}
               >
                 <div
                   className={cn(
-                    'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
+                    "font-semibold text-sm text-gray-800 px-2 py-1 rounded-md",
                     !isAllWeeklyGoalsComplete &&
-                      (isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50')
+                      (isStarred ? "bg-yellow-50" : isPinned && "bg-blue-50")
                   )}
                 >
                   <GoalDetailsPopover
@@ -453,4 +453,4 @@ export const WeekCardWeeklyGoals = forwardRef<
     </div>
   );
 });
-WeekCardWeeklyGoals.displayName = 'WeekCardWeeklyGoals';
+WeekCardWeeklyGoals.displayName = "WeekCardWeeklyGoals";

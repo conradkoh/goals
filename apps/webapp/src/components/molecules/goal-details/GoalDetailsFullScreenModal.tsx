@@ -1,39 +1,39 @@
-import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Pin, Star, X } from 'lucide-react';
-import { GoalActionMenu } from './GoalActionMenu';
-import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
-import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useToast } from '@/components/ui/use-toast';
-import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import React, { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Pin, Star, X } from "lucide-react";
+import { GoalActionMenu } from "./GoalActionMenu";
+import { GoalEditProvider, useGoalEditContext } from "./GoalEditContext";
+import { Input } from "@/components/ui/input";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useToast } from "@/components/ui/use-toast";
+import { useFormSubmitShortcut } from "@/hooks/useFormSubmitShortcut";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { GoalDetailsContent } from './GoalDetailsContent';
-import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { FireGoalsProvider } from '@/contexts/FireGoalsContext';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, getDayName } from '@/lib/constants';
-import { DateTime } from 'luxon';
+} from "@/components/ui/dialog";
+import { GoalDetailsContent } from "./GoalDetailsContent";
+import { GoalDetailsChildrenList } from "./GoalDetailsChildrenList";
+import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
+import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CreateGoalInput } from "@/components/atoms/CreateGoalInput";
+import { useWeek } from "@/hooks/useWeek";
+import { DayOfWeek, getDayName } from "@/lib/constants";
+import { DateTime } from "luxon";
 import {
   GoalStarPin,
   GoalStarPinContainer,
-} from '@/components/atoms/GoalStarPin';
+} from "@/components/atoms/GoalStarPin";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 interface GoalDetailsFullScreenModalProps {
   goal: GoalWithDetailsAndChildren;
@@ -48,8 +48,8 @@ const GoalEditModalContent: React.FC<{
   onSave: (title: string, details?: string) => Promise<void>;
 }> = ({ onSave }) => {
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const [editTitle, setEditTitle] = useState('');
-  const [editDetails, setEditDetails] = useState('');
+  const [editTitle, setEditTitle] = useState("");
+  const [editDetails, setEditDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
@@ -67,7 +67,7 @@ const GoalEditModalContent: React.FC<{
       (!hasInitialized || editingGoal._id !== editingGoal._id)
     ) {
       setEditTitle(editingGoal.title);
-      setEditDetails(editingGoal.details || '');
+      setEditDetails(editingGoal.details || "");
       setHasInitialized(true);
     }
   }, [isEditing, editingGoal, hasInitialized]);
@@ -85,9 +85,9 @@ const GoalEditModalContent: React.FC<{
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
       toast({
-        title: 'Error',
-        description: 'Goal title cannot be empty',
-        variant: 'destructive',
+        title: "Error",
+        description: "Goal title cannot be empty",
+        variant: "destructive",
       });
       return;
     }
@@ -97,19 +97,19 @@ const GoalEditModalContent: React.FC<{
       await onSave(trimmedTitle, editDetails);
       stopEditing();
       // Clear form state after successful save
-      setEditTitle('');
-      setEditDetails('');
+      setEditTitle("");
+      setEditDetails("");
       setHasInitialized(false);
       toast({
-        title: 'Success',
-        description: 'Goal updated successfully',
+        title: "Success",
+        description: "Goal updated successfully",
       });
     } catch (error) {
-      console.error('Failed to save goal:', error);
+      console.error("Failed to save goal:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to save goal. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to save goal. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -154,7 +154,7 @@ const GoalEditModalContent: React.FC<{
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>
@@ -180,8 +180,8 @@ export const GoalDetailsFullScreenModal: React.FC<
     return DateTime.now().weekday as DayOfWeek;
   }, []); // Empty dependency array - we only need the initial weekday
 
-  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
-  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
+  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState("");
+  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState("");
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
     () => currentWeekday
   );
@@ -223,10 +223,10 @@ export const GoalDetailsFullScreenModal: React.FC<
     const trimmedTitle = newWeeklyGoalTitle.trim();
     if (trimmedTitle && isQuarterlyGoal) {
       try {
-        setNewWeeklyGoalTitle('');
+        setNewWeeklyGoalTitle("");
         await createWeeklyGoalOptimistic(goal._id, trimmedTitle);
       } catch (error) {
-        console.error('Failed to create weekly goal:', error);
+        console.error("Failed to create weekly goal:", error);
         setNewWeeklyGoalTitle(trimmedTitle);
       }
     }
@@ -236,13 +236,13 @@ export const GoalDetailsFullScreenModal: React.FC<
     const trimmedTitle = newDailyGoalTitle.trim();
     if (trimmedTitle && isWeeklyGoal) {
       try {
-        setNewDailyGoalTitle('');
+        setNewDailyGoalTitle("");
 
         const dateTimestamp = DateTime.fromObject({
           weekNumber,
           weekYear: year,
         })
-          .startOf('week')
+          .startOf("week")
           .plus({ days: selectedDayOfWeek - 1 })
           .toMillis();
 
@@ -253,7 +253,7 @@ export const GoalDetailsFullScreenModal: React.FC<
           dateTimestamp
         );
       } catch (error) {
-        console.error('Failed to create daily goal:', error);
+        console.error("Failed to create daily goal:", error);
         setNewDailyGoalTitle(trimmedTitle);
       }
     }
@@ -329,8 +329,8 @@ export const GoalDetailsFullScreenModal: React.FC<
       {/* Display completion date if the goal is complete */}
       {isComplete && goal.completedAt && (
         <div className="text-sm text-muted-foreground">
-          Completed on{' '}
-          {DateTime.fromMillis(goal.completedAt).toFormat('LLL d, yyyy')}
+          Completed on{" "}
+          {DateTime.fromMillis(goal.completedAt).toFormat("LLL d, yyyy")}
         </div>
       )}
 
@@ -368,7 +368,7 @@ export const GoalDetailsFullScreenModal: React.FC<
                       value={newWeeklyGoalTitle}
                       onChange={setNewWeeklyGoalTitle}
                       onSubmit={handleCreateWeeklyGoal}
-                      onEscape={() => setNewWeeklyGoalTitle('')}
+                      onEscape={() => setNewWeeklyGoalTitle("")}
                     />
                   </div>
                 </>
@@ -389,7 +389,7 @@ export const GoalDetailsFullScreenModal: React.FC<
                       value={newDailyGoalTitle}
                       onChange={setNewDailyGoalTitle}
                       onSubmit={handleCreateDailyGoal}
-                      onEscape={() => setNewDailyGoalTitle('')}
+                      onEscape={() => setNewDailyGoalTitle("")}
                     >
                       <div className="mt-2">
                         <Select
