@@ -7,21 +7,38 @@
   "scripts": {
     "dev": "nx run-many --target=dev --all --parallel",
     "build": "nx run-many --target=build --all --parallel",
-    "lint": "nx run-many --target=lint --all --parallel",
+    "lint": "biome check .",
+    "lint:fix": "biome check --apply .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
     "test": "nx run-many --target=test --all --parallel",
     "test:watch": "nx run-many --target=test:watch --all --parallel",
     "clean": "find . -name 'node_modules' -type d -prune -exec trash {} +",
-    "typecheck": "nx run-many --target=typecheck --all --parallel"
+    "typecheck": "nx run-many --target=typecheck --all --parallel",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json,md}": [
+      "biome format --write --no-errors-on-unmatched",
+      "biome check --write --no-errors-on-unmatched"
+    ]
   },
   "devDependencies": {
-    "nx": "^20.4.2"
+    "nx": "^20.4.2",
+    "lint-staged": "^15.5.0",
+    "husky": "^9.1.7"
   },
   "dependencies": {
+    "@biomejs/biome": "^2.1.4",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@types/node": "^20",
     "typescript": "^5.7.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "nx", "sharp"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "nx",
+      "sharp"
+    ]
   }
 }
