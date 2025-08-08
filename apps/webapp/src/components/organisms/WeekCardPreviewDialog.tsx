@@ -84,17 +84,17 @@ export const WeekCardPreviewDialog = ({
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Move Tasks from Previous Week</AlertDialogTitle>
+            <AlertDialogTitle>Move Tasks from Last Non-Empty Week</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <span className="block">
-                  There are no incomplete tasks from the previous week to move
+                  There are no incomplete tasks from the last non-empty week to move
                   to this week.
                 </span>
                 <div className="text-center py-8 text-gray-500">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <span className="block">
-                    All tasks from the previous week are complete!
+                    All tasks from the last non-empty week are complete!
                   </span>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export const WeekCardPreviewDialog = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Move Tasks from Previous Week</AlertDialogTitle>
+          <AlertDialogTitle>Move Tasks from Last Non-Empty Week</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-6 max-h-[50vh] overflow-y-auto">
               {/* Explanation section */}

@@ -15,6 +15,7 @@ import {
   WeeklyGoalWithState,
   WeekStateToCopy,
 } from './types';
+import { findLastNonEmptyWeek } from './findLastNonEmptyWeek';
 
 /**
  * Move goals from one week to another
@@ -153,6 +154,104 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     dailyGoalsMoved: result.dailyGoalsToMove.length,
     quarterlyGoalsUpdated: result.quarterlyGoalsToUpdate.length,
   } as MoveGoalsFromWeekResult<T>;
+}
+
+/**
+ * Move goals from the last non-empty week to the target week
+ * @param ctx - The database context
+ * @param args - The arguments for the mutation
+ * @returns The result of the mutation
+ */
+export async function moveGoalsFromLastNonEmptyWeekUsecase(
+  ctx: MutationCtx,
+  args: MoveGoalsFromWeekArgs
+): Promise<DryRunResult | ReturnType<typeof updateResultPlaceholder>> {
+  const { userId, to, dryRun } = args;
+
+  // Search backwards up to ~one quarter for a week that produces movable content
+  let candidate: TimePeriod = {
+    year: to.year,
+    quarter: to.quarter,
+    weekNumber: to.weekNumber - 1,
+  };
+
+  const maxWeeksToSearch = 13;
+  for (let i = 0; i < maxWeeksToSearch; i++) {
+    // Handle quarter/year boundaries
+    if (candidate.weekNumber < 1) {
+      let prevQuarter = candidate.quarter - 1;
+      let prevYear = candidate.year;
+      if (prevQuarter < 1) {
+        prevQuarter = 4;
+        prevYear = candidate.year - 1;
+      }
+      candidate = {
+        year: prevYear,
+        quarter: prevQuarter,
+        weekNumber: 13, // safe upper-bound for weeks per quarter
+      };
+    }
+
+    // Run a dry-run for this candidate week to see if there's anything to move
+    const preview = await moveGoalsFromWeekUsecase(ctx, {
+      userId,
+      from: candidate,
+      to,
+      dryRun: true as const,
+    });
+
+    if (preview.canPull) {
+      if (dryRun) {
+        // Return the preview directly
+        return preview as DryRunResult;
+      }
+      // Execute the actual move using this candidate week
+      return (await moveGoalsFromWeekUsecase(ctx, {
+        userId,
+        from: candidate,
+        to,
+        dryRun: false as const,
+      })) as ReturnType<typeof updateResultPlaceholder>;
+    }
+
+    // Step to previous week
+    candidate = { ...candidate, weekNumber: candidate.weekNumber - 1 };
+  }
+
+  // No week found with movable content
+  const emptyBase = {
+    weekStatesToCopy: [],
+    dailyGoalsToMove: [],
+    quarterlyGoalsToUpdate: [],
+  };
+  if (dryRun) {
+    return {
+      ...emptyBase,
+      isDryRun: true,
+      canPull: false,
+    } as DryRunResult;
+  }
+  return updateResultPlaceholder(
+    emptyBase.weekStatesToCopy,
+    emptyBase.dailyGoalsToMove,
+    emptyBase.quarterlyGoalsToUpdate
+  );
+}
+
+// Helper solely for typing the update result shape without importing the alias directly here
+function updateResultPlaceholder(
+  _w: any,
+  _d: any,
+  _q: any
+) {
+  return {
+    weekStatesToCopy: _w,
+    dailyGoalsToMove: _d,
+    quarterlyGoalsToUpdate: _q,
+    weekStatesCopied: 0,
+    dailyGoalsMoved: 0,
+    quarterlyGoalsUpdated: 0,
+  };
 }
 
 /**
@@ -501,7 +600,8 @@ export async function generateDryRunPreview(
 ): Promise<DryRunResult> {
   return {
     isDryRun: true,
-    canPull: true,
+  // Only allow pull if there's at least one weekly state to copy or daily goal to move
+  canPull: weekStatesToCopy.length > 0 || dailyGoalsToMove.length > 0,
     weekStatesToCopy: weekStatesToCopy.map((item) => ({
       title: item.originalGoal.title,
       carryOver: item.carryOver,

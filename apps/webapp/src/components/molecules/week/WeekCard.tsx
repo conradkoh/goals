@@ -1,8 +1,5 @@
-import { Button } from '@/components/ui/button';
 import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { Focus } from 'lucide-react';
-import { DayOfWeek } from '@services/backend/src/constants';
 import { WeekActionMenu } from './WeekActionMenu';
 import { useMemo } from 'react';
 import {
@@ -34,10 +31,10 @@ const WeekCardInner = ({
     useMoveGoalsForWeekContext();
 
   const tooltipContent = isFirstWeek
-    ? 'Cannot pull goals from previous week as this is the first week of the quarter'
+    ? 'Cannot pull goals from last non-empty week as this is the first week of the quarter'
     : isMovingTasks
     ? 'Moving tasks...'
-    : "Can't pull from previous week";
+    : "Can't pull from last non-empty week";
 
   // Memoize the WeekActionMenu props to prevent unnecessary re-renders
   const weekActionMenuProps = useMemo(

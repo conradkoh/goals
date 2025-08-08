@@ -114,7 +114,8 @@ export type BaseGoalMoveResult = {
 
 export type DryRunResult = BaseGoalMoveResult & {
   isDryRun: true;
-  canPull: true;
+  // true when there is something to pull; false when no prior non-empty week
+  canPull: boolean;
 };
 
 export type UpdateResult = BaseGoalMoveResult & {

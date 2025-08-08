@@ -58,7 +58,7 @@ export const useMoveGoalsForWeek = ({
   quarter,
 }: UseMoveGoalsForWeekProps): UseMoveGoalsForWeekReturn => {
   const { sessionId } = useSession();
-  const moveGoalsFromWeekMutation = useMutation(api.goal.moveGoalsFromWeek);
+  const moveGoalsFromLastNonEmptyWeekMutation = useMutation(api.goal.moveGoalsFromLastNonEmptyWeek);
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<{
@@ -77,13 +77,8 @@ export const useMoveGoalsForWeek = ({
       // Store the target day of week for use in the actual move operation
       setTargetDayOfWeek(dayOfWeek);
 
-      const previewData = await moveGoalsFromWeekMutation({
+      const previewData = await moveGoalsFromLastNonEmptyWeekMutation({
         sessionId,
-        from: {
-          quarter,
-          weekNumber: weekNumber - 1,
-          year,
-        },
         to: {
           quarter,
           weekNumber,
@@ -128,7 +123,7 @@ export const useMoveGoalsForWeek = ({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to preview tasks from previous week.',
+        description: 'Failed to preview tasks from last non-empty week.',
       });
     }
   };
@@ -137,13 +132,8 @@ export const useMoveGoalsForWeek = ({
     if (isFirstWeek) return;
     try {
       setIsMovingTasks(true);
-      await moveGoalsFromWeekMutation({
+      await moveGoalsFromLastNonEmptyWeekMutation({
         sessionId,
-        from: {
-          quarter,
-          weekNumber: weekNumber - 1,
-          year,
-        },
         to: {
           quarter,
           weekNumber,
@@ -155,14 +145,14 @@ export const useMoveGoalsForWeek = ({
       setShowConfirmDialog(false);
       toast({
         title: 'Success',
-        description: 'Successfully moved tasks from previous week.',
+        description: 'Successfully moved tasks from last non-empty week.',
       });
     } catch (error) {
       console.error('Failed to move tasks:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to move tasks from previous week.',
+        description: 'Failed to move tasks from last non-empty week.',
       });
     } finally {
       setIsMovingTasks(false);

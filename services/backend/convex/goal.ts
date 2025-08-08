@@ -6,7 +6,7 @@ import {
   mutation,
   action,
 } from './_generated/server';
-import { moveGoalsFromWeekUsecase } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
+import { moveGoalsFromWeekUsecase, moveGoalsFromLastNonEmptyWeekUsecase } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
 import { DayOfWeek, getDayName } from '../src/constants';
 import { Id, Doc } from './_generated/dataModel';
 import { internal } from './_generated/api';
@@ -56,6 +56,43 @@ export const moveGoalsFromWeek = mutation({
     const result = await moveGoalsFromWeekUsecase(ctx, {
       userId,
       from,
+      to,
+      dryRun: dryRun ?? false,
+    });
+
+    return result;
+  },
+});
+
+export const moveGoalsFromLastNonEmptyWeek = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    to: v.object({
+      year: v.number(),
+      quarter: v.number(),
+      weekNumber: v.number(),
+      dayOfWeek: v.optional(
+        v.union(
+          v.literal(DayOfWeek.MONDAY),
+          v.literal(DayOfWeek.TUESDAY),
+          v.literal(DayOfWeek.WEDNESDAY),
+          v.literal(DayOfWeek.THURSDAY),
+          v.literal(DayOfWeek.FRIDAY),
+          v.literal(DayOfWeek.SATURDAY),
+          v.literal(DayOfWeek.SUNDAY)
+        )
+      ),
+    }),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, to, dryRun } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    const result = await moveGoalsFromLastNonEmptyWeekUsecase(ctx, {
+      userId,
+      from: to, // This parameter will be ignored since we find the source week dynamically
       to,
       dryRun: dryRun ?? false,
     });
