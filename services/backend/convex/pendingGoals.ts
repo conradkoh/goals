@@ -1,8 +1,7 @@
-import { v } from 'convex/values';
-import { ConvexError } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { Id } from './_generated/dataModel';
+import { ConvexError, v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
+import { Id } from './_generated/dataModel';
+import { mutation, query } from './_generated/server';
 
 /**
  * Sets or updates the pending status description for a goal.
@@ -34,9 +33,7 @@ export const setPendingStatus = mutation({
 
     const existingPending = await ctx.db
       .query('pendingGoals')
-      .withIndex('by_user_and_goal', (q) =>
-        q.eq('userId', userId).eq('goalId', goalId)
-      )
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
       .first();
 
     if (existingPending) {
@@ -51,6 +48,15 @@ export const setPendingStatus = mutation({
         description,
         createdAt: Date.now(),
       });
+    }
+
+    // Simple invariant: when a goal is marked pending, ensure it is not on fire
+    const existingFireGoal = await ctx.db
+      .query('fireGoals')
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
+      .first();
+    if (existingFireGoal) {
+      await ctx.db.delete(existingFireGoal._id);
     }
 
     return true;
@@ -86,13 +92,24 @@ export const clearPendingStatus = mutation({
 
     const existingPending = await ctx.db
       .query('pendingGoals')
-      .withIndex('by_user_and_goal', (q) =>
-        q.eq('userId', userId).eq('goalId', goalId)
-      )
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
       .first();
 
     if (existingPending) {
       await ctx.db.delete(existingPending._id);
+    }
+
+    // Simple behavior: when pending is cleared, tag the goal as on fire again
+    const existingFireGoal = await ctx.db
+      .query('fireGoals')
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
+      .first();
+    if (!existingFireGoal) {
+      await ctx.db.insert('fireGoals', {
+        userId,
+        goalId,
+        createdAt: Date.now(),
+      });
     }
 
     return true;
