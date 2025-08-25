@@ -1,11 +1,11 @@
-import { ReactElement, useState } from 'react';
-import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { useSession } from '@/modules/auth/useSession';
-import { toast } from '@/components/ui/use-toast';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@services/backend/src/constants';
+import { useMutation } from 'convex/react';
+import { type ReactElement, useState } from 'react';
 import { WeekCardPreviewDialog } from '@/components/organisms/WeekCardPreviewDialog';
-import { DayOfWeek } from '@services/backend/src/constants';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import { toast } from '@/components/ui/use-toast';
+import { useSession } from '@/modules/auth/useSession';
 
 // Match the types expected by WeekCardPreviewDialog
 interface DailyGoalToCopy {
@@ -64,10 +64,14 @@ export const useMoveGoalsForWeek = ({
   const [preview, setPreview] = useState<{
     tasks: DailyGoalToCopy[];
     weeklyGoals: WeekStateToCopy[];
+    quarterlyGoals: {
+      id: string;
+      title: string;
+      isStarred?: boolean;
+      isPinned?: boolean;
+    }[];
   } | null>(null);
-  const [targetDayOfWeek, setTargetDayOfWeek] = useState<DayOfWeek | undefined>(
-    undefined
-  );
+  const [targetDayOfWeek, setTargetDayOfWeek] = useState<DayOfWeek | undefined>(undefined);
 
   const isFirstWeek = weekNumber === 1;
 
@@ -115,6 +119,12 @@ export const useMoveGoalsForWeek = ({
             };
           }),
           weeklyGoals: previewData.weekStatesToCopy,
+          quarterlyGoals: previewData.quarterlyGoalsToUpdate.map((q) => ({
+            id: q.id,
+            title: q.title,
+            isStarred: q.isStarred,
+            isPinned: q.isPinned,
+          })),
         });
         setShowConfirmDialog(true);
       }
