@@ -49,7 +49,9 @@ export default defineSchema({
     carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
     isComplete: v.boolean(), // Whether the goal is complete
     completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
-  }).index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter']),
+  })
+    .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
+    .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId']),
 
   // timeseries data for snapshotting
   goalStateByWeek: defineTable({
@@ -82,12 +84,7 @@ export default defineSchema({
     carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
   })
     .index('by_user', ['userId']) //TEMP: for migration only
-    .index('by_user_and_year_and_quarter_and_week', [
-      'userId',
-      'year',
-      'quarter',
-      'weekNumber',
-    ])
+    .index('by_user_and_year_and_quarter_and_week', ['userId', 'year', 'quarter', 'weekNumber'])
     .index('by_user_and_goal', ['userId', 'goalId'])
     .index('by_user_and_goal_and_year_and_quarter_and_week', [
       'userId',
