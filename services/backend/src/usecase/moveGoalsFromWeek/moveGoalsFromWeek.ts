@@ -54,7 +54,10 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   const childGoalsMap = await getBatchChildGoals(ctx, userId, weeklyGoals, from.year, from.quarter);
 
   // Pre-fetch parent goals (quarterly goals) for weekly goals
-  const parentIds = goals.filter((goal) => goal?.parentId).map((goal) => goal!.parentId!);
+  const parentIds = goals
+    .filter((goal) => goal?.parentId)
+    .map((goal) => goal?.parentId)
+    .filter((id): id is Id<'goals'> => id !== undefined);
   const uniqueParentIds = [...new Set(parentIds)];
   const parentGoalPromises = uniqueParentIds.map((id) => ctx.db.get(id));
   const parentGoals = await Promise.all(parentGoalPromises);
@@ -97,7 +100,6 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   // If this is a dry run, return the preview data
   if (dryRun) {
     return (await generateDryRunPreview(
-      ctx,
       result.weekStatesToCopy,
       result.dailyGoalsToMove,
       result.quarterlyGoalsToUpdate
@@ -130,7 +132,6 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
 
   // Generate the preview data for the commit case
   const previewData = await generateDryRunPreview(
-    ctx,
     result.weekStatesToCopy,
     result.dailyGoalsToMove,
     result.quarterlyGoalsToUpdate
@@ -147,7 +148,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
 }
 
 /**
- * Move goals from the last non-empty week to the target week
+ * Move goals from the last non-empty week to the target week (OPTIMIZED VERSION)
  * @param ctx - The database context
  * @param args - The arguments for the mutation
  * @returns The result of the mutation
@@ -155,10 +156,13 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
 export async function moveGoalsFromLastNonEmptyWeekUsecase(
   ctx: MutationCtx,
   args: MoveGoalsFromWeekArgs
-): Promise<DryRunResult | ReturnType<typeof updateResultPlaceholder>> {
+): Promise<DryRunResult | MoveGoalsFromWeekResult<typeof args>> {
   const { userId, to, dryRun } = args;
 
-  // Search backwards up to ~one quarter for a week that produces movable content
+  // We'll scan backwards up to 13 weeks (roughly a quarter) but perform only a
+  // very cheap existence check per week using .first() on the indexed query.
+  // Only when we find a candidate with any goal state do we run the heavier
+  // moveGoalsFromWeekUsecase dry run (which loads related goal docs, etc.).
   let candidate: TimePeriod = {
     year: to.year,
     quarter: to.quarter,
@@ -167,73 +171,68 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
 
   const maxWeeksToSearch = 13;
   for (let i = 0; i < maxWeeksToSearch; i++) {
-    // Handle quarter/year boundaries
+    // Handle quarter/year boundary rollover
     if (candidate.weekNumber < 1) {
       let prevQuarter = candidate.quarter - 1;
       let prevYear = candidate.year;
       if (prevQuarter < 1) {
         prevQuarter = 4;
-        prevYear = candidate.year - 1;
+        prevYear -= 1;
       }
-      candidate = {
-        year: prevYear,
-        quarter: prevQuarter,
-        weekNumber: 13, // safe upper-bound for weeks per quarter
-      };
+      candidate = { year: prevYear, quarter: prevQuarter, weekNumber: 13 };
     }
 
-    // Run a dry-run for this candidate week to see if there's anything to move
-    const preview = await moveGoalsFromWeekUsecase(ctx, {
-      userId,
-      from: candidate,
-      to,
-      dryRun: true as const,
-    });
+    // Cheap existence probe: fetch the FIRST goal state record only.
+    const probe = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', candidate.year)
+          .eq('quarter', candidate.quarter)
+          .eq('weekNumber', candidate.weekNumber)
+      )
+      .first();
 
-    if (preview.canPull) {
-      if (dryRun) {
-        // Return the preview directly
-        return preview as DryRunResult;
-      }
-      // Execute the actual move using this candidate week
-      return (await moveGoalsFromWeekUsecase(ctx, {
+    if (probe) {
+      // Now run the dry run for this specific week to determine if there is
+      // actually movable content (canPull logic encapsulated there). This keeps
+      // correctness identical while avoiding heavy processing for empty weeks.
+      const preview = await moveGoalsFromWeekUsecase(ctx, {
         userId,
         from: candidate,
         to,
-        dryRun: false as const,
-      })) as ReturnType<typeof updateResultPlaceholder>;
+        dryRun: true as const,
+      });
+
+      if (preview.canPull) {
+        if (dryRun) return preview as DryRunResult;
+        return await moveGoalsFromWeekUsecase(ctx, {
+          userId,
+          from: candidate,
+          to,
+          dryRun: false as const,
+        });
+      }
+      // If the week has states but none are movable, keep scanning backwards.
     }
 
-    // Step to previous week
     candidate = { ...candidate, weekNumber: candidate.weekNumber - 1 };
   }
 
-  // No week found with movable content
+  // No candidate week produced movable content.
   const emptyBase = {
     weekStatesToCopy: [],
     dailyGoalsToMove: [],
     quarterlyGoalsToUpdate: [],
   };
   if (dryRun) {
-    return {
-      ...emptyBase,
-      isDryRun: true,
-      canPull: false,
-    } as DryRunResult;
+    return { ...emptyBase, isDryRun: true, canPull: false } as DryRunResult;
   }
-  return updateResultPlaceholder(
-    emptyBase.weekStatesToCopy,
-    emptyBase.dailyGoalsToMove,
-    emptyBase.quarterlyGoalsToUpdate
-  );
-}
-
-// Helper solely for typing the update result shape without importing the alias directly here
-function updateResultPlaceholder(_w: any, _d: any, _q: any) {
   return {
-    weekStatesToCopy: _w,
-    dailyGoalsToMove: _d,
-    quarterlyGoalsToUpdate: _q,
+    weekStatesToCopy: [],
+    dailyGoalsToMove: [],
+    quarterlyGoalsToUpdate: [],
     weekStatesCopied: 0,
     dailyGoalsMoved: 0,
     quarterlyGoalsUpdated: 0,
@@ -278,10 +277,9 @@ async function getChildGoals(
 ) {
   return await ctx.db
     .query('goals')
-    .withIndex('by_user_and_year_and_quarter', (q) =>
-      q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+    .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', parentGoal._id)
     )
-    .filter((q) => q.eq(q.field('parentId'), parentGoal._id))
     .collect();
 }
 
@@ -334,20 +332,43 @@ async function getDailyGoalState(
 }
 
 async function processQuarterlyGoal(
-  _ctx: MutationCtx,
+  ctx: MutationCtx,
   goal: Doc<'goals'>,
   weeklyState: Doc<'goalStateByWeek'>
 ): Promise<QuarterlyGoalToUpdate[]> {
   if (weeklyState.isStarred || weeklyState.isPinned) {
-    // Always propagate quarterly starred/pinned state regardless of weekly goals
-    return [
-      {
-        goalId: goal._id,
-        title: goal.title,
-        isStarred: weeklyState.isStarred,
-        isPinned: weeklyState.isStarred ? false : weeklyState.isPinned,
-      },
-    ];
+    // Get all weekly goals under this quarterly goal
+    const weeklyGoalItems = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', goal.userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('parentId', goal._id)
+      )
+      .collect();
+
+    if (weeklyGoalItems.length === 0) {
+      return [];
+    }
+
+    // Check if any weekly goals are incomplete using the goals directly
+    const hasIncompleteWeeklyGoals = weeklyGoalItems.some((weeklyGoal) => {
+      return !weeklyGoal.isComplete;
+    });
+
+    // Only update if there are incomplete weekly goals
+    if (hasIncompleteWeeklyGoals) {
+      return [
+        {
+          goalId: goal._id,
+          title: goal.title,
+          isStarred: weeklyState.isStarred,
+          isPinned: weeklyState.isStarred ? false : weeklyState.isPinned,
+        },
+      ];
+    }
   }
   return [];
 }
@@ -377,7 +398,7 @@ export async function processGoal(
 
       // Use pre-fetched parent goal if available
       if (goal.parentId) {
-        if (parentGoalsMap && parentGoalsMap.has(goal.parentId)) {
+        if (parentGoalsMap?.has(goal.parentId)) {
           quarterlyGoal = parentGoalsMap.get(goal.parentId) || null;
         } else {
           quarterlyGoal = await ctx.db.get(goal.parentId);
@@ -421,7 +442,7 @@ export async function processWeeklyGoal(
 
   // Get all daily goals - use pre-fetched data if available
   let dailyGoals: Doc<'goals'>[] = [];
-  if (childGoalsMap && childGoalsMap.has(goal._id)) {
+  if (childGoalsMap?.has(goal._id)) {
     dailyGoals = childGoalsMap.get(goal._id) || [];
   } else {
     dailyGoals = await getChildGoals(ctx, userId, goal, from.year, from.quarter);
@@ -504,18 +525,14 @@ function createWeeklyGoalCarryOver(
 }
 
 export async function generateDryRunPreview(
-  _ctx: MutationCtx,
   weekStatesToCopy: WeekStateToCopy[],
   dailyGoalsToMove: DailyGoalToMove[],
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[]
 ): Promise<DryRunResult> {
   return {
     isDryRun: true,
-    // Allow pull if there's anything to update: weekly states, daily goals, or quarterly state updates
-    canPull:
-      weekStatesToCopy.length > 0 ||
-      dailyGoalsToMove.length > 0 ||
-      quarterlyGoalsToUpdate.length > 0,
+    // Only allow pull if there's at least one weekly state to copy or daily goal to move
+    canPull: weekStatesToCopy.length > 0 || dailyGoalsToMove.length > 0,
     weekStatesToCopy: weekStatesToCopy.map((item) => ({
       title: item.originalGoal.title,
       carryOver: item.carryOver,
@@ -642,6 +659,7 @@ export async function copyWeeklyGoals(
           dailyGoals,
         };
       }
+
       // Create new goal with carry over information
       const newGoalId = await ctx.db.insert('goals', {
         ...goalFieldsToCopy,
@@ -665,23 +683,16 @@ export async function copyWeeklyGoals(
   const stateInsertions = await Promise.all(
     goalInsertions.map(async ({ goal, targetWeekGoalId, carryOver, dailyGoals }) => {
       // Create weekly state that points to the new goal
-      // If a weekly state already exists for this goal in the target week, reuse it
-      const existingWeeklyState = targetWeek.existingGoals.find(
-        (state) => state.goalId === targetWeekGoalId
-      );
-
-      const newWeeklyStateId = existingWeeklyState
-        ? existingWeeklyState._id
-        : await ctx.db.insert('goalStateByWeek', {
-            userId: targetWeek.userId,
-            year: targetWeek.year,
-            quarter: targetWeek.quarter,
-            weekNumber: targetWeek.weekNumber,
-            goalId: targetWeekGoalId,
-            isStarred: false,
-            isPinned: false,
-            carryOver,
-          });
+      const newWeeklyStateId = await ctx.db.insert('goalStateByWeek', {
+        userId: targetWeek.userId,
+        year: targetWeek.year,
+        quarter: targetWeek.quarter,
+        weekNumber: targetWeek.weekNumber,
+        goalId: targetWeekGoalId,
+        isStarred: false,
+        isPinned: false,
+        carryOver,
+      });
 
       return {
         goal,
@@ -694,13 +705,9 @@ export async function copyWeeklyGoals(
 
   // Fetch all the created goals and states at once
   const allGoalIds = goalInsertions.map((item) => item.targetWeekGoalId);
-  const allStateIds = stateInsertions.map((item) => item.newWeeklyStateId);
 
-  // Batch fetch all the newly created entities
-  const [allGoals, _allStates] = await Promise.all([
-    Promise.all(allGoalIds.map((id) => ctx.db.get(id))),
-    Promise.all(allStateIds.map((id) => ctx.db.get(id))),
-  ]);
+  // Batch fetch all the newly created goals
+  const allGoals = await Promise.all(allGoalIds.map((id) => ctx.db.get(id)));
 
   // Create a map for efficient lookup
   const goalsMap = new Map<Id<'goals'>, Doc<'goals'>>();
