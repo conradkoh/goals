@@ -340,10 +340,13 @@ async function processQuarterlyGoal(
     // Get all weekly goals under this quarterly goal
     const weeklyGoalItems = await ctx.db
       .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) =>
-        q.eq('userId', goal.userId).eq('year', goal.year).eq('quarter', goal.quarter)
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', goal.userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('parentId', goal._id)
       )
-      .filter((q) => q.eq(q.field('parentId'), goal._id))
       .collect();
 
     if (weeklyGoalItems.length === 0) {
