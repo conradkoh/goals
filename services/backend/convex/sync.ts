@@ -1,8 +1,8 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
+import { requireLogin } from '../src/usecase/requireLogin';
+import { api, internal } from './_generated/api';
 import { mutation, query } from './_generated/server';
 import { getUser } from './auth';
-import { internal } from './_generated/api';
-import { ConvexError } from 'convex/values';
 
 const ErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -52,13 +52,10 @@ const ENDINGS = ['ng', 'nt', 'st', 'th', 'ch', 'sh', 'le', 'er', 'ar', 'or'];
 function generateWord(): string {
   const minLength = 4;
   const maxLength = 8;
-  const targetLength =
-    Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+  const targetLength = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
 
-  const getRandomChar = (str: string) =>
-    str[Math.floor(Math.random() * str.length)];
-  const getRandomItem = <T>(arr: T[]) =>
-    arr[Math.floor(Math.random() * arr.length)];
+  const getRandomChar = (str: string) => str[Math.floor(Math.random() * str.length)];
+  const getRandomItem = <T>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
   let word = '';
   let isLastCharVowel = false;
@@ -122,7 +119,7 @@ export const createSyncSession = mutation({
     sessionId: v.id('sessions'),
   },
   handler: async (ctx, args) => {
-    const user = await getUser(ctx, { sessionId: args.sessionId });
+    const user = await requireLogin(ctx, args.sessionId);
     if (!user) {
       throw new Error('Not authenticated');
     }
@@ -138,9 +135,7 @@ export const createSyncSession = mutation({
       .filter((q) => q.eq(q.field('userId'), user._id))
       .collect();
 
-    await Promise.all(
-      existingSessions.map((session) => ctx.db.delete(session._id))
-    );
+    await Promise.all(existingSessions.map((session) => ctx.db.delete(session._id)));
 
     // Create new sync session that expires in 1 minute
     const expiresAt = Date.now() + SYNC_DURATION_MS;
@@ -163,7 +158,7 @@ export const getCurrentSyncSession = query({
     sessionId: v.id('sessions'),
   },
   handler: async (ctx, args) => {
-    const user = await getUser(ctx, { sessionId: args.sessionId });
+    const user = await requireLogin(ctx, args.sessionId);
     if (!user) {
       throw new Error('Not authenticated');
     }
@@ -196,9 +191,7 @@ export const validatePassphrase = mutation({
     // Find the sync session with this passphrase
     const syncSession = await ctx.db
       .query('syncSessions')
-      .withIndex('by_passphrase', (q) =>
-        q.eq('passphrase', normalizedPassphrase)
-      )
+      .withIndex('by_passphrase', (q) => q.eq('passphrase', normalizedPassphrase))
       .first();
 
     if (!syncSession) {
@@ -221,8 +214,7 @@ export const validatePassphrase = mutation({
     if (syncSession.status === 'consumed') {
       throw new ConvexError({
         code: ErrorCode.CONSUMED,
-        message:
-          'This sync code has already been used. Please request a new code.',
+        message: 'This sync code has already been used. Please request a new code.',
       });
     }
 
