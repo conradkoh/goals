@@ -182,8 +182,8 @@ importers:
         specifier: ^1.27.0
         version: 1.27.0(react@19.0.0)
       convex-helpers:
-        specifier: ^0.1.71
-        version: 0.1.71(convex@1.27.0(react@19.0.0))(react@19.0.0)(zod@3.24.2)
+        specifier: ^0.1.104
+        version: 0.1.104(convex@1.27.0(react@19.0.0))(react@19.0.0)(typescript@5.9.2)(zod@3.24.2)
       luxon:
         specifier: ^3.5.0
         version: 3.5.0
@@ -198,8 +198,8 @@ importers:
         specifier: ^3.4.2
         version: 3.4.2
       convex-test:
-        specifier: ^0.0.35
-        version: 0.0.35(convex@1.27.0(react@19.0.0))
+        specifier: ^0.0.38
+        version: 0.0.38(convex@1.27.0(react@19.0.0))
       vite:
         specifier: ^6.1.1
         version: 6.1.1(@types/node@20.17.17)(jiti@1.21.7)(yaml@2.7.0)
@@ -2173,24 +2173,30 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
-  convex-helpers@0.1.71:
-    resolution: {integrity: sha512-/uucsexesq9CNl1J+wZIdjcvPWd9nXcZKE8sIGokduhmtPI+6GtXz/dkpNm9pgFXx6yPJ51lFMuuZFAkVicI0A==}
+  convex-helpers@0.1.104:
+    resolution: {integrity: sha512-7CYvx7T3K6n+McDTK4ZQaQNNGBzq5aWezpjzsKbOxPXx7oNcTP9wrpef3JxeXWFzkByJv5hRCjseh9B7eNJ7Ig==}
     hasBin: true
     peerDependencies:
-      convex: ^1.13.0
+      '@standard-schema/spec': ^1.0.0
+      convex: ^1.24.0
       hono: ^4.0.5
       react: ^17.0.2 || ^18.0.0 || ^19.0.0
-      zod: ^3.22.4
+      typescript: ^5.5
+      zod: ^3.22.4 || ^4.0.15
     peerDependenciesMeta:
+      '@standard-schema/spec':
+        optional: true
       hono:
         optional: true
       react:
         optional: true
+      typescript:
+        optional: true
       zod:
         optional: true
 
-  convex-test@0.0.35:
-    resolution: {integrity: sha512-nvhlElyoxrLvLKruVs2qyndHAza8sEAYSWIGGO1K99HAQAnEl1w3zUZJfOafq7t1r688tsf7MsJFjX8IQbH0Dg==}
+  convex-test@0.0.38:
+    resolution: {integrity: sha512-1o/3GvUR9gMLjiqq7SxchI/0OYQaWwbQC4INmB1SNt1WLBjUgEM8+brgpqrZwJ+Vb1DdGZokCVeihwT5IPk49w==}
     peerDependencies:
       convex: ^1.16.4
 
@@ -5847,14 +5853,15 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  convex-helpers@0.1.71(convex@1.27.0(react@19.0.0))(react@19.0.0)(zod@3.24.2):
+  convex-helpers@0.1.104(convex@1.27.0(react@19.0.0))(react@19.0.0)(typescript@5.9.2)(zod@3.24.2):
     dependencies:
       convex: 1.27.0(react@19.0.0)
     optionalDependencies:
       react: 19.0.0
+      typescript: 5.9.2
       zod: 3.24.2
 
-  convex-test@0.0.35(convex@1.27.0(react@19.0.0)):
+  convex-test@0.0.38(convex@1.27.0(react@19.0.0)):
     dependencies:
       convex: 1.27.0(react@19.0.0)
 
