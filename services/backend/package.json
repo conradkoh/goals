@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "convex": "^1.27.0",
-    "convex-helpers": "^0.1.71",
+    "convex-helpers": "^0.1.104",
     "luxon": "^3.5.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@types/luxon": "^3.4.2",
-    "convex-test": "^0.0.35",
+    "convex-test": "^0.0.38",
     "vite": "^6.1.1",
     "vitest": "^3.0.5"
   }
