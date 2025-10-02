@@ -30,9 +30,7 @@ export function KeyboardShortcut({
         if (checkForOpenDialogs) {
           // Check if there are any open dialogs or popovers
           const openDialogs = document.querySelectorAll('[role="dialog"]');
-          const openPopovers = document.querySelectorAll(
-            '[role="dialog"][data-state="open"]'
-          );
+          const openPopovers = document.querySelectorAll('[role="dialog"][data-state="open"]');
 
           // Only trigger callback if there are no open dialogs or popovers
           if (openDialogs.length === 0 && openPopovers.length === 0) {

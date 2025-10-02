@@ -1,22 +1,16 @@
-import { WeeklyGoalTaskItem } from "@/components/molecules/day-of-week/components/WeeklyGoalTaskItem";
-import { GoalDetailsPopover } from "@/components/molecules/goal-details";
-import { DailyGoalTaskItem } from "@/components/organisms/DailyGoalTaskItem";
-import { Button } from "@/components/ui/button";
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useFireGoals } from "@/contexts/GoalStatusContext";
-import { useWeek } from "@/hooks/useWeek";
-import { DayOfWeek } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { Eye, EyeOff, Flame, Info, Pin, Star } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Eye, EyeOff, Flame, Info, Star } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useFireGoals } from '@/contexts/GoalStatusContext';
+import { useWeek } from '@/hooks/useWeek';
+import type { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface OnFireGoalsSectionProps {
   weeklyGoalsWithQuarterly: Array<{
@@ -24,14 +18,9 @@ interface OnFireGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoalTitle: (
-    goalId: Id<"goals">,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<"goals">) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   isFocusModeEnabled?: boolean;
-  toggleFocusMode?: () => void;
 }
 
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
@@ -40,9 +29,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   onUpdateGoalTitle,
   onDeleteGoal,
   isFocusModeEnabled = false,
-  toggleFocusMode,
 }) => {
-  const { weeklyGoals, toggleGoalCompletion, weekNumber } = useWeek();
+  const { weeklyGoals } = useWeek();
   const { fireGoals } = useFireGoals();
 
   // Group on-fire goals by quarterly goal
@@ -87,8 +75,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
       // Find existing weekly goal entry or create a new one
       let weeklyGoalEntry = result
-        .get(quarterlyId)!
-        .weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
+        .get(quarterlyId)
+        ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
 
       if (!weeklyGoalEntry) {
         weeklyGoalEntry = {
@@ -96,11 +84,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
           dailyGoals: [],
           isWeeklyOnFire,
         };
-        result.get(quarterlyId)!.weeklyGoals.push(weeklyGoalEntry);
+        result.get(quarterlyId)?.weeklyGoals.push(weeklyGoalEntry);
       } else {
         // Update fire status if it wasn't already set
-        weeklyGoalEntry.isWeeklyOnFire =
-          weeklyGoalEntry.isWeeklyOnFire || isWeeklyOnFire;
+        weeklyGoalEntry.isWeeklyOnFire = weeklyGoalEntry.isWeeklyOnFire || isWeeklyOnFire;
       }
 
       // Add daily goals to the weekly goal entry
@@ -114,9 +101,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       .filter(
         (goal) =>
           fireGoals.has(goal._id.toString()) &&
-          !goal.children.some(
-            (child) => child.state?.daily?.dayOfWeek === selectedDayOfWeek
-          )
+          !goal.children.some((child) => child.state?.daily?.dayOfWeek === selectedDayOfWeek)
       )
       .forEach((weeklyGoal) => {
         const parentQuarterlyGoal = weeklyGoalsWithQuarterly.find(
@@ -136,14 +121,12 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
           // Check if this weekly goal is already in the list
           const existingEntry = result
-            .get(quarterlyId)!
-            .weeklyGoals.find(
-              (entry) => entry.weeklyGoal._id === weeklyGoal._id
-            );
+            .get(quarterlyId)
+            ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
 
           if (!existingEntry) {
             // Add weekly goal
-            result.get(quarterlyId)!.weeklyGoals.push({
+            result.get(quarterlyId)?.weeklyGoals.push({
               weeklyGoal,
               dailyGoals: [],
               isWeeklyOnFire: true,
@@ -162,7 +145,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
    * Handles updating goal titles with proper error handling.
    */
   const _handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<"goals">, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
       await onUpdateGoalTitle(goalId, title, details);
     },
     [onUpdateGoalTitle]
@@ -171,24 +154,19 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   if (!onFireGoalsByQuarterly) {
     // If there are no visible fire goals but focus mode is enabled and toggle function is available,
     // still render the toggle button to allow disabling focus mode
-    if (isFocusModeEnabled && toggleFocusMode) {
+    if (isFocusModeEnabled) {
       return (
         <div className="bg-red-50 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-red-500" />
-              <h2 className="text-lg font-semibold text-red-700">
-                Urgent Items
-              </h2>
+              <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
               <TooltipProvider delayDuration={300}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
                   </TooltipTrigger>
-                  <TooltipContent
-                    sideOffset={5}
-                    className="animate-in fade-in-50 duration-300"
-                  >
+                  <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                     <p className="text-xs max-w-xs">
                       These urgent items are stored locally in your browser.
                     </p>
@@ -201,21 +179,19 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={"ghost"}
+                    variant={'ghost'}
                     size="sm"
-                    onClick={toggleFocusMode}
+                    onClick={() => {}} // No toggle function provided, so do nothing
                     className="text-red-600 hover:text-red-700 flex items-center gap-1"
                   >
-                    <EyeOff className="h-4 w-4 mr-1" />
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Show all goals</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-          <p className="text-sm text-red-600">
-            No urgent items for today. Showing all goals.
-          </p>
+          <p className="text-sm text-red-600">No urgent items for today. Showing all goals.</p>
         </div>
       );
     }
@@ -233,10 +209,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
               <TooltipTrigger asChild>
                 <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
               </TooltipTrigger>
-              <TooltipContent
-                sideOffset={5}
-                className="animate-in fade-in-50 duration-300"
-              >
+              <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                 <p className="text-xs max-w-xs">
                   These urgent items are stored locally in your browser.
                 </p>
@@ -245,51 +218,20 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
           </TooltipProvider>
         </div>
 
-        {toggleFocusMode && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={"ghost"}
-                  size="sm"
-                  onClick={toggleFocusMode}
-                  className="text-red-600 hover:text-red-700 flex items-center gap-1"
-                >
-                  {isFocusModeEnabled ? (
-                    <>
-                      <EyeOff className="h-4 w-4 mr-1" />
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-4 w-4 mr-1" />
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {isFocusModeEnabled
-                  ? "Show all goals"
-                  : "Focus on urgent items only"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        {/* Removed toggleFocusMode prop, so this block is removed */}
       </div>
 
       <div className="space-y-4">
         {Array.from(onFireGoalsByQuarterly.entries()).map(
           ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
-            <div
-              key={quarterlyId}
-              className="border-b border-red-100 pb-3 last:border-b-0"
-            >
+            <div key={quarterlyId} className="border-b border-red-100 pb-3 last:border-b-0">
               {/* Quarterly Goal Header with Popover */}
               <div className="flex items-center gap-1.5 mb-2">
                 {quarterlyGoal.state?.isStarred && (
                   <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
                 )}
                 {quarterlyGoal.state?.isPinned && (
-                  <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
+                  <EyeOff className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
                 )}
                 <GoalDetailsPopover
                   goal={quarterlyGoal}
@@ -298,8 +240,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                   }
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
                   titleClassName={cn(
-                    "break-words w-full whitespace-pre-wrap flex items-center",
-                    quarterlyGoal.isComplete ? "flex items-center" : ""
+                    'break-words w-full whitespace-pre-wrap flex items-center',
+                    quarterlyGoal.isComplete ? 'flex items-center' : ''
                   )}
                 />
               </div>
@@ -307,35 +249,33 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
               {/* Weekly Goals */}
               <div className="space-y-2 ml-4">
                 {/* Render all weekly goals with their associated daily goals */}
-                {weeklyGoals.map(
-                  ({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
-                    <div key={`weekly-${weeklyGoal._id.toString()}`}>
-                      {/* Always show the weekly goal if it's on fire or has daily goals */}
-                      {(isWeeklyOnFire || dailyGoals.length > 0) && (
-                        <div className="mb-1">
-                          <WeeklyGoalTaskItem
-                            goal={weeklyGoal}
-                            onUpdateTitle={_handleUpdateGoalTitle}
-                          />
-                        </div>
-                      )}
+                {weeklyGoals.map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
+                  <div key={`weekly-${weeklyGoal._id.toString()}`}>
+                    {/* Always show the weekly goal if it's on fire or has daily goals */}
+                    {(isWeeklyOnFire || dailyGoals.length > 0) && (
+                      <div className="mb-1">
+                        <WeeklyGoalTaskItem
+                          goal={weeklyGoal}
+                          onUpdateTitle={_handleUpdateGoalTitle}
+                        />
+                      </div>
+                    )}
 
-                      {/* Daily Goals */}
-                      {dailyGoals.length > 0 && (
-                        <div className="space-y-1 ml-4">
-                          {dailyGoals.map((dailyGoal) => (
-                            <DailyGoalTaskItem
-                              key={dailyGoal._id.toString()}
-                              goal={dailyGoal}
-                              onUpdateTitle={_handleUpdateGoalTitle}
-                              onDelete={() => onDeleteGoal(dailyGoal._id)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                )}
+                    {/* Daily Goals */}
+                    {dailyGoals.length > 0 && (
+                      <div className="space-y-1 ml-4">
+                        {dailyGoals.map((dailyGoal) => (
+                          <DailyGoalTaskItem
+                            key={dailyGoal._id.toString()}
+                            goal={dailyGoal}
+                            onUpdateTitle={_handleUpdateGoalTitle}
+                            onDelete={() => onDeleteGoal(dailyGoal._id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )

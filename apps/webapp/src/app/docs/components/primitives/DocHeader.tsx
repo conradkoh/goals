@@ -1,5 +1,4 @@
-import { LucideIcon } from 'lucide-react';
-import React from 'react';
+import type React from 'react';
 
 interface DocHeaderProps {
   icon: React.ReactNode;
@@ -30,9 +29,7 @@ export function DocHeader({
         {icon}
         <span>{badge}</span>
       </div>
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-        {title}
-      </h1>
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
       <p className="text-lg text-slate-600 max-w-2xl">{description}</p>
     </div>
   );

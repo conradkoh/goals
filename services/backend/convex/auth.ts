@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { Id } from './_generated/dataModel';
 import { requireLogin } from '../src/usecase/requireLogin';
+import type { Id } from './_generated/dataModel';
+import { mutation, query } from './_generated/server';
 
 export const useAnonymousSession = mutation({
   args: {
@@ -20,8 +20,7 @@ export const useAnonymousSession = mutation({
         return prevSessionId as Id<'sessions'>; //return the same one already active
       }
     }
-    const displayName =
-      'anonymous' + Math.random().toString(36).substring(2, 15);
+    const displayName = `anonymous${Math.random().toString(36).substring(2, 15)}`;
     const userId = await ctx.db.insert('users', {
       type: 'anonymous',
       displayName: displayName,

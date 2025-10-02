@@ -1,9 +1,9 @@
-import { useSession } from '@/modules/auth/useSession';
 import { api } from '@services/backend/convex/_generated/api';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
-import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 import { isOptimisticId } from '@/hooks/useOptimistic';
+import type { DayOfWeekType } from '@/lib/constants';
+import { useSession } from '@/modules/auth/useSession';
 
 export interface DailyGoalDetails {
   title: string;

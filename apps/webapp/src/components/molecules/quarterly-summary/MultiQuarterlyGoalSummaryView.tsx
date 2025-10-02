@@ -1,13 +1,11 @@
-import React from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useMultipleQuarterlyGoalsSummary } from '@/hooks/useMultipleQuarterlyGoalsSummary';
-import { WeekSection } from './WeekSection';
-import { Skeleton } from '@/components/ui/skeleton';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { AlertCircle, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Star, Pin, BarChart3 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useMultipleQuarterlyGoalsSummary } from '@/hooks/useMultipleQuarterlyGoalsSummary';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { WeekSection } from './WeekSection';
 
 interface MultiQuarterlyGoalSummaryViewProps {
   quarterlyGoalIds: Id<'goals'>[];
@@ -28,8 +26,9 @@ function MultiQuarterlyGoalSummaryViewSkeleton() {
           <Skeleton className="h-20 w-full" />
         </div>
       </div>
-      
+
       {Array.from({ length: 2 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loading items don't need unique keys
         <div key={i} className="space-y-4">
           <Skeleton className="h-6 w-1/2" />
           <div className="border rounded-lg p-4 space-y-3">
@@ -68,9 +67,7 @@ export function MultiQuarterlyGoalSummaryView({
       <div className={className}>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error || 'Failed to load quarterly goals summary'}
-          </AlertDescription>
+          <AlertDescription>{error || 'Failed to load quarterly goals summary'}</AlertDescription>
         </Alert>
       </div>
     );
@@ -110,20 +107,23 @@ export function MultiQuarterlyGoalSummaryView({
                     </span>
                   )}
                 </div>
-                
-                <h2 className={cn(
-                  'text-xl font-bold text-gray-900 mb-2 leading-tight',
-                  isComplete && 'text-gray-500 line-through'
-                )}>
+
+                <h2
+                  className={cn(
+                    'text-xl font-bold text-gray-900 mb-2 leading-tight',
+                    isComplete && 'text-gray-500 line-through'
+                  )}
+                >
                   {quarterlyGoal.title}
                 </h2>
-                
+
                 {quarterlyGoal.details && (
                   <div
                     className={cn(
                       'text-sm text-muted-foreground leading-relaxed',
                       isComplete && 'line-through'
                     )}
+                    // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                     dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
                   />
                 )}
@@ -131,20 +131,18 @@ export function MultiQuarterlyGoalSummaryView({
 
               {Object.keys(weeklyGoalsByWeek).length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Weekly Goals
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-800">Weekly Goals</h3>
                   {Object.entries(weeklyGoalsByWeek)
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([weekNum, weeklyGoals]) => (
-                    <WeekSection
-                      key={`${quarterlyGoal._id}-week-${weekNum}`}
-                      weekNumber={Number(weekNum)}
-                      year={year}
-                      weeklyGoals={weeklyGoals}
-                      goalActions={goalActions}
-                    />
-                  ))}
+                      <WeekSection
+                        key={`${quarterlyGoal._id}-week-${weekNum}`}
+                        weekNumber={Number(weekNum)}
+                        year={year}
+                        weeklyGoals={weeklyGoals}
+                        goalActions={goalActions}
+                      />
+                    ))}
                 </div>
               )}
             </div>
@@ -153,4 +151,4 @@ export function MultiQuarterlyGoalSummaryView({
       </div>
     </div>
   );
-} 
+}

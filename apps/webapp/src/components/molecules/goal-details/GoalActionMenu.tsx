@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2, FileText, Maximize2, MoreVertical } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type React from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -6,13 +10,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useGoalEditContext } from './GoalEditContext';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2, FileText, MoreVertical, Maximize2 } from 'lucide-react';
+import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { GoalDetailsFullScreenModal } from './GoalDetailsFullScreenModal';
-import { useRouter } from 'next/navigation';
-import { useWeek } from '@/hooks/useWeek';
+import { useGoalEditContext } from './GoalEditContext';
 
 interface GoalActionMenuProps {
   goal: GoalWithDetailsAndChildren;

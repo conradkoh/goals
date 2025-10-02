@@ -1,31 +1,18 @@
-import { useState, useCallback, useMemo } from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailyGoalTaskItem } from './DailyGoalTaskItem';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
-import { DayOfWeekType } from '@/lib/constants';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { SafeHTML } from '@/components/ui/safe-html';
-import { Edit2, Pin, Star, Check } from 'lucide-react';
-import { GoalEditPopover } from '../atoms/GoalEditPopover';
-import { useWeek } from '@/hooks/useWeek';
-import { Checkbox } from '@/components/ui/checkbox';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Check, Pin, Star } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { Spinner } from '@/components/ui/spinner';
+import { useWeek } from '@/hooks/useWeek';
+import type { DayOfWeekType } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
   onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
@@ -52,11 +39,7 @@ export const DailyGoalList = ({
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   className?: string;
@@ -98,6 +81,7 @@ export const DailyGoalListContainer = ({
         onUpdateGoalTitle={onUpdateGoalTitle}
         onDeleteGoal={onDeleteGoal}
       />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isInputFocused && setIsHovering(false)}
@@ -144,11 +128,7 @@ export const DailyGoalListContainer = ({
 export interface DailyGoalGroupHeaderProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
 }
 
 export const DailyGoalGroupHeader = ({
@@ -205,12 +185,8 @@ export const DailyGoalGroupHeader = ({
         />
       </div>
       <div className="flex items-center gap-1.5 text-sm text-gray-500">
-        {isStarred && (
-          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-        )}
-        {isPinned && (
-          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-        )}
+        {isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
+        {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
         <GoalDetailsPopover
           goal={quarterlyGoal}
@@ -227,17 +203,11 @@ export interface DailyGoalGroupContainerProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   isCreating?: boolean;
-  sortGoals?: (
-    goals: GoalWithDetailsAndChildren[]
-  ) => GoalWithDetailsAndChildren[];
+  sortGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
 }
 
 export const DailyGoalGroupContainer = ({
@@ -252,21 +222,14 @@ export const DailyGoalGroupContainer = ({
 }: DailyGoalGroupContainerProps) => {
   const dailyGoals = useMemo(
     () =>
-      weeklyGoal.children.filter(
-        (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
-      ),
+      weeklyGoal.children.filter((dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek),
     [weeklyGoal.children, dayOfWeek]
   );
 
-  const sortedDailyGoals = useMemo(
-    () => sortGoals(dailyGoals),
-    [dailyGoals, sortGoals]
-  );
+  const sortedDailyGoals = useMemo(() => sortGoals(dailyGoals), [dailyGoals, sortGoals]);
 
   const isSoftComplete = useMemo(
-    () =>
-      sortedDailyGoals.length > 0 &&
-      sortedDailyGoals.every((goal) => goal.isComplete),
+    () => sortedDailyGoals.length > 0 && sortedDailyGoals.every((goal) => goal.isComplete),
     [sortedDailyGoals]
   );
 

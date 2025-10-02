@@ -1,13 +1,11 @@
 import { ConvexError, v } from 'convex/values';
 import { DateTime } from 'luxon';
-import { DayOfWeek, getDayName } from '../src/constants';
+import { DayOfWeek } from '../src/constants';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
-import { api } from './_generated/api';
-import { Doc, Id } from './_generated/dataModel';
-import { internalMutation, mutation, query } from './_generated/server';
+import { joinPath, validateGoalPath } from '../src/util/path';
+import { mutation, query } from './_generated/server';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -677,7 +675,7 @@ export const getQuarterlyGoalSummary = query({
     const weekResults = await Promise.all(weekPromises);
 
     // Find the quarterly goal in each week's data and extract its weekly/daily goals
-    const weeklyGoalsByWeek: Record<number, any[]> = {};
+    const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
     let quarterlyGoalDetails = null;
 
     for (const weekTree of weekResults) {
@@ -697,23 +695,9 @@ export const getQuarterlyGoalSummary = query({
         }
 
         // Store weekly goals for this week
-        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => ({
-          ...weeklyGoal,
-          weekNumber: weekTree.weekNumber,
-          // Calculate week date range as timestamps
-          weekStartTimestamp: DateTime.fromObject({
-            weekNumber: weekTree.weekNumber,
-            weekYear: year,
-          })
-            .startOf('week')
-            .toMillis(),
-          weekEndTimestamp: DateTime.fromObject({
-            weekNumber: weekTree.weekNumber,
-            weekYear: year,
-          })
-            .endOf('week')
-            .toMillis(),
-        }));
+        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) =>
+          mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year)
+        );
       }
     }
 
@@ -826,7 +810,7 @@ export const getMultipleQuarterlyGoalsSummary = query({
       const weekResults = await Promise.all(weekPromises);
 
       // Find the quarterly goal in each week's data and extract its weekly/daily goals
-      const weeklyGoalsByWeek: Record<number, any[]> = {};
+      const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
       let quarterlyGoalDetails = null;
 
       for (const weekTree of weekResults) {
@@ -846,24 +830,8 @@ export const getMultipleQuarterlyGoalsSummary = query({
           }
 
           // Store weekly goals for this week
-          weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
-            (weeklyGoal) => ({
-              ...weeklyGoal,
-              weekNumber: weekTree.weekNumber,
-              // Calculate week date range as timestamps
-              weekStartTimestamp: DateTime.fromObject({
-                weekNumber: weekTree.weekNumber,
-                weekYear: year,
-              })
-                .startOf('week')
-                .toMillis(),
-              weekEndTimestamp: DateTime.fromObject({
-                weekNumber: weekTree.weekNumber,
-                weekYear: year,
-              })
-                .endOf('week')
-                .toMillis(),
-            })
+          weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) =>
+            mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year)
           );
         }
       }
@@ -904,4 +872,17 @@ export const getMultipleQuarterlyGoalsSummary = query({
       weekRange,
     };
   },
+});
+
+type WeeklyGoalTreeNode = Awaited<
+  ReturnType<typeof getWeekGoalsTree>
+>['quarterlyGoals'][number]['children'][number];
+
+const mapWeeklyGoal = (weeklyGoal: WeeklyGoalTreeNode, weekNumber: number, year: number) => ({
+  ...weeklyGoal,
+  weekNumber,
+  weekStartTimestamp: DateTime.fromObject({ weekNumber, weekYear: year })
+    .startOf('week')
+    .toMillis(),
+  weekEndTimestamp: DateTime.fromObject({ weekNumber, weekYear: year }).endOf('week').toMillis(),
 });

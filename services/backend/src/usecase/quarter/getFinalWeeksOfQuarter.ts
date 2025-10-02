@@ -1,4 +1,3 @@
-import { DateTime } from 'luxon';
 import { getQuarterDateRange } from './getQuarterDateRange';
 
 /**
@@ -47,7 +46,6 @@ export function isInFinalWeeks(
   finalWeeks: Array<{ weekNumber: number; year: number }>
 ): boolean {
   return finalWeeks.some(
-    (finalWeek) =>
-      state.weekNumber === finalWeek.weekNumber && state.year === finalWeek.year
+    (finalWeek) => state.weekNumber === finalWeek.weekNumber && state.year === finalWeek.year
   );
 }

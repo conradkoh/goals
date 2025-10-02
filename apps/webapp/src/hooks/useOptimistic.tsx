@@ -29,13 +29,11 @@ type OptimisticArray<ArrayValue> = (
 type RemoveFunc = () => void; // Function to remove the action from temporary storage
 
 // Type for the function that updates the optimistic array based on an action
-type OptimisticUpdateAction<ArrayValue> = (
-  action: OptimisticArrayAction<ArrayValue>
-) => RemoveFunc;
+type OptimisticUpdateAction<ArrayValue> = (action: OptimisticArrayAction<ArrayValue>) => RemoveFunc;
 
 // Custom hook to manage an optimistic array
 export function useOptimisticArray<
-  ArrayType extends Array<ArrayValue>, // Generic type for the actual array
+  ArrayType extends ArrayValue[], // Generic type for the actual array
   ArrayValue, // Generic type for the values in the array
 >(
   actualValue: ArrayType | undefined // The actual value of the array
@@ -82,8 +80,7 @@ export function useOptimisticArray<
           const index = result.findIndex(
             (item) =>
               // We know the item must have an ID field since we're using it for removal
-              (item as unknown as { [key: string]: string })[idField] ===
-              action.id
+              (item as unknown as { [key: string]: string })[idField] === action.id
           );
           if (index !== -1) {
             result.splice(index, 1);
@@ -96,6 +93,7 @@ export function useOptimisticArray<
     return result;
   }, [actualValue]) satisfies OptimisticArray<ArrayValue> | undefined;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: optimisticValue dependency intentionally excluded to avoid infinite loops
   useEffect(() => {}, [optimisticValue]);
 
   return [optimisticValue, doAction]; // Return the optimistic value and action function

@@ -1,13 +1,13 @@
-import React from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DayOfWeek, getDayName } from '@/lib/constants';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2, Trash2 } from 'lucide-react';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { DateTime } from 'luxon';
+import React from 'react';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { type DayOfWeek, getDayName } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 /**
  * Props for the DailySummaryItem component.
@@ -57,7 +57,7 @@ export function DailySummaryItem({
 }: DailySummaryItemProps) {
   const isComplete = dailyGoal.isComplete;
   const dayName = React.useMemo(() => getDayName(dayOfWeek), [dayOfWeek]);
-  
+
   // Format completion date if available
   const completedDate = React.useMemo(() => {
     return dailyGoal.completedAt
@@ -71,11 +71,14 @@ export function DailySummaryItem({
     }
   }, [goalActions, dailyGoal, weekNumber]);
 
-  const handleEdit = React.useCallback(async (title: string, details?: string) => {
-    if (goalActions) {
-      await goalActions.handleEditGoal(dailyGoal._id, title, details);
-    }
-  }, [goalActions, dailyGoal._id]);
+  const handleEdit = React.useCallback(
+    async (title: string, details?: string) => {
+      if (goalActions) {
+        await goalActions.handleEditGoal(dailyGoal._id, title, details);
+      }
+    },
+    [goalActions, dailyGoal._id]
+  );
 
   const handleDelete = React.useCallback(async () => {
     if (goalActions) {
@@ -97,19 +100,17 @@ export function DailySummaryItem({
         onCheckedChange={goalActions ? handleToggleComplete : undefined}
         className="mt-0.5 flex-shrink-0"
       />
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
             {dayName}
           </span>
           {completedDate && (
-            <span className="text-xs text-green-600">
-              Completed {completedDate}
-            </span>
+            <span className="text-xs text-green-600">Completed {completedDate}</span>
           )}
         </div>
-        
+
         <h4
           className={cn(
             'font-medium text-sm leading-tight mb-1',
@@ -118,13 +119,14 @@ export function DailySummaryItem({
         >
           {dailyGoal.title}
         </h4>
-        
+
         {dailyGoal.details && (
           <div
             className={cn(
               'text-xs text-muted-foreground leading-relaxed',
               !disableStrikethrough && isComplete && 'line-through'
             )}
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
             dangerouslySetInnerHTML={{ __html: dailyGoal.details }}
           />
         )}
@@ -147,7 +149,7 @@ export function DailySummaryItem({
               </Button>
             }
           />
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -160,4 +162,4 @@ export function DailySummaryItem({
       )}
     </div>
   );
-} 
+}

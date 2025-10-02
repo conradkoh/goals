@@ -1,25 +1,13 @@
 'use client';
 
+import { ArrowLeft, BookOpen, Download, Keyboard, Menu, PlayCircle, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import {
-  BookOpen,
-  ArrowLeft,
-  Download,
-  PlayCircle,
-  Menu,
-  X,
-  Keyboard,
-} from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export default function DocsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -59,11 +47,7 @@ export default function DocsLayout({
               className="md:hidden"
               onClick={() => setMobileNavOpen(!mobileNavOpen)}
             >
-              {mobileNavOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -80,9 +64,7 @@ export default function DocsLayout({
                     href={item.href}
                     className={cn(
                       'flex items-center w-full gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-slate-100',
-                      pathname === item.href
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-slate-700'
+                      pathname === item.href ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
                     )}
                     onClick={() => setMobileNavOpen(false)}
                   >

@@ -1,15 +1,15 @@
-import { useState, useCallback, useMemo } from 'react';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useWeek } from '@/hooks/useWeek';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { useCallback, useMemo, useState } from 'react';
 import {
   CollapsibleMinimal,
-  CollapsibleMinimalTrigger,
   CollapsibleMinimalContent,
+  CollapsibleMinimalTrigger,
 } from '@/components/ui/collapsible-minimal';
-import { QuarterlyGoal } from './QuarterlyGoal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useWeek } from '@/hooks/useWeek';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+import { QuarterlyGoal } from './QuarterlyGoal';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;
@@ -28,9 +28,7 @@ const QuarterlyGoalsSkeleton = () => (
 );
 
 // Helper function to sort goals by status and title
-const sortGoals = (
-  goals: GoalWithDetailsAndChildren[]
-): GoalWithDetailsAndChildren[] => {
+const sortGoals = (goals: GoalWithDetailsAndChildren[]): GoalWithDetailsAndChildren[] => {
   // Sort function that prioritizes starred -> pinned -> neither
   // Within each group, sort alphabetically by title
   return [...goals].sort((a, b) => {
@@ -81,14 +79,7 @@ export const WeekCardQuarterlyGoals = ({
       console.error('Failed to create quarterly goal:', error);
       // TODO: Add proper error handling UI
     }
-  }, [
-    createQuarterlyGoal,
-    newGoalTitle,
-    weekNumber,
-    year,
-    quarter,
-    isExpanded,
-  ]);
+  }, [createQuarterlyGoal, newGoalTitle, weekNumber, year, quarter, isExpanded]);
 
   const handleToggleStatus = useCallback(
     async (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => {
@@ -125,7 +116,7 @@ export const WeekCardQuarterlyGoals = ({
     [updateQuarterlyGoalTitle]
   );
 
-  const handleDeleteGoal = useCallback(
+  const _handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
         await deleteGoal(goalId);
@@ -138,19 +129,12 @@ export const WeekCardQuarterlyGoals = ({
   );
 
   // Sort the goals before rendering
-  const sortedGoals = useMemo(
-    () => sortGoals(quarterlyGoals),
-    [quarterlyGoals]
-  );
+  const sortedGoals = useMemo(() => sortGoals(quarterlyGoals), [quarterlyGoals]);
 
   // Split goals into important (starred/pinned) and other
   const { importantGoals, otherGoals } = useMemo(() => {
-    const important = sortedGoals.filter(
-      (goal) => goal.state?.isStarred || goal.state?.isPinned
-    );
-    const other = sortedGoals.filter(
-      (goal) => !goal.state?.isStarred && !goal.state?.isPinned
-    );
+    const important = sortedGoals.filter((goal) => goal.state?.isStarred || goal.state?.isPinned);
+    const other = sortedGoals.filter((goal) => !goal.state?.isStarred && !goal.state?.isPinned);
     return { importantGoals: important, otherGoals: other };
   }, [sortedGoals]);
 

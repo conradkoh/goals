@@ -1,13 +1,8 @@
+import { Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SafeHTML } from '@/components/ui/safe-html';
-import { Maximize2 } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface GoalDetailsContentProps {
@@ -30,9 +25,7 @@ export function GoalDetailsContent({
       <div className="space-y-3">
         {showTitle && (
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-base break-words flex-1">
-              {title}
-            </h3>
+            <h3 className="font-semibold text-base break-words flex-1">{title}</h3>
           </div>
         )}
 
@@ -42,10 +35,7 @@ export function GoalDetailsContent({
             className
           )}
         >
-          <SafeHTML
-            html={details}
-            className="text-sm prose prose-sm max-w-none"
-          />
+          <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
 
           {/* Absolutely positioned expand button */}
           <div className="absolute top-0 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
@@ -55,21 +45,13 @@ export function GoalDetailsContent({
       </div>
 
       {/* Full view dialog */}
-      <Dialog
-        open={isFullViewOpen}
-        onOpenChange={(open) => !open && setIsFullViewOpen(false)}
-      >
+      <Dialog open={isFullViewOpen} onOpenChange={(open) => !open && setIsFullViewOpen(false)}>
         <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold break-words">
-              {title}
-            </DialogTitle>
+            <DialogTitle className="text-xl font-semibold break-words">{title}</DialogTitle>
           </DialogHeader>
           <div className="mt-4 overflow-y-auto flex-1 pr-2">
-            <SafeHTML
-              html={details}
-              className="text-sm prose prose-sm max-w-none"
-            />
+            <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
           </div>
         </DialogContent>
       </Dialog>

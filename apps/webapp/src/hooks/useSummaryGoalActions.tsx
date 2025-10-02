@@ -1,8 +1,8 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useGoalActions } from './useGoalActions';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { toast } from '@/components/ui/use-toast';
+import { useGoalActions } from './useGoalActions';
 
 export interface SummaryGoalActions {
   handleToggleComplete: (goal: GoalWithDetailsAndChildren, weekNumber: number) => Promise<void>;
@@ -15,94 +15,92 @@ interface UseSummaryGoalActionsProps {
   onDataRefresh?: () => void;
 }
 
-export function useSummaryGoalActions({ 
-  onDataRefresh 
+export function useSummaryGoalActions({
+  onDataRefresh,
 }: UseSummaryGoalActionsProps = {}): SummaryGoalActions {
-  const {
-    toggleGoalCompletion,
-    updateQuarterlyGoalTitle,
-    deleteGoal,
-  } = useGoalActions();
+  const { toggleGoalCompletion, updateQuarterlyGoalTitle, deleteGoal } = useGoalActions();
 
-  const handleToggleComplete = useCallback(async (
-    goal: GoalWithDetailsAndChildren,
-    weekNumber: number
-  ) => {
-    try {
-      const newCompletionStatus = !goal.isComplete;
-      
-      await toggleGoalCompletion({
-        goalId: goal._id,
-        weekNumber,
-        isComplete: newCompletionStatus,
-        updateChildren: true, // Update child goals as well
-      });
+  const handleToggleComplete = useCallback(
+    async (goal: GoalWithDetailsAndChildren, weekNumber: number) => {
+      try {
+        const newCompletionStatus = !goal.isComplete;
 
-      // Show success feedback
-      toast({
-        title: newCompletionStatus ? 'Goal completed!' : 'Goal reopened',
-        description: `"${goal.title}" has been ${newCompletionStatus ? 'completed' : 'reopened'}.`,
-      });
+        await toggleGoalCompletion({
+          goalId: goal._id,
+          weekNumber,
+          isComplete: newCompletionStatus,
+          updateChildren: true, // Update child goals as well
+        });
 
-      // Refresh data
-      onDataRefresh?.();
-    } catch (error) {
-      console.error('Failed to toggle goal completion:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to update goal',
-        description: 'There was an error updating the goal completion status.',
-      });
-    }
-  }, [toggleGoalCompletion, onDataRefresh]);
+        // Show success feedback
+        toast({
+          title: newCompletionStatus ? 'Goal completed!' : 'Goal reopened',
+          description: `"${goal.title}" has been ${newCompletionStatus ? 'completed' : 'reopened'}.`,
+        });
 
-  const handleEditGoal = useCallback(async (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => {
-    try {
-      // For now, we'll use the quarterly goal update function for all goals
-      // This might need to be expanded based on goal type
-      await updateQuarterlyGoalTitle({
-        goalId,
-        title,
-        details,
-      });
+        // Refresh data
+        onDataRefresh?.();
+      } catch (error) {
+        console.error('Failed to toggle goal completion:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to update goal',
+          description: 'There was an error updating the goal completion status.',
+        });
+      }
+    },
+    [toggleGoalCompletion, onDataRefresh]
+  );
 
-      toast({
-        title: 'Goal updated!',
-        description: 'The goal has been successfully updated.',
-      });
+  const handleEditGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
+      try {
+        // For now, we'll use the quarterly goal update function for all goals
+        // This might need to be expanded based on goal type
+        await updateQuarterlyGoalTitle({
+          goalId,
+          title,
+          details,
+        });
 
-      // Refresh data
-      onDataRefresh?.();
-    } catch (error) {
-      console.error('Failed to edit goal:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to update goal',
-        description: 'There was an error updating the goal.',
-      });
-    }
-  }, [updateQuarterlyGoalTitle, onDataRefresh]);
+        toast({
+          title: 'Goal updated!',
+          description: 'The goal has been successfully updated.',
+        });
 
-  const handleDeleteGoal = useCallback(async (goalId: Id<'goals'>) => {
-    try {
-      await deleteGoal({ goalId });
+        // Refresh data
+        onDataRefresh?.();
+      } catch (error) {
+        console.error('Failed to edit goal:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to update goal',
+          description: 'There was an error updating the goal.',
+        });
+      }
+    },
+    [updateQuarterlyGoalTitle, onDataRefresh]
+  );
 
-      toast({
-        title: 'Goal deleted!',
-        description: 'The goal has been successfully deleted.',
-      });
+  const handleDeleteGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      try {
+        await deleteGoal({ goalId });
 
-      // Refresh data
-      onDataRefresh?.();
-    } catch (error) {
-      console.error('Failed to delete goal:', error);
-      // Error handling is already done in useGoalActions
-    }
-  }, [deleteGoal, onDataRefresh]);
+        toast({
+          title: 'Goal deleted!',
+          description: 'The goal has been successfully deleted.',
+        });
+
+        // Refresh data
+        onDataRefresh?.();
+      } catch (error) {
+        console.error('Failed to delete goal:', error);
+        // Error handling is already done in useGoalActions
+      }
+    },
+    [deleteGoal, onDataRefresh]
+  );
 
   return {
     handleToggleComplete,
@@ -110,4 +108,4 @@ export function useSummaryGoalActions({
     handleDeleteGoal,
     isLoading: false, // We can add loading state tracking later if needed
   };
-} 
+}

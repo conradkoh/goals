@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { WeeklyTaskItem } from './WeeklyTaskItem';
-import { Button } from '@/components/ui/button';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { cn } from '@/lib/utils';
+import { WeeklyTaskItem } from './WeeklyTaskItem';
 
 /**
  * Props for the WeekSection component.
@@ -82,10 +82,10 @@ export function WeekSection({
 
   // Calculate totals for this week
   const totalWeeklyGoals = weeklyGoals.length;
-  const completedWeeklyGoals = weeklyGoals.filter(goal => goal.isComplete).length;
+  const completedWeeklyGoals = weeklyGoals.filter((goal) => goal.isComplete).length;
   const totalDailyGoals = weeklyGoals.reduce((sum, goal) => sum + (goal.children?.length || 0), 0);
   const completedDailyGoals = weeklyGoals.reduce((sum, goal) => {
-    return sum + (goal.children?.filter(daily => daily.isComplete).length || 0);
+    return sum + (goal.children?.filter((daily) => daily.isComplete).length || 0);
   }, 0);
 
   return (
@@ -106,17 +106,13 @@ export function WeekSection({
                 <ChevronRight className="h-4 w-4" />
               )}
             </Button>
-            
+
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Week {weekNumber}
-                </h3>
-                <span className="text-sm text-muted-foreground">
-                  {weekDateRange}
-                </span>
+                <h3 className="text-lg font-semibold text-foreground">Week {weekNumber}</h3>
+                <span className="text-sm text-muted-foreground">{weekDateRange}</span>
               </div>
-              
+
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span>
                   {completedWeeklyGoals}/{totalWeeklyGoals} weekly goals
@@ -147,4 +143,4 @@ export function WeekSection({
       )}
     </div>
   );
-} 
+}

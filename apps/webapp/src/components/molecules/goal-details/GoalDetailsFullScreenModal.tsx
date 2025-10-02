@@ -1,39 +1,31 @@
-import React, { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Pin, Star, X } from "lucide-react";
-import { GoalActionMenu } from "./GoalActionMenu";
-import { GoalEditProvider, useGoalEditContext } from "./GoalEditContext";
-import { Input } from "@/components/ui/input";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { useToast } from "@/components/ui/use-toast";
-import { useFormSubmitShortcut } from "@/hooks/useFormSubmitShortcut";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { GoalDetailsContent } from "./GoalDetailsContent";
-import { GoalDetailsChildrenList } from "./GoalDetailsChildrenList";
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CreateGoalInput } from "@/components/atoms/CreateGoalInput";
-import { useWeek } from "@/hooks/useWeek";
-import { DayOfWeek, getDayName } from "@/lib/constants";
-import { DateTime } from "luxon";
-import {
-  GoalStarPin,
-  GoalStarPinContainer,
-} from "@/components/atoms/GoalStarPin";
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Pin, Star, X } from 'lucide-react';
+import { DateTime } from 'luxon';
+import React, { useMemo, useState } from 'react';
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/components/ui/use-toast';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, getDayName } from '@/lib/constants';
+import { GoalActionMenu } from './GoalActionMenu';
+import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
+import { GoalDetailsContent } from './GoalDetailsContent';
+import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsFullScreenModalProps {
   goal: GoalWithDetailsAndChildren;
@@ -48,8 +40,8 @@ const GoalEditModalContent: React.FC<{
   onSave: (title: string, details?: string) => Promise<void>;
 }> = ({ onSave }) => {
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const [editTitle, setEditTitle] = useState("");
-  const [editDetails, setEditDetails] = useState("");
+  const [editTitle, setEditTitle] = useState('');
+  const [editDetails, setEditDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
@@ -61,13 +53,9 @@ const GoalEditModalContent: React.FC<{
 
   // Initialize form data and preserve it across re-renders
   React.useEffect(() => {
-    if (
-      isEditing &&
-      editingGoal &&
-      (!hasInitialized || editingGoal._id !== editingGoal._id)
-    ) {
+    if (isEditing && editingGoal && !hasInitialized) {
       setEditTitle(editingGoal.title);
-      setEditDetails(editingGoal.details || "");
+      setEditDetails(editingGoal.details || '');
       setHasInitialized(true);
     }
   }, [isEditing, editingGoal, hasInitialized]);
@@ -85,9 +73,9 @@ const GoalEditModalContent: React.FC<{
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
       toast({
-        title: "Error",
-        description: "Goal title cannot be empty",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Goal title cannot be empty',
+        variant: 'destructive',
       });
       return;
     }
@@ -97,19 +85,19 @@ const GoalEditModalContent: React.FC<{
       await onSave(trimmedTitle, editDetails);
       stopEditing();
       // Clear form state after successful save
-      setEditTitle("");
-      setEditDetails("");
+      setEditTitle('');
+      setEditDetails('');
       setHasInitialized(false);
       toast({
-        title: "Success",
-        description: "Goal updated successfully",
+        title: 'Success',
+        description: 'Goal updated successfully',
       });
     } catch (error) {
-      console.error("Failed to save goal:", error);
+      console.error('Failed to save goal:', error);
       toast({
-        title: "Error",
-        description: "Failed to save goal. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to save goal. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -127,8 +115,10 @@ const GoalEditModalContent: React.FC<{
         <DialogHeader>
           <DialogTitle>Edit Goal</DialogTitle>
         </DialogHeader>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: Keyboard handler needed for form submission */}
         <div className="space-y-6 py-4" onKeyDown={handleKeyDown}>
           <div className="space-y-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with input below */}
             <label className="text-sm font-medium">Title</label>
             <Input
               value={editTitle}
@@ -138,6 +128,7 @@ const GoalEditModalContent: React.FC<{
             />
           </div>
           <div className="space-y-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with RichTextEditor below */}
             <label className="text-sm font-medium">Details</label>
             <RichTextEditor
               value={editDetails}
@@ -146,15 +137,11 @@ const GoalEditModalContent: React.FC<{
             />
           </div>
           <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
+            <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
@@ -163,9 +150,13 @@ const GoalEditModalContent: React.FC<{
   );
 };
 
-export const GoalDetailsFullScreenModal: React.FC<
-  GoalDetailsFullScreenModalProps
-> = ({ goal, onSave, onToggleComplete, isOpen, onClose }) => {
+export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProps> = ({
+  goal,
+  onSave,
+  onToggleComplete,
+  isOpen,
+  onClose,
+}) => {
   const {
     weekNumber,
     year,
@@ -180,11 +171,9 @@ export const GoalDetailsFullScreenModal: React.FC<
     return DateTime.now().weekday as DayOfWeek;
   }, []); // Empty dependency array - we only need the initial weekday
 
-  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState("");
-  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState("");
-  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(
-    () => currentWeekday
-  );
+  const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
+  const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => currentWeekday);
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
@@ -223,10 +212,10 @@ export const GoalDetailsFullScreenModal: React.FC<
     const trimmedTitle = newWeeklyGoalTitle.trim();
     if (trimmedTitle && isQuarterlyGoal) {
       try {
-        setNewWeeklyGoalTitle("");
+        setNewWeeklyGoalTitle('');
         await createWeeklyGoalOptimistic(goal._id, trimmedTitle);
       } catch (error) {
-        console.error("Failed to create weekly goal:", error);
+        console.error('Failed to create weekly goal:', error);
         setNewWeeklyGoalTitle(trimmedTitle);
       }
     }
@@ -236,24 +225,19 @@ export const GoalDetailsFullScreenModal: React.FC<
     const trimmedTitle = newDailyGoalTitle.trim();
     if (trimmedTitle && isWeeklyGoal) {
       try {
-        setNewDailyGoalTitle("");
+        setNewDailyGoalTitle('');
 
         const dateTimestamp = DateTime.fromObject({
           weekNumber,
           weekYear: year,
         })
-          .startOf("week")
+          .startOf('week')
           .plus({ days: selectedDayOfWeek - 1 })
           .toMillis();
 
-        await createDailyGoalOptimistic(
-          goal._id,
-          trimmedTitle,
-          selectedDayOfWeek,
-          dateTimestamp
-        );
+        await createDailyGoalOptimistic(goal._id, trimmedTitle, selectedDayOfWeek, dateTimestamp);
       } catch (error) {
-        console.error("Failed to create daily goal:", error);
+        console.error('Failed to create daily goal:', error);
         setNewDailyGoalTitle(trimmedTitle);
       }
     }
@@ -264,12 +248,7 @@ export const GoalDetailsFullScreenModal: React.FC<
       {/* Header with close button */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Goal Details</h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          className="h-8 w-8"
-        >
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -283,9 +262,7 @@ export const GoalDetailsFullScreenModal: React.FC<
             disabled={!onToggleComplete}
             onCheckedChange={(checked) => onToggleComplete?.(checked === true)}
           />
-          <h3 className="font-semibold text-xl break-words flex-1 leading-tight">
-            {goal.title}
-          </h3>
+          <h3 className="font-semibold text-xl break-words flex-1 leading-tight">{goal.title}</h3>
         </div>
         <div className="flex items-center gap-2">
           {isQuarterlyGoal && (
@@ -300,11 +277,7 @@ export const GoalDetailsFullScreenModal: React.FC<
               />
             </GoalStarPinContainer>
           )}
-          <GoalActionMenu
-            goal={goal}
-            onSave={onSave}
-            isQuarterlyGoal={isQuarterlyGoal}
-          />
+          <GoalActionMenu goal={goal} onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
         </div>
       </div>
 
@@ -329,8 +302,7 @@ export const GoalDetailsFullScreenModal: React.FC<
       {/* Display completion date if the goal is complete */}
       {isComplete && goal.completedAt && (
         <div className="text-sm text-muted-foreground">
-          Completed on{" "}
-          {DateTime.fromMillis(goal.completedAt).toFormat("LLL d, yyyy")}
+          Completed on {DateTime.fromMillis(goal.completedAt).toFormat('LLL d, yyyy')}
         </div>
       )}
 
@@ -347,9 +319,7 @@ export const GoalDetailsFullScreenModal: React.FC<
       {/* Child goals section */}
       {shouldShowChildGoals &&
         goal &&
-        ((goal.children && goal.children.length > 0) ||
-          isQuarterlyGoal ||
-          isWeeklyGoal) && (
+        ((goal.children && goal.children.length > 0) || isQuarterlyGoal || isWeeklyGoal) && (
           <>
             <Separator className="my-6" />
             <div className="space-y-4">
@@ -357,10 +327,7 @@ export const GoalDetailsFullScreenModal: React.FC<
               {isQuarterlyGoal && (
                 <>
                   {goal.children && goal.children.length > 0 && (
-                    <GoalDetailsChildrenList
-                      parentGoal={goal}
-                      title="Weekly Goals"
-                    />
+                    <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
                   )}
                   <div className="pl-4 pt-2">
                     <CreateGoalInput
@@ -368,7 +335,7 @@ export const GoalDetailsFullScreenModal: React.FC<
                       value={newWeeklyGoalTitle}
                       onChange={setNewWeeklyGoalTitle}
                       onSubmit={handleCreateWeeklyGoal}
-                      onEscape={() => setNewWeeklyGoalTitle("")}
+                      onEscape={() => setNewWeeklyGoalTitle('')}
                     />
                   </div>
                 </>
@@ -378,10 +345,7 @@ export const GoalDetailsFullScreenModal: React.FC<
               {isWeeklyGoal && (
                 <>
                   {goal.children && goal.children.length > 0 && (
-                    <GoalDetailsChildrenList
-                      parentGoal={goal}
-                      title="Daily Goals"
-                    />
+                    <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
                   )}
                   <div className="pl-4 pt-2">
                     <CreateGoalInput
@@ -389,13 +353,13 @@ export const GoalDetailsFullScreenModal: React.FC<
                       value={newDailyGoalTitle}
                       onChange={setNewDailyGoalTitle}
                       onSubmit={handleCreateDailyGoal}
-                      onEscape={() => setNewDailyGoalTitle("")}
+                      onEscape={() => setNewDailyGoalTitle('')}
                     >
                       <div className="mt-2">
                         <Select
                           value={selectedDayOfWeek.toString()}
                           onValueChange={(value) =>
-                            setSelectedDayOfWeek(parseInt(value) as DayOfWeek)
+                            setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
                           }
                         >
                           <SelectTrigger className="h-9 text-xs">

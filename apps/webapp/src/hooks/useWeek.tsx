@@ -1,14 +1,16 @@
-import { createContext, useContext, useMemo, useRef } from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { useQuery } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { useSession } from '@/modules/auth/useSession';
-import { DayOfWeek } from '@services/backend/src/constants';
-import { WeekGoalsTree } from '@services/backend/src/usecase/getWeekDetails';
-import { useOptimisticArray, isOptimisticId } from './useOptimistic';
-import { useGoalActions } from './useGoalActions';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@services/backend/src/constants';
+import type {
+  GoalWithDetailsAndChildren,
+  WeekGoalsTree,
+} from '@services/backend/src/usecase/getWeekDetails';
+import { useQuery } from 'convex/react';
+import { createContext, useContext, useMemo, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { useSession } from '@/modules/auth/useSession';
+import { useGoalActions } from './useGoalActions';
+import { isOptimisticId, useOptimisticArray } from './useOptimistic';
 
 // Modify how we extend GoalWithDetailsAndChildren to add isOptimistic flag
 export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
@@ -87,8 +89,7 @@ export const WeekProviderWithoutDashboard = ({
     );
 
     // Get all weekly goals (both real and optimistic)
-    const allWeeklyGoals =
-      optimisticWeeklyGoals ?? allGoals.filter((goal) => goal.depth === 1);
+    const allWeeklyGoals = optimisticWeeklyGoals ?? allGoals.filter((goal) => goal.depth === 1);
 
     // Add isOptimistic flag based on ID
     const weeklyGoalsWithStatus = allWeeklyGoals.map((goal) => ({
@@ -97,8 +98,7 @@ export const WeekProviderWithoutDashboard = ({
     }));
 
     // Get all daily goals (both real and optimistic)
-    const allDailyGoals =
-      optimisticDailyGoals ?? allGoals.filter((goal) => goal.depth === 2);
+    const allDailyGoals = optimisticDailyGoals ?? allGoals.filter((goal) => goal.depth === 2);
 
     // Add isOptimistic flag based on ID
     const dailyGoalsWithStatus = allDailyGoals.map((goal) => ({
@@ -134,8 +134,7 @@ export const WeekProviderWithoutDashboard = ({
     // Always calculate stats on the frontend now that backend stats are removed
     const stats = {
       totalTasks: dailyGoalsWithStatus.length,
-      completedTasks: dailyGoalsWithStatus.filter((goal) => goal.isComplete)
-        .length,
+      completedTasks: dailyGoalsWithStatus.filter((goal) => goal.isComplete).length,
     };
 
     return {
@@ -153,8 +152,7 @@ export const WeekProviderWithoutDashboard = ({
         details?: string
       ) => {
         // Generate optimistic IDs using the new prefix
-        const tempId =
-          `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
+        const tempId = `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
 
         // Create a minimal optimistic goal with only the fields we need for UI rendering
         const optimisticGoal: GoalWithOptimisticStatus = {
@@ -237,8 +235,7 @@ export const WeekProviderWithoutDashboard = ({
         details?: string
       ) => {
         // Generate optimistic IDs
-        const tempId =
-          `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
+        const tempId = `optimistic_${optimisticCounter.current++}` as Id<'goals'>;
 
         // Create optimistic daily goal
         const optimisticGoal: GoalWithOptimisticStatus = {
@@ -325,7 +322,7 @@ export const WeekProviderWithoutDashboard = ({
 
         if (!goal) {
           toast({
-            title: 'Failed to delete goal with id: ' + goalId,
+            title: `Failed to delete goal with id: ${goalId}`,
             variant: 'destructive',
           });
           return;
@@ -400,11 +397,7 @@ export const WeekProviderWithoutDashboard = ({
     doDailyGoalAction,
   ]);
 
-  return (
-    <WeekContext.Provider value={weekContextValue}>
-      {children}
-    </WeekContext.Provider>
-  );
+  return <WeekContext.Provider value={weekContextValue}>{children}</WeekContext.Provider>;
 };
 
 export const useWeek = () => {

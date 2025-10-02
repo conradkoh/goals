@@ -1,11 +1,11 @@
-import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { useSession } from '@/modules/auth/useSession';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { useMutation } from 'convex/react';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
 import { useWeek } from '@/hooks/useWeek';
+import { useSession } from '@/modules/auth/useSession';
+import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
 
 interface GoalPreviewNode {
   _id: Id<'goals'>;
@@ -34,9 +34,7 @@ export const DeleteGoalIconButton = ({
 
   // Goal deletion preview state
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [deletePreview, setDeletePreview] = useState<DeletePreview | null>(
-    null
-  );
+  const [deletePreview, setDeletePreview] = useState<DeletePreview | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeleteClick = useCallback(async () => {
@@ -61,13 +59,7 @@ export const DeleteGoalIconButton = ({
     } else {
       deleteGoalOptimistic(goalId);
     }
-  }, [
-    goalId,
-    requireConfirmation,
-    sessionId,
-    deleteGoalMutation,
-    deleteGoalOptimistic,
-  ]);
+  }, [goalId, requireConfirmation, sessionId, deleteGoalMutation, deleteGoalOptimistic]);
 
   const deleteGoal = useCallback(async () => {
     if (!sessionId) return;
@@ -92,6 +84,7 @@ export const DeleteGoalIconButton = ({
   return (
     <>
       <button
+        type="button"
         onClick={handleDeleteClick}
         className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
         disabled={isDeleting}
@@ -106,4 +99,4 @@ export const DeleteGoalIconButton = ({
       />
     </>
   );
-}; 
+};

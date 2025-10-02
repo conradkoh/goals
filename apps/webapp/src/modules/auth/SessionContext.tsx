@@ -1,17 +1,13 @@
 'use client';
-import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { api } from '@services/backend/convex/_generated/api';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useEffect, useState } from 'react';
+import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 
 const SESSION_ID_KEY = 'goals-session-id';
 
-export const SessionProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const SessionProvider = ({ children }: { children: React.ReactNode }) => {
   const enforceSession = useMutation(api.auth.useAnonymousSession);
   const [sessionId, setSessionId] = useState<Id<'sessions'> | null>(
     localStorage.getItem(SESSION_ID_KEY) as Id<'sessions'> | null

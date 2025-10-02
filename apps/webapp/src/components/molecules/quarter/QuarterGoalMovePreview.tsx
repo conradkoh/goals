@@ -1,4 +1,4 @@
-import React from 'react';
+import { ArrowRightLeft, Calendar, History, Loader2, Pin, Star } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,19 +9,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Loader2,
-  History,
-  Calendar,
-  Star,
-  Pin,
-  ArrowRightLeft,
-} from 'lucide-react';
-import {
+import type {
+  DailyGoalToCopy,
   QuarterlyGoalToCopy,
   WeeklyGoalToCopy,
-  DailyGoalToCopy,
 } from '@/hooks/useMoveGoalsForQuarter';
 import { cn } from '@/lib/utils';
 
@@ -53,8 +44,7 @@ export const QuarterGoalMovePreview = ({
   onConfirm,
   isConfirming = false,
 }: QuarterGoalMovePreviewProps) => {
-  const hasQuarterlyGoals =
-    preview?.quarterlyGoals && preview.quarterlyGoals.length > 0;
+  const hasQuarterlyGoals = preview?.quarterlyGoals && preview.quarterlyGoals.length > 0;
   const hasWeeklyGoals = preview?.weeklyGoals && preview.weeklyGoals.length > 0;
   const hasDailyGoals = preview?.dailyGoals && preview.dailyGoals.length > 0;
   const hasContent = hasQuarterlyGoals || hasWeeklyGoals || hasDailyGoals;
@@ -65,20 +55,15 @@ export const QuarterGoalMovePreview = ({
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Pull Goals from Previous Quarter
-            </AlertDialogTitle>
+            <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <span className="block">
-                  There are no incomplete goals from the previous quarter to
-                  move to this quarter.
+                  There are no incomplete goals from the previous quarter to move to this quarter.
                 </span>
                 <div className="text-center py-8 text-gray-500">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <span className="block">
-                    All goals from the previous quarter are complete!
-                  </span>
+                  <span className="block">All goals from the previous quarter are complete!</span>
                 </div>
               </div>
             </AlertDialogDescription>
@@ -122,10 +107,7 @@ export const QuarterGoalMovePreview = ({
   // Create a mapping of weekly goals to their quarterly parents
   const weeklyToQuarterlyMap = new Map<string, string>();
   preview?.weeklyGoals.forEach((goal) => {
-    weeklyToQuarterlyMap.set(
-      goal.id.toString(),
-      goal.quarterlyGoalId.toString()
-    );
+    weeklyToQuarterlyMap.set(goal.id.toString(), goal.quarterlyGoalId.toString());
   });
 
   // Create a mapping of daily goals to their weekly parents
@@ -141,7 +123,7 @@ export const QuarterGoalMovePreview = ({
     if (!dailyGoalsByWeekly.has(weeklyId)) {
       dailyGoalsByWeekly.set(weeklyId, []);
     }
-    dailyGoalsByWeekly.get(weeklyId)!.push(goal);
+    dailyGoalsByWeekly.get(weeklyId)?.push(goal);
   });
 
   // Group weekly goals by their quarterly parent
@@ -151,7 +133,7 @@ export const QuarterGoalMovePreview = ({
     if (!weeklyGoalsByQuarterly.has(quarterlyId)) {
       weeklyGoalsByQuarterly.set(quarterlyId, []);
     }
-    weeklyGoalsByQuarterly.get(quarterlyId)!.push(goal);
+    weeklyGoalsByQuarterly.get(quarterlyId)?.push(goal);
   });
 
   return (
@@ -168,8 +150,7 @@ export const QuarterGoalMovePreview = ({
                   <div className="flex items-start gap-2">
                     <ArrowRightLeft className="h-4 w-4 mt-0.5 text-muted-foreground" />
                     <p className="text-sm">
-                      All hierarchies and relationships between goals will be
-                      preserved
+                      All hierarchies and relationships between goals will be preserved
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
@@ -177,11 +158,8 @@ export const QuarterGoalMovePreview = ({
                       <Star className="h-4 w-4 text-yellow-500" />
                     </div>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">
-                        Quarterly Goals
-                      </span>{' '}
-                      that are incomplete will be copied to this quarter with
-                      their pinned and starred status
+                      <span className="font-medium text-gray-900">Quarterly Goals</span> that are
+                      incomplete will be copied to this quarter with their pinned and starred status
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
@@ -189,12 +167,9 @@ export const QuarterGoalMovePreview = ({
                       <History className="h-4 w-4 text-blue-500" />
                     </div>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">
-                        Weekly Goals
-                      </span>{' '}
-                      that are incomplete from the final week of the previous
-                      quarter (e.g., week 13 for Q1) will be copied to this
-                      quarter with their weekly assignments
+                      <span className="font-medium text-gray-900">Weekly Goals</span> that are
+                      incomplete from the final week of the previous quarter (e.g., week 13 for Q1)
+                      will be copied to this quarter with their weekly assignments
                     </p>
                   </div>
                   <div className="flex items-start gap-2">
@@ -202,12 +177,9 @@ export const QuarterGoalMovePreview = ({
                       <Calendar className="h-4 w-4 text-green-500" />
                     </div>
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">
-                        Daily Goals
-                      </span>{' '}
-                      that are associated with moved weekly goals from the final
-                      week and are incomplete will be copied with their day
-                      assignments
+                      <span className="font-medium text-gray-900">Daily Goals</span> that are
+                      associated with moved weekly goals from the final week and are incomplete will
+                      be copied with their day assignments
                     </p>
                   </div>
                 </div>
@@ -235,47 +207,38 @@ export const QuarterGoalMovePreview = ({
                         quarterlyGoal.isStarred
                           ? 'bg-yellow-50 border border-yellow-200'
                           : quarterlyGoal.isPinned
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'bg-gray-50 border border-gray-200'
+                            ? 'bg-blue-50 border border-blue-200'
+                            : 'bg-gray-50 border border-gray-200'
                       )}
                     >
                       {/* Weekly goals under this quarterly goal */}
-                      {weeklyGoalsByQuarterly
-                        .get(quarterlyGoal.id)
-                        ?.map((weeklyGoal) => (
-                          <div
-                            key={weeklyGoal.id.toString()}
-                            className="pl-4 space-y-1 py-2"
-                          >
-                            <h5 className="text-sm text-muted-foreground">
-                              <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                                {weeklyGoal.title}
-                              </div>
-                            </h5>
+                      {weeklyGoalsByQuarterly.get(quarterlyGoal.id)?.map((weeklyGoal) => (
+                        <div key={weeklyGoal.id.toString()} className="pl-4 space-y-1 py-2">
+                          <h5 className="text-sm text-muted-foreground">
+                            <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                              {weeklyGoal.title}
+                            </div>
+                          </h5>
 
-                            {/* Daily goals under this weekly goal */}
-                            {(() => {
-                              const dailyGoals = dailyGoalsByWeekly.get(
-                                weeklyGoal.id.toString()
-                              );
-                              return dailyGoals && dailyGoals.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {dailyGoals.map((dailyGoal) => (
-                                    <li
-                                      key={dailyGoal.id.toString()}
-                                      className="flex items-center gap-2 pl-4"
-                                    >
-                                      <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                      <div className="text-sm break-words">
-                                        {dailyGoal.title}
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : null;
-                            })()}
-                          </div>
-                        ))}
+                          {/* Daily goals under this weekly goal */}
+                          {(() => {
+                            const dailyGoals = dailyGoalsByWeekly.get(weeklyGoal.id.toString());
+                            return dailyGoals && dailyGoals.length > 0 ? (
+                              <ul className="space-y-1">
+                                {dailyGoals.map((dailyGoal) => (
+                                  <li
+                                    key={dailyGoal.id.toString()}
+                                    className="flex items-center gap-2 pl-4"
+                                  >
+                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                    <div className="text-sm break-words">{dailyGoal.title}</div>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null;
+                          })()}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}

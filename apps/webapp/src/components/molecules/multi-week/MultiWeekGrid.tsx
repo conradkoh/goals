@@ -1,12 +1,13 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
-import { useCenteredScroll, useCalculatedThenMeasured } from '@/lib/scroll';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useCalculatedThenMeasured, useCenteredScroll } from '@/lib/scroll';
+import { cn } from '@/lib/utils';
 
 // Layout Constants
 const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1024;
-const DESKTOP_BREAKPOINT = 1280;
+const _DESKTOP_BREAKPOINT = 1280;
 const DEFAULT_CARD_WIDTH = 320;
 const JUMP_BUTTON_OFFSET = {
   TOP: 16, // tailwind top-4
@@ -92,25 +93,23 @@ export const MultiWeekGrid = ({
   });
 
   // Check visibility when currentIndex changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: currentIndex is tracked internally by checkCurrentWeekVisibility
   useEffect(() => {
     checkCurrentWeekVisibility();
   }, [currentIndex, checkCurrentWeekVisibility]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn('relative flex flex-col overflow-hidden', className)}
-    >
+    <div ref={containerRef} className={cn('relative flex flex-col overflow-hidden', className)}>
       {/* Floating Jump to Current Week Button */}
       {showJumpToCurrentWeek && (
         <button
+          type="button"
           onClick={() => scrollToCurrentWeek(true)}
           style={{
             position: 'absolute',
             top: `${JUMP_BUTTON_OFFSET.TOP}px`,
             right:
-              containerRef.current &&
-              containerRef.current.clientWidth < MOBILE_BREAKPOINT
+              containerRef.current && containerRef.current.clientWidth < MOBILE_BREAKPOINT
                 ? `${JUMP_BUTTON_OFFSET.RIGHT_MOBILE}px`
                 : `${JUMP_BUTTON_OFFSET.RIGHT_DESKTOP}px`,
             zIndex: 10,
@@ -124,18 +123,14 @@ export const MultiWeekGrid = ({
         >
           {isCurrentWeekToRight ? (
             <>
-              <span className="hidden md:inline">
-                Jump forward to current week
-              </span>
+              <span className="hidden md:inline">Jump forward to current week</span>
               <span className="md:hidden">Current week</span>
               <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
             </>
           ) : (
             <>
               <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5 rotate-180" />
-              <span className="hidden md:inline">
-                Jump back to current week
-              </span>
+              <span className="hidden md:inline">Jump back to current week</span>
               <span className="md:hidden">Current week</span>
             </>
           )}

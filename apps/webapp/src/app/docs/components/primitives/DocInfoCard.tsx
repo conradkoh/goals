@@ -1,14 +1,11 @@
-import React from 'react';
+import type React from 'react';
 
 interface DocInfoCardProps {
   children: React.ReactNode;
   variant?: 'default' | 'note' | 'warning';
 }
 
-export function DocInfoCard({
-  children,
-  variant = 'default',
-}: DocInfoCardProps) {
+export function DocInfoCard({ children, variant = 'default' }: DocInfoCardProps) {
   const variantClasses = {
     default: 'bg-slate-50 border-slate-200',
     note: 'bg-blue-50 border-blue-200',

@@ -44,13 +44,13 @@ export function getQuarterWeeks(
 
   // For accurate week numbers, we need to check if the date is actually in that week
   // by checking if Thursday of that week is in the quarter
-  let weeks: number[] = [];
+  const weeks: number[] = [];
   let currentDate = startDate;
 
   // Keep adding weeks until we pass the end date
   while (currentDate <= endDate) {
     // Find Thursday of the current week
-    let weekThursday = currentDate.set({ weekday: 4 });
+    const weekThursday = currentDate.set({ weekday: 4 });
 
     // If we're in Q1 and the Thursday is in the previous year,
     // we need to adjust the week number to be from the previous year

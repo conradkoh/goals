@@ -1,10 +1,7 @@
-import { MutationCtx, QueryCtx } from '../../convex/_generated/server';
-import { Id } from '../../convex/_generated/dataModel';
+import type { Id } from '../../convex/_generated/dataModel';
+import type { MutationCtx, QueryCtx } from '../../convex/_generated/server';
 
-export const requireLogin = async (
-  ctx: QueryCtx | MutationCtx,
-  sessionId: Id<'sessions'>
-) => {
+export const requireLogin = async (ctx: QueryCtx | MutationCtx, sessionId: Id<'sessions'>) => {
   const session = await ctx.db.get(sessionId);
   if (!session) {
     throw new Error('Login required');

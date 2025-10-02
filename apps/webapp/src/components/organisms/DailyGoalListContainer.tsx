@@ -1,18 +1,14 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { DailyGoalList } from './DailyGoalList';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   className?: string;
@@ -24,6 +20,7 @@ export interface DailyGoalListContainerProps {
 export const DailyGoalListContainer = ({
   goals,
   onUpdateGoalTitle,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: reserved for future delete capability in this container
   onDeleteGoal,
   onCreateGoal,
   className,
@@ -49,6 +46,7 @@ export const DailyGoalListContainer = ({
   return (
     <div className={cn('space-y-2', className)}>
       <DailyGoalList goals={goals} onUpdateGoalTitle={onUpdateGoalTitle} />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => !isInputFocused && setIsHovering(false)}

@@ -1,9 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { DayOfWeek } from '@/lib/constants';
 import { CalendarClock } from 'lucide-react';
-import { DateTime } from 'luxon';
+import { Button } from '@/components/ui/button';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import type { DayOfWeek } from '@/lib/constants';
 
 export interface JumpToCurrentButtonProps {
   /**
@@ -62,8 +61,7 @@ export const JumpToCurrentButton = ({
   className = '',
 }: JumpToCurrentButtonProps) => {
   // Get current date information
-  const { weekNumber: currentWeekNumber, weekday: currentDay } =
-    useCurrentWeekInfo();
+  const { weekday: currentDay } = useCurrentWeekInfo();
   const { currentWeekNumber: quarterCurrentWeekNumber } = useQuarterWeekInfo(
     year,
     quarter as 1 | 2 | 3 | 4

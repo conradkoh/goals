@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailySummaryItem } from './DailySummaryItem';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { DateTime } from 'luxon';
-import { DayOfWeek } from '@/lib/constants';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import React, { useState } from 'react';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import type { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { DailySummaryItem } from './DailySummaryItem';
 
 /**
  * Props for the WeeklySummarySection component.
@@ -52,9 +52,12 @@ export function WeeklySummarySection({
   disableStrikethrough,
 }: WeeklySummarySectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  
+
   const isComplete = weeklyGoal.isComplete;
-  const hasDailyGoals = React.useMemo(() => weeklyGoal.children && weeklyGoal.children.length > 0, [weeklyGoal.children]);
+  const hasDailyGoals = React.useMemo(
+    () => weeklyGoal.children && weeklyGoal.children.length > 0,
+    [weeklyGoal.children]
+  );
 
   const handleToggleComplete = React.useCallback(async () => {
     if (goalActions) {
@@ -62,45 +65,50 @@ export function WeeklySummarySection({
     }
   }, [goalActions, weeklyGoal]);
 
-  const handleEdit = React.useCallback(async (title: string, details?: string) => {
-    if (goalActions) {
-      await goalActions.handleEditGoal(weeklyGoal._id, title, details);
-    }
-  }, [goalActions, weeklyGoal._id]);
+  const handleEdit = React.useCallback(
+    async (title: string, details?: string) => {
+      if (goalActions) {
+        await goalActions.handleEditGoal(weeklyGoal._id, title, details);
+      }
+    },
+    [goalActions, weeklyGoal._id]
+  );
 
   const handleDelete = React.useCallback(async () => {
     if (goalActions) {
       await goalActions.handleDeleteGoal(weeklyGoal._id);
     }
   }, [goalActions, weeklyGoal._id]);
-  
+
   // Format week date range
-  const { weekStart, weekEnd, weekDateRange } = React.useMemo(() => {
-    const weekStart = DateTime.fromMillis(weeklyGoal.weekStartTimestamp);
-    const weekEnd = DateTime.fromMillis(weeklyGoal.weekEndTimestamp);
-    const weekDateRange = `${weekStart.toFormat('LLL d')} - ${weekEnd.toFormat('LLL d')}`;
-    return { weekStart, weekEnd, weekDateRange };
+  const weekDateRange = React.useMemo(() => {
+    const start = DateTime.fromMillis(weeklyGoal.weekStartTimestamp);
+    const end = DateTime.fromMillis(weeklyGoal.weekEndTimestamp);
+    return `${start.toFormat('LLL d')} - ${end.toFormat('LLL d')}`;
   }, [weeklyGoal.weekStartTimestamp, weeklyGoal.weekEndTimestamp]);
-  
+
   // Group daily goals by day of week
   const dailyGoalsByDay = React.useMemo(() => {
-    return weeklyGoal.children?.reduce((acc, dailyGoal) => {
-      if (dailyGoal.state?.daily?.dayOfWeek) {
-        const dayOfWeek = dailyGoal.state.daily.dayOfWeek;
-        if (!acc[dayOfWeek]) {
-          acc[dayOfWeek] = [];
-        }
-        acc[dayOfWeek].push(dailyGoal);
-      }
-      return acc;
-    }, {} as Record<DayOfWeek, GoalWithDetailsAndChildren[]>) || {};
+    return (
+      weeklyGoal.children?.reduce(
+        (acc, dailyGoal) => {
+          if (dailyGoal.state?.daily?.dayOfWeek) {
+            const dayOfWeek = dailyGoal.state.daily.dayOfWeek;
+            if (!acc[dayOfWeek]) {
+              acc[dayOfWeek] = [];
+            }
+            acc[dayOfWeek].push(dailyGoal);
+          }
+          return acc;
+        },
+        {} as Record<DayOfWeek, GoalWithDetailsAndChildren[]>
+      ) || {}
+    );
   }, [weeklyGoal.children]);
 
   // Sort days of week in order
   const sortedDays = React.useMemo(() => {
-    return Object.keys(dailyGoalsByDay)
-      .map(Number)
-      .sort() as DayOfWeek[];
+    return Object.keys(dailyGoalsByDay).map(Number).sort() as DayOfWeek[];
   }, [dailyGoalsByDay]);
 
   return (
@@ -114,17 +122,15 @@ export function WeeklySummarySection({
             onCheckedChange={goalActions ? handleToggleComplete : undefined}
             className="mt-0.5 flex-shrink-0"
           />
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
                 Week {weeklyGoal.weekNumber}
               </span>
-              <span className="text-xs text-muted-foreground">
-                {weekDateRange}
-              </span>
+              <span className="text-xs text-muted-foreground">{weekDateRange}</span>
             </div>
-            
+
             <h3
               className={cn(
                 'font-semibold text-base leading-tight mb-1',
@@ -133,18 +139,19 @@ export function WeeklySummarySection({
             >
               {weeklyGoal.title}
             </h3>
-            
+
             {weeklyGoal.details && (
               <div
                 className={cn(
                   'text-sm text-muted-foreground leading-relaxed',
                   !disableStrikethrough && isComplete && 'line-through'
                 )}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                 dangerouslySetInnerHTML={{ __html: weeklyGoal.details }}
               />
             )}
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
             {goalActions && (
@@ -163,7 +170,7 @@ export function WeeklySummarySection({
                     </Button>
                   }
                 />
-                
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -174,7 +181,7 @@ export function WeeklySummarySection({
                 </Button>
               </div>
             )}
-            
+
             {hasDailyGoals && (
               <Button
                 variant="ghost"
@@ -199,7 +206,7 @@ export function WeeklySummarySection({
           <h4 className="text-sm font-medium text-muted-foreground mb-3">
             Daily Goals ({weeklyGoal.children.length})
           </h4>
-          
+
           {sortedDays.length > 0 ? (
             <div className="space-y-3">
               {sortedDays.map((dayOfWeek) => (
@@ -224,7 +231,7 @@ export function WeeklySummarySection({
           )}
         </div>
       )}
-      
+
       {!hasDailyGoals && (
         <div className="px-4 pb-4">
           <div className="text-sm text-muted-foreground text-center py-2">
@@ -234,4 +241,4 @@ export function WeeklySummarySection({
       )}
     </div>
   );
-} 
+}

@@ -22,10 +22,7 @@ interface QuarterWeekInfo {
   isCurrentQuarter: boolean;
 }
 
-export const useQuarterWeekInfo = (
-  year: number,
-  quarter: 1 | 2 | 3 | 4
-): QuarterWeekInfo => {
+export const useQuarterWeekInfo = (year: number, quarter: 1 | 2 | 3 | 4): QuarterWeekInfo => {
   return useMemo(() => {
     // Calculate start and end dates for the quarter
     const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
@@ -36,8 +33,7 @@ export const useQuarterWeekInfo = (
     // Get current date info
     const now = DateTime.now();
     const currentWeekNumber = now.weekNumber;
-    const isCurrentQuarter =
-      now.year === year && Math.ceil(now.month / 3) === quarter;
+    const isCurrentQuarter = now.year === year && Math.ceil(now.month / 3) === quarter;
 
     // Generate week information
     const weeks: WeekInfo[] = [];

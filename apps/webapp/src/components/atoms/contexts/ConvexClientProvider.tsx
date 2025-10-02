@@ -1,8 +1,9 @@
 'use client';
 
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
+// biome-ignore lint/style/noNonNullAssertion: Environment variable is required at build time
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {

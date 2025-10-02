@@ -1,10 +1,10 @@
-import { convexTest } from '../src/util/test';
-import { test, expect, describe } from 'vitest';
-import { api } from './_generated/api';
-import { Id } from './_generated/dataModel';
+import { describe, expect, test } from 'vitest';
 import { DayOfWeek } from '../src/constants';
+import type { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
+import { convexTest } from '../src/util/test';
+import { api } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 import schema from './schema';
-import { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
 
 // Define the test context type based on the return value of convexTest
 type TestCtx = ReturnType<typeof convexTest>;
@@ -22,7 +22,7 @@ const createMockGoal = async (
   sessionId: Id<'sessions'>,
   depth: GoalDepth,
   parentId?: Id<'goals'>,
-  isComplete = false
+  _isComplete = false
 ) => {
   if (depth === GoalDepth.Quarterly) {
     return await ctx.mutation(api.dashboard.createQuarterlyGoal, {
@@ -32,22 +32,28 @@ const createMockGoal = async (
       quarter: 1,
       weekNumber: 1,
     });
-  } else if (depth === GoalDepth.Weekly) {
+  }
+  if (depth === GoalDepth.Weekly) {
+    if (!parentId) {
+      throw new Error('Weekly goal requires a parent quarterly goal');
+    }
     return await ctx.mutation(api.dashboard.createWeeklyGoal, {
       sessionId,
       title: `Goal ${depth}`,
-      parentId: parentId!,
+      parentId,
       weekNumber: 1,
-    });
-  } else {
-    return await ctx.mutation(api.dashboard.createDailyGoal, {
-      sessionId,
-      title: `Goal ${depth}`,
-      parentId: parentId!,
-      weekNumber: 1,
-      dayOfWeek: DayOfWeek.MONDAY,
     });
   }
+  if (!parentId) {
+    throw new Error('Daily goal requires a parent weekly goal');
+  }
+  return await ctx.mutation(api.dashboard.createDailyGoal, {
+    sessionId,
+    title: `Goal ${depth}`,
+    parentId,
+    weekNumber: 1,
+    dayOfWeek: DayOfWeek.MONDAY,
+  });
 };
 
 describe('moveGoalsFromWeek', () => {
@@ -56,23 +62,9 @@ describe('moveGoalsFromWeek', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create test data
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
-    const dailyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoalId
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
+    const dailyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
 
     // Set the quarterly goal as starred (which should take precedence over pinned)
     await ctx.mutation(api.dashboard.updateQuarterlyGoalStatus, {
@@ -176,11 +168,7 @@ describe('moveGoalsFromWeek', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Test Case 1: Moving a pinned quarterly goal
-    const pinnedQuarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const pinnedQuarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
     await ctx.mutation(api.dashboard.updateQuarterlyGoalStatus, {
       sessionId,
       goalId: pinnedQuarterlyGoalId,
@@ -192,11 +180,7 @@ describe('moveGoalsFromWeek', () => {
     });
 
     // Test Case 2: Moving a starred quarterly goal
-    const starredQuarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const starredQuarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
     await ctx.mutation(api.dashboard.updateQuarterlyGoalStatus, {
       sessionId,
       goalId: starredQuarterlyGoalId,
@@ -235,7 +219,7 @@ describe('moveGoalsFromWeek', () => {
     });
 
     // Move goals from week 1 to week 2
-    const moveResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
+    const _moveResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
       sessionId,
       from: { year: 2024, quarter: 1, weekNumber: 1 },
       to: { year: 2024, quarter: 1, weekNumber: 2 },
@@ -281,17 +265,8 @@ describe('moveGoalsFromWeek', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create test data
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Set the weekly goal as a fire goal
     await ctx.mutation(api.fireGoal.toggleFireStatus, {
@@ -328,8 +303,7 @@ describe('moveGoalsFromWeek', () => {
       (qg: GoalWithDetailsAndChildren) => qg._id === quarterlyGoalId
     );
     const carriedOverWeeklyGoal = quarterlyGoal?.children.find(
-      (wg: GoalWithDetailsAndChildren) =>
-        wg.carryOver?.fromGoal.previousGoalId === weeklyGoalId
+      (wg: GoalWithDetailsAndChildren) => wg.carryOver?.fromGoal.previousGoalId === weeklyGoalId
     );
 
     expect(carriedOverWeeklyGoal).toBeDefined();
@@ -339,7 +313,7 @@ describe('moveGoalsFromWeek', () => {
     const fireGoalsAfter = await ctx.query(api.fireGoal.getFireGoals, {
       sessionId,
     });
-    expect(fireGoalsAfter).toContain(carriedOverWeeklyGoal!._id);
+    expect(fireGoalsAfter).toContain(carriedOverWeeklyGoal?._id);
     expect(fireGoalsAfter).toHaveLength(1); // Should only have the new goal, not the old one
   });
 });
@@ -350,17 +324,8 @@ describe('moveGoalsFromDay', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create test data
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create a daily goal for Monday
     const mondayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
@@ -372,16 +337,13 @@ describe('moveGoalsFromDay', () => {
     });
 
     // Create a completed daily goal for Monday
-    const completedMondayGoalId = await ctx.mutation(
-      api.dashboard.createDailyGoal,
-      {
-        sessionId,
-        title: 'Completed Monday task',
-        parentId: weeklyGoalId,
-        weekNumber: 1,
-        dayOfWeek: DayOfWeek.MONDAY,
-      }
-    );
+    const completedMondayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Completed Monday task',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
 
     // Mark the second goal as complete
     await ctx.mutation(api.dashboard.toggleGoalCompletion, {
@@ -462,17 +424,8 @@ describe('moveGoalsFromDay', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create test data
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create a daily goal for Monday in week 1
     const mondayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
@@ -522,17 +475,8 @@ describe('moveGoalsFromDay', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create test data
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create a daily goal for Wednesday
     const wednesdayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
@@ -544,16 +488,13 @@ describe('moveGoalsFromDay', () => {
     });
 
     // Create a completed daily goal for Wednesday
-    const completedWednesdayGoalId = await ctx.mutation(
-      api.dashboard.createDailyGoal,
-      {
-        sessionId,
-        title: 'Completed Wednesday task',
-        parentId: weeklyGoalId,
-        weekNumber: 1,
-        dayOfWeek: DayOfWeek.WEDNESDAY,
-      }
-    );
+    const completedWednesdayGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Completed Wednesday task',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.WEDNESDAY,
+    });
 
     // Mark the second goal as complete
     await ctx.mutation(api.dashboard.toggleGoalCompletion, {
@@ -613,25 +554,12 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create two quarterly goals
-    const quarterlyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
-    const quarterlyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
     // Create a weekly goal under the first quarterly goal
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoal1Id
-    );
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoal1Id);
 
     // Delete the first quarterly goal (should delete its child)
     await expect(
@@ -679,41 +607,17 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create a quarterly goal
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
     // Create two weekly goals under the quarterly goal
-    const weeklyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
-    const weeklyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create daily goals under each weekly goal
-    const dailyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal1Id
-    );
+    const dailyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal1Id);
 
-    const dailyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal2Id
-    );
+    const dailyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal2Id);
 
     // Delete the first weekly goal (should delete its child)
     await expect(
@@ -749,6 +653,7 @@ describe('deleteGoal', () => {
 
     // Check if weeklyGoal2Id exists in the tree
     const weeklyGoal2Exists = weekData.tree.allGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === weeklyGoal2Id
     );
     expect(weeklyGoal2Exists).toBe(true);
@@ -782,47 +687,19 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create two quarterly goals (both with inPath = "/")
-    const quarterlyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
-    const quarterlyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
     // Create weekly goals under each quarterly goal
-    const weeklyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoal1Id
-    );
+    const weeklyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoal1Id);
 
-    const weeklyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoal2Id
-    );
+    const weeklyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoal2Id);
 
     // Create daily goals under each weekly goal
-    const dailyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal1Id
-    );
+    const dailyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal1Id);
 
-    const dailyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal2Id
-    );
+    const dailyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal2Id);
 
     // Delete the first quarterly goal (should delete all its children)
     await expect(
@@ -865,6 +742,7 @@ describe('deleteGoal', () => {
 
     // Check if quarterlyGoal2Id exists in the tree
     const quarterlyGoal2Exists = weekData.tree.quarterlyGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === quarterlyGoal2Id
     );
     expect(quarterlyGoal2Exists).toBe(true);
@@ -905,46 +783,17 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create a deep hierarchy of goals
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
-    const weeklyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
-    const dailyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal1Id
-    );
+    const dailyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal1Id);
 
-    const weeklyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
-    const dailyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoal2Id
-    );
+    const dailyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoal2Id);
 
-    const weeklyGoal3Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoal3Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Delete the quarterly goal (should delete all children)
     await expect(
@@ -1004,32 +853,14 @@ describe('deleteGoal', () => {
 
     // Create two separate hierarchies
     // First hierarchy
-    const quarterlyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
-    const weeklyGoal1Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoal1Id
-    );
+    const weeklyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoal1Id);
 
     // Second hierarchy
-    const quarterlyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
-    const weeklyGoal2Id = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoal2Id
-    );
+    const weeklyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoal2Id);
 
     // Delete the first quarterly goal
     await expect(
@@ -1065,12 +896,14 @@ describe('deleteGoal', () => {
 
     // Check if quarterlyGoal2Id exists in the tree
     const quarterlyGoal2Exists = weekData.tree.quarterlyGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === quarterlyGoal2Id
     );
     expect(quarterlyGoal2Exists).toBe(true);
 
     // Check if weeklyGoal2Id exists in the tree
     const weeklyGoal2Exists = weekData.tree.allGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === weeklyGoal2Id
     );
     expect(weeklyGoal2Exists).toBe(true);
@@ -1099,13 +932,9 @@ describe('deleteGoal', () => {
     const sessionId2 = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create goals for user 1
-    const user1QuarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId1,
-      GoalDepth.Quarterly
-    );
+    const user1QuarterlyGoalId = await createMockGoal(ctx, sessionId1, GoalDepth.Quarterly);
 
-    const user1WeeklyGoalId = await createMockGoal(
+    const _user1WeeklyGoalId = await createMockGoal(
       ctx,
       sessionId1,
       GoalDepth.Weekly,
@@ -1113,13 +942,9 @@ describe('deleteGoal', () => {
     );
 
     // Create goals for user 2
-    const user2QuarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId2,
-      GoalDepth.Quarterly
-    );
+    const user2QuarterlyGoalId = await createMockGoal(ctx, sessionId2, GoalDepth.Quarterly);
 
-    const user2WeeklyGoalId = await createMockGoal(
+    const _user2WeeklyGoalId = await createMockGoal(
       ctx,
       sessionId2,
       GoalDepth.Weekly,
@@ -1151,6 +976,7 @@ describe('deleteGoal', () => {
     });
 
     const user1QuarterlyGoalExists = user1WeekData.tree.quarterlyGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === user1QuarterlyGoalId
     );
     expect(user1QuarterlyGoalExists).toBe(true);
@@ -1164,6 +990,7 @@ describe('deleteGoal', () => {
     });
 
     const user2QuarterlyGoalExists = user2WeekData.tree.quarterlyGoals.some(
+      // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
       (goal: any) => goal._id === user2QuarterlyGoalId
     );
     expect(user2QuarterlyGoalExists).toBe(true);
@@ -1189,40 +1016,31 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create a goal in quarter 1
-    const quarter1GoalId = await ctx.mutation(
-      api.dashboard.createQuarterlyGoal,
-      {
-        sessionId,
-        title: 'Quarter 1 Goal',
-        year: 2024,
-        quarter: 1,
-        weekNumber: 1,
-      }
-    );
+    const quarter1GoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarter 1 Goal',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
 
     // Create a goal in quarter 2
-    const quarter2GoalId = await ctx.mutation(
-      api.dashboard.createQuarterlyGoal,
-      {
-        sessionId,
-        title: 'Quarter 2 Goal',
-        year: 2024,
-        quarter: 2,
-        weekNumber: 1,
-      }
-    );
+    const quarter2GoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarter 2 Goal',
+      year: 2024,
+      quarter: 2,
+      weekNumber: 1,
+    });
 
     // Create a goal in a different year
-    const nextYearGoalId = await ctx.mutation(
-      api.dashboard.createQuarterlyGoal,
-      {
-        sessionId,
-        title: 'Next Year Goal',
-        year: 2025,
-        quarter: 1,
-        weekNumber: 1,
-      }
-    );
+    const nextYearGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Next Year Goal',
+      year: 2025,
+      quarter: 1,
+      weekNumber: 1,
+    });
 
     // Delete the quarter 1 goal
     await expect(
@@ -1276,34 +1094,15 @@ describe('deleteGoal', () => {
     const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
 
     // Create a quarterly goal
-    const quarterlyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Quarterly
-    );
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
 
     // Create a weekly goal under the quarterly goal
-    const weeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Weekly,
-      quarterlyGoalId
-    );
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create daily goals under the weekly goal
-    const dailyGoalId1 = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoalId
-    );
+    const _dailyGoalId1 = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
 
-    const dailyGoalId2 = await createMockGoal(
-      ctx,
-      sessionId,
-      GoalDepth.Daily,
-      weeklyGoalId
-    );
+    const _dailyGoalId2 = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
 
     // Test deleting the weekly goal with dryRun
     const result = (await ctx.mutation(api.goal.deleteGoal, {
@@ -1316,6 +1115,7 @@ describe('deleteGoal', () => {
         _id: Id<'goals'>;
         title: string;
         depth: number;
+        // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
         children: any[];
       }>;
     };
@@ -1330,7 +1130,7 @@ describe('deleteGoal', () => {
     expect(weeklyGoalPreview.children).toHaveLength(2);
 
     // Now test actual deletion
-    const deleteResult = await ctx.mutation(api.goal.deleteGoal, {
+    const _deleteResult = await ctx.mutation(api.goal.deleteGoal, {
       sessionId,
       goalId: weeklyGoalId,
     });

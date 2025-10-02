@@ -75,9 +75,7 @@ export function useCalculatedThenMeasured<T>(
   } = options;
 
   // Initialize with calculated value
-  const [calculatedValue, setCalculatedValue] = useState<T>(() =>
-    calculateFn()
-  );
+  const [calculatedValue, setCalculatedValue] = useState<T>(() => calculateFn());
   const [measuredValue, setMeasuredValue] = useState<T | undefined>(undefined);
   const [value, setValue] = useState<T>(calculatedValue);
   const [isMeasured, setIsMeasured] = useState(false);
@@ -90,9 +88,11 @@ export function useCalculatedThenMeasured<T>(
     setValue(newCalculatedValue);
     setIsMeasured(false);
     setIsStable(false);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: calculateFn is intentionally excluded to prevent unnecessary recalculations
   }, dependencies);
 
   // Measure after render and update if significantly different
+  // biome-ignore lint/correctness/useExhaustiveDependencies: measureFn and isSignificantDifference are intentionally excluded to prevent unnecessary remeasures
   useEffect(() => {
     // Use setTimeout to ensure DOM is ready
     const timeoutId = setTimeout(() => {

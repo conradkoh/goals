@@ -37,7 +37,6 @@ export function getPreviousQuarter(
 } {
   if (quarter === 1) {
     return { year: year - 1, quarter: 4 };
-  } else {
-    return { year, quarter: (quarter - 1) as 1 | 2 | 3 | 4 };
   }
+  return { year, quarter: (quarter - 1) as 1 | 2 | 3 | 4 };
 }

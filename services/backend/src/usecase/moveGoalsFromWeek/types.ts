@@ -1,5 +1,5 @@
-import { Id, Doc } from '../../../convex/_generated/dataModel';
-import { DayOfWeek } from '../../../src/constants';
+import type { Doc, Id } from '../../../convex/_generated/dataModel';
+import type { DayOfWeek } from '../../../src/constants';
 
 // Core domain types
 export enum GoalDepth {
@@ -124,5 +124,6 @@ export type UpdateResult = BaseGoalMoveResult & {
   quarterlyGoalsUpdated: number;
 };
 
-export type MoveGoalsFromWeekResult<T extends MoveGoalsFromWeekArgs> =
-  T['dryRun'] extends true ? DryRunResult : UpdateResult;
+export type MoveGoalsFromWeekResult<T extends MoveGoalsFromWeekArgs> = T['dryRun'] extends true
+  ? DryRunResult
+  : UpdateResult;

@@ -1,9 +1,9 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { useCallback, useRef, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { useToast } from '@/components/ui/use-toast';
-import { DayOfWeek } from '@/lib/constants';
+import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useCallback, useRef, useState } from 'react';
 
 export interface AddTaskInputProps {
   parentGoalId: Id<'goals'>;
@@ -29,7 +29,7 @@ export const AddTaskInput = ({
 
   // Handle successful task creation
   const handleSubmit = async () => {
-    if (newGoalTitle && newGoalTitle.trim()) {
+    if (newGoalTitle?.trim()) {
       try {
         // Store the current title in case we need to restore it after an error
         const currentTitle = newGoalTitle.trim();
@@ -57,10 +57,7 @@ export const AddTaskInput = ({
         // Show error toast
         toast({
           title: 'Failed to create task',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'An unexpected error occurred',
+          description: error instanceof Error ? error.message : 'An unexpected error occurred',
           variant: 'destructive',
         });
 
@@ -76,13 +73,12 @@ export const AddTaskInput = ({
   }, []);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control
     <div
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => {
         // we preserve the title if either the input is focused or the title is not empty
-        const isInputFocused = document.activeElement?.isEqualNode(
-          inputRef.current
-        );
+        const isInputFocused = document.activeElement?.isEqualNode(inputRef.current);
         if (!(isInputFocused || newGoalTitle)) {
           setIsVisible(false);
         }
@@ -91,9 +87,7 @@ export const AddTaskInput = ({
       <div
         className={cn(
           'transition-opacity duration-150',
-          isVisible
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
+          isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
       >
         <CreateGoalInput

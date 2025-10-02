@@ -1,3 +1,7 @@
+import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import type { ViewMode } from '@/components/molecules/focus/constants';
+import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -5,12 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
-import { ViewMode } from '@/components/molecules/focus/constants';
-import { DayOfWeek, getDayName } from '@/lib/constants';
+import { type DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 
 export type FocusMenuBarProps = {
   viewMode?: ViewMode;
@@ -52,9 +52,7 @@ export const FocusMenuBar = ({
   handlePreviewGoals,
 }: FocusMenuBarProps) => {
   // Generate years (current year - 1 to current year + 2)
-  const years = selectedYear
-    ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i)
-    : [];
+  const years = selectedYear ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i) : [];
 
   // Generate quarters
   const quarters = [1, 2, 3, 4];
@@ -75,62 +73,53 @@ export const FocusMenuBar = ({
   const tooltipContent = isFirstQuarter
     ? 'Cannot pull goals from previous quarter as this is the first quarter'
     : isMovingGoals
-    ? 'Moving goals...'
-    : "Can't pull from previous quarter";
+      ? 'Moving goals...'
+      : "Can't pull from previous quarter";
 
   return (
     <div className="bg-background p-3 border-b">
       <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
-        <div
-          id="focus-menu-bar"
-          className="flex items-center justify-center w-full"
-        >
+        <div id="focus-menu-bar" className="flex items-center justify-center w-full">
           <div className="flex items-center gap-4">
-            {showYearQuarterSelectors &&
-              selectedYear &&
-              selectedQuarter &&
-              onYearQuarterChange && (
-                <>
-                  <Select
-                    value={selectedYear.toString()}
-                    onValueChange={(value) =>
-                      onYearQuarterChange(parseInt(value), selectedQuarter)
-                    }
-                  >
-                    <SelectTrigger className="w-[80px]">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {showYearQuarterSelectors && selectedYear && selectedQuarter && onYearQuarterChange && (
+              <>
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) =>
+                    onYearQuarterChange(Number.parseInt(value), selectedQuarter)
+                  }
+                >
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  <Select
-                    value={selectedQuarter.toString()}
-                    onValueChange={(value) =>
-                      onYearQuarterChange(
-                        selectedYear,
-                        parseInt(value) as 1 | 2 | 3 | 4
-                      )
-                    }
-                  >
-                    <SelectTrigger className="w-[80px]">
-                      <SelectValue placeholder="Quarter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {quarters.map((quarter) => (
-                        <SelectItem key={quarter} value={quarter.toString()}>
-                          Q{quarter}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              )}
+                <Select
+                  value={selectedQuarter.toString()}
+                  onValueChange={(value) =>
+                    onYearQuarterChange(selectedYear, Number.parseInt(value) as 1 | 2 | 3 | 4)
+                  }
+                >
+                  <SelectTrigger className="w-[80px]">
+                    <SelectValue placeholder="Quarter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {quarters.map((quarter) => (
+                      <SelectItem key={quarter} value={quarter.toString()}>
+                        Q{quarter}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
 
             {showNavigationControls && onPrevious && onNext && (
               <div className="flex items-center gap-2 mr-2">
@@ -150,8 +139,8 @@ export const FocusMenuBar = ({
                   {viewMode === 'daily' && selectedDay
                     ? `${getDayName(selectedDay)}`
                     : viewMode === 'weekly' && selectedWeek
-                    ? `Week ${selectedWeek}`
-                    : ''}
+                      ? `Week ${selectedWeek}`
+                      : ''}
                 </span>
                 <Button
                   variant="ghost"
@@ -171,9 +160,7 @@ export const FocusMenuBar = ({
             <Select
               value={viewMode}
               onValueChange={
-                onViewModeChange
-                  ? (value) => onViewModeChange(value as ViewMode)
-                  : undefined
+                onViewModeChange ? (value) => onViewModeChange(value as ViewMode) : undefined
               }
             >
               <SelectTrigger className="w-[140px]">

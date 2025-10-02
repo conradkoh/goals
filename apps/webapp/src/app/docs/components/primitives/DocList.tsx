@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 interface DocListItemProps {
   children: React.ReactNode;
@@ -21,9 +21,7 @@ export function DocListItem({ children, variant = 'blue' }: DocListItemProps) {
   return (
     <li className="flex items-start gap-2">
       <div className={`rounded-full ${variantClasses[variant]} p-1 mt-0.5`}>
-        <div
-          className={`h-1.5 w-1.5 rounded-full ${dotClasses[variant]}`}
-        ></div>
+        <div className={`h-1.5 w-1.5 rounded-full ${dotClasses[variant]}`} />
       </div>
       <span className="text-slate-600">{children}</span>
     </li>

@@ -1,22 +1,14 @@
-import { FocusModeDailyViewDailyGoals } from "@/components/organisms/focus/FocusModeDailyViewDailyGoals";
-import {
-  WeekData,
-  WeekProviderWithoutDashboard,
-  useWeek,
-} from "@/hooks/useWeek";
-import { DayOfWeek } from "@/lib/constants";
-import { JumpToCurrentButton } from "@/components/molecules/focus/JumpToCurrentButton";
-import {
-  GoalStatusProvider,
-  useGoalStatus,
-} from "@/contexts/GoalStatusContext";
-import { OnFireGoalsSection } from "@/components/organisms/focus/OnFireGoalsSection";
-import { PendingGoalsSection } from "@/components/organisms/focus/PendingGoalsSection";
-import { TaskPullActionMenu } from "@/components/molecules/focus/TaskPullActionMenu";
-import { useCallback, useMemo, useState } from "react";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { useDashboard } from "@/hooks/useDashboard";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { useCallback, useMemo } from 'react';
+import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
+import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionMenu';
+import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
+import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
+import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
+import { GoalStatusProvider, useGoalStatus } from '@/contexts/GoalStatusContext';
+import { useWeek, type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import type { DayOfWeek } from '@/lib/constants';
 
 interface FocusModeDailyViewProps {
   year: number;
@@ -38,9 +30,8 @@ const FocusModeDailyViewInner = ({
   onJumpToCurrent,
   isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
-  const { fireGoals, toggleFireStatus, isOnFire } = useGoalStatus();
+  const { fireGoals } = useGoalStatus();
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
-  const { toggleFocusMode } = useDashboard();
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
   const preparedWeeklyGoalsForDay = useCallback(() => {
@@ -64,9 +55,7 @@ const FocusModeDailyViewInner = ({
         return !!weeklyGoal.parentId;
       })
       .map((weeklyGoal) => {
-        const parentQuarterlyGoal = quarterlyGoals.find(
-          (g) => g._id === weeklyGoal.parentId
-        );
+        const parentQuarterlyGoal = quarterlyGoals.find((g) => g._id === weeklyGoal.parentId);
         if (!parentQuarterlyGoal) {
           return null;
         }
@@ -94,7 +83,7 @@ const FocusModeDailyViewInner = ({
   }, [preparedWeeklyGoalsForDay]);
 
   // Determine if there are any fire goals to display
-  const hasFireGoals = useMemo(() => {
+  const _hasFireGoals = useMemo(() => {
     return fireGoals.size > 0;
   }, [fireGoals]);
 
@@ -103,20 +92,19 @@ const FocusModeDailyViewInner = ({
     if (fireGoals.size === 0) return false;
 
     // Check if any weekly goals are on fire
-    const hasOnFireWeeklyGoals = weeklyGoalsWithQuarterly.some(
-      ({ weeklyGoal }) => fireGoals.has(weeklyGoal._id.toString())
+    const hasOnFireWeeklyGoals = weeklyGoalsWithQuarterly.some(({ weeklyGoal }) =>
+      fireGoals.has(weeklyGoal._id.toString())
     );
 
     if (hasOnFireWeeklyGoals) return true;
 
     // Check if any daily goals for the selected day are on fire
-    const hasOnFireDailyGoals = weeklyGoalsWithQuarterly.some(
-      ({ weeklyGoal }) =>
-        weeklyGoal.children.some(
-          (dailyGoal) =>
-            dailyGoal.state?.daily?.dayOfWeek === selectedDayOfWeek &&
-            fireGoals.has(dailyGoal._id.toString())
-        )
+    const hasOnFireDailyGoals = weeklyGoalsWithQuarterly.some(({ weeklyGoal }) =>
+      weeklyGoal.children.some(
+        (dailyGoal) =>
+          dailyGoal.state?.daily?.dayOfWeek === selectedDayOfWeek &&
+          fireGoals.has(dailyGoal._id.toString())
+      )
     );
 
     return hasOnFireDailyGoals;
@@ -124,7 +112,7 @@ const FocusModeDailyViewInner = ({
 
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<"goals">, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
@@ -132,18 +120,18 @@ const FocusModeDailyViewInner = ({
           details,
         });
       } catch (error) {
-        console.error("Failed to update goal title:", error);
+        console.error('Failed to update goal title:', error);
       }
     },
     [updateQuarterlyGoalTitle]
   );
 
   const handleDeleteGoal = useCallback(
-    async (goalId: Id<"goals">) => {
+    async (goalId: Id<'goals'>) => {
       try {
         await deleteGoalOptimistic(goalId);
       } catch (error) {
-        console.error("Failed to delete goal:", error);
+        console.error('Failed to delete goal:', error);
       }
     },
     [deleteGoalOptimistic]
@@ -157,9 +145,7 @@ const FocusModeDailyViewInner = ({
 
   // Get current day data for the action menu
   const currentDay = useMemo(() => {
-    const currentDayData = weekData.days?.find(
-      (day) => day.dayOfWeek === selectedDayOfWeek
-    );
+    const currentDayData = weekData.days?.find((day) => day.dayOfWeek === selectedDayOfWeek);
     return currentDayData;
   }, [weekData.days, selectedDayOfWeek]);
 
@@ -191,7 +177,6 @@ const FocusModeDailyViewInner = ({
         onUpdateGoalTitle={handleUpdateGoalTitle}
         onDeleteGoal={handleDeleteGoal}
         isFocusModeEnabled={isFocusModeEnabled}
-        toggleFocusMode={toggleFocusMode}
       />
 
       <PendingGoalsSection
@@ -206,7 +191,6 @@ const FocusModeDailyViewInner = ({
           <FocusModeDailyViewDailyGoals
             weekNumber={weekNumber}
             year={year}
-            quarter={quarter}
             selectedDayOfWeek={selectedDayOfWeek}
           />
         </div>

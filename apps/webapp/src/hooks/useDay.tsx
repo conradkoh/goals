@@ -1,7 +1,7 @@
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { createContext, useContext, useMemo } from 'react';
+import type { DayOfWeekType } from '@/lib/constants';
 import { useWeek } from './useWeek';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 
 type DailyGoalsViewModel = {
   dayOfWeek: DayOfWeekType;
@@ -10,7 +10,7 @@ type DailyGoalsViewModel = {
   weeklyGoals: Array<{
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
-    dailyGoals: Array<GoalWithDetailsAndChildren>;
+    dailyGoals: GoalWithDetailsAndChildren[];
   }>;
 };
 
@@ -30,12 +30,7 @@ interface DayProviderProps {
   children: React.ReactNode;
 }
 
-export const DayProvider = ({
-  dayOfWeek,
-  date,
-  dateTimestamp,
-  children,
-}: DayProviderProps) => {
+export const DayProvider = ({ dayOfWeek, date, dateTimestamp, children }: DayProviderProps) => {
   const { quarterlyGoals } = useWeek();
 
   const dailyGoalsView = useMemo(() => {

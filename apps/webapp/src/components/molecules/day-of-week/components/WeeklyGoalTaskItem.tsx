@@ -1,36 +1,28 @@
-import React, { useCallback } from "react";
-import { Edit2 } from "lucide-react";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { GoalWithOptimisticStatus } from "@/hooks/useWeek";
-import { useWeek } from "@/hooks/useWeek";
-import { Checkbox } from "@/components/ui/checkbox";
-import { GoalEditPopover } from "@/components/atoms/GoalEditPopover";
-import { DeleteGoalIconButton } from "@/components/organisms/DeleteGoalIconButton";
-import { Spinner } from "@/components/ui/spinner";
-import { FireIcon } from "@/components/atoms/FireIcon";
-import { PendingIcon } from "@/components/atoms/PendingIcon";
-import { GoalDetailsPopover } from "@/components/molecules/goal-details";
-import { useFireGoalStatus } from "@/contexts/GoalStatusContext";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { Edit2 } from 'lucide-react';
+import { useCallback } from 'react';
+import { FireIcon } from '@/components/atoms/FireIcon';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Spinner } from '@/components/ui/spinner';
+import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
+import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 
 /**
  * Props for the weekly goal task item component.
  */
 export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
-  onUpdateTitle: (
-    goalId: Id<"goals">,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
 }
 
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
  */
-export const WeeklyGoalTaskItem = ({
-  goal,
-  onUpdateTitle,
-}: WeeklyGoalTaskItemProps) => {
+export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemProps) => {
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.isComplete;
@@ -53,13 +45,7 @@ export const WeeklyGoalTaskItem = ({
         toggleFireStatus(goal._id);
       }
     },
-    [
-      toggleGoalCompletion,
-      goal._id,
-      currentWeekNumber,
-      isOnFire,
-      toggleFireStatus,
-    ]
+    [toggleGoalCompletion, goal._id, currentWeekNumber, isOnFire, toggleFireStatus]
   );
 
   /**
@@ -76,7 +62,7 @@ export const WeeklyGoalTaskItem = ({
    * Handles checkbox change events for goal completion.
    */
   const _handleCheckboxChange = useCallback(
-    (checked: boolean | "indeterminate") => {
+    (checked: boolean | 'indeterminate') => {
       _handleToggleCompletion(checked === true);
     },
     [_handleToggleCompletion]
@@ -111,15 +97,15 @@ export const WeeklyGoalTaskItem = ({
                   details={goal.details}
                   onSave={_handleUpdateTitle}
                   trigger={
-                    <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                    <button
+                      type="button"
+                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+                    >
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
                   }
                 />
-                <DeleteGoalIconButton
-                  requireConfirmation={false}
-                  goalId={goal._id}
-                />
+                <DeleteGoalIconButton requireConfirmation={false} goalId={goal._id} />
               </>
             )}
           </div>

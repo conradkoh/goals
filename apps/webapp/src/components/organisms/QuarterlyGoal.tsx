@@ -1,44 +1,25 @@
-import { Button } from '@/components/ui/button';
-import { SafeHTML } from '@/components/ui/safe-html';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2 } from 'lucide-react';
+import { useCallback } from 'react';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Check, Edit2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { GoalStarPin, GoalStarPinContainer } from '../atoms/GoalStarPin';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useWeek } from '@/hooks/useWeek';
-import {
-  GoalDetailsContent,
-  GoalDetailsPopover,
-} from '@/components/molecules/goal-details';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
-  onToggleStatus: (
-    goalId: Id<'goals'>,
-    isStarred: boolean,
-    isPinned: boolean
-  ) => Promise<void>;
-  onUpdateTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onToggleStatus: (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => Promise<void>;
+  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
 }
 
-export function QuarterlyGoal({
-  goal,
-  onToggleStatus,
-  onUpdateTitle,
-}: QuarterlyGoalProps) {
+export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: QuarterlyGoalProps) {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isComplete = goal.isComplete;
   const isAllWeeklyGoalsComplete =
-    goal.children.length > 0 &&
-    goal.children.every((child) => child.isComplete);
+    goal.children.length > 0 && goal.children.every((child) => child.isComplete);
 
   const handleToggleStar = useCallback(() => {
     onToggleStatus(
@@ -76,54 +57,55 @@ export function QuarterlyGoal({
   );
 
   return (
-    <>
-      <div
-        className={cn(
-          'group px-2 py-1 rounded-sm',
-          isComplete
-            ? 'bg-green-50'
-            : isAllWeeklyGoalsComplete
+    <div
+      className={cn(
+        'group px-2 py-1 rounded-sm',
+        isComplete
+          ? 'bg-green-50'
+          : isAllWeeklyGoalsComplete
             ? 'bg-green-50/50'
             : 'hover:bg-gray-50'
-        )}
-      >
-        <div className="flex items-center gap-2 group/title">
-          <GoalStarPinContainer>
-            <GoalStarPin
-              value={{
-                isStarred: goal.state?.isStarred || false,
-                isPinned: goal.state?.isPinned || false,
-              }}
-              onStarred={handleToggleStar}
-              onPinned={handleTogglePin}
-            />
-          </GoalStarPinContainer>
-
-          {/* View Mode */}
-          <GoalDetailsPopover
-            goal={goal}
-            onSave={handleSaveTitle}
-            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-            titleClassName="text-gray-600 flex items-center"
-            onToggleComplete={handleToggleCompletion}
+      )}
+    >
+      <div className="flex items-center gap-2 group/title">
+        <GoalStarPinContainer>
+          <GoalStarPin
+            value={{
+              isStarred: goal.state?.isStarred || false,
+              isPinned: goal.state?.isPinned || false,
+            }}
+            onStarred={handleToggleStar}
+            onPinned={handleTogglePin}
           />
+        </GoalStarPinContainer>
 
-          {/* Edit Mode */}
-          <GoalEditPopover
-            title={goal.title}
-            details={goal.details || ''}
-            onSave={handleSaveTitle}
-            trigger={
-              <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
-                <Edit2 className="h-3.5 w-3.5" />
-              </button>
-            }
-          />
+        {/* View Mode */}
+        <GoalDetailsPopover
+          goal={goal}
+          onSave={handleSaveTitle}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          titleClassName="text-gray-600 flex items-center"
+          onToggleComplete={handleToggleCompletion}
+        />
 
-          {/* Delete Button */}
-          <DeleteGoalIconButton goalId={goal._id} requireConfirmation={true} />
-        </div>
+        {/* Edit Mode */}
+        <GoalEditPopover
+          title={goal.title}
+          details={goal.details || ''}
+          onSave={handleSaveTitle}
+          trigger={
+            <button
+              type="button"
+              className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          }
+        />
+
+        {/* Delete Button */}
+        <DeleteGoalIconButton goalId={goal._id} requireConfirmation={true} />
       </div>
-    </>
+    </div>
   );
 }

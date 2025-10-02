@@ -221,7 +221,9 @@ export const WeekCardPreviewDialog = ({
                         <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
                         <p className="text-sm">
                           Daily goals will be consolidated to{' '}
-                          <span className="font-medium">{getDayName(consolidationDay!)}</span>
+                          <span className="font-medium">
+                            {consolidationDay ? getDayName(consolidationDay) : 'the selected day'}
+                          </span>
                         </p>
                       </>
                     ) : (

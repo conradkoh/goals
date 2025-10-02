@@ -1,5 +1,5 @@
-import { DateTime } from 'luxon';
-import { getQuarterDateRange, getFinalWeeksOfQuarter } from './';
+import type { DateTime } from 'luxon';
+import { getFinalWeeksOfQuarter } from './';
 
 /**
  * Debug utility to test date calculations for a specific date

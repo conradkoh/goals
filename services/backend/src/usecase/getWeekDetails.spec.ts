@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
-import { Id } from '../../convex/_generated/dataModel';
+import { describe, expect, it } from 'vitest';
+import type { Id } from '../../convex/_generated/dataModel';
 
 // Import the buildGoalTree function
 // Since it's not exported, we'll need to test through getWeekDetails
 // Let's create a test-only export of buildGoalTree
 import { buildGoalTree } from './getWeekDetails';
+
 describe('buildGoalTree', () => {
   it('should build a tree with quarterly and weekly goals', () => {
     const goals = [
@@ -45,7 +46,7 @@ describe('buildGoalTree', () => {
       },
     ];
 
-    const { tree, index } = buildGoalTree(goals, (n) => ({
+    const { tree } = buildGoalTree(goals, (n) => ({
       ...n,
       state: undefined,
     }));
@@ -167,8 +168,6 @@ describe('buildGoalTree', () => {
         ...n,
         state: undefined,
       }))
-    ).toThrow(
-      'depth 1 goal has deleted parent. node id: weekly1 | parent id: nonexistent'
-    );
+    ).toThrow('depth 1 goal has deleted parent. node id: weekly1 | parent id: nonexistent');
   });
 });

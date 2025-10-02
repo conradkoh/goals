@@ -1,39 +1,30 @@
-import { useDailyGoal } from "@/hooks/useDailyGoal";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { useWeek } from "@/hooks/useWeek";
-import { Checkbox } from "@/components/ui/checkbox";
-
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Edit2 } from 'lucide-react';
+import { FireIcon } from '@/components/atoms/FireIcon';
+import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-
-import { Edit2 } from "lucide-react";
-import { GoalEditPopover } from "../atoms/GoalEditPopover";
-import { DeleteGoalIconButton } from "./DeleteGoalIconButton";
-import { DayOfWeek, DayOfWeekType, getDayName } from "@/lib/constants";
-import { Spinner } from "@/components/ui/spinner";
-import { isOptimisticId } from "@/hooks/useOptimistic";
-import { FireIcon } from "@/components/atoms/FireIcon";
-import { PendingIcon } from "@/components/atoms/PendingIcon";
-import { GoalDetailsPopover } from "@/components/molecules/goal-details";
-import {
-  useFireGoalStatus,
-  usePendingGoalStatus,
-} from "@/contexts/GoalStatusContext";
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { useFireGoalStatus, usePendingGoalStatus } from '@/contexts/GoalStatusContext';
+import { useDailyGoal } from '@/hooks/useDailyGoal';
+import { isOptimisticId } from '@/hooks/useOptimistic';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
+import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (
-    goalId: Id<"goals">,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDelete: (goalId: Id<"goals">) => void;
+  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onDelete: (goalId: Id<'goals'>) => void;
   inSidebar?: boolean;
   className?: string;
 }
@@ -48,9 +39,7 @@ export const DailyGoalTaskItem = ({
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const { isComplete = goal.isComplete } = goal;
   const isOptimistic = isOptimisticId(goal._id);
-  const currentDayOfWeek = goal.state?.daily?.dayOfWeek as
-    | DayOfWeekType
-    | undefined;
+  const currentDayOfWeek = goal.state?.daily?.dayOfWeek as DayOfWeekType | undefined;
 
   // Use the custom hook for fire goal status
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
@@ -120,7 +109,7 @@ export const DailyGoalTaskItem = ({
               <Select
                 value={currentDayOfWeek?.toString()}
                 onValueChange={(value) =>
-                  handleMoveToDayOfWeek(parseInt(value) as DayOfWeekType)
+                  handleMoveToDayOfWeek(Number.parseInt(value) as DayOfWeekType)
                 }
               >
                 <SelectTrigger className="h-8 text-xs">
@@ -156,15 +145,15 @@ export const DailyGoalTaskItem = ({
                   await onUpdateTitle(goal._id, newTitle, newDetails);
                 }}
                 trigger={
-                  <button className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground">
+                  <button
+                    type="button"
+                    className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+                  >
                     <Edit2 className="h-3.5 w-3.5" />
                   </button>
                 }
               />
-              <DeleteGoalIconButton
-                requireConfirmation={false}
-                goalId={goal._id}
-              />
+              <DeleteGoalIconButton requireConfirmation={false} goalId={goal._id} />
             </>
           )}
         </div>

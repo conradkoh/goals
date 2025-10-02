@@ -1,8 +1,6 @@
 import { ConvexError, v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { api, internal } from './_generated/api';
 import { mutation, query } from './_generated/server';
-import { getUser } from './auth';
 
 const ErrorCode = {
   VALIDATION_ERROR: 'VALIDATION_ERROR',

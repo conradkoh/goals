@@ -1,15 +1,11 @@
+import { Edit2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
-import { Edit2 } from 'lucide-react';
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 
 interface GoalEditPopoverProps {
   title: string;
@@ -65,10 +61,7 @@ export function GoalEditPopover({
       // Show error toast with retry option
       toast({
         title: 'Failed to save goal',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
         variant: 'destructive',
         action: (
           <Button
@@ -76,9 +69,7 @@ export function GoalEditPopover({
             size="sm"
             onClick={() => {
               // Try again with the same data
-              onSave(title.trim(), details).catch((e) =>
-                console.error('Retry failed:', e)
-              );
+              onSave(title.trim(), details).catch((e) => console.error('Retry failed:', e));
             }}
           >
             Retry
@@ -132,10 +123,7 @@ export function GoalEditPopover({
         onKeyDown={handleFormShortcut}
       >
         <div className="space-y-2">
-          <label
-            htmlFor="title"
-            className="text-sm font-medium text-muted-foreground"
-          >
+          <label htmlFor="title" className="text-sm font-medium text-muted-foreground">
             Title
           </label>
           <Input
@@ -148,10 +136,7 @@ export function GoalEditPopover({
           />
         </div>
         <div className="space-y-2">
-          <label
-            htmlFor="details"
-            className="text-sm font-medium text-muted-foreground"
-          >
+          <label htmlFor="details" className="text-sm font-medium text-muted-foreground">
             Details
           </label>
           <RichTextEditor
@@ -162,11 +147,7 @@ export function GoalEditPopover({
           />
         </div>
         <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={isSubmitting || !title.trim()}>

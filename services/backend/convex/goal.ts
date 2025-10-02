@@ -9,9 +9,7 @@ import {
   debugQuarterCalculations,
   getFinalWeeksOfQuarter,
   getFirstWeekOfQuarter,
-  getQuarterDateRange,
   getQuarterWeeks,
-  isInFinalWeeks,
 } from '../src/usecase/quarter';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { getNextPath, joinPath } from '../src/util/path';
@@ -366,6 +364,7 @@ export const deleteGoal = mutation({
           acc[state.goalId].push(state);
           return acc;
         },
+        // biome-ignore lint/suspicious/noExplicitAny: Dynamic goal state types from database
         {} as Record<Id<'goals'>, any[]>
       );
 
@@ -401,6 +400,7 @@ export const deleteGoal = mutation({
 // Helper function to build a tree of goals for preview
 function buildGoalTreeForPreview(
   goals: Doc<'goals'>[],
+  // biome-ignore lint/suspicious/noExplicitAny: Dynamic goal state types from database
   goalStatesByGoalId: Record<Id<'goals'>, any[]> = {}
 ) {
   const roots: GoalPreviewNode[] = [];
@@ -498,7 +498,7 @@ export const cleanupOrphanedGoalStatesForUser = internalMutation({
     const existingGoals = await Promise.all(uniqueGoalIds.map((id) => ctx.db.get(id)));
 
     // Create a set of existing goal IDs for quick lookup
-    const existingGoalIds = new Set(existingGoals.filter(Boolean).map((goal) => goal!._id));
+    const existingGoalIds = new Set(existingGoals.filter(Boolean).map((goal) => goal?._id));
 
     // Find orphaned goal states (where the goal doesn't exist)
     const orphanedStates = goalStates.filter((state) => !existingGoalIds.has(state.goalId));
@@ -558,6 +558,7 @@ export const moveGoalsFromQuarter = action({
     dryRun: v.optional(v.boolean()),
     debug: v.optional(v.boolean()),
   },
+  // biome-ignore lint/suspicious/noExplicitAny: Complex return type varies based on dryRun flag
   handler: async (ctx, args): Promise<any> => {
     const { sessionId, from, to, dryRun = false, debug = false } = args;
     // Auth check
@@ -861,7 +862,7 @@ export const moveQuarterlyGoal = mutation({
       .filter((q) => q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
       .collect();
     // Create a map of goalId -> latest state to handle any duplicates
-    const latestStateByGoalId = weeklyGoalStates.reduce(
+    const _latestStateByGoalId = weeklyGoalStates.reduce(
       (acc, state) => {
         const existing = acc[state.goalId];
         if (!existing || existing._creationTime < state._creationTime) {

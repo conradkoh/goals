@@ -1,9 +1,9 @@
 'use client';
-import React, { useEffect } from 'react';
-import { DashboardFocusView } from '../../../components/organisms/DashboardFocusView';
-import { useDashboard } from '@/hooks/useDashboard';
 import { useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useScreenSize } from '@/hooks/useScreenSize';
+import { DashboardFocusView } from '../../../components/organisms/DashboardFocusView';
 
 const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
@@ -34,10 +34,7 @@ const QuarterOverviewPage = () => {
     }
 
     // Set default week if in weekly/daily mode and week not set
-    if (
-      (viewMode === 'weekly' || viewMode === 'daily') &&
-      !searchParams.get('week')
-    ) {
+    if ((viewMode === 'weekly' || viewMode === 'daily') && !searchParams.get('week')) {
       params.week = currentWeekNumber.toString();
       shouldUpdateUrl = true;
     }
@@ -51,14 +48,7 @@ const QuarterOverviewPage = () => {
     if (shouldUpdateUrl) {
       updateUrlParams(params);
     }
-  }, [
-    isMobile,
-    searchParams,
-    viewMode,
-    currentWeekNumber,
-    selectedDayOfWeek,
-    updateUrlParams,
-  ]);
+  }, [isMobile, searchParams, viewMode, currentWeekNumber, selectedDayOfWeek, updateUrlParams]);
 
   return (
     <div className="flex flex-col h-full">

@@ -1,10 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { api } from '@services/backend/convex/_generated/api';
+import { useMutation, useQuery } from 'convex/react';
+import { Check, Copy, Laptop } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,14 +12,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Laptop, Copy, Check } from 'lucide-react';
-import { api } from '@services/backend/convex/_generated/api';
-import { useMutation, useQuery } from 'convex/react';
-import { useSession } from '@/modules/auth/useSession';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { parseConvexError, errorTitles } from '@/lib/error';
+import { useToast } from '@/components/ui/use-toast';
+import { errorTitles, parseConvexError } from '@/lib/error';
+import { useSession } from '@/modules/auth/useSession';
 
 export function SyncPassphrase() {
   const { sessionId } = useSession();
@@ -36,9 +32,14 @@ export function SyncPassphrase() {
 
   const createSyncSession = useMutation(api.sync.createSyncSession);
   const validatePassphrase = useMutation(api.sync.validatePassphrase);
-  const currentSyncSession = useQuery(api.sync.getCurrentSyncSession, {
-    sessionId: sessionId!,
-  });
+  const currentSyncSession = useQuery(
+    api.sync.getCurrentSyncSession,
+    sessionId
+      ? {
+          sessionId,
+        }
+      : 'skip'
+  );
 
   // Create initial sync session when component mounts or when current session is null/consumed
   useEffect(() => {
@@ -54,15 +55,12 @@ export function SyncPassphrase() {
   // Reset copy state when passphrase changes
   useEffect(() => {
     setHasCopied(false);
-  }, [currentSyncSession?.passphrase]);
+  }, []);
 
   // Calculate initial time left when sync session changes
   useEffect(() => {
     if (currentSyncSession?.expiresAt) {
-      const remaining = Math.max(
-        0,
-        Math.floor((currentSyncSession.expiresAt - Date.now()) / 1000)
-      );
+      const remaining = Math.max(0, Math.floor((currentSyncSession.expiresAt - Date.now()) / 1000));
       setTimeLeft(remaining);
     }
   }, [currentSyncSession?.expiresAt]);
@@ -79,9 +77,7 @@ export function SyncPassphrase() {
             });
           }
           return Math.floor(
-            currentSyncSession?.durationMs
-              ? currentSyncSession.durationMs / 1000
-              : 60
+            currentSyncSession?.durationMs ? currentSyncSession.durationMs / 1000 : 60
           );
         }
         return prev - 1;
@@ -131,7 +127,7 @@ export function SyncPassphrase() {
         title: 'Copied!',
         description: 'Sync code copied to clipboard',
       });
-    } catch (err) {
+    } catch (_err) {
       toast({
         variant: 'destructive',
         title: 'Failed to copy',
@@ -157,7 +153,10 @@ export function SyncPassphrase() {
     <>
       <Popover>
         <PopoverTrigger asChild>
-          <button className="relative flex w-full items-center px-4 py-2 text-sm hover:bg-muted">
+          <button
+            type="button"
+            className="relative flex w-full items-center px-4 py-2 text-sm hover:bg-muted"
+          >
             <Laptop className="mr-2 h-4 w-4" />
             <span>Sync Device</span>
           </button>
@@ -167,8 +166,7 @@ export function SyncPassphrase() {
             <div>
               <h4 className="font-medium mb-1">Sync Code</h4>
               <p className="text-sm text-muted-foreground">
-                Use this code to sync with another device. The code refreshes
-                every minute.
+                Use this code to sync with another device. The code refreshes every minute.
               </p>
             </div>
             <div className="space-y-2">
@@ -184,6 +182,7 @@ export function SyncPassphrase() {
               ) : (
                 <>
                   <button
+                    type="button"
                     onClick={handleCopy}
                     className="w-full bg-muted hover:bg-muted/80 p-3 rounded-md text-left relative group transition-colors"
                   >
@@ -231,10 +230,7 @@ export function SyncPassphrase() {
                     }
                   }}
                 />
-                <Button
-                  onClick={() => handleSyncAttempt(syncCode)}
-                  disabled={!syncCode}
-                >
+                <Button onClick={() => handleSyncAttempt(syncCode)} disabled={!syncCode}>
                   Sync
                 </Button>
               </div>
@@ -248,16 +244,14 @@ export function SyncPassphrase() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Session Sync</AlertDialogTitle>
             <AlertDialogDescription>
-              Warning: Syncing with another device will replace your current
-              session. Any unsaved changes or data in your current session will
-              be lost. Are you sure you want to continue?
+              Warning: Syncing with another device will replace your current session. Any unsaved
+              changes or data in your current session will be lost. Are you sure you want to
+              continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSync}>
-              Continue
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmSync}>Continue</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

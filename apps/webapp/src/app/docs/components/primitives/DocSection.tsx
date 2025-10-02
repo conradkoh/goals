@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 interface DocSectionProps {
   title: string;
@@ -7,12 +7,7 @@ interface DocSectionProps {
   variant?: 'primary' | 'secondary' | 'neutral';
 }
 
-export function DocSection({
-  title,
-  icon,
-  children,
-  variant = 'primary',
-}: DocSectionProps) {
+export function DocSection({ title, icon, children, variant = 'primary' }: DocSectionProps) {
   const headerVariants = {
     primary: 'bg-blue-600',
     secondary: 'bg-indigo-600',

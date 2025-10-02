@@ -1,6 +1,5 @@
 import { ConvexError, v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 
 /**

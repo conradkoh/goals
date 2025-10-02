@@ -1,15 +1,15 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { useDashboard } from '@/hooks/useDashboard';
+import React, { useCallback, useMemo } from 'react';
+import type { ViewMode } from '@/components/molecules/focus/constants';
+import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
+import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
+import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
-import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
-import { ViewMode } from '@/components/molecules/focus/constants';
-import { useWeekWithoutDashboard } from '@/hooks/useWeek';
-import { DayOfWeek } from '@/lib/constants';
-import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
-import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
-import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { useWeekWithoutDashboard } from '@/hooks/useWeek';
+import type { DayOfWeek } from '@/lib/constants';
 
 interface DashboardFocusViewProps {
   viewMode: ViewMode;
@@ -41,10 +41,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     handleDayNavigation,
     isFocusModeEnabled,
   } = useDashboard();
-  const { currentWeekNumber } = useQuarterWeekInfo(
-    selectedYear,
-    selectedQuarter as 1 | 2 | 3 | 4
-  );
+  useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
 
   // Use the hook for the "Pull from previous quarter" functionality
   const {
@@ -70,7 +67,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   // When year or quarter changes, force a re-render
   React.useEffect(() => {
     setForceRender((prev) => prev + 1);
-  }, [selectedYear, selectedQuarter]);
+  }, []);
 
   // Create unique keys for view components to force re-renders when year/quarter change
   const quarterlyViewKey = useMemo(
@@ -79,21 +76,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   );
 
   const weeklyViewKey = useMemo(
-    () =>
-      `weekly-${selectedYear}-${selectedQuarter}-${selectedWeekNumber}-${forceRender}`,
+    () => `weekly-${selectedYear}-${selectedQuarter}-${selectedWeekNumber}-${forceRender}`,
     [selectedYear, selectedQuarter, selectedWeekNumber, forceRender]
   );
 
   const dailyViewKey = useMemo(
     () =>
       `daily-${selectedYear}-${selectedQuarter}-${selectedWeekNumber}-${selectedDayOfWeek}-${forceRender}`,
-    [
-      selectedYear,
-      selectedQuarter,
-      selectedWeekNumber,
-      selectedDayOfWeek,
-      forceRender,
-    ]
+    [selectedYear, selectedQuarter, selectedWeekNumber, selectedDayOfWeek, forceRender]
   );
 
   const handleJumpToCurrentDay = useCallback(
@@ -135,18 +125,12 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
       <div className="w-full h-full">
         {viewMode === 'quarterly' && (
           <div key={quarterlyViewKey}>
-            <FocusModeQuarterlyView
-              year={selectedYear}
-              quarter={selectedQuarter}
-            />
+            <FocusModeQuarterlyView year={selectedYear} quarter={selectedQuarter} />
           </div>
         )}
 
         {viewMode === 'weekly' && weekData && (
-          <div
-            className="w-full h-full md:max-w-4xl mx-auto"
-            key={weeklyViewKey}
-          >
+          <div className="w-full h-full md:max-w-4xl mx-auto" key={weeklyViewKey}>
             <FocusModeWeeklyView
               weekNumber={selectedWeekNumber}
               year={selectedYear}
@@ -158,10 +142,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
         )}
 
         {viewMode === 'daily' && weekData && (
-          <div
-            className="w-full h-full md:max-w-4xl mx-auto"
-            key={dailyViewKey}
-          >
+          <div className="w-full h-full md:max-w-4xl mx-auto" key={dailyViewKey}>
             <FocusModeDailyView
               weekNumber={selectedWeekNumber}
               year={selectedYear}

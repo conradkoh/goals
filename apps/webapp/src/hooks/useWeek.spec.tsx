@@ -1,11 +1,11 @@
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 
 // Mock for Vitest functionality
-const describe = (name: string, fn: () => void) => fn();
-const it = (name: string, fn: () => void) => fn();
-const expect = (value: any) => ({
-  toBe: (expected: any) => {
+const describe = (_name: string, fn: () => void) => fn();
+const it = (_name: string, fn: () => void) => fn();
+const expect = (value: unknown) => ({
+  toBe: (expected: unknown) => {
     if (value !== expected) {
       console.error(`Expected ${value} to be ${expected}`);
     }
@@ -194,10 +194,7 @@ describe('useWeek', () => {
       const baseQuarterlyGoals = goalsList.filter((goal) => goal.depth === 0);
 
       // Create a map of quarterly goals by ID for faster lookup
-      const quarterlyGoalsMap = new Map<
-        Id<'goals'>,
-        GoalWithDetailsAndChildren
-      >(
+      const quarterlyGoalsMap = new Map<Id<'goals'>, GoalWithDetailsAndChildren>(
         baseQuarterlyGoals.map((goal) => [goal._id, { ...goal, children: [] }])
       );
 

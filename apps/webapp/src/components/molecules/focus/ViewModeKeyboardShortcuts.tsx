@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ViewMode } from '@/components/molecules/focus/constants';
+import type { ViewMode } from '@/components/molecules/focus/constants';
 
 interface ViewModeKeyboardShortcutsProps {
   onViewModeChange: (viewMode: ViewMode) => void;

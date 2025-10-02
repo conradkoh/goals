@@ -1,14 +1,14 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { AlertCircle, Pin, Star } from 'lucide-react';
+import { DateTime } from 'luxon';
 import React from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
-import { WeekSection } from './WeekSection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Star, Pin } from 'lucide-react';
+import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { cn } from '@/lib/utils';
-import { DateTime } from 'luxon';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { WeekSection } from './WeekSection';
 
 /**
  * Props for the QuarterlyGoalSummaryView component.
@@ -51,9 +51,10 @@ function QuarterlyGoalSummaryViewSkeleton() {
         <Skeleton className="h-4 w-1/2" />
         <Skeleton className="h-16 w-full" />
       </div>
-      
+
       {/* Weekly sections skeleton */}
       {Array.from({ length: 3 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loading items don't need unique keys
         <div key={i} className="border rounded-lg p-4 space-y-3">
           <Skeleton className="h-6 w-1/3" />
           <Skeleton className="h-4 w-full" />
@@ -84,7 +85,7 @@ export function QuarterlyGoalSummaryView({
     quarter,
   });
 
-  const { quarterlyGoal, weeklyGoalsByWeek, weekRange } = summaryData || {};
+  const { quarterlyGoal, weeklyGoalsByWeek } = summaryData || {};
   const isComplete = quarterlyGoal?.isComplete;
   const isStarred = quarterlyGoal?.state?.isStarred || false;
   const isPinned = quarterlyGoal?.state?.isPinned || false;
@@ -99,20 +100,21 @@ export function QuarterlyGoalSummaryView({
   // Group weekly goals by week number and sort weeks
   const weeksByNumber = React.useMemo(() => {
     if (!weeklyGoalsByWeek) return [];
-    
+
+    // biome-ignore lint/suspicious/noExplicitAny: weekly goal shape varies by backend response
     const weekMap: Record<number, any[]> = {};
-    
+
     Object.entries(weeklyGoalsByWeek).forEach(([weekNum, goals]) => {
       const weekNumber = Number(weekNum);
       if (goals && goals.length > 0) {
         weekMap[weekNumber] = goals;
       }
     });
-    
+
     return Object.keys(weekMap)
       .map(Number)
       .sort((a, b) => a - b)
-      .map(weekNum => ({
+      .map((weekNum) => ({
         weekNumber: weekNum,
         weeklyGoals: weekMap[weekNum],
       }));
@@ -122,24 +124,28 @@ export function QuarterlyGoalSummaryView({
   const totalWeeklyGoals = React.useMemo(() => {
     return Object.values(weeklyGoalsByWeek || {}).flat().length;
   }, [weeklyGoalsByWeek]);
-  
+
   const completedWeeklyGoals = React.useMemo(() => {
     return Object.values(weeklyGoalsByWeek || {})
       .flat()
-      .filter(goal => goal.isComplete).length;
+      .filter((goal) => goal.isComplete).length;
   }, [weeklyGoalsByWeek]);
-  
+
   const totalDailyGoals = React.useMemo(() => {
     return Object.values(weeklyGoalsByWeek || {})
       .flat()
       .reduce((sum, weeklyGoal) => sum + (weeklyGoal.children?.length || 0), 0);
   }, [weeklyGoalsByWeek]);
-  
+
   const completedDailyGoals = React.useMemo(() => {
     return Object.values(weeklyGoalsByWeek || {})
       .flat()
       .reduce((sum, weeklyGoal) => {
-        return sum + (weeklyGoal.children?.filter((daily: typeof weeklyGoal.children[0]) => daily.isComplete).length || 0);
+        return (
+          sum +
+          (weeklyGoal.children?.filter((daily: (typeof weeklyGoal.children)[0]) => daily.isComplete)
+            .length || 0)
+        );
       }, 0);
   }, [weeklyGoalsByWeek]);
 
@@ -156,9 +162,7 @@ export function QuarterlyGoalSummaryView({
       <div className={className}>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error || 'Failed to load quarterly goal summary'}
-          </AlertDescription>
+          <AlertDescription>{error || 'Failed to load quarterly goal summary'}</AlertDescription>
         </Alert>
       </div>
     );
@@ -169,12 +173,8 @@ export function QuarterlyGoalSummaryView({
       {/* Quarterly Goal Header */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
         <div className="flex items-start gap-4 mb-4">
-          <Checkbox
-            checked={isComplete}
-            disabled
-            className="mt-1 flex-shrink-0"
-          />
-          
+          <Checkbox checked={isComplete} disabled className="mt-1 flex-shrink-0" />
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
@@ -193,7 +193,7 @@ export function QuarterlyGoalSummaryView({
                 </div>
               )}
             </div>
-            
+
             <h1
               className={cn(
                 'text-2xl font-bold text-gray-900 mb-2 leading-tight',
@@ -202,19 +202,17 @@ export function QuarterlyGoalSummaryView({
             >
               {quarterlyGoal?.title}
             </h1>
-            
+
             {completedDate && (
               <div className="text-sm text-green-600 font-medium mb-2">
                 Completed on {completedDate}
               </div>
             )}
-            
+
             {quarterlyGoal?.details && (
               <div
-                className={cn(
-                  'text-gray-700 leading-relaxed',
-                  isComplete && 'text-gray-500'
-                )}
+                className={cn('text-gray-700 leading-relaxed', isComplete && 'text-gray-500')}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                 dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
               />
             )}
@@ -236,14 +234,17 @@ export function QuarterlyGoalSummaryView({
             <div className="text-xs text-indigo-600">Daily Goals</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-700">
-              {weeksByNumber.length}
-            </div>
+            <div className="text-2xl font-bold text-purple-700">{weeksByNumber.length}</div>
             <div className="text-xs text-purple-600">Active Weeks</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-700">
-              {Math.round(((completedWeeklyGoals + completedDailyGoals) / (totalWeeklyGoals + totalDailyGoals)) * 100) || 0}%
+              {Math.round(
+                ((completedWeeklyGoals + completedDailyGoals) /
+                  (totalWeeklyGoals + totalDailyGoals)) *
+                  100
+              ) || 0}
+              %
             </div>
             <div className="text-xs text-green-600">Completion</div>
           </div>
@@ -256,7 +257,7 @@ export function QuarterlyGoalSummaryView({
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Weekly Goals ({totalWeeklyGoals})
           </h2>
-          
+
           {weeksByNumber.map(({ weekNumber, weeklyGoals }) => (
             <WeekSection
               key={weekNumber}
@@ -278,4 +279,4 @@ export function QuarterlyGoalSummaryView({
       )}
     </div>
   );
-} 
+}

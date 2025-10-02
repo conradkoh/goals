@@ -1,31 +1,20 @@
 'use client';
 
 import {
-  Download,
-  Monitor,
   Apple,
   Command,
-  Bell,
-  RefreshCw,
-  Save,
-  Laptop,
+  Download,
   Globe,
-  Rocket,
-  Smartphone,
-  Share2,
-  Plus,
   Home,
+  Laptop,
+  Plus,
+  Rocket,
+  Share2,
+  Smartphone,
 } from 'lucide-react';
-import {
-  DocHeader,
-  DocSection,
-  DocInfoCard,
-  DocFeatureCard,
-  DocList,
-  DocListItem,
-} from '../components/primitives';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useEffect, useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DocHeader, DocInfoCard, DocList, DocListItem, DocSection } from '../components/primitives';
 
 export default function InstallationGuidePage() {
   const [platform, setPlatform] = useState<'macos' | 'ios'>('macos');
@@ -33,11 +22,7 @@ export default function InstallationGuidePage() {
   useEffect(() => {
     // Detect platform based on user agent
     const userAgent = navigator.userAgent.toLowerCase();
-    if (
-      userAgent.includes('iphone') ||
-      userAgent.includes('ipad') ||
-      userAgent.includes('ipod')
-    ) {
+    if (userAgent.includes('iphone') || userAgent.includes('ipad') || userAgent.includes('ipod')) {
       setPlatform('ios');
     } else if (userAgent.includes('mac')) {
       setPlatform('macos');
@@ -78,13 +63,9 @@ export default function InstallationGuidePage() {
             variant="primary"
           >
             <DocList>
-              <DocListItem variant="blue">
-                macOS 11 (Big Sur) or newer
-              </DocListItem>
+              <DocListItem variant="blue">macOS 11 (Big Sur) or newer</DocListItem>
               <DocListItem variant="blue">Safari 14 or newer</DocListItem>
-              <DocListItem variant="blue">
-                Raycast (optional, for hotkey access)
-              </DocListItem>
+              <DocListItem variant="blue">Raycast (optional, for hotkey access)</DocListItem>
               <DocListItem variant="blue">
                 Internet connection for initial setup and syncing
               </DocListItem>
@@ -98,8 +79,7 @@ export default function InstallationGuidePage() {
           >
             <div className="space-y-6">
               <p className="text-slate-700">
-                Follow these steps to install Goals as a Progressive Web App
-                (PWA) using Safari:
+                Follow these steps to install Goals as a Progressive Web App (PWA) using Safari:
               </p>
 
               <div className="space-y-4">
@@ -116,8 +96,8 @@ export default function InstallationGuidePage() {
                   </p>
                   <DocInfoCard variant="note">
                     <p>
-                      Make sure you're using Safari browser, as it provides the
-                      best installation experience on macOS.
+                      Make sure you're using Safari browser, as it provides the best installation
+                      experience on macOS.
                     </p>
                   </DocInfoCard>
                 </div>
@@ -128,24 +108,19 @@ export default function InstallationGuidePage() {
                     Step 2: Add to Dock
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">
-                      To add Goals to your dock:
-                    </p>
+                    <p className="text-sm text-slate-600">To add Goals to your dock:</p>
                     <DocList>
                       <DocListItem variant="blue">
-                        Click on the "Share" button in Safari's toolbar (square
-                        with arrow pointing up)
+                        Click on the "Share" button in Safari's toolbar (square with arrow pointing
+                        up)
                       </DocListItem>
                       <DocListItem variant="blue">
                         Scroll down in the share menu and select "Add to Dock"
                       </DocListItem>
                       <DocListItem variant="blue">
-                        In the dialog that appears, you can edit the name if
-                        desired
+                        In the dialog that appears, you can edit the name if desired
                       </DocListItem>
-                      <DocListItem variant="blue">
-                        Click "Add" to complete the process
-                      </DocListItem>
+                      <DocListItem variant="blue">Click "Add" to complete the process</DocListItem>
                     </DocList>
                   </div>
                 </div>
@@ -156,9 +131,8 @@ export default function InstallationGuidePage() {
                     Step 3: Launch the App
                   </h3>
                   <p className="text-sm text-slate-600">
-                    Click on the Goals icon in your dock to launch it. The app
-                    will open in its own window, separate from Safari, providing
-                    a native app-like experience.
+                    Click on the Goals icon in your dock to launch it. The app will open in its own
+                    window, separate from Safari, providing a native app-like experience.
                   </p>
                 </div>
               </div>
@@ -172,8 +146,7 @@ export default function InstallationGuidePage() {
           >
             <div className="space-y-6">
               <p className="text-slate-700">
-                For quick access to Goals, you can set up a hotkey using
-                Raycast:
+                For quick access to Goals, you can set up a hotkey using Raycast:
               </p>
 
               <div className="space-y-4">
@@ -194,12 +167,9 @@ export default function InstallationGuidePage() {
                       and download the installer
                     </DocListItem>
                     <DocListItem variant="indigo">
-                      Open the downloaded file and follow the installation
-                      instructions
+                      Open the downloaded file and follow the installation instructions
                     </DocListItem>
-                    <DocListItem variant="indigo">
-                      Launch Raycast after installation
-                    </DocListItem>
+                    <DocListItem variant="indigo">Launch Raycast after installation</DocListItem>
                   </DocList>
                 </div>
 
@@ -229,16 +199,10 @@ export default function InstallationGuidePage() {
                       Click on the newly added Goals in the extensions list
                     </DocListItem>
                     <DocListItem variant="indigo">
-                      Click "Add Hotkey" and press your desired key combination
-                      (e.g.,{' '}
-                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                        ⌘ + G
-                      </span>
-                      )
+                      Click "Add Hotkey" and press your desired key combination (e.g.,{' '}
+                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">⌘ + G</span>)
                     </DocListItem>
-                    <DocListItem variant="indigo">
-                      Click "Save" to confirm your hotkey
-                    </DocListItem>
+                    <DocListItem variant="indigo">Click "Save" to confirm your hotkey</DocListItem>
                   </DocList>
                 </div>
               </div>
@@ -247,8 +211,8 @@ export default function InstallationGuidePage() {
                 <p className="flex items-start gap-2">
                   <span className="font-semibold">Tip:</span>
                   <span>
-                    You can now quickly open Goals from anywhere on your Mac by
-                    pressing your configured hotkey.
+                    You can now quickly open Goals from anywhere on your Mac by pressing your
+                    configured hotkey.
                   </span>
                 </p>
               </DocInfoCard>
@@ -278,8 +242,8 @@ export default function InstallationGuidePage() {
           >
             <div className="space-y-6">
               <p className="text-slate-700">
-                Follow these steps to install Goals as a Progressive Web App
-                (PWA) on your iOS device:
+                Follow these steps to install Goals as a Progressive Web App (PWA) on your iOS
+                device:
               </p>
 
               <div className="space-y-4">
@@ -296,9 +260,8 @@ export default function InstallationGuidePage() {
                   </p>
                   <DocInfoCard variant="note">
                     <p>
-                      Make sure you're using Safari browser, as other browsers
-                      on iOS don't support adding websites to the home screen as
-                      PWAs.
+                      Make sure you're using Safari browser, as other browsers on iOS don't support
+                      adding websites to the home screen as PWAs.
                     </p>
                   </DocInfoCard>
                 </div>
@@ -309,17 +272,14 @@ export default function InstallationGuidePage() {
                     Step 2: Open Share Menu
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">
-                      Tap the Share button in Safari:
-                    </p>
+                    <p className="text-sm text-slate-600">Tap the Share button in Safari:</p>
                     <DocList>
                       <DocListItem variant="blue">
-                        Tap the Share button at the bottom of the screen (square
-                        with an arrow pointing up)
+                        Tap the Share button at the bottom of the screen (square with an arrow
+                        pointing up)
                       </DocListItem>
                       <DocListItem variant="blue">
-                        If you don't see the toolbar, scroll up slightly to make
-                        it appear
+                        If you don't see the toolbar, scroll up slightly to make it appear
                       </DocListItem>
                     </DocList>
                   </div>
@@ -331,20 +291,14 @@ export default function InstallationGuidePage() {
                     Step 3: Add to Home Screen
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">
-                      Add Goals to your home screen:
-                    </p>
+                    <p className="text-sm text-slate-600">Add Goals to your home screen:</p>
                     <DocList>
                       <DocListItem variant="blue">
-                        Scroll down in the share menu and tap "Add to Home
-                        Screen"
+                        Scroll down in the share menu and tap "Add to Home Screen"
                       </DocListItem>
+                      <DocListItem variant="blue">You can edit the name if desired</DocListItem>
                       <DocListItem variant="blue">
-                        You can edit the name if desired
-                      </DocListItem>
-                      <DocListItem variant="blue">
-                        Tap "Add" in the top-right corner to complete the
-                        process
+                        Tap "Add" in the top-right corner to complete the process
                       </DocListItem>
                     </DocList>
                   </div>
@@ -356,9 +310,9 @@ export default function InstallationGuidePage() {
                     Step 4: Launch the App
                   </h3>
                   <p className="text-sm text-slate-600">
-                    Tap the Goals icon on your home screen to launch it. The app
-                    will open in its own window, separate from Safari, providing
-                    a native app-like experience with full-screen mode.
+                    Tap the Goals icon on your home screen to launch it. The app will open in its
+                    own window, separate from Safari, providing a native app-like experience with
+                    full-screen mode.
                   </p>
                 </div>
               </div>

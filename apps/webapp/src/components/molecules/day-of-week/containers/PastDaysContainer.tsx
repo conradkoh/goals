@@ -1,30 +1,24 @@
-import React from "react";
-import { Check } from "lucide-react";
+import { Check } from 'lucide-react';
 import {
   CollapsibleMinimal,
   CollapsibleMinimalContent,
   CollapsibleMinimalTrigger,
-} from "@/components/ui/collapsible-minimal";
-import { DayContainer, DayContainerProps } from "./DayContainer";
-import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
+} from '@/components/ui/collapsible-minimal';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { DayContainer, type DayContainerProps } from './DayContainer';
 
 /**
  * Props for the past days container component.
  */
 export interface PastDaysContainerProps {
-  days: Array<
-    Omit<
-      DayContainerProps,
-      "onUpdateGoalTitle" | "onDeleteGoal" | "onCreateGoal"
-    >
-  >;
-  onUpdateGoalTitle: DayContainerProps["onUpdateGoalTitle"];
-  onDeleteGoal: DayContainerProps["onDeleteGoal"];
-  onCreateGoal: DayContainerProps["onCreateDailyGoal"];
+  days: Omit<DayContainerProps, 'onUpdateGoalTitle' | 'onDeleteGoal' | 'onCreateGoal'>[];
+  onUpdateGoalTitle: DayContainerProps['onUpdateGoalTitle'];
+  onDeleteGoal: DayContainerProps['onDeleteGoal'];
+  onCreateGoal: DayContainerProps['onCreateDailyGoal'];
   isCreating?: Record<string, boolean>;
   completedTasks: number;
   totalTasks: number;
-  sortDailyGoals?: DayContainerProps["sortDailyGoals"];
+  sortDailyGoals?: DayContainerProps['sortDailyGoals'];
 }
 
 /**

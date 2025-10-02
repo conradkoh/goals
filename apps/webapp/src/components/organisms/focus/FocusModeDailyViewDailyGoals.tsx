@@ -1,28 +1,23 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { DateTime } from 'luxon';
+import { useMemo, useState } from 'react';
 import {
   DayContainer,
   wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
 import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, DayOfWeekType } from '@/lib/constants';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DateTime } from 'luxon';
-import { useMemo, useState } from 'react';
-import { AddTaskInput } from '@/components/atoms/AddTaskInput';
-import { useToast } from '@/components/ui/use-toast';
-import { DailyGoalTaskItem } from '../DailyGoalTaskItem';
+import type { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 
 export interface FocusModeDailyViewDailyGoalsProps {
   weekNumber: number;
   year: number;
-  quarter: number;
   selectedDayOfWeek: DayOfWeek;
 }
 
 export const FocusModeDailyViewDailyGoals = ({
   weekNumber,
   year,
-  quarter,
   selectedDayOfWeek,
 }: FocusModeDailyViewDailyGoalsProps) => {
   const {
@@ -31,15 +26,12 @@ export const FocusModeDailyViewDailyGoals = ({
     quarterlyGoals,
     createDailyGoalOptimistic,
     createWeeklyGoalOptimistic,
-    dailyGoals,
     deleteGoalOptimistic,
     updateQuarterlyGoalTitle,
   } = useWeek();
 
   // Add state to track which goals are being created
-  const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [creatingGoals, setCreatingGoals] = useState<Record<string, boolean>>({});
 
   // Find the current day data
   const currentDay = useMemo(() => {
@@ -76,28 +68,20 @@ export const FocusModeDailyViewDailyGoals = ({
       // Sort by quarterly goal priority
       if (quarterlyGoalA && quarterlyGoalB) {
         // Sort by starred status
-        if (quarterlyGoalA.state?.isStarred && !quarterlyGoalB.state?.isStarred)
-          return -1;
-        if (!quarterlyGoalA.state?.isStarred && quarterlyGoalB.state?.isStarred)
-          return 1;
+        if (quarterlyGoalA.state?.isStarred && !quarterlyGoalB.state?.isStarred) return -1;
+        if (!quarterlyGoalA.state?.isStarred && quarterlyGoalB.state?.isStarred) return 1;
 
         // Sort by pinned status
-        if (quarterlyGoalA.state?.isPinned && !quarterlyGoalB.state?.isPinned)
-          return -1;
-        if (!quarterlyGoalA.state?.isPinned && quarterlyGoalB.state?.isPinned)
-          return 1;
+        if (quarterlyGoalA.state?.isPinned && !quarterlyGoalB.state?.isPinned) return -1;
+        if (!quarterlyGoalA.state?.isPinned && quarterlyGoalB.state?.isPinned) return 1;
 
         // If same priority, sort by quarterly goal title
-        const quarterlyCompare = quarterlyGoalA.title.localeCompare(
-          quarterlyGoalB.title
-        );
+        const quarterlyCompare = quarterlyGoalA.title.localeCompare(quarterlyGoalB.title);
         if (quarterlyCompare !== 0) return quarterlyCompare;
 
         // If same quarterly goal, sort by weekly goal title
         if (weeklyGoalA && weeklyGoalB) {
-          const weeklyCompare = weeklyGoalA.title.localeCompare(
-            weeklyGoalB.title
-          );
+          const weeklyCompare = weeklyGoalA.title.localeCompare(weeklyGoalB.title);
           if (weeklyCompare !== 0) return weeklyCompare;
         }
       }
@@ -129,10 +113,7 @@ export const FocusModeDailyViewDailyGoals = ({
             }>
           ).find((day) => day.dayOfWeek === selectedDayOfWeek);
 
-          if (
-            currentDayData &&
-            wasCompletedToday(weeklyGoal, currentDayData.dateTimestamp)
-          ) {
+          if (currentDayData && wasCompletedToday(weeklyGoal, currentDayData.dateTimestamp)) {
             return true; // Include goals completed today
           }
           return false; // Filter out other completed goals
@@ -141,9 +122,7 @@ export const FocusModeDailyViewDailyGoals = ({
         return true;
       })
       .map((weeklyGoal) => {
-        const parentQuarterlyGoal = quarterlyGoals.find(
-          (g) => g._id === weeklyGoal.parentId
-        );
+        const parentQuarterlyGoal = quarterlyGoals.find((g) => g._id === weeklyGoal.parentId);
         if (!parentQuarterlyGoal) {
           console.warn(
             `Weekly goal ${weeklyGoal._id} has parentId ${weeklyGoal.parentId} but parent not found in quarterlyGoals`
@@ -203,13 +182,9 @@ export const FocusModeDailyViewDailyGoals = ({
         return a.title.localeCompare(b.title);
       })
       .flatMap(([, group]) => group);
-  }, [weeklyGoals, quarterlyGoals]);
+  }, [weeklyGoals, quarterlyGoals, days, selectedDayOfWeek]);
 
-  const handleUpdateGoalTitle = (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => {
+  const handleUpdateGoalTitle = (goalId: Id<'goals'>, title: string, details?: string) => {
     return updateQuarterlyGoalTitle({ goalId, title, details });
   };
 
@@ -237,12 +212,7 @@ export const FocusModeDailyViewDailyGoals = ({
     setCreatingGoals((prev) => ({ ...prev, [weeklyGoalId]: true }));
 
     try {
-      await createDailyGoalOptimistic(
-        weeklyGoalId,
-        title,
-        dayOfWeekToUse,
-        dateTimestamp
-      );
+      await createDailyGoalOptimistic(weeklyGoalId, title, dayOfWeekToUse, dateTimestamp);
     } catch (error) {
       console.error('Failed to create daily goal:', error);
     } finally {

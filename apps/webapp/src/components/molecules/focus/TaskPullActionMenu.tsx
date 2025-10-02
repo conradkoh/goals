@@ -1,29 +1,24 @@
+import { CalendarDays, History, MoreVertical } from 'lucide-react';
+import { DateTime } from 'luxon';
+import { useCallback, useMemo, useState } from 'react';
+import {
+  type PreviewTask,
+  TaskMovePreview,
+  type TaskMovePreviewData,
+} from '@/components/molecules/day-of-week/components/TaskMovePreview';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
-import { History, CalendarDays, MoreVertical } from 'lucide-react';
-import { DateTime } from 'luxon';
-import { useState, useCallback, useMemo } from 'react';
-import {
-  TaskMovePreview,
-  TaskMovePreviewData,
-  PreviewTask,
-} from '@/components/molecules/day-of-week/components/TaskMovePreview';
-import { toast } from '@/components/ui/use-toast';
 
 interface TaskPullActionMenuProps {
   dayOfWeek: DayOfWeek;
@@ -40,15 +35,11 @@ export const TaskPullActionMenu = ({
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
-  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] =
-    useState(false);
+  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] = useState(false);
 
   // Memoize computed values that depend on props
   const isMonday = useMemo(() => dayOfWeek === DayOfWeek.MONDAY, [dayOfWeek]);
-  const isDisabled = useMemo(
-    () => isMovingTasks || isMonday,
-    [isMovingTasks, isMonday]
-  );
+  const isDisabled = useMemo(() => isMovingTasks || isMonday, [isMovingTasks, isMonday]);
 
   // Memoize date calculations
   const dateCalculations = useMemo(() => {
@@ -58,27 +49,24 @@ export const TaskPullActionMenu = ({
   }, [dateTimestamp]);
 
   // Get previous day of week - memoized pure function
-  const getPreviousDayOfWeek = useCallback(
-    (currentDay: DayOfWeek): DayOfWeek => {
-      switch (currentDay) {
-        case DayOfWeek.TUESDAY:
-          return DayOfWeek.MONDAY;
-        case DayOfWeek.WEDNESDAY:
-          return DayOfWeek.TUESDAY;
-        case DayOfWeek.THURSDAY:
-          return DayOfWeek.WEDNESDAY;
-        case DayOfWeek.FRIDAY:
-          return DayOfWeek.THURSDAY;
-        case DayOfWeek.SATURDAY:
-          return DayOfWeek.FRIDAY;
-        case DayOfWeek.SUNDAY:
-          return DayOfWeek.SATURDAY;
-        default:
-          return DayOfWeek.SUNDAY; // This shouldn't happen for Monday
-      }
-    },
-    []
-  );
+  const getPreviousDayOfWeek = useCallback((currentDay: DayOfWeek): DayOfWeek => {
+    switch (currentDay) {
+      case DayOfWeek.TUESDAY:
+        return DayOfWeek.MONDAY;
+      case DayOfWeek.WEDNESDAY:
+        return DayOfWeek.TUESDAY;
+      case DayOfWeek.THURSDAY:
+        return DayOfWeek.WEDNESDAY;
+      case DayOfWeek.FRIDAY:
+        return DayOfWeek.THURSDAY;
+      case DayOfWeek.SATURDAY:
+        return DayOfWeek.FRIDAY;
+      case DayOfWeek.SUNDAY:
+        return DayOfWeek.SATURDAY;
+      default:
+        return DayOfWeek.SUNDAY; // This shouldn't happen for Monday
+    }
+  }, []);
 
   // Get all past days in the week - memoized to avoid recalculation
   const getAllPastDaysOfWeek = useCallback(
@@ -141,11 +129,7 @@ export const TaskPullActionMenu = ({
               moveOnlyIncomplete: true,
             });
 
-            if (
-              'canMove' in previewData &&
-              previewData.canMove &&
-              previewData.tasks.length > 0
-            ) {
+            if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
               allTasks.push(...previewData.tasks);
             }
           }
@@ -359,10 +343,7 @@ export const TaskPullActionMenu = ({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="w-full cursor-not-allowed">
-                      <DropdownMenuItem
-                        className="cursor-not-allowed opacity-50"
-                        disabled
-                      >
+                      <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
                         <History className="mr-2 h-4 w-4" />
                         <span className="text-sm">Pull Incomplete Tasks</span>
                       </DropdownMenuItem>

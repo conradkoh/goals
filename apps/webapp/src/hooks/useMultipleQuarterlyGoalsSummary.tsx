@@ -1,8 +1,7 @@
-import { useQuery } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { useQuery } from 'convex/react';
 import { useSession } from '@/modules/auth/useSession';
-import { MultipleQuarterlyGoalsSummary } from '@services/backend/src/usecase/getWeekDetails';
 
 interface UseMultipleQuarterlyGoalsSummaryProps {
   quarterlyGoalIds: Id<'goals'>[];
@@ -34,4 +33,4 @@ export function useMultipleQuarterlyGoalsSummary({
     isLoading: summaryData === undefined,
     error: summaryData === null ? 'Failed to load multiple quarterly goals summary' : null,
   };
-} 
+}

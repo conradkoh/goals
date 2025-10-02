@@ -1,10 +1,5 @@
-import { describe, test, expect } from 'vitest';
-import { DateTime } from 'luxon';
-import {
-  getQuarterWeeks,
-  getFirstWeekOfQuarter,
-  getWeeksInYear,
-} from './getQuarterWeeks';
+import { describe, expect, test } from 'vitest';
+import { getFirstWeekOfQuarter, getQuarterWeeks, getWeeksInYear } from './getQuarterWeeks';
 
 describe('Quarter Weeks Use Cases', () => {
   describe('getQuarterWeeks', () => {

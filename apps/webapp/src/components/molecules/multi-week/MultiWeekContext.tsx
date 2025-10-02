@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { WeekData } from '@/hooks/useWeek';
-import { DayOfWeek } from '@/lib/constants';
-import { generateISOWeeks } from '@/lib/date/iso-week';
 import { DateTime } from 'luxon';
+import type React from 'react';
+import { createContext, useContext, useMemo } from 'react';
+import type { WeekData } from '@/hooks/useWeek';
+import type { DayOfWeek } from '@/lib/constants';
+import { generateISOWeeks } from '@/lib/date/iso-week';
 
 // Define the context type
 interface MultiWeekContextType {
@@ -15,16 +16,10 @@ interface MultiWeekContextType {
 }
 
 // Create the context with a default empty value
-const MultiWeekContext = createContext<MultiWeekContextType | undefined>(
-  undefined
-);
+const MultiWeekContext = createContext<MultiWeekContextType | undefined>(undefined);
 
 // Helper function to create a placeholder WeekData object for a week
-const createPlaceholderWeekData = (
-  weekNumber: number,
-  year: number,
-  quarter: number
-): WeekData => {
+const createPlaceholderWeekData = (weekNumber: number, year: number, quarter: number): WeekData => {
   // Calculate the Monday date for this week using Luxon for proper ISO week handling
   const mondayDate = DateTime.fromObject({
     weekYear: year,
@@ -95,11 +90,7 @@ export const MultiWeekGenerator: React.FC<MultiWeekGeneratorProps> = ({
   const weeksWithData = useMemo(() => {
     return generatedWeeks.map((week) => ({
       ...week,
-      weekData: createPlaceholderWeekData(
-        week.weekNumber,
-        week.year,
-        week.quarter
-      ),
+      weekData: createPlaceholderWeekData(week.weekNumber, week.year, week.quarter),
     }));
   }, [generatedWeeks]);
 

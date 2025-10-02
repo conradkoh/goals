@@ -1,8 +1,6 @@
-import { v } from 'convex/values';
-import { ConvexError } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { Id } from './_generated/dataModel';
+import { ConvexError, v } from 'convex/values';
 import { requireLogin } from '../src/usecase/requireLogin';
+import { mutation, query } from './_generated/server';
 
 /**
  * Toggles the fire status of a goal for the authenticated user.
@@ -33,22 +31,19 @@ export const toggleFireStatus = mutation({
 
     const existingFireGoal = await ctx.db
       .query('fireGoals')
-      .withIndex('by_user_and_goal', (q) =>
-        q.eq('userId', userId).eq('goalId', goalId)
-      )
+      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
       .first();
 
     if (existingFireGoal) {
       await ctx.db.delete(existingFireGoal._id);
       return false;
-    } else {
-      await ctx.db.insert('fireGoals', {
-        userId,
-        goalId,
-        createdAt: Date.now(),
-      });
-      return true;
     }
+    await ctx.db.insert('fireGoals', {
+      userId,
+      goalId,
+      createdAt: Date.now(),
+    });
+    return true;
   },
 });
 
@@ -72,5 +67,3 @@ export const getFireGoals = query({
     return fireGoals.map((fg) => fg.goalId);
   },
 });
-
-

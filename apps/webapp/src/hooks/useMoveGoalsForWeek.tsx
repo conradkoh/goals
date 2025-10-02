@@ -111,8 +111,8 @@ export const useMoveGoalsForWeek = ({
                 consolidateToDayOfWeek: dayOfWeek,
               },
               quarterlyGoal: {
-                id: dailyGoal.quarterlyGoalId!,
-                title: dailyGoal.quarterlyGoalTitle!,
+                id: dailyGoal.quarterlyGoalId ?? dailyGoal.weeklyGoalId,
+                title: dailyGoal.quarterlyGoalTitle ?? dailyGoal.weeklyGoalTitle,
                 isStarred: quarterlyStatus.isStarred,
                 isPinned: quarterlyStatus.isPinned,
               },

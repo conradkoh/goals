@@ -1,11 +1,11 @@
-import React from 'react';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { useQuarterlyGoalsList } from '@/hooks/useQuarterlyGoalsList';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { AlertCircle, CheckSquare, Square } from 'lucide-react';
+import React from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useQuarterlyGoalsList } from '@/hooks/useQuarterlyGoalsList';
 import { cn } from '@/lib/utils';
 
 interface QuarterlyGoalSelectorProps {
@@ -26,6 +26,7 @@ function QuarterlyGoalSelectorSkeleton() {
         <Skeleton className="h-8 w-24" />
       </div>
       {Array.from({ length: 3 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loading items don't need unique keys
         <div key={i} className="flex items-center space-x-3">
           <Skeleton className="h-4 w-4" />
           <Skeleton className="h-4 w-full" />
@@ -46,17 +47,20 @@ export function QuarterlyGoalSelector({
 }: QuarterlyGoalSelectorProps) {
   const { goals, isLoading, error } = useQuarterlyGoalsList({ year, quarter });
 
-  const handleGoalToggle = React.useCallback((goalId: Id<'goals'>, checked: boolean) => {
-    if (checked) {
-      onSelectionChange([...selectedGoalIds, goalId]);
-    } else {
-      onSelectionChange(selectedGoalIds.filter(id => id !== goalId));
-    }
-  }, [selectedGoalIds, onSelectionChange]);
+  const handleGoalToggle = React.useCallback(
+    (goalId: Id<'goals'>, checked: boolean) => {
+      if (checked) {
+        onSelectionChange([...selectedGoalIds, goalId]);
+      } else {
+        onSelectionChange(selectedGoalIds.filter((id) => id !== goalId));
+      }
+    },
+    [selectedGoalIds, onSelectionChange]
+  );
 
   const handleSelectAll = React.useCallback(() => {
     if (goals) {
-      onSelectionChange(goals.map(goal => goal._id));
+      onSelectionChange(goals.map((goal) => goal._id));
     }
   }, [goals, onSelectionChange]);
 
@@ -65,7 +69,7 @@ export function QuarterlyGoalSelector({
   }, [onSelectionChange]);
 
   const isAllSelected = React.useMemo(() => {
-    return goals && goals.length > 0 && goals.every(goal => selectedGoalIds.includes(goal._id));
+    return goals && goals.length > 0 && goals.every((goal) => selectedGoalIds.includes(goal._id));
   }, [goals, selectedGoalIds]);
 
   const isNoneSelected = React.useMemo(() => {
@@ -85,9 +89,7 @@ export function QuarterlyGoalSelector({
       <div className={className}>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error || 'Failed to load quarterly goals'}
-          </AlertDescription>
+          <AlertDescription>{error || 'Failed to load quarterly goals'}</AlertDescription>
         </Alert>
       </div>
     );
@@ -177,7 +179,8 @@ export function QuarterlyGoalSelector({
       {selectedGoalIds.length > 0 && (
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-muted-foreground">
-            {selectedGoalIds.length} goal{selectedGoalIds.length === 1 ? '' : 's'} selected for summary
+            {selectedGoalIds.length} goal{selectedGoalIds.length === 1 ? '' : 's'} selected for
+            summary
           </div>
           {showGenerateButton && onGenerateSummary && (
             <Button onClick={onGenerateSummary} className="ml-4">
@@ -188,4 +191,4 @@ export function QuarterlyGoalSelector({
       )}
     </div>
   );
-} 
+}

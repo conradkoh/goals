@@ -1,17 +1,14 @@
-import { useQuery } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
+import type { QuarterlyGoalOption } from '@services/backend/src/usecase/getWeekDetails';
+import { useQuery } from 'convex/react';
 import { useSession } from '@/modules/auth/useSession';
-import { QuarterlyGoalOption } from '@services/backend/src/usecase/getWeekDetails';
 
 interface UseQuarterlyGoalsListProps {
   year: number;
   quarter: number;
 }
 
-export function useQuarterlyGoalsList({
-  year,
-  quarter,
-}: UseQuarterlyGoalsListProps) {
+export function useQuarterlyGoalsList({ year, quarter }: UseQuarterlyGoalsListProps) {
   const { sessionId } = useSession();
 
   const goalsData = useQuery(
@@ -30,4 +27,4 @@ export function useQuarterlyGoalsList({
     isLoading: goalsData === undefined,
     error: goalsData === null ? 'Failed to load quarterly goals list' : null,
   };
-} 
+}

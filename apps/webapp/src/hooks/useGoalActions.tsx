@@ -1,45 +1,23 @@
-import { useMutation } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { useSession } from '@/modules/auth/useSession';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { DayOfWeek } from '@services/backend/src/constants';
-import { useMemo, useState } from 'react';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { errorTitles } from '@services/backend/errors';
+import type { DayOfWeek } from '@services/backend/src/constants';
+import { useMutation } from 'convex/react';
+import { useMemo } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { parseConvexError } from '@/lib/error';
-
-interface GoalPreviewNode {
-  _id: Id<'goals'>;
-  title: string;
-  depth: number;
-  children: GoalPreviewNode[];
-}
-
-interface DeletePreview {
-  isDryRun: boolean;
-  goalsToDelete: GoalPreviewNode[];
-}
+import { useSession } from '@/modules/auth/useSession';
 
 export const useGoalActions = () => {
   const { sessionId } = useSession();
-  const createQuarterlyGoalMutation = useMutation(
-    api.dashboard.createQuarterlyGoal
-  );
+  const createQuarterlyGoalMutation = useMutation(api.dashboard.createQuarterlyGoal);
   const createWeeklyGoalMutation = useMutation(api.dashboard.createWeeklyGoal);
   const createDailyGoalMutation = useMutation(api.dashboard.createDailyGoal);
-  const updateQuarterlyGoalStatusMutation = useMutation(
-    api.dashboard.updateQuarterlyGoalStatus
-  );
-  const updateQuarterlyGoalTitleMutation = useMutation(
-    api.dashboard.updateQuarterlyGoalTitle
-  );
+  const updateQuarterlyGoalStatusMutation = useMutation(api.dashboard.updateQuarterlyGoalStatus);
+  const updateQuarterlyGoalTitleMutation = useMutation(api.dashboard.updateQuarterlyGoalTitle);
   const deleteGoalMutation = useMutation(api.goal.deleteGoal);
-  const toggleGoalCompletionMutation = useMutation(
-    api.dashboard.toggleGoalCompletion
-  );
-  const updateDailyGoalDayMutation = useMutation(
-    api.dashboard.updateDailyGoalDay
-  );
+  const toggleGoalCompletionMutation = useMutation(api.dashboard.toggleGoalCompletion);
+  const updateDailyGoalDayMutation = useMutation(api.dashboard.updateDailyGoalDay);
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
 
   return useMemo(

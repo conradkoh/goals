@@ -1,7 +1,5 @@
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../../convex/_generated/server';
-import { requireLogin } from '../requireLogin';
-import { findLastNonEmptyWeek } from './findLastNonEmptyWeek';
 import {
   type CarryOver,
   type DailyGoalToMove,
@@ -418,8 +416,6 @@ export async function processGoal(
       result.dailyGoalsToMove = dailyGoals;
       break;
     }
-    // Daily goals are processed as part of weekly goals
-    case GoalDepth.Daily:
     default:
       break;
   }

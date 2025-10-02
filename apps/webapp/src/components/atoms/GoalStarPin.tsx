@@ -1,5 +1,5 @@
-import { Star, Pin } from 'lucide-react';
-import React from 'react';
+import { Pin, Star } from 'lucide-react';
+import type React from 'react';
 
 // Example usage:
 /*
@@ -33,6 +33,7 @@ const ActionButton = ({
   className?: string;
 }) => (
   <button
+    type="button"
     onClick={onClick}
     className={`w-4 flex justify-center items-center transition-all ${className}`}
   >
@@ -47,15 +48,9 @@ const ActionButton = ({
 export const GoalStarPinContainer: React.FC<{
   children: React.ReactNode;
   className?: string;
-}> = ({ children, className = '' }) => (
-  <div className={`group ${className}`}>{children}</div>
-);
+}> = ({ children, className = '' }) => <div className={`group ${className}`}>{children}</div>;
 
-export const GoalStarPin = ({
-  value,
-  onStarred,
-  onPinned,
-}: GoalStarPinProps) => {
+export const GoalStarPin = ({ value, onStarred, onPinned }: GoalStarPinProps) => {
   const { isStarred, isPinned } = value;
 
   if (isStarred) {

@@ -80,10 +80,7 @@ export function getISOWeekInfo(date: Date): ISOWeekInfo {
  *   new Date(2025, 2, 31)  // Mar 31
  * );
  */
-export function generateISOWeeks(
-  startDate: Date,
-  endDate: Date
-): ISOWeekInfo[] {
+export function generateISOWeeks(startDate: Date, endDate: Date): ISOWeekInfo[] {
   const weeks: ISOWeekInfo[] = [];
 
   // Convert to Luxon DateTime and ensure we start at the beginning of the week

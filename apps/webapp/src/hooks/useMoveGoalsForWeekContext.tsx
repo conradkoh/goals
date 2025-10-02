@@ -1,6 +1,7 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import type { DayOfWeek } from '@services/backend/src/constants';
+import type React from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 import { useMoveGoalsForWeek } from './useMoveGoalsForWeek';
-import { DayOfWeek } from '@services/backend/src/constants';
 
 interface MoveGoalsForWeekContextProps {
   weekNumber: number;
@@ -16,18 +17,16 @@ interface MoveGoalsForWeekContextValue {
   dialog: React.ReactElement;
 }
 
-const MoveGoalsForWeekContext =
-  createContext<MoveGoalsForWeekContextValue | null>(null);
+const MoveGoalsForWeekContext = createContext<MoveGoalsForWeekContextValue | null>(null);
 
 export const MoveGoalsForWeekProvider: React.FC<
   MoveGoalsForWeekContextProps & { children: ReactNode }
 > = ({ weekNumber, year, quarter, children }) => {
-  const { isFirstWeek, isMovingTasks, handlePreviewTasks, dialog } =
-    useMoveGoalsForWeek({
-      weekNumber,
-      year,
-      quarter,
-    });
+  const { isFirstWeek, isMovingTasks, handlePreviewTasks, dialog } = useMoveGoalsForWeek({
+    weekNumber,
+    year,
+    quarter,
+  });
 
   // Calculate isDisabled once here instead of in multiple components
   const isDisabled = isFirstWeek || isMovingTasks;
@@ -41,18 +40,14 @@ export const MoveGoalsForWeekProvider: React.FC<
   };
 
   return (
-    <MoveGoalsForWeekContext.Provider value={value}>
-      {children}
-    </MoveGoalsForWeekContext.Provider>
+    <MoveGoalsForWeekContext.Provider value={value}>{children}</MoveGoalsForWeekContext.Provider>
   );
 };
 
 export const useMoveGoalsForWeekContext = () => {
   const context = useContext(MoveGoalsForWeekContext);
   if (!context) {
-    throw new Error(
-      'useMoveGoalsForWeekContext must be used within a MoveGoalsForWeekProvider'
-    );
+    throw new Error('useMoveGoalsForWeekContext must be used within a MoveGoalsForWeekProvider');
   }
   return context;
 };

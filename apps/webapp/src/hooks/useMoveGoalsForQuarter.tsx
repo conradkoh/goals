@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
-import { useAction } from 'convex/react';
 import { api } from '@services/backend/convex/_generated/api';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { DayOfWeek } from '@services/backend/src/constants';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { useAction } from 'convex/react';
+import type React from 'react';
+import { useCallback, useState } from 'react';
+import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
 import { useSession } from '@/modules/auth/useSession';
 import { toast } from '../components/ui/use-toast';
-import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
 
 // Types for the return values from the preview call
 export type QuarterlyGoalToCopy = {
@@ -79,9 +79,8 @@ export const useMoveGoalsForQuarter = ({
   const getPreviousQuarter = useCallback(() => {
     if (quarter === 1) {
       return { year: year - 1, quarter: 4 };
-    } else {
-      return { year, quarter: (quarter - 1) as 1 | 2 | 3 | 4 };
     }
+    return { year, quarter: (quarter - 1) as 1 | 2 | 3 | 4 };
   }, [year, quarter]);
 
   const handlePreviewGoals = async () => {
@@ -137,7 +136,7 @@ export const useMoveGoalsForQuarter = ({
       }
 
       // Use the new action instead of the mutation
-      const result = await moveGoalsAction({
+      const _result = await moveGoalsAction({
         sessionId,
         from: {
           year: prevQuarter.year,

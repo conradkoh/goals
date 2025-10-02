@@ -1,11 +1,11 @@
-import { WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
-import { cn } from '@/lib/utils';
-import { WeekActionMenu } from './WeekActionMenu';
 import { useMemo } from 'react';
 import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
 } from '@/hooks/useMoveGoalsForWeekContext';
+import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { cn } from '@/lib/utils';
+import { WeekActionMenu } from './WeekActionMenu';
 
 interface WeekCardProps {
   weekLabel: string;
@@ -22,6 +22,7 @@ interface WeekCardProps {
 const WeekCardInner = ({
   weekLabel,
   mondayDate,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: part of public API shared with parent component
   weekNumber,
   isCurrentWeek,
   children,
@@ -33,8 +34,8 @@ const WeekCardInner = ({
   const tooltipContent = isFirstWeek
     ? 'Cannot pull goals from last non-empty week as this is the first week of the quarter'
     : isMovingTasks
-    ? 'Moving tasks...'
-    : "Can't pull from last non-empty week";
+      ? 'Moving tasks...'
+      : "Can't pull from last non-empty week";
 
   // Memoize the WeekActionMenu props to prevent unnecessary re-renders
   const weekActionMenuProps = useMemo(
@@ -58,18 +59,11 @@ const WeekCardInner = ({
           isCurrentWeek && 'ring-2 ring-blue-500'
         )}
       >
-        <div
-          className={cn(
-            'border-b p-2 md:p-3 flex-shrink-0',
-            isCurrentWeek && 'bg-blue-50'
-          )}
-        >
+        <div className={cn('border-b p-2 md:p-3 flex-shrink-0', isCurrentWeek && 'bg-blue-50')}>
           <div className="flex items-baseline justify-between">
             <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
               <h3 className="font-semibold">{weekLabel}</h3>
-              <span className="text-xs md:text-sm text-gray-500">
-                {mondayDate}
-              </span>
+              <span className="text-xs md:text-sm text-gray-500">{mondayDate}</span>
             </div>
             <div className="flex items-center gap-1 md:gap-2">
               <WeekActionMenu {...weekActionMenuProps} />
@@ -91,11 +85,7 @@ export const WeekCard = (props: WeekCardProps) => {
   const { weekNumber, year, quarter, ...rest } = props;
 
   return (
-    <MoveGoalsForWeekProvider
-      weekNumber={weekNumber}
-      year={year}
-      quarter={quarter}
-    >
+    <MoveGoalsForWeekProvider weekNumber={weekNumber} year={year} quarter={quarter}>
       <WeekCardInner weekNumber={weekNumber} {...rest} />
     </MoveGoalsForWeekProvider>
   );

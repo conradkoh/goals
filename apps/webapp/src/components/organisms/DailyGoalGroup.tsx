@@ -1,37 +1,25 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Pin, Star } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
-import { SafeHTML } from '@/components/ui/safe-html';
 import { Spinner } from '@/components/ui/spinner';
-import { DayOfWeekType } from '@/lib/constants';
+import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '@/components/ui/popover';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2, Star, Pin } from 'lucide-react';
-import { useState, useMemo } from 'react';
 
 export interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string
-  ) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   isCreating?: boolean;
   className?: string;
-  sortGoals?: (
-    goals: GoalWithDetailsAndChildren[]
-  ) => GoalWithDetailsAndChildren[];
+  sortGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
 }
 
 export const DailyGoalGroup = ({
@@ -91,9 +79,7 @@ export const DailyGoalGroup = ({
             {isStarred && (
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
             )}
-            {isPinned && (
-              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
-            )}
+            {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />}
 
             <GoalEditPopover
               title={quarterlyGoal.title}
@@ -144,6 +130,7 @@ export const DailyGoalGroup = ({
             ))}
           </div>
 
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
           <div
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => !isInputFocused && setIsHovering(false)}

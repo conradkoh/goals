@@ -1,13 +1,13 @@
-import React from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { DailySummaryItem } from './DailySummaryItem';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2, Trash2 } from 'lucide-react';
+import React from 'react';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { DayOfWeek } from '@/lib/constants';
-import { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { DailySummaryItem } from './DailySummaryItem';
 
 /**
  * Props for the WeeklyTaskItem component.
@@ -50,7 +50,10 @@ export function WeeklyTaskItem({
   disableStrikethrough,
 }: WeeklyTaskItemProps) {
   const isComplete = weeklyGoal.isComplete;
-  const hasDailyGoals = React.useMemo(() => weeklyGoal.children && weeklyGoal.children.length > 0, [weeklyGoal.children]);
+  const hasDailyGoals = React.useMemo(
+    () => weeklyGoal.children && weeklyGoal.children.length > 0,
+    [weeklyGoal.children]
+  );
 
   const handleToggleComplete = React.useCallback(async () => {
     if (goalActions) {
@@ -58,11 +61,14 @@ export function WeeklyTaskItem({
     }
   }, [goalActions, weeklyGoal]);
 
-  const handleEdit = React.useCallback(async (title: string, details?: string) => {
-    if (goalActions) {
-      await goalActions.handleEditGoal(weeklyGoal._id, title, details);
-    }
-  }, [goalActions, weeklyGoal._id]);
+  const handleEdit = React.useCallback(
+    async (title: string, details?: string) => {
+      if (goalActions) {
+        await goalActions.handleEditGoal(weeklyGoal._id, title, details);
+      }
+    },
+    [goalActions, weeklyGoal._id]
+  );
 
   const handleDelete = React.useCallback(async () => {
     if (goalActions) {
@@ -73,9 +79,9 @@ export function WeeklyTaskItem({
   // Group daily goals by day of week and sort them
   const sortedDailyGoals = React.useMemo(() => {
     if (!weeklyGoal.children) return [];
-    
+
     return weeklyGoal.children
-      .filter(dailyGoal => dailyGoal.state?.daily?.dayOfWeek)
+      .filter((dailyGoal) => dailyGoal.state?.daily?.dayOfWeek)
       .sort((a, b) => {
         const dayA = a.state?.daily?.dayOfWeek || 0;
         const dayB = b.state?.daily?.dayOfWeek || 0;
@@ -94,7 +100,7 @@ export function WeeklyTaskItem({
             onCheckedChange={goalActions ? handleToggleComplete : undefined}
             className="mt-0.5 flex-shrink-0"
           />
-          
+
           <div className="flex-1 min-w-0">
             <h4
               className={cn(
@@ -104,18 +110,19 @@ export function WeeklyTaskItem({
             >
               {weeklyGoal.title}
             </h4>
-            
+
             {weeklyGoal.details && (
               <div
                 className={cn(
                   'text-sm text-muted-foreground leading-relaxed mb-2',
                   !disableStrikethrough && isComplete && 'line-through'
                 )}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                 dangerouslySetInnerHTML={{ __html: weeklyGoal.details }}
               />
             )}
           </div>
-          
+
           {/* Action Buttons */}
           {goalActions && (
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -133,7 +140,7 @@ export function WeeklyTaskItem({
                   </Button>
                 }
               />
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -153,7 +160,7 @@ export function WeeklyTaskItem({
           <div className="text-sm font-medium text-muted-foreground mb-2 pl-7">
             Daily Goals ({sortedDailyGoals.length})
           </div>
-          
+
           <div className="space-y-2 pl-7">
             {sortedDailyGoals.map((dailyGoal) => (
               <DailySummaryItem
@@ -170,4 +177,4 @@ export function WeeklyTaskItem({
       )}
     </div>
   );
-} 
+}

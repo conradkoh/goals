@@ -1,20 +1,8 @@
-import { Metadata } from 'next';
+import { ArrowRight, BookText, Download, HelpCircle, Keyboard, PlayCircle } from 'lucide-react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  Download,
-  BookText,
-  ArrowRight,
-  PlayCircle,
-  HelpCircle,
-  Keyboard,
-} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DocHeader,
-  DocCard,
-  DocList,
-  DocListItem,
-} from './components/primitives';
+import { DocCard, DocHeader, DocList, DocListItem } from './components/primitives';
 
 export const metadata: Metadata = {
   title: 'Goals Documentation',
@@ -41,19 +29,13 @@ export default function DocsPage() {
           variant="blue"
         >
           <p className="text-sm text-slate-600 mb-4">
-            Get started with the Goals installation process for macOS with
-            Safari and Raycast integration.
+            Get started with the Goals installation process for macOS with Safari and Raycast
+            integration.
           </p>
           <DocList>
-            <DocListItem variant="blue">
-              Safari installation as a Progressive Web App
-            </DocListItem>
-            <DocListItem variant="blue">
-              System requirements for optimal performance
-            </DocListItem>
-            <DocListItem variant="blue">
-              Raycast integration for quick access
-            </DocListItem>
+            <DocListItem variant="blue">Safari installation as a Progressive Web App</DocListItem>
+            <DocListItem variant="blue">System requirements for optimal performance</DocListItem>
+            <DocListItem variant="blue">Raycast integration for quick access</DocListItem>
           </DocList>
         </DocCard>
 
@@ -65,13 +47,11 @@ export default function DocsPage() {
           variant="indigo"
         >
           <p className="text-sm text-slate-600 mb-4">
-            Understand how to use Goals effectively with quarterly, weekly, and
-            daily planning to achieve your objectives.
+            Understand how to use Goals effectively with quarterly, weekly, and daily planning to
+            achieve your objectives.
           </p>
           <DocList>
-            <DocListItem variant="indigo">
-              Setting effective quarterly goals
-            </DocListItem>
+            <DocListItem variant="indigo">Setting effective quarterly goals</DocListItem>
             <DocListItem variant="indigo">
               Managing weekly objectives and tracking progress
             </DocListItem>
@@ -89,19 +69,15 @@ export default function DocsPage() {
           variant="blue"
         >
           <p className="text-sm text-slate-600 mb-4">
-            Master Goals with keyboard shortcuts to navigate and perform actions
-            quickly without using the mouse.
+            Master Goals with keyboard shortcuts to navigate and perform actions quickly without
+            using the mouse.
           </p>
           <DocList>
             <DocListItem variant="blue">
               View switching between daily, weekly, and quarterly views
             </DocListItem>
-            <DocListItem variant="blue">
-              Global navigation shortcuts
-            </DocListItem>
-            <DocListItem variant="blue">
-              Form and text editing shortcuts
-            </DocListItem>
+            <DocListItem variant="blue">Global navigation shortcuts</DocListItem>
+            <DocListItem variant="blue">Form and text editing shortcuts</DocListItem>
           </DocList>
         </DocCard>
       </div>
@@ -113,12 +89,9 @@ export default function DocsPage() {
               <HelpCircle className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-slate-900 mb-1">
-                Need more help?
-              </h3>
+              <h3 className="text-lg font-medium text-slate-900 mb-1">Need more help?</h3>
               <p className="text-sm text-slate-600">
-                If you have any questions or need assistance, check out our
-                support resources.
+                If you have any questions or need assistance, check out our support resources.
               </p>
             </div>
           </div>

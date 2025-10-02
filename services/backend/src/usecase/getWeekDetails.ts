@@ -1,5 +1,5 @@
-import { Doc, Id } from '../../convex/_generated/dataModel';
-import { MutationCtx, QueryCtx } from '../../convex/_generated/server';
+import type { Doc, Id } from '../../convex/_generated/dataModel';
+import type { MutationCtx, QueryCtx } from '../../convex/_generated/server';
 import { joinPath } from '../util/path';
 
 // A tree of quarterly goals with their weekly goals and daily goals
@@ -38,11 +38,16 @@ export type QuarterlyGoalSummary = {
     completedAt?: number;
     state?: Doc<'goalStateByWeek'>;
   };
-  weeklyGoalsByWeek: Record<number, Array<GoalWithDetailsAndChildren & {
-    weekNumber: number;
-    weekStartTimestamp: number;
-    weekEndTimestamp: number;
-  }>>;
+  weeklyGoalsByWeek: Record<
+    number,
+    Array<
+      GoalWithDetailsAndChildren & {
+        weekNumber: number;
+        weekStartTimestamp: number;
+        weekEndTimestamp: number;
+      }
+    >
+  >;
   quarter: number;
   year: number;
   weekRange: {
@@ -97,19 +102,15 @@ export const getWeekGoalsTree = async (
   const weekStates = await ctx.db
     .query('goalStateByWeek')
     .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-      q
-        .eq('userId', userId)
-        .eq('year', year)
-        .eq('quarter', quarter)
-        .eq('weekNumber', weekNumber)
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', weekNumber)
     )
     .collect();
 
   // Get the associated goal details
   const goalIds = weekStates.map((ws) => ws.goalId);
-  const goals = (
-    await Promise.all(goalIds.map((goalId) => ctx.db.get(goalId)))
-  ).filter((goal) => goal !== null);
+  const goals = (await Promise.all(goalIds.map((goalId) => ctx.db.get(goalId)))).filter(
+    (goal) => goal !== null
+  );
 
   const weekStatesMap = new Map(weekStates.map((ws) => [ws.goalId, ws]));
 
@@ -168,16 +169,19 @@ export function buildGoalTree(
   const roots: GoalWithDetailsAndChildren[] = [];
 
   // First, index all nodes
-  const nodeIndex = n.reduce((acc, n) => {
-    const base: GoalWithDetailsAndChildren = {
-      ...n,
-      path: joinPath(n.inPath, n._id),
-      state: undefined,
-      children: [],
-    };
-    acc[n._id] = attach(base);
-    return acc;
-  }, {} as Record<Id<'goals'>, GoalWithDetailsAndChildren>);
+  const nodeIndex = n.reduce(
+    (acc, n) => {
+      const base: GoalWithDetailsAndChildren = {
+        ...n,
+        path: joinPath(n.inPath, n._id),
+        state: undefined,
+        children: [],
+      };
+      acc[n._id] = attach(base);
+      return acc;
+    },
+    {} as Record<Id<'goals'>, GoalWithDetailsAndChildren>
+  );
 
   // Then, populate parent and grandparent titles
   for (const key in nodeIndex) {
@@ -207,9 +211,7 @@ export function buildGoalTree(
       case 1:
       case 2: {
         if (!node.parentId) {
-          throw new Error(
-            `depth ${node.depth} goal has no parent. node id: ${node._id}`
-          );
+          throw new Error(`depth ${node.depth} goal has no parent. node id: ${node._id}`);
         }
         const parent = nodeIndex[node.parentId];
         if (!parent) {

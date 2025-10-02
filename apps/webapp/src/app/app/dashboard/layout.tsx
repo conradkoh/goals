@@ -1,37 +1,26 @@
 'use client';
 
-import { User, BookOpen } from 'lucide-react';
+import { api } from '@services/backend/convex/_generated/api';
+import { useQuery } from 'convex/react';
+import { BookOpen, User } from 'lucide-react';
+import Link from 'next/link';
+import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/toaster';
 import { DashboardProvider } from '@/hooks/useDashboard';
 import { useSession } from '@/modules/auth/useSession';
-import { api } from '@services/backend/convex/_generated/api';
-import { useQuery } from 'convex/react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
-import { Separator } from '@/components/ui/separator';
-import Link from 'next/link';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-        <DashboardProvider>
-          <div
-            id="dashboard-layout"
-            className="h-screen bg-background flex flex-col"
-          >
-            <Header />
-            <main className="flex-1 overflow-auto">{children}</main>
-          </div>
-          <Toaster />
-        </DashboardProvider>
+    <DashboardProvider>
+      <div id="dashboard-layout" className="h-screen bg-background flex flex-col">
+        <Header />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+      <Toaster />
+    </DashboardProvider>
   );
 }
 
@@ -64,9 +53,7 @@ const Header = () => {
                     <p className="text-sm font-medium leading-none">
                       {user?.displayName || 'Loading...'}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Anonymous User
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Anonymous User</p>
                   </div>
                 </div>
               </div>

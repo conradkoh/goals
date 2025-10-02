@@ -1,21 +1,20 @@
-import { WeekCardDailyGoals } from "@/components/organisms/WeekCardDailyGoals";
-import { WeekCardQuarterlyGoals } from "@/components/organisms/WeekCardQuarterlyGoals";
-import { WeekCardWeeklyGoals } from "@/components/organisms/WeekCardWeeklyGoals";
+import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DateTime } from 'luxon';
+import type React from 'react';
+import { memo, useMemo } from 'react';
+import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import {
-  WeekData,
-  WeekProviderWithoutDashboard,
   useWeekWithoutDashboard,
-} from "@/hooks/useWeek";
-import { DayOfWeek } from "@/lib/constants";
-import { DndContext, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { useRouter } from "next/navigation";
-import React, { memo, useMemo, useCallback } from "react";
-import { WeekCard } from "../week/WeekCard";
-import { useMultiWeek } from "./MultiWeekContext";
-import { MultiWeekGrid } from "./MultiWeekGrid";
-import { DateTime } from "luxon";
-import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
-import { useCurrentDateInfo } from "@/hooks/useCurrentDateTime";
+  type WeekData,
+  WeekProviderWithoutDashboard,
+} from '@/hooks/useWeek';
+import { WeekCard } from '../week/WeekCard';
+import { useMultiWeek } from './MultiWeekContext';
+import { MultiWeekGrid } from './MultiWeekGrid';
 
 // Week card content component
 const WeekCardContent = ({
@@ -41,8 +40,8 @@ const WeekCardContent = ({
   const mondayDate = DateTime.fromObject({
     weekYear: week.year,
     weekNumber: week.weekNumber,
-  }).startOf("week");
-  const mondayDateString = mondayDate.toFormat("yyyy-MM-dd");
+  }).startOf('week');
+  const mondayDateString = mondayDate.toFormat('yyyy-MM-dd');
 
   // Use the backend data if available, otherwise use placeholder data
   const weekData = useMemo(
@@ -55,7 +54,7 @@ const WeekCardContent = ({
       year: week.year,
       quarter: week.quarter,
     }),
-    [week.weekNumber, mondayDateString, weekDataFromBackend, week.weekData]
+    [week.weekNumber, mondayDateString, weekDataFromBackend, week.weekData, week.quarter, week.year]
   );
 
   // Loading state is determined by weekDataFromBackend being undefined
@@ -71,9 +70,7 @@ const WeekCardContent = ({
       isCurrentWeek={isCurrentWeek}
       weekData={weekData}
     >
-      <WeekProviderWithoutDashboard
-        weekData={weekDataFromBackend || week.weekData}
-      >
+      <WeekProviderWithoutDashboard weekData={weekDataFromBackend || week.weekData}>
         <div className="space-y-2 md:space-y-4">
           <WeekCardSection title="💭 Quarterly Goals">
             <WeekCardQuarterlyGoals
@@ -99,7 +96,6 @@ const WeekCardContent = ({
             <WeekCardDailyGoals
               weekNumber={week.weekNumber}
               year={week.year}
-              quarter={week.quarter}
               isLoading={isLoading}
             />
           </WeekCardSection>
@@ -110,7 +106,7 @@ const WeekCardContent = ({
 };
 
 // Update the displayName
-WeekCardContent.displayName = "WeekCardContent";
+WeekCardContent.displayName = 'WeekCardContent';
 
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
@@ -167,7 +163,7 @@ export const MultiWeekLayout = memo(() => {
   );
 });
 
-MultiWeekLayout.displayName = "MultiWeekLayout";
+MultiWeekLayout.displayName = 'MultiWeekLayout';
 
 interface WeekCardSectionProps {
   title: string;
@@ -185,4 +181,4 @@ const WeekCardSection = memo(({ title, children }: WeekCardSectionProps) => {
   );
 });
 
-WeekCardSection.displayName = "WeekCardSection";
+WeekCardSection.displayName = 'WeekCardSection';

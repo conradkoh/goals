@@ -1,6 +1,6 @@
 'use client';
-import { SessionContext } from '@/modules/auth/SessionContext';
 import { useContext } from 'react';
+import { SessionContext } from '@/modules/auth/SessionContext';
 
 export function useSession() {
   const { sessionId } = useContext(SessionContext);

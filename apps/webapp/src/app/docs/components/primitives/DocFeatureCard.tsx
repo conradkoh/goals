@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 
 interface DocFeatureCardProps {
   title: string;
@@ -13,7 +13,7 @@ export function DocFeatureCard({
   icon,
   variant = 'blue',
 }: DocFeatureCardProps) {
-  const variantClasses = {
+  const _variantClasses = {
     blue: 'bg-blue-50',
     indigo: 'bg-indigo-50',
     slate: 'bg-slate-100',

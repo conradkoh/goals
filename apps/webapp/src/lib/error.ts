@@ -1,5 +1,5 @@
+import { type ErrorData, errorDataSchema } from '@services/backend/errors';
 import { ConvexError } from 'convex/values';
-import { errorDataSchema, type ErrorData } from '@services/backend/errors';
 
 /**
  * Parses an error caught from a Convex mutation into a structured ErrorData object.
@@ -21,8 +21,7 @@ export function parseConvexError(error: unknown): ErrorData {
   // For non-Convex errors (e.g., network issues)
   return {
     code: 'UNEXPECTED_ERROR',
-    message:
-      error instanceof Error ? error.message : 'An unexpected error occurred',
+    message: error instanceof Error ? error.message : 'An unexpected error occurred',
   };
 }
 

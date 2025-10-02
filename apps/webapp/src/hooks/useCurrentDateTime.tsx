@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
 import { DateTime } from 'luxon';
-import { DayOfWeek } from '@/lib/constants';
+import { useEffect, useState } from 'react';
+import type { DayOfWeek } from '@/lib/constants';
 
 // Core hook that updates only when the day changes (at midnight)
 export const useCurrentDate = () => {
-  const [currentDate, setCurrentDate] = useState(() =>
-    DateTime.now().startOf('day')
-  );
+  const [currentDate, setCurrentDate] = useState(() => DateTime.now().startOf('day'));
 
   useEffect(() => {
     const updateDate = () => {

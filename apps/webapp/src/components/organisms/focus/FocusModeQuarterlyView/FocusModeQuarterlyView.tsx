@@ -1,11 +1,10 @@
-import React, { useMemo, memo } from 'react';
-import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
-import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
+import { memo, useMemo } from 'react';
 import {
   MoveGoalsForQuarterProvider,
   useMoveGoalsForQuarterContext,
 } from '@/hooks/useMoveGoalsForQuarterContext';
-import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
+import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
+import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
 
 export interface FocusModeQuarterlyViewProps {
   year?: number;
@@ -18,13 +17,8 @@ const FocusModeQuarterlyViewInner = ({
   quarter = Math.floor(new Date().getMonth() / 3) + 1,
 }: FocusModeQuarterlyViewProps) => {
   // Get the context for moving goals
-  const {
-    isFirstQuarter,
-    isMovingGoals,
-    isDisabled,
-    handlePreviewGoals,
-    dialog,
-  } = useMoveGoalsForQuarterContext();
+  const { isFirstQuarter, isMovingGoals, isDisabled, handlePreviewGoals, dialog } =
+    useMoveGoalsForQuarterContext();
 
   // Generate a key that changes when year or quarter changes
   const instanceKey = `quarterly-view-${year}-${quarter}`;
@@ -51,11 +45,11 @@ const FocusModeQuarterlyViewInner = ({
   const tooltipContent = isFirstQuarter
     ? 'Cannot pull goals from previous quarter as this is the first quarter'
     : isMovingGoals
-    ? 'Moving goals...'
-    : "Can't pull from previous quarter";
+      ? 'Moving goals...'
+      : "Can't pull from previous quarter";
 
   // Memoize the QuarterActionMenu props
-  const quarterActionMenuProps = useMemo(
+  const _quarterActionMenuProps = useMemo(
     () => ({
       isDisabled,
       isFirstQuarter,
@@ -67,24 +61,11 @@ const FocusModeQuarterlyViewInner = ({
       year,
       quarter,
     }),
-    [
-      isDisabled,
-      isFirstQuarter,
-      isMovingGoals,
-      handlePreviewGoals,
-      tooltipContent,
-      year,
-      quarter,
-    ]
+    [isDisabled, isFirstQuarter, isMovingGoals, handlePreviewGoals, tooltipContent, year, quarter]
   );
 
   return (
-    <div
-      id="focus-mode-quarterly-view"
-      className="w-full h-full"
-      key={instanceKey}
-    >
-
+    <div id="focus-mode-quarterly-view" className="w-full h-full" key={instanceKey}>
       <MultiWeekGenerator startDate={startOfQuarter} endDate={endOfQuarter}>
         <MultiWeekLayout />
       </MultiWeekGenerator>
@@ -101,14 +82,8 @@ export const FocusModeQuarterlyView = memo(
     quarter = Math.floor(new Date().getMonth() / 3) + 1,
   }: FocusModeQuarterlyViewProps) => {
     return (
-      <MoveGoalsForQuarterProvider
-        year={year}
-        quarter={quarter as 1 | 2 | 3 | 4}
-      >
-        <FocusModeQuarterlyViewInner
-          year={year}
-          quarter={quarter}
-        />
+      <MoveGoalsForQuarterProvider year={year} quarter={quarter as 1 | 2 | 3 | 4}>
+        <FocusModeQuarterlyViewInner year={year} quarter={quarter} />
       </MoveGoalsForQuarterProvider>
     );
   }

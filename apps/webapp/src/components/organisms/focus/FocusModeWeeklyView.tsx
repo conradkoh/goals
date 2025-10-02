@@ -1,36 +1,16 @@
-import { WeekData, WeekProviderWithoutDashboard } from "@/hooks/useWeek";
-import { WeekCardDailyGoals } from "../WeekCardDailyGoals";
-import { WeekCardQuarterlyGoals } from "../WeekCardQuarterlyGoals";
-import { WeekCardWeeklyGoals } from "../WeekCardWeeklyGoals";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-  DropdownMenuSubContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  History,
-  ArrowDownToLine,
-  Calendar,
-  ArrowRightLeft,
-  MoveHorizontal,
-} from "lucide-react";
-import { useMemo } from "react";
-import { DayOfWeek } from "@services/backend/src/constants";
-import { WeekActionMenu } from "@/components/molecules/week/WeekActionMenu";
+import type { DayOfWeek } from '@services/backend/src/constants';
+import { useMemo } from 'react';
+import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
+import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
-} from "@/hooks/useMoveGoalsForWeekContext";
-import { JumpToCurrentButton } from "@/components/molecules/focus/JumpToCurrentButton";
-import { FireGoalsProvider } from "@/contexts/GoalStatusContext";
+} from '@/hooks/useMoveGoalsForWeekContext';
+import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
@@ -58,7 +38,7 @@ const FocusModeWeeklyViewInner = ({
       isFirstWeek,
       isMovingTasks,
       handlePreviewTasks,
-      buttonSize: "icon" as const,
+      buttonSize: 'icon' as const,
       showLabel: false,
     }),
     [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks]
@@ -72,37 +52,18 @@ const FocusModeWeeklyViewInner = ({
 
   // Memoize the components to prevent unnecessary re-renders
   const quarterlyGoalsComponent = useMemo(
-    () => (
-      <WeekCardQuarterlyGoals
-        weekNumber={weekNumber}
-        year={year}
-        quarter={quarter}
-      />
-    ),
+    () => <WeekCardQuarterlyGoals weekNumber={weekNumber} year={year} quarter={quarter} />,
     [weekNumber, year, quarter]
   );
 
   const weeklyGoalsComponent = useMemo(
-    () => (
-      <WeekCardWeeklyGoals
-        weekNumber={weekNumber}
-        year={year}
-        quarter={quarter}
-      />
-    ),
+    () => <WeekCardWeeklyGoals weekNumber={weekNumber} year={year} quarter={quarter} />,
     [weekNumber, year, quarter]
   );
 
   const dailyGoalsComponent = useMemo(
-    () => (
-      <WeekCardDailyGoals
-        weekNumber={weekNumber}
-        year={year}
-        quarter={quarter}
-        mode="plan"
-      />
-    ),
-    [weekNumber, year, quarter]
+    () => <WeekCardDailyGoals weekNumber={weekNumber} year={year} mode="plan" />,
+    [weekNumber, year]
   );
 
   return (
@@ -151,11 +112,7 @@ export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
   const { weekNumber, year, quarter, weekData, onJumpToCurrent } = props;
 
   return (
-    <MoveGoalsForWeekProvider
-      weekNumber={weekNumber}
-      year={year}
-      quarter={quarter}
-    >
+    <MoveGoalsForWeekProvider weekNumber={weekNumber} year={year} quarter={quarter}>
       <FocusModeWeeklyViewInner
         weekNumber={weekNumber}
         year={year}

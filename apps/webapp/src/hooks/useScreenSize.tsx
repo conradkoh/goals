@@ -9,10 +9,9 @@ export const useScreenSize = (): {
   isMobile: boolean;
   isDesktop: boolean;
 } => {
-  const [screenSize, setScreenSize] = useState<ScreenSize>(() =>
-    getScreenSize()
-  );
+  const [screenSize, setScreenSize] = useState<ScreenSize>(() => getScreenSize());
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: updateScreenSize is stable and doesn't need to be in deps
   useEffect(() => {
     // Set initial screen size
     updateScreenSize();
@@ -40,9 +39,9 @@ function getScreenSize() {
   const width = window.innerWidth;
   if (width < 768) {
     return 'mobile';
-  } else if (width < 1024) {
-    return 'tablet';
-  } else {
-    return 'desktop';
   }
+  if (width < 1024) {
+    return 'tablet';
+  }
+  return 'desktop';
 }

@@ -1,14 +1,17 @@
 'use client';
 
-import React from 'react';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { ArrowLeft, Eye, FileText, Home } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalSummaryView, QuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
+import React from 'react';
+import {
+  QuarterlyGoalSummaryView,
+  QuarterlySummaryMarkdownView,
+} from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, FileText, Eye } from 'lucide-react';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
-import { DateTime } from 'luxon';
 
 /**
  * Renders the quarterly summary page for a specific goal.
@@ -22,21 +25,23 @@ export default function QuarterlySummaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = React.useState<'summary' | 'markdown'>('summary');
-  
+
   // Get year and quarter from URL params, fallback to current date
   const { year, quarter } = React.useMemo(() => {
     const now = DateTime.now();
     const yearParam = searchParams.get('year');
     const quarterParam = searchParams.get('quarter');
-    
-    const year = yearParam ? parseInt(yearParam) : now.year;
-    const quarter = quarterParam ? (parseInt(quarterParam) as 1 | 2 | 3 | 4) : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
+
+    const year = yearParam ? Number.parseInt(yearParam) : now.year;
+    const quarter = quarterParam
+      ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
+      : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
     return { year, quarter };
   }, [searchParams]);
-  
+
   const goalId = params.goalId as Id<'goals'>;
   const goalActions = useSummaryGoalActions();
-  
+
   // Get the quarterly goal data to show in breadcrumb
   const { summaryData } = useQuarterlyGoalSummary({
     quarterlyGoalId: goalId,
@@ -47,11 +52,11 @@ export default function QuarterlySummaryPage() {
   // Set page title based on goal name
   React.useEffect(() => {
     const originalTitle = document.title;
-    
+
     if (summaryData?.quarterlyGoal.title) {
       document.title = `${summaryData.quarterlyGoal.title} - Q${quarter} ${year} Summary`;
     }
-    
+
     // Cleanup: restore original title when component unmounts
     return () => {
       document.title = originalTitle;
@@ -67,7 +72,7 @@ export default function QuarterlySummaryPage() {
   }, [router]);
 
   const handleGoHome = React.useCallback(() => {
-          router.push('/app/dashboard');
+    router.push('/app/dashboard');
   }, [router]);
 
   return (
@@ -86,7 +91,7 @@ export default function QuarterlySummaryPage() {
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back</span>
               </Button>
-              
+
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Button
                   variant="ghost"
@@ -133,7 +138,7 @@ export default function QuarterlySummaryPage() {
                   Markdown
                 </Button>
               </div>
-              
+
               {/* Quarter Badge */}
               <span className="text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                 Q{quarter} {year}
@@ -155,13 +160,10 @@ export default function QuarterlySummaryPage() {
           />
         ) : (
           summaryData && (
-            <QuarterlySummaryMarkdownView
-              summaryData={summaryData}
-              className="shadow-sm border"
-            />
+            <QuarterlySummaryMarkdownView summaryData={summaryData} className="shadow-sm border" />
           )
         )}
       </div>
     </div>
   );
-} 
+}

@@ -1,14 +1,15 @@
-import React, { useCallback } from "react";
-import { Flame } from "lucide-react";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { cn } from "@/lib/utils";
-import { useFireGoalStatus } from "@/contexts/GoalStatusContext";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { Flame } from 'lucide-react';
+import type React from 'react';
+import { useCallback } from 'react';
+import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
+import { cn } from '@/lib/utils';
 
 /**
  * Props for the fire icon component.
  */
 export interface FireIconProps {
-  goalId: Id<"goals">;
+  goalId: Id<'goals'>;
   className?: string;
 }
 
@@ -31,13 +32,14 @@ export const FireIcon: React.FC<FireIconProps> = ({ goalId, className }) => {
 
   return (
     <button
+      type="button"
       onClick={_handleClick}
       className={cn(
-        "text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity",
-        isOnFire ? "text-red-500 opacity-100" : "hover:text-red-500",
+        'text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity',
+        isOnFire ? 'text-red-500 opacity-100' : 'hover:text-red-500',
         className
       )}
-      title={isOnFire ? "Remove from urgent" : "Mark as urgent"}
+      title={isOnFire ? 'Remove from urgent' : 'Mark as urgent'}
     >
       <Flame className="h-3.5 w-3.5" />
     </button>

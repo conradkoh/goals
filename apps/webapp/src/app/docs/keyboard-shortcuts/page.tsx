@@ -1,18 +1,6 @@
-import { Metadata } from 'next';
-import {
-  Keyboard,
-  Command,
-  MousePointerClick,
-  ArrowUpDown,
-  ArrowLeftRight,
-  LayoutGrid,
-} from 'lucide-react';
-import {
-  DocHeader,
-  DocSection,
-  DocFeatureCard,
-  DocInfoCard,
-} from '../components/primitives';
+import { Command, Keyboard, LayoutGrid, MousePointerClick } from 'lucide-react';
+import type { Metadata } from 'next';
+import { DocHeader, DocInfoCard, DocSection } from '../components/primitives';
 
 export const metadata: Metadata = {
   title: 'Keyboard Shortcuts - Goals Documentation',
@@ -39,40 +27,26 @@ export default function KeyboardShortcutsPage() {
         >
           <div className="space-y-4">
             <p className="text-slate-700">
-              Quickly switch between different views to focus on your goals at
-              various levels.
+              Quickly switch between different views to focus on your goals at various levels.
             </p>
 
             <div className="space-y-4">
               <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">
-                  View Switching
-                </h3>
+                <h3 className="font-medium text-slate-900 mb-2">View Switching</h3>
                 <p className="text-sm text-slate-600 mb-3">
-                  When no element is focused, use these shortcuts to switch
-                  views:
+                  When no element is focused, use these shortcuts to switch views:
                 </p>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                      Q
-                    </span>
-                    <span className="text-slate-600">
-                      Switch to Quarterly View
-                    </span>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Q</span>
+                    <span className="text-slate-600">Switch to Quarterly View</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                      W
-                    </span>
-                    <span className="text-slate-600">
-                      Switch to Weekly View
-                    </span>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">W</span>
+                    <span className="text-slate-600">Switch to Weekly View</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                      D
-                    </span>
+                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">D</span>
                     <span className="text-slate-600">Switch to Daily View</span>
                   </div>
                 </div>
@@ -82,9 +56,9 @@ export default function KeyboardShortcutsPage() {
                 <p className="flex items-start gap-2">
                   <span className="font-semibold">Note:</span>
                   <span>
-                    View switching shortcuts only work when no element is
-                    focused (i.e., when clicking on the background) and no
-                    modifier keys (Ctrl, Alt, Shift, Meta/Command) are pressed.
+                    View switching shortcuts only work when no element is focused (i.e., when
+                    clicking on the background) and no modifier keys (Ctrl, Alt, Shift,
+                    Meta/Command) are pressed.
                   </span>
                 </p>
               </DocInfoCard>
@@ -99,27 +73,18 @@ export default function KeyboardShortcutsPage() {
         >
           <div className="space-y-4">
             <p className="text-slate-700">
-              Navigate through the application quickly using these global
-              shortcuts.
+              Navigate through the application quickly using these global shortcuts.
             </p>
 
             <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                    ?
-                  </span>
-                  <span className="text-slate-600">
-                    Show keyboard shortcuts help
-                  </span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">?</span>
+                  <span className="text-slate-600">Show keyboard shortcuts help</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                    Esc
-                  </span>
-                  <span className="text-slate-600">
-                    Close popups / Cancel current action
-                  </span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Esc</span>
+                  <span className="text-slate-600">Close popups / Cancel current action</span>
                 </div>
               </div>
             </div>

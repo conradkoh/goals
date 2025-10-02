@@ -1,9 +1,5 @@
-import { describe, test, expect } from 'vitest';
-import { DateTime } from 'luxon';
-import {
-  getFinalWeeksOfQuarter,
-  isInFinalWeeks,
-} from './getFinalWeeksOfQuarter';
+import { describe, expect, test } from 'vitest';
+import { getFinalWeeksOfQuarter, isInFinalWeeks } from './getFinalWeeksOfQuarter';
 
 describe('Final Weeks of Quarter Use Cases', () => {
   describe('getFinalWeeksOfQuarter', () => {
@@ -21,9 +17,7 @@ describe('Final Weeks of Quarter Use Cases', () => {
 
       // For our specific test case (2025-04-01), we want to verify
       // that week 13 is correctly identified as the final week of Q1
-      expect(
-        finalWeeks.some((w) => w.weekNumber === 13 && w.year === 2025)
-      ).toBe(true);
+      expect(finalWeeks.some((w) => w.weekNumber === 13 && w.year === 2025)).toBe(true);
     });
   });
 

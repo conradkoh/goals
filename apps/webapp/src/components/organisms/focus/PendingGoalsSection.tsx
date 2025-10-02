@@ -1,21 +1,15 @@
-import { WeeklyGoalTaskItem } from "@/components/molecules/day-of-week/components/WeeklyGoalTaskItem";
-import { GoalDetailsPopover } from "@/components/molecules/goal-details";
-import { DailyGoalTaskItem } from "@/components/organisms/DailyGoalTaskItem";
-
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useGoalStatus } from "@/contexts/GoalStatusContext";
-import { useWeek } from "@/hooks/useWeek";
-import { DayOfWeek } from "@/lib/constants";
-import { cn } from "@/lib/utils";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { Clock, Info, Pin, Star } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { Clock, Info, Pin, Star } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
+import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoalStatus } from '@/contexts/GoalStatusContext';
+import { useWeek } from '@/hooks/useWeek';
+import type { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface PendingGoalsSectionProps {
   weeklyGoalsWithQuarterly: Array<{
@@ -23,12 +17,8 @@ interface PendingGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoalTitle: (
-    goalId: Id<"goals">,
-    title: string,
-    details?: string
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<"goals">) => Promise<void>;
+  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
 }
 
 export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
@@ -37,7 +27,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   onUpdateGoalTitle,
   onDeleteGoal,
 }) => {
-  const { weeklyGoals, toggleGoalCompletion, weekNumber } = useWeek();
+  const { weeklyGoals } = useWeek();
   const { pendingGoals, getPendingDescription } = useGoalStatus();
 
   // Group pending goals by quarterly goal
@@ -86,8 +76,8 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
 
       // Find existing weekly goal entry or create a new one
       let weeklyGoalEntry = result
-        .get(quarterlyId)!
-        .weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
+        .get(quarterlyId)
+        ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
 
       if (!weeklyGoalEntry) {
         weeklyGoalEntry = {
@@ -96,11 +86,10 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
           isWeeklyPending,
           pendingDescription: weeklyPendingDescription,
         };
-        result.get(quarterlyId)!.weeklyGoals.push(weeklyGoalEntry);
+        result.get(quarterlyId)?.weeklyGoals.push(weeklyGoalEntry);
       } else {
         // Update pending status if it wasn't already set
-        weeklyGoalEntry.isWeeklyPending =
-          weeklyGoalEntry.isWeeklyPending || isWeeklyPending;
+        weeklyGoalEntry.isWeeklyPending = weeklyGoalEntry.isWeeklyPending || isWeeklyPending;
         if (weeklyPendingDescription) {
           weeklyGoalEntry.pendingDescription = weeklyPendingDescription;
         }
@@ -117,9 +106,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       .filter(
         (goal) =>
           pendingGoalIds.has(goal._id.toString()) &&
-          !goal.children.some(
-            (child) => child.state?.daily?.dayOfWeek === selectedDayOfWeek
-          )
+          !goal.children.some((child) => child.state?.daily?.dayOfWeek === selectedDayOfWeek)
       )
       .forEach((weeklyGoal) => {
         const parentQuarterlyGoal = weeklyGoalsWithQuarterly.find(
@@ -128,9 +115,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
 
         if (parentQuarterlyGoal) {
           const quarterlyId = parentQuarterlyGoal._id.toString();
-          const weeklyPendingDescription = getPendingDescription(
-            weeklyGoal._id
-          );
+          const weeklyPendingDescription = getPendingDescription(weeklyGoal._id);
 
           // Initialize quarterly entry if needed
           if (!result.has(quarterlyId)) {
@@ -142,14 +127,12 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
 
           // Check if this weekly goal is already in the list
           const existingEntry = result
-            .get(quarterlyId)!
-            .weeklyGoals.find(
-              (entry) => entry.weeklyGoal._id === weeklyGoal._id
-            );
+            .get(quarterlyId)
+            ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
 
           if (!existingEntry) {
             // Add weekly goal
-            result.get(quarterlyId)!.weeklyGoals.push({
+            result.get(quarterlyId)?.weeklyGoals.push({
               weeklyGoal,
               dailyGoals: [],
               isWeeklyPending: true,
@@ -175,7 +158,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   ]);
 
   const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<"goals">, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
       await onUpdateGoalTitle(goalId, title, details);
     },
     [onUpdateGoalTitle]
@@ -190,18 +173,13 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-lg font-semibold text-yellow-700">
-            Pending Items
-          </h2>
+          <h2 className="text-lg font-semibold text-yellow-700">Pending Items</h2>
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="h-4 w-4 text-yellow-400 hover:text-yellow-500 transition-colors" />
               </TooltipTrigger>
-              <TooltipContent
-                sideOffset={5}
-                className="animate-in fade-in-50 duration-300"
-              >
+              <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                 <p className="text-xs max-w-xs">
                   These pending items are waiting for someone or something.
                 </p>
@@ -214,10 +192,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       <div className="space-y-4">
         {Array.from(pendingGoalsByQuarterly.entries()).map(
           ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
-            <div
-              key={quarterlyId}
-              className="border-b border-yellow-100 pb-3 last:border-b-0"
-            >
+            <div key={quarterlyId} className="border-b border-yellow-100 pb-3 last:border-b-0">
               {/* Quarterly Goal Header with Popover */}
               <div className="flex items-center gap-1.5 mb-2">
                 {quarterlyGoal.state?.isStarred && (
@@ -233,8 +208,8 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                   }
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-yellow-800 hover:text-yellow-900 hover:no-underline"
                   titleClassName={cn(
-                    "break-words w-full whitespace-pre-wrap flex items-center",
-                    quarterlyGoal.isComplete ? "flex items-center" : ""
+                    'break-words w-full whitespace-pre-wrap flex items-center',
+                    quarterlyGoal.isComplete ? 'flex items-center' : ''
                   )}
                 />
               </div>
@@ -243,12 +218,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
               <div className="space-y-2 ml-4">
                 {/* Render all weekly goals with their associated daily goals */}
                 {weeklyGoals.map(
-                  ({
-                    weeklyGoal,
-                    dailyGoals,
-                    isWeeklyPending,
-                    pendingDescription,
-                  }) => (
+                  ({ weeklyGoal, dailyGoals, isWeeklyPending, pendingDescription }) => (
                     <div key={`weekly-${weeklyGoal._id.toString()}`}>
                       {/* Always show the weekly goal if it's pending or has daily goals */}
                       {(isWeeklyPending || dailyGoals.length > 0) && (
@@ -270,8 +240,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                       {dailyGoals.length > 0 && (
                         <div className="space-y-1 ml-4">
                           {dailyGoals.map((dailyGoal) => {
-                            const dailyPendingDescription =
-                              getPendingDescription(dailyGoal._id);
+                            const dailyPendingDescription = getPendingDescription(dailyGoal._id);
                             return (
                               <div key={dailyGoal._id.toString()}>
                                 <DailyGoalTaskItem

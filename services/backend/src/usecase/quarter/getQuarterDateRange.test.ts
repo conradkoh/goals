@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
-import { getQuarterDateRange, getPreviousQuarter } from './getQuarterDateRange';
+import { describe, expect, test } from 'vitest';
+import { getPreviousQuarter, getQuarterDateRange } from './getQuarterDateRange';
 
 describe('Quarter Date Range Use Cases', () => {
   describe('getQuarterDateRange', () => {

@@ -65,6 +65,7 @@ export function useDomMeasurement<T extends HTMLElement>(
     height: 0,
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: state dependencies intentionally excluded to prevent infinite loops
   useEffect(() => {
     const element = elementRef.current;
     if (!element) return;

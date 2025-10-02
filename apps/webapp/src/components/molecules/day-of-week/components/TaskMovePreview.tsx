@@ -1,3 +1,4 @@
+import { History, Pin, Star } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,8 +10,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
-import { History, Pin, Star } from 'lucide-react';
-import React from 'react';
 
 export interface PreviewTask {
   id: string;
@@ -83,7 +82,7 @@ export const TaskMovePreview = ({
           string,
           {
             weeklyGoal: { id: string; title: string };
-            tasks: Array<PreviewTask>;
+            tasks: PreviewTask[];
           }
         >;
       }
@@ -110,10 +109,7 @@ export const TaskMovePreview = ({
               ) : (
                 <div className="space-y-4">
                   {Object.values(groupedTasks || {}).map((quarterlyGroup) => (
-                    <div
-                      key={quarterlyGroup.quarterlyGoal.id}
-                      className="space-y-2"
-                    >
+                    <div key={quarterlyGroup.quarterlyGoal.id} className="space-y-2">
                       <h4 className="font-medium text-sm flex items-center gap-1.5">
                         {quarterlyGroup.quarterlyGoal.isStarred && (
                           <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
@@ -131,37 +127,27 @@ export const TaskMovePreview = ({
                           quarterlyGroup.quarterlyGoal.isStarred
                             ? 'bg-yellow-50 border border-yellow-200'
                             : quarterlyGroup.quarterlyGoal.isPinned
-                            ? 'bg-blue-50 border border-blue-200'
-                            : ''
+                              ? 'bg-blue-50 border border-blue-200'
+                              : ''
                         )}
                       >
-                        {Object.values(quarterlyGroup.weeklyGoals).map(
-                          (weeklyGroup) => (
-                            <div
-                              key={weeklyGroup.weeklyGoal.id}
-                              className="pl-4 space-y-1 py-2"
-                            >
-                              <h5 className="text-sm text-muted-foreground">
-                                <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                                  {weeklyGroup.weeklyGoal.title}
-                                </div>
-                              </h5>
-                              <ul className="space-y-1">
-                                {weeklyGroup.tasks.map((task) => (
-                                  <li
-                                    key={task.id}
-                                    className="flex items-center gap-2 pl-4"
-                                  >
-                                    <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                    <div className="text-sm break-words">
-                                      {task.title}
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )
-                        )}
+                        {Object.values(quarterlyGroup.weeklyGoals).map((weeklyGroup) => (
+                          <div key={weeklyGroup.weeklyGoal.id} className="pl-4 space-y-1 py-2">
+                            <h5 className="text-sm text-muted-foreground">
+                              <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                                {weeklyGroup.weeklyGoal.title}
+                              </div>
+                            </h5>
+                            <ul className="space-y-1">
+                              {weeklyGroup.tasks.map((task) => (
+                                <li key={task.id} className="flex items-center gap-2 pl-4">
+                                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                  <div className="text-sm break-words">{task.title}</div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -173,9 +159,7 @@ export const TaskMovePreview = ({
         <AlertDialogFooter>
           <AlertDialogCancel>Close</AlertDialogCancel>
           {preview && preview.tasks.length > 0 && (
-            <AlertDialogAction onClick={onConfirm}>
-              Move Tasks
-            </AlertDialogAction>
+            <AlertDialogAction onClick={onConfirm}>Move Tasks</AlertDialogAction>
           )}
         </AlertDialogFooter>
       </AlertDialogContent>

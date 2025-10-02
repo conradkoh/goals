@@ -1,24 +1,18 @@
-import { Button } from '@/components/ui/button';
+import { CalendarDays, History } from 'lucide-react';
+import { DateTime } from 'luxon';
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, DayOfWeekType, getDayName } from '@/lib/constants';
-import { History, CalendarDays } from 'lucide-react';
-import { DateTime } from 'luxon';
-import { useState } from 'react';
-import { TaskMovePreview, TaskMovePreviewData } from './TaskMovePreview';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, getDayName } from '@/lib/constants';
+import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
 
 interface DayHeaderProps {
   dayOfWeek: DayOfWeek;
@@ -26,17 +20,12 @@ interface DayHeaderProps {
   dateTimestamp: number;
 }
 
-export const DayHeader = ({
-  dayOfWeek,
-  weekNumber,
-  dateTimestamp,
-}: DayHeaderProps) => {
+export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderProps) => {
   const { moveGoalsFromDay } = useWeek();
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
-  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] =
-    useState(false);
+  const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] = useState(false);
 
   const isMonday = dayOfWeek === DayOfWeek.MONDAY;
   const isDisabled = isMovingTasks || isMonday;
@@ -90,6 +79,7 @@ export const DayHeader = ({
       if (fromAllPastDays) {
         // Get all past days in the week
         const pastDays = getAllPastDaysOfWeek(dayOfWeek);
+        // biome-ignore lint/suspicious/noExplicitAny: Complex type from moveGoalsFromDay result
         let allTasks: any[] = [];
         let hasAnyTasks = false;
 
@@ -112,11 +102,7 @@ export const DayHeader = ({
             moveOnlyIncomplete: true,
           });
 
-          if (
-            'canMove' in previewData &&
-            previewData.canMove &&
-            previewData.tasks.length > 0
-          ) {
+          if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
             allTasks = [...allTasks, ...previewData.tasks];
             hasAnyTasks = true;
           }
@@ -295,9 +281,7 @@ export const DayHeader = ({
               <DropdownMenuTrigger asChild>
                 <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer flex items-center gap-2">
                   <span>{getDayName(dayOfWeek)}</span>
-                  <span className="text-gray-500 font-normal">
-                    {formattedDate}
-                  </span>
+                  <span className="text-gray-500 font-normal">{formattedDate}</span>
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -306,16 +290,11 @@ export const DayHeader = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="w-full cursor-not-allowed">
-                          <DropdownMenuItem
-                            className="cursor-not-allowed opacity-50"
-                            disabled
-                          >
+                          <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
                             <History className="mr-2 h-4 w-4" />
                             <div className="flex flex-col w-full items-center">
                               <span>Pull Incomplete</span>
-                              <span className="text-gray-500 text-xs">
-                                from previous day
-                              </span>
+                              <span className="text-gray-500 text-xs">from previous day</span>
                             </div>
                           </DropdownMenuItem>
                         </div>
@@ -334,9 +313,7 @@ export const DayHeader = ({
                       <History className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">
-                          from previous day
-                        </span>
+                        <span className="text-gray-500 text-xs">from previous day</span>
                       </div>
                     </DropdownMenuItem>
 
@@ -349,9 +326,7 @@ export const DayHeader = ({
                       <CalendarDays className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">
-                          from all past days in week
-                        </span>
+                        <span className="text-gray-500 text-xs">from all past days in week</span>
                       </div>
                     </DropdownMenuItem>
                   </>

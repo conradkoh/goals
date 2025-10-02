@@ -44,16 +44,9 @@ const CollapsibleMinimalContent = ({
   ...props
 }: React.ComponentPropsWithoutRef<typeof CollapsiblePrimitive.Content>) => (
   <CollapsiblePrimitive.Content
-    className={cn(
-      'mt-2 space-y-1 animate-in slide-in-from-top-1 duration-100',
-      className
-    )}
+    className={cn('mt-2 space-y-1 animate-in slide-in-from-top-1 duration-100', className)}
     {...props}
   />
 );
 
-export {
-  CollapsibleMinimal,
-  CollapsibleMinimalTrigger,
-  CollapsibleMinimalContent,
-};
+export { CollapsibleMinimal, CollapsibleMinimalTrigger, CollapsibleMinimalContent };

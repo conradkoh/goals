@@ -1,29 +1,24 @@
+import { DayOfWeek } from '@services/backend/src/constants';
+import {
+  ArrowDownToLine,
+  ArrowRightLeft,
+  History,
+  MoreVertical,
+  MoveHorizontal,
+} from 'lucide-react';
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
-import {
-  MoreVertical,
-  History,
-  ArrowDownToLine,
-  ArrowRightLeft,
-  MoveHorizontal,
-} from 'lucide-react';
-import { DayOfWeek } from '@services/backend/src/constants';
-import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
+import { cn } from '@/lib/utils';
 
 interface WeekActionMenuProps {
   isDisabled?: boolean;
@@ -32,13 +27,7 @@ interface WeekActionMenuProps {
   tooltipContent?: string;
   handlePreviewTasks: (dayOfWeek?: DayOfWeek) => void;
   buttonSize?: 'default' | 'sm' | 'lg' | 'icon';
-  buttonVariant?:
-    | 'default'
-    | 'destructive'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link';
+  buttonVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   align?: 'start' | 'center' | 'end';
   className?: string;
   showLabel?: boolean;
@@ -57,8 +46,8 @@ export const WeekActionMenu = React.memo(
     className,
     showLabel = false,
   }: WeekActionMenuProps) => {
-  // Use a hook that updates only once a day (at midnight) to avoid excessive rerenders
-  const { weekday, weekdayLong } = useCurrentDateInfo();
+    // Use a hook that updates only once a day (at midnight) to avoid excessive rerenders
+    const { weekday, weekdayLong } = useCurrentDateInfo();
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -66,10 +55,7 @@ export const WeekActionMenu = React.memo(
             variant={buttonVariant}
             size={buttonSize}
             disabled={isDisabled}
-            className={cn(
-              'text-muted-foreground hover:text-foreground',
-              className
-            )}
+            className={cn('text-muted-foreground hover:text-foreground', className)}
           >
             {showLabel ? (
               <>
@@ -91,16 +77,11 @@ export const WeekActionMenu = React.memo(
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="w-full cursor-not-allowed">
-                    <DropdownMenuItem
-                      className="cursor-not-allowed opacity-50"
-                      disabled
-                    >
+                    <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
                       <History className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">
-                          from last non-empty week
-                        </span>
+                        <span className="text-gray-500 text-xs">from last non-empty week</span>
                       </div>
                     </DropdownMenuItem>
                   </div>
@@ -127,9 +108,7 @@ export const WeekActionMenu = React.memo(
                 className="flex items-center"
               >
                 <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">
-                  To first day of the week (Monday)
-                </span>
+                <span className="text-sm">To first day of the week (Monday)</span>
               </DropdownMenuItem>
 
               <DropdownMenuItem

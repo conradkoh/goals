@@ -1,6 +1,6 @@
-import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
-import { useState, useRef, useEffect, forwardRef, ForwardedRef } from 'react';
+import { type ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
+import { Input } from '@/components/ui/input';
 
 interface CreateGoalInputProps {
   placeholder?: string;

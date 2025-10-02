@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { createContext, type ReactNode, useContext, useState } from 'react';
 
 interface GoalEditContextType {
   isEditing: boolean;
@@ -8,16 +8,12 @@ interface GoalEditContextType {
   stopEditing: () => void;
 }
 
-const GoalEditContext = createContext<GoalEditContextType | undefined>(
-  undefined
-);
+const GoalEditContext = createContext<GoalEditContextType | undefined>(undefined);
 
 export function useGoalEditContext() {
   const context = useContext(GoalEditContext);
   if (context === undefined) {
-    throw new Error(
-      'useGoalEditContext must be used within a GoalEditProvider'
-    );
+    throw new Error('useGoalEditContext must be used within a GoalEditProvider');
   }
   return context;
 }
@@ -28,8 +24,7 @@ interface GoalEditProviderProps {
 
 export function GoalEditProvider({ children }: GoalEditProviderProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editingGoal, setEditingGoal] =
-    useState<GoalWithDetailsAndChildren | null>(null);
+  const [editingGoal, setEditingGoal] = useState<GoalWithDetailsAndChildren | null>(null);
 
   const startEditing = (goal: GoalWithDetailsAndChildren) => {
     setEditingGoal(goal);
@@ -48,9 +43,5 @@ export function GoalEditProvider({ children }: GoalEditProviderProps) {
     stopEditing,
   };
 
-  return (
-    <GoalEditContext.Provider value={value}>
-      {children}
-    </GoalEditContext.Provider>
-  );
+  return <GoalEditContext.Provider value={value}>{children}</GoalEditContext.Provider>;
 }

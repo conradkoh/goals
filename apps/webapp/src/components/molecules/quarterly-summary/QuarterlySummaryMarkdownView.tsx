@@ -1,11 +1,11 @@
+import type { QuarterlyGoalSummary } from '@services/backend/src/usecase/getWeekDetails';
+import { Check, Copy } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Copy, Check } from 'lucide-react';
-import { QuarterlyGoalSummary } from '@services/backend/src/usecase/getWeekDetails';
-import { generateQuarterlySummaryMarkdown } from '@/lib/markdown/quarterlyMarkdown';
 import { useClipboard } from '@/hooks/useClipboard';
+import { generateQuarterlySummaryMarkdown } from '@/lib/markdown/quarterlyMarkdown';
 import { cn } from '@/lib/utils';
 
 interface QuarterlySummaryMarkdownViewProps {
@@ -34,7 +34,7 @@ export function QuarterlySummaryMarkdownView({
       markdownContent,
       'Quarterly summary markdown copied to clipboard!'
     );
-    
+
     if (success) {
       setJustCopied(true);
       setTimeout(() => setJustCopied(false), 2000);
@@ -52,15 +52,15 @@ export function QuarterlySummaryMarkdownView({
               Copy this markdown to share or save your quarterly summary
             </p>
           </div>
-          
+
           <Button
             onClick={handleCopy}
             disabled={isCopying}
-            variant={justCopied ? "default" : "outline"}
+            variant={justCopied ? 'default' : 'outline'}
             size="sm"
             className={cn(
-              "transition-all duration-200",
-              justCopied && "bg-green-600 hover:bg-green-700 text-white"
+              'transition-all duration-200',
+              justCopied && 'bg-green-600 hover:bg-green-700 text-white'
             )}
           >
             {justCopied ? (
@@ -76,7 +76,7 @@ export function QuarterlySummaryMarkdownView({
             )}
           </Button>
         </div>
-        
+
         {/* Options */}
         <div className="flex items-center space-x-2">
           <Checkbox
@@ -99,11 +99,11 @@ export function QuarterlySummaryMarkdownView({
           <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 border rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
             <code className="text-gray-800">{markdownContent}</code>
           </pre>
-          
+
           {/* Fade overlay at bottom when scrollable */}
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none rounded-b-lg" />
         </div>
-        
+
         {/* Character count */}
         <div className="mt-3 text-xs text-gray-500 text-right">
           {markdownContent.length.toLocaleString()} characters
@@ -111,4 +111,4 @@ export function QuarterlySummaryMarkdownView({
       </div>
     </Card>
   );
-} 
+}

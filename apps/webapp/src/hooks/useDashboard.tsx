@@ -1,12 +1,11 @@
 'use client';
 
-import { ViewMode } from '@/components/molecules/focus/constants';
+import { useRouter, useSearchParams } from 'next/navigation';
+import type React from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
+import type { ViewMode } from '@/components/molecules/focus/constants';
 import { useScreenSize } from '@/hooks/useScreenSize';
 import { DayOfWeek } from '@/lib/constants';
-import { FunctionReference } from 'convex/server';
-import { DateTime } from 'luxon';
-import { useRouter, useSearchParams } from 'next/navigation';
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
 import { useCurrentDateInfo } from './useCurrentDateTime';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
 
@@ -70,15 +69,9 @@ interface DashboardContextValue {
   toggleFocusMode: () => void;
 }
 
-const DashboardContext = createContext<DashboardContextValue | 'not-found'>(
-  'not-found'
-);
+const DashboardContext = createContext<DashboardContextValue | 'not-found'>('not-found');
 
-export const DashboardProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const DashboardProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isMobile } = useScreenSize();
@@ -94,12 +87,12 @@ export const DashboardProvider = ({
   const currentDayName = currentDate.weekdayLong;
   const currentQuarter = currentDate.quarter;
 
-  // Get year and quarter from URL or use current values
-  const selectedYear = searchParams.get('year')
-    ? parseInt(searchParams.get('year')!)
-    : currentYear;
-  const selectedQuarter = searchParams.get('quarter')
-    ? (parseInt(searchParams.get('quarter')!) as 1 | 2 | 3 | 4)
+  const yearParam = searchParams.get('year');
+  const quarterParam = searchParams.get('quarter');
+
+  const selectedYear = yearParam ? Number.parseInt(yearParam) : currentYear;
+  const selectedQuarter = quarterParam
+    ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
     : currentQuarter;
 
   // Get quarter week info
@@ -114,12 +107,12 @@ export const DashboardProvider = ({
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');
-  const selectedWeek = weekFromUrl ? parseInt(weekFromUrl) : currentWeekNumber;
+  const selectedWeek = weekFromUrl ? Number.parseInt(weekFromUrl) : currentWeekNumber;
 
   // Get day from URL or use current day
   const dayFromUrl = searchParams.get('day');
   const selectedDayOfWeek = dayFromUrl
-    ? (parseInt(dayFromUrl) as DayOfWeek)
+    ? (Number.parseInt(dayFromUrl) as DayOfWeek)
     : (currentDate.weekday as DayOfWeek);
 
   // Calculate navigation bounds
@@ -182,10 +175,7 @@ export const DashboardProvider = ({
       };
 
       // If changing to weekly or daily view, ensure week parameter is set
-      if (
-        (newViewMode === 'weekly' || newViewMode === 'daily') &&
-        !searchParams.has('week')
-      ) {
+      if ((newViewMode === 'weekly' || newViewMode === 'daily') && !searchParams.has('week')) {
         params.week = currentWeekNumber;
       }
 
@@ -244,13 +234,7 @@ export const DashboardProvider = ({
         day: (selectedDayOfWeek - 1) as DayOfWeek,
       });
     }
-  }, [
-    isAtMinBound,
-    viewMode,
-    selectedWeek,
-    selectedDayOfWeek,
-    updateUrlParams,
-  ]);
+  }, [isAtMinBound, viewMode, selectedWeek, selectedDayOfWeek, updateUrlParams]);
 
   // Handle next navigation
   const handleNext = useCallback(() => {
@@ -273,13 +257,7 @@ export const DashboardProvider = ({
         day: (selectedDayOfWeek + 1) as DayOfWeek,
       });
     }
-  }, [
-    isAtMaxBound,
-    viewMode,
-    selectedWeek,
-    selectedDayOfWeek,
-    updateUrlParams,
-  ]);
+  }, [isAtMaxBound, viewMode, selectedWeek, selectedDayOfWeek, updateUrlParams]);
 
   // Handle toggle focus mode
   const toggleFocusMode = useCallback(() => {
@@ -352,16 +330,5 @@ export const DashboardProvider = ({
     ]
   );
 
-  return (
-    <DashboardContext.Provider value={value}>
-      {children}
-    </DashboardContext.Provider>
-  );
+  return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 };
-
-type QueryReturnType<Query extends FunctionReference<'query'>> =
-  Query['_returnType'];
-
-type AsyncQueryReturnType<Query extends FunctionReference<'query'>> =
-  | QueryReturnType<Query>
-  | undefined;

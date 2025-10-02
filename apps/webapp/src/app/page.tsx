@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { ArrowRight, BookOpen } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -13,8 +13,8 @@ export default function Home() {
         </h1>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          A powerful goal management system that helps you break down quarterly
-          objectives into weekly and daily actionable tasks.
+          A powerful goal management system that helps you break down quarterly objectives into
+          weekly and daily actionable tasks.
         </p>
 
         <div className="space-y-4 max-w-xl mx-auto">
@@ -42,7 +42,7 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-                          href="/app/dashboard"
+            href="/app/dashboard"
             className="inline-flex items-center justify-center gap-2 px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
           >
             Try Dashboard
@@ -59,10 +59,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-20 text-center text-sm text-muted-foreground">
-        <p>
-          Start achieving your goals today with our structured approach to goal
-          management.
-        </p>
+        <p>Start achieving your goals today with our structured approach to goal management.</p>
       </footer>
     </div>
   );

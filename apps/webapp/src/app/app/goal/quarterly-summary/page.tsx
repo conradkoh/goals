@@ -1,18 +1,18 @@
 'use client';
 
-import React from 'react';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { ArrowLeft, Eye, FileText, Home, Settings } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { 
-  MultiQuarterlyGoalSummaryView, 
+import React from 'react';
+import {
+  MultiQuarterlyGoalSummaryView,
   MultiQuarterlySummaryMarkdownView,
-  QuarterlyGoalSelector 
+  QuarterlyGoalSelector,
 } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, FileText, Eye, Settings } from 'lucide-react';
 import { useMultipleQuarterlyGoalsSummary } from '@/hooks/useMultipleQuarterlyGoalsSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
-import { DateTime } from 'luxon';
 
 /**
  * Renders the multi-goal quarterly summary page.
@@ -25,18 +25,20 @@ export default function MultiGoalQuarterlySummaryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = React.useState<'summary' | 'markdown' | 'selection'>('selection');
-  
+
   // Get year and quarter from URL params, fallback to current date
   const { year, quarter } = React.useMemo(() => {
     const now = DateTime.now();
     const yearParam = searchParams.get('year');
     const quarterParam = searchParams.get('quarter');
-    
-    const year = yearParam ? parseInt(yearParam) : now.year;
-    const quarter = quarterParam ? (parseInt(quarterParam) as 1 | 2 | 3 | 4) : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
+
+    const year = yearParam ? Number.parseInt(yearParam) : now.year;
+    const quarter = quarterParam
+      ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
+      : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
     return { year, quarter };
   }, [searchParams]);
-  
+
   // Get selected goal IDs from URL params
   const [selectedGoalIds, setSelectedGoalIds] = React.useState<Id<'goals'>[]>(() => {
     const goalsParam = searchParams.get('goals');
@@ -45,9 +47,9 @@ export default function MultiGoalQuarterlySummaryPage() {
     }
     return [];
   });
-  
+
   const goalActions = useSummaryGoalActions();
-  
+
   // Get the multi-goal summary data
   const { summaryData } = useMultipleQuarterlyGoalsSummary({
     quarterlyGoalIds: selectedGoalIds,
@@ -63,7 +65,7 @@ export default function MultiGoalQuarterlySummaryPage() {
     if (selectedGoalIds.length > 0) {
       params.set('goals', selectedGoalIds.join(','));
     }
-    
+
     const newUrl = `/app/goal/quarterly-summary?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
   }, [selectedGoalIds, year, quarter]);
@@ -72,7 +74,7 @@ export default function MultiGoalQuarterlySummaryPage() {
   React.useEffect(() => {
     const originalTitle = document.title;
     document.title = `Q${quarter} ${year} Multi-Goal Summary`;
-    
+
     return () => {
       document.title = originalTitle;
     };
@@ -120,7 +122,7 @@ export default function MultiGoalQuarterlySummaryPage() {
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back</span>
               </Button>
-              
+
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Button
                   variant="ghost"
@@ -174,7 +176,7 @@ export default function MultiGoalQuarterlySummaryPage() {
                   Markdown
                 </Button>
               </div>
-              
+
               {/* Quarter Badge */}
               <span className="text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                 Q{quarter} {year}
@@ -197,7 +199,7 @@ export default function MultiGoalQuarterlySummaryPage() {
             className="bg-white rounded-lg shadow-sm border p-6"
           />
         )}
-        
+
         {viewMode === 'summary' && canShowSummary && (
           <MultiQuarterlyGoalSummaryView
             quarterlyGoalIds={selectedGoalIds}
@@ -207,25 +209,23 @@ export default function MultiGoalQuarterlySummaryPage() {
             className="bg-white rounded-lg shadow-sm border p-6"
           />
         )}
-        
+
         {viewMode === 'markdown' && canShowSummary && summaryData && (
           <MultiQuarterlySummaryMarkdownView
             summaryData={summaryData}
             className="shadow-sm border"
           />
         )}
-        
+
         {!canShowSummary && viewMode !== 'selection' && (
           <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
             <p className="text-muted-foreground mb-4">
               No goals selected. Please select goals to view the summary.
             </p>
-            <Button onClick={() => setViewMode('selection')}>
-              Select Goals
-            </Button>
+            <Button onClick={() => setViewMode('selection')}>Select Goals</Button>
           </div>
         )}
       </div>
     </div>
   );
-} 
+}

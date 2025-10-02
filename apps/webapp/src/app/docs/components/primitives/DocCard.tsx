@@ -1,6 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import type React from 'react';
 import { Button } from '@/components/ui/button';
 
 interface DocCardProps {
@@ -32,8 +32,7 @@ export function DocCard({
 
   const buttonVariants = {
     blue: 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300',
-    indigo:
-      'border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300',
+    indigo: 'border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300',
   };
 
   return (
@@ -59,10 +58,7 @@ export function DocCard({
             size="sm"
             className={`w-full ${buttonVariants[variant]} group font-medium`}
           >
-            <Link
-              href={href}
-              className="flex items-center justify-center gap-1.5"
-            >
+            <Link href={href} className="flex items-center justify-center gap-1.5">
               View Guide
               <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </Link>

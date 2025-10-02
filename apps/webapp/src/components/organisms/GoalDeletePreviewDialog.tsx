@@ -1,11 +1,5 @@
-import {
-  Trash2,
-  AlertTriangle,
-  Target,
-  Calendar,
-  CheckSquare,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Id } from '@services/backend/convex/_generated/dataModel';
+import { cn } from '@/lib/utils';
 
 // Define the structure of a goal node in the preview
 interface GoalPreviewNode {
@@ -83,9 +77,7 @@ export const GoalDeletePreviewDialog = ({
   }
 
   // Check if we're deleting a quarterly goal
-  const isDeletingQuarterlyGoal = preview.goalsToDelete.some(
-    (goal) => goal.depth === 0
-  );
+  const isDeletingQuarterlyGoal = preview.goalsToDelete.some((goal) => goal.depth === 0);
 
   // Count weekly goals
   const weeklyGoalsCount = countGoalsByDepth(preview.goalsToDelete, 1);
@@ -94,7 +86,7 @@ export const GoalDeletePreviewDialog = ({
   const dailyGoalsCount = countGoalsByDepth(preview.goalsToDelete, 2);
 
   // Recursive function to render a goal and its children
-  const renderGoalTree = (goal: GoalPreviewNode, level: number = 0) => {
+  const renderGoalTree = (goal: GoalPreviewNode, level = 0) => {
     const depthLabel = getDepthLabel(goal.depth);
     const isQuarterly = goal.depth === 0;
     const isWeekly = goal.depth === 1;
@@ -135,8 +127,7 @@ export const GoalDeletePreviewDialog = ({
             <span className="text-xs ml-2 opacity-70">({depthLabel})</span>
             {!isQuarterly && goal.weeks && goal.weeks.length > 0 && (
               <span className="text-xs ml-2 opacity-70">
-                - {goal.weeks.length === 1 ? 'Week' : 'Weeks'}:{' '}
-                {goal.weeks.join(', ')}
+                - {goal.weeks.length === 1 ? 'Week' : 'Weeks'}: {goal.weeks.join(', ')}
               </span>
             )}
           </div>
@@ -168,18 +159,17 @@ export const GoalDeletePreviewDialog = ({
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 mt-0.5 text-red-500" />
                     <p className="text-sm">
-                      This action will permanently delete the selected goal and
-                      all its child goals.
+                      This action will permanently delete the selected goal and all its child goals.
                     </p>
                   </div>
                   {isDeletingQuarterlyGoal && (
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-4 w-4 mt-0.5 text-red-500" />
                       <p className="text-sm">
-                        <strong>Important:</strong> Deleting this quarterly goal
-                        will delete {weeklyGoalsCount} weekly goal
-                        {weeklyGoalsCount !== 1 ? 's' : ''} across multiple
-                        weeks and {dailyGoalsCount} daily goal
+                        <strong>Important:</strong> Deleting this quarterly goal will delete{' '}
+                        {weeklyGoalsCount} weekly goal
+                        {weeklyGoalsCount !== 1 ? 's' : ''} across multiple weeks and{' '}
+                        {dailyGoalsCount} daily goal
                         {dailyGoalsCount !== 1 ? 's' : ''}.
                       </p>
                     </div>
@@ -192,9 +182,7 @@ export const GoalDeletePreviewDialog = ({
               </div>
 
               <div className="space-y-4">
-                <h3 className="font-semibold text-sm">
-                  The following items will be deleted:
-                </h3>
+                <h3 className="font-semibold text-sm">The following items will be deleted:</h3>
 
                 {/* Summary of goals to be deleted */}
                 {isDeletingQuarterlyGoal && (
@@ -234,10 +222,7 @@ export const GoalDeletePreviewDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onDeleteGoals}
-            className="bg-red-500 hover:bg-red-600"
-          >
+          <AlertDialogAction onClick={onDeleteGoals} className="bg-red-500 hover:bg-red-600">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -247,10 +232,7 @@ export const GoalDeletePreviewDialog = ({
 };
 
 // Helper function to count goals by depth
-function countGoalsByDepth(
-  goals: GoalPreviewNode[],
-  targetDepth: number
-): number {
+function countGoalsByDepth(goals: GoalPreviewNode[], targetDepth: number): number {
   let count = 0;
 
   function traverse(goal: GoalPreviewNode) {

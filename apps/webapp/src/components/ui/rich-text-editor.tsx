@@ -1,23 +1,21 @@
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import Underline from '@tiptap/extension-underline';
-import { cn } from '@/lib/utils';
-import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { EditorView } from '@tiptap/pm/view';
+import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { ConditionalRender } from '@/components/atoms/ConditionalRender';
+import { cn } from '@/lib/utils';
 
 // Helper function to check if HTML content is effectively empty
-const isHTMLEmpty = (html: string) => {
+const _isHTMLEmpty = (html: string) => {
   // Remove all HTML tags
   const textContent = html.replace(/<[^>]*>/g, '');
   // Remove all whitespace, including non-breaking spaces and other special characters
-  const cleanContent = textContent.replace(
-    /[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,
-    ''
-  );
+  // biome-ignore lint/suspicious/noMisleadingCharacterClass: Unicode ranges intentionally match individual characters
+  const cleanContent = textContent.replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, '');
   return cleanContent === '';
 };
 
@@ -40,7 +38,7 @@ const NoNewLineOnSubmit = Extension.create({
       new Plugin({
         key: new PluginKey('eventHandler'),
         props: {
-          handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+          handleKeyDown: (_view: EditorView, event: KeyboardEvent) => {
             // Prevent new line on Cmd/Ctrl + Enter
             if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
               return true; // Return true to mark the event as handled
@@ -60,12 +58,7 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-export function RichTextEditor({
-  value,
-  onChange,
-  className,
-  placeholder,
-}: RichTextEditorProps) {
+export function RichTextEditor({ value, onChange, className, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -86,8 +79,7 @@ export function RichTextEditor({
         },
         code: {
           HTMLAttributes: {
-            class:
-              'rounded-md bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm',
+            class: 'rounded-md bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm',
           },
         },
         codeBlock: {
@@ -153,11 +145,7 @@ export function RichTextEditor({
           if (event.key === ' ' && !event.metaKey && !event.ctrlKey) {
             // Check for markdown syntax at the start of the line
             const { from } = view.state.selection;
-            const line = view.state.doc.textBetween(
-              Math.max(0, from - 10),
-              from,
-              '\n'
-            );
+            const line = view.state.doc.textBetween(Math.max(0, from - 10), from, '\n');
 
             // Handle basic markdown shortcuts
             if (line.endsWith('# ')) {
@@ -191,14 +179,10 @@ export function RichTextEditor({
           }
           return false;
         },
-        handlePaste: (view, event) => {
+        handlePaste: (_view, event) => {
           // Handle link pasting over selected text
           const clipboardText = event.clipboardData?.getData('text/plain');
-          if (
-            clipboardText &&
-            clipboardText.match(/^https?:\/\//) &&
-            editor.state.selection.content().size > 0
-          ) {
+          if (clipboardText?.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
             editor.commands.setLink({ href: clipboardText });
             return true;
           }

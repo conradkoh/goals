@@ -101,9 +101,7 @@ export function useCenteredScroll(
   const getGridContent = useCallback(() => {
     if (!containerRef.current) return null;
 
-    return containerRef.current.querySelector(
-      gridContentSelector
-    ) as HTMLElement | null;
+    return containerRef.current.querySelector(gridContentSelector) as HTMLElement | null;
   }, [containerRef, gridContentSelector]);
 
   // Scroll to the current item
@@ -119,8 +117,7 @@ export function useCenteredScroll(
       if (!gridContent) return;
 
       const items = Array.from(gridContent.children);
-      if (items.length === 0 || itemIndex < 0 || itemIndex >= items.length)
-        return;
+      if (items.length === 0 || itemIndex < 0 || itemIndex >= items.length) return;
 
       const targetItem = items[itemIndex] as HTMLElement;
       if (!targetItem) return;
@@ -144,7 +141,7 @@ export function useCenteredScroll(
           left: scrollPosition,
           behavior: smooth ? 'smooth' : 'auto',
         });
-      } catch (error) {
+      } catch (_error) {
         // Fallback to direct assignment if scrollTo fails
         scrollableContainer.scrollLeft = scrollPosition;
       }

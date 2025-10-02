@@ -1,13 +1,9 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { ArrowDownToLine, FileText, History } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React from 'react';
+import { QuarterlyGoalSelector } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -17,16 +13,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { ArrowDownToLine, History, FileText } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Id } from '@services/backend/convex/_generated/dataModel';
-import { QuarterlyGoalSelector } from '@/components/molecules/quarterly-summary';
 
 export interface QuarterActionMenuProps {
   isDisabled?: boolean;
@@ -96,10 +91,7 @@ export const QuarterActionMenu = React.memo(
               variant={buttonVariant}
               size={buttonSize}
               disabled={isDisabled}
-              className={cn(
-                'text-muted-foreground hover:text-foreground',
-                className
-              )}
+              className={cn('text-muted-foreground hover:text-foreground', className)}
             >
               {showLabel ? (
                 <>
@@ -121,16 +113,11 @@ export const QuarterActionMenu = React.memo(
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="w-full cursor-not-allowed">
-                      <DropdownMenuItem
-                        className="cursor-not-allowed opacity-50"
-                        disabled
-                      >
+                      <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
                         <History className="mr-2 h-4 w-4" />
                         <div className="flex flex-col w-full items-center">
                           <span>Pull Incomplete</span>
-                          <span className="text-gray-500 text-xs">
-                            from previous quarter
-                          </span>
+                          <span className="text-gray-500 text-xs">from previous quarter</span>
                         </div>
                       </DropdownMenuItem>
                     </div>
@@ -153,9 +140,7 @@ export const QuarterActionMenu = React.memo(
                   className="flex items-center"
                 >
                   <FileText className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">
-                    Generate Summary
-                  </span>
+                  <span className="text-sm">Generate Summary</span>
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -170,9 +155,7 @@ export const QuarterActionMenu = React.memo(
                   className="flex items-center"
                 >
                   <History className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">
-                    Pull incomplete goals from previous quarter
-                  </span>
+                  <span className="text-sm">Pull incomplete goals from previous quarter</span>
                 </DropdownMenuItem>
               </>
             )}
@@ -185,8 +168,8 @@ export const QuarterActionMenu = React.memo(
             <DialogHeader>
               <DialogTitle>Select Goals for Summary</DialogTitle>
               <DialogDescription>
-                Choose which goals from Q{quarter} {year} you want to include in the quarterly summary.
-                You can select multiple goals to generate a comprehensive report.
+                Choose which goals from Q{quarter} {year} you want to include in the quarterly
+                summary. You can select multiple goals to generate a comprehensive report.
               </DialogDescription>
             </DialogHeader>
 
@@ -202,16 +185,15 @@ export const QuarterActionMenu = React.memo(
 
             <DialogFooter className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {selectedGoalIds.length === 0 
+                {selectedGoalIds.length === 0
                   ? 'No goals selected'
-                  : `${selectedGoalIds.length} goal${selectedGoalIds.length === 1 ? '' : 's'} selected`
-                }
+                  : `${selectedGoalIds.length} goal${selectedGoalIds.length === 1 ? '' : 's'} selected`}
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleCloseDialog}>
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={handleConfirmGoalSelection}
                   disabled={selectedGoalIds.length === 0}
                 >

@@ -1,31 +1,21 @@
-import { GoalWithDetailsAndChildren } from "@services/backend/src/usecase/getWeekDetails";
-import { Id } from "@services/backend/convex/_generated/dataModel";
-import { DailyGoalTaskItem } from "@/components/organisms/DailyGoalTaskItem";
-import { WeeklyGoalTaskItem } from "@/components/molecules/day-of-week/components/WeeklyGoalTaskItem";
-import { useWeek } from "@/hooks/useWeek";
-import { useCallback } from "react";
-import { useFireGoals } from "@/contexts/GoalStatusContext";
+import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { useCallback } from 'react';
+import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
+import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
+import { useWeek } from '@/hooks/useWeek';
 
 interface GoalDetailsChildrenListProps {
   parentGoal: GoalWithDetailsAndChildren;
   title: string;
 }
 
-export function GoalDetailsChildrenList({
-  parentGoal,
-  title,
-}: GoalDetailsChildrenListProps) {
+export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildrenListProps) {
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
-  const { fireGoals, isOnFire, toggleFireStatus } = useFireGoals();
-
-  // If there are no children, don't render anything
-  if (!parentGoal.children || parentGoal.children.length === 0) {
-    return null;
-  }
 
   // Handle title update for child goals
   const handleUpdateTitle = useCallback(
-    async (goalId: Id<"goals">, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string) => {
       await updateQuarterlyGoalTitle({
         goalId,
         title,
@@ -37,11 +27,16 @@ export function GoalDetailsChildrenList({
 
   // Handle goal deletion
   const handleDeleteGoal = useCallback(
-    async (goalId: Id<"goals">) => {
+    async (goalId: Id<'goals'>) => {
       await deleteGoalOptimistic(goalId);
     },
     [deleteGoalOptimistic]
   );
+
+  // If there are no children, don't render anything
+  if (!parentGoal.children || parentGoal.children.length === 0) {
+    return null;
+  }
 
   const isQuarterlyParent = parentGoal.depth === 0;
 
@@ -55,10 +50,7 @@ export function GoalDetailsChildrenList({
           <div key={child._id}>
             {isQuarterlyParent ? (
               // Render weekly goals when parent is quarterly
-              <WeeklyGoalTaskItem
-                goal={child}
-                onUpdateTitle={handleUpdateTitle}
-              />
+              <WeeklyGoalTaskItem goal={child} onUpdateTitle={handleUpdateTitle} />
             ) : (
               // Render daily goals when parent is weekly
               <DailyGoalTaskItem
@@ -70,20 +62,18 @@ export function GoalDetailsChildrenList({
 
             {/* If the parent is a quarterly goal and we have grandchildren (daily goals), 
                 show them indented under their weekly parent */}
-            {isQuarterlyParent &&
-              child.children &&
-              child.children.length > 0 && (
-                <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-gray-100 pl-3">
-                  {child.children.map((grandchild) => (
-                    <DailyGoalTaskItem
-                      key={grandchild._id}
-                      goal={grandchild}
-                      onUpdateTitle={handleUpdateTitle}
-                      onDelete={() => handleDeleteGoal(grandchild._id)}
-                    />
-                  ))}
-                </div>
-              )}
+            {isQuarterlyParent && child.children && child.children.length > 0 && (
+              <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-gray-100 pl-3">
+                {child.children.map((grandchild) => (
+                  <DailyGoalTaskItem
+                    key={grandchild._id}
+                    goal={grandchild}
+                    onUpdateTitle={handleUpdateTitle}
+                    onDelete={() => handleDeleteGoal(grandchild._id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
