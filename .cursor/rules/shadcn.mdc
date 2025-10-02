@@ -1,7 +1,0 @@
----
-description: Shadcn commands executing in the cli
-globs: 
----
-# Shadcn
-
-Remember that the `shadcn-ui` cli has been replaced by `shadcn`.

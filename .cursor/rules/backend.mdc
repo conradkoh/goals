@@ -1,5 +1,7 @@
 ---
-applyTo: "**"
+description: Backend-specific context and coding guidelines for the Convex backend located in services/backend
+globs: "**"
+alwaysApply: true
 ---
 
 # Backend Development Guidelines
@@ -42,7 +44,7 @@ The application uses the `AuthProvider` component to provide authentication stat
 
 ## Feature Flags
 
-Feature flags for the app are configured in [featureFlags.ts](../../services/backend/config/featureFlags.ts).
+Feature flags for the app are configured in [featureFlags.ts](mdc:services/backend/config/featureFlags.ts).
 
 <verify>
   <check>Are new flags added with safe defaults (off/false)?</check>

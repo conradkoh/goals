@@ -1,5 +1,7 @@
 ---
-applyTo: "**"
+description: Frontend-specific context and coding guidelines for the webapp located in apps/webapp
+globs: "**"
+alwaysApply: true
 ---
 
 # Frontend Development Guidelines
@@ -19,22 +21,17 @@ This document provides frontend-specific context and coding guidelines for the w
 ## Dark Mode Guidelines - CRITICAL FOR ALL COMPONENTS
 
 ### **Golden Rule: Use Semantic Colors First**
-
 ✅ **Preferred approach** - these automatically adapt:
-
 - Text: `text-foreground`, `text-muted-foreground`
 - Backgrounds: `bg-background`, `bg-card`, `bg-muted`, `bg-accent`
 - Interactive: `hover:bg-accent/50`
 - Borders: `border-border`, `border-input`
 
 ❌ **Avoid these** - they break in dark mode:
-
 - `text-black`, `bg-white`, `text-gray-900`, `bg-gray-50`
 
 ### **When You Need Brand/Status Colors**
-
 ✅ **Always include dark variants**:
-
 ```tsx
 // Status backgrounds
 bg-red-50 dark:bg-red-950/20
@@ -49,22 +46,19 @@ border-red-200 dark:border-red-800
 ```
 
 ❌ **Never use single-mode colors**:
-
 ```tsx
-bg - red - 50; // Will cause white text on light red in dark mode
+bg-red-50  // Will cause white text on light red in dark mode
 ```
 
 ### **Quick Reference**
-
-| Purpose         | Use This                | Not This           |
-| --------------- | ----------------------- | ------------------ |
-| Primary text    | `text-foreground`       | `text-black`       |
-| Secondary text  | `text-muted-foreground` | `text-gray-600`    |
-| Card background | `bg-card`               | `bg-white`         |
-| Hover states    | `hover:bg-accent/50`    | `hover:bg-gray-50` |
+| Purpose | Use This | Not This |
+|---------|----------|----------|
+| Primary text | `text-foreground` | `text-black` |
+| Secondary text | `text-muted-foreground` | `text-gray-600` |
+| Card background | `bg-card` | `bg-white` |
+| Hover states | `hover:bg-accent/50` | `hover:bg-gray-50` |
 
 ### **Testing Checklist**
-
 Test each component in: light mode → dark mode → system mode
 
 ## UI Design - Components & Icons
@@ -134,4 +128,5 @@ const updateName = useSessionMutation(api.auth.updateUserName);
 
 ## Feature Flags
 
-Feature flags for the app are configured in the backend at [featureFlags.ts](../../services/backend/config/featureFlags.ts).
+Feature flags for the app are configured in the backend at [featureFlags.ts](mdc:services/backend/config/featureFlags.ts).
+
