@@ -1,13 +1,13 @@
-import { v } from 'convex/values';
-import { query, mutation, internalMutation } from './_generated/server';
-import { Doc, Id } from './_generated/dataModel';
-import { requireLogin } from '../src/usecase/requireLogin';
-import { ConvexError } from 'convex/values';
-import { getWeekGoalsTree, WeekGoalsTree } from '../src/usecase/getWeekDetails';
-import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
+import { ConvexError, v } from 'convex/values';
 import { DateTime } from 'luxon';
 import { DayOfWeek, getDayName } from '../src/constants';
+import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
+import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
+import { requireLogin } from '../src/usecase/requireLogin';
+import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
 import { api } from './_generated/api';
+import { Doc, Id } from './_generated/dataModel';
+import { internalMutation, mutation, query } from './_generated/server';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -21,15 +21,12 @@ export const getQuarterOverview = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Calculate the start and end dates of the quarter
-    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
-    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-    const startWeek = startDate.weekNumber;
-    const endWeek = endDate.weekNumber;
+    // Calculate all week numbers in this quarter using the proper utility
+    const { weeks } = getQuarterWeeks(year, quarter);
 
     // Get details for all weeks in the quarter
     const weekPromises = [];
-    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+    for (const weekNum of weeks) {
       weekPromises.push(
         getWeekGoalsTree(ctx, {
           userId,
@@ -41,10 +38,13 @@ export const getQuarterOverview = query({
     }
 
     const weekResults = await Promise.all(weekPromises);
-    const weekSummaries = weekResults.reduce((acc, week) => {
-      acc[week.weekNumber] = week;
-      return acc;
-    }, {} as Record<number, WeekGoalsTree>);
+    const weekSummaries = weekResults.reduce(
+      (acc, week) => {
+        acc[week.weekNumber] = week;
+        return acc;
+      },
+      {} as Record<number, WeekGoalsTree>
+    );
 
     return weekSummaries;
   },
@@ -62,16 +62,7 @@ export const createQuarterlyGoal = mutation({
     isStarred: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const {
-      sessionId,
-      year,
-      quarter,
-      title,
-      details,
-      weekNumber,
-      isPinned,
-      isStarred,
-    } = args;
+    const { sessionId, year, quarter, title, details, weekNumber, isPinned, isStarred } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -97,22 +88,19 @@ export const createQuarterlyGoal = mutation({
       isComplete: false,
     });
 
-    // Calculate all week numbers in this quarter
-    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
-    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-    const startWeek = startDate.weekNumber;
-    const endWeek = endDate.weekNumber;
+    // Calculate all week numbers in this quarter using the proper utility
+    const { weeks } = getQuarterWeeks(year, quarter);
 
     // Create initial weekly states for this goal (for all weeks in the quarter)
-    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+    for (const weekNum of weeks) {
       await ctx.db.insert('goalStateByWeek', {
         userId,
         year,
         quarter,
         goalId,
         weekNumber: weekNum,
-        isStarred: weekNum === weekNumber ? isStarred ?? false : false,
-        isPinned: weekNum === weekNumber ? isPinned ?? false : false,
+        isStarred: weekNum === weekNumber ? (isStarred ?? false) : false,
+        isPinned: weekNum === weekNumber ? (isPinned ?? false) : false,
       });
     }
 
@@ -131,15 +119,7 @@ export const updateQuarterlyGoalStatus = mutation({
     isPinned: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const {
-      sessionId,
-      year,
-      quarter,
-      weekNumber,
-      goalId,
-      isStarred,
-      isPinned,
-    } = args;
+    const { sessionId, year, quarter, weekNumber, goalId, isStarred, isPinned } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -147,11 +127,7 @@ export const updateQuarterlyGoalStatus = mutation({
     const weeklyGoal = await ctx.db
       .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', year)
-          .eq('quarter', quarter)
-          .eq('weekNumber', weekNumber)
+        q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', weekNumber)
       )
       .filter((q) => q.eq(q.field('goalId'), goalId))
       .first();
@@ -450,10 +426,7 @@ export const toggleGoalCompletion = mutation({
       const childGoals = await ctx.db
         .query('goals')
         .withIndex('by_user_and_year_and_quarter', (q) =>
-          q
-            .eq('userId', userId)
-            .eq('year', goal.year)
-            .eq('quarter', goal.quarter)
+          q.eq('userId', userId).eq('year', goal.year).eq('quarter', goal.quarter)
         )
         .filter((q) => q.eq(q.field('parentId'), goalId))
         .collect();
@@ -685,15 +658,12 @@ export const getQuarterlyGoalSummary = query({
       });
     }
 
-    // Calculate the start and end dates of the quarter
-    const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
-    const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-    const startWeek = startDate.weekNumber;
-    const endWeek = endDate.weekNumber;
+    // Calculate all week numbers in this quarter using the proper utility
+    const { weeks, startWeek, endWeek } = getQuarterWeeks(year, quarter);
 
     // Get details for all weeks in the quarter
     const weekPromises = [];
-    for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+    for (const weekNum of weeks) {
       weekPromises.push(
         getWeekGoalsTree(ctx, {
           userId,
@@ -711,9 +681,7 @@ export const getQuarterlyGoalSummary = query({
     let quarterlyGoalDetails = null;
 
     for (const weekTree of weekResults) {
-      const targetQuarterlyGoal = weekTree.quarterlyGoals.find(
-        (qg) => qg._id === quarterlyGoalId
-      );
+      const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === quarterlyGoalId);
 
       if (targetQuarterlyGoal) {
         // Store quarterly goal details (from first occurrence)
@@ -729,21 +697,23 @@ export const getQuarterlyGoalSummary = query({
         }
 
         // Store weekly goals for this week
-        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
-          (weeklyGoal) => ({
-            ...weeklyGoal,
+        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => ({
+          ...weeklyGoal,
+          weekNumber: weekTree.weekNumber,
+          // Calculate week date range as timestamps
+          weekStartTimestamp: DateTime.fromObject({
             weekNumber: weekTree.weekNumber,
-            // Calculate week date range as timestamps
-            weekStartTimestamp: DateTime.fromObject({
-              weekNumber: weekTree.weekNumber,
-              weekYear: year,
-            }).startOf('week').toMillis(),
-            weekEndTimestamp: DateTime.fromObject({
-              weekNumber: weekTree.weekNumber,
-              weekYear: year,
-            }).endOf('week').toMillis(),
+            weekYear: year,
           })
-        );
+            .startOf('week')
+            .toMillis(),
+          weekEndTimestamp: DateTime.fromObject({
+            weekNumber: weekTree.weekNumber,
+            weekYear: year,
+          })
+            .endOf('week')
+            .toMillis(),
+        }));
       }
     }
 
@@ -783,10 +753,7 @@ export const getAllQuarterlyGoalsForQuarter = query({
     const quarterlyGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_year_and_quarter', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', year)
-          .eq('quarter', quarter)
+        q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
       )
       .filter((q) => q.eq(q.field('depth'), 0))
       .collect();
@@ -840,15 +807,12 @@ export const getMultipleQuarterlyGoalsSummary = query({
         });
       }
 
-      // Calculate the start and end dates of the quarter
-      const startDate = DateTime.local(year, (quarter - 1) * 3 + 1, 1);
-      const endDate = startDate.plus({ months: 3 }).minus({ days: 1 });
-      const startWeek = startDate.weekNumber;
-      const endWeek = endDate.weekNumber;
+      // Calculate all week numbers in this quarter using the proper utility
+      const { weeks, startWeek, endWeek } = getQuarterWeeks(year, quarter);
 
       // Get details for all weeks in the quarter
       const weekPromises = [];
-      for (let weekNum = startWeek; weekNum <= endWeek; weekNum++) {
+      for (const weekNum of weeks) {
         weekPromises.push(
           getWeekGoalsTree(ctx, {
             userId,
@@ -866,9 +830,7 @@ export const getMultipleQuarterlyGoalsSummary = query({
       let quarterlyGoalDetails = null;
 
       for (const weekTree of weekResults) {
-        const targetQuarterlyGoal = weekTree.quarterlyGoals.find(
-          (qg) => qg._id === goalId
-        );
+        const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === goalId);
 
         if (targetQuarterlyGoal) {
           // Store quarterly goal details (from first occurrence)
@@ -892,11 +854,15 @@ export const getMultipleQuarterlyGoalsSummary = query({
               weekStartTimestamp: DateTime.fromObject({
                 weekNumber: weekTree.weekNumber,
                 weekYear: year,
-              }).startOf('week').toMillis(),
+              })
+                .startOf('week')
+                .toMillis(),
               weekEndTimestamp: DateTime.fromObject({
                 weekNumber: weekTree.weekNumber,
                 weekYear: year,
-              }).endOf('week').toMillis(),
+              })
+                .endOf('week')
+                .toMillis(),
             })
           );
         }
@@ -926,7 +892,9 @@ export const getMultipleQuarterlyGoalsSummary = query({
     // Calculate overall week range from the first goal (should be the same for all)
     const weekRange = quarterlyGoals[0]?.weekRange || {
       startWeek: DateTime.local(year, (quarter - 1) * 3 + 1, 1).weekNumber,
-      endWeek: DateTime.local(year, (quarter - 1) * 3 + 1, 1).plus({ months: 3 }).minus({ days: 1 }).weekNumber,
+      endWeek: DateTime.local(year, (quarter - 1) * 3 + 1, 1)
+        .plus({ months: 3 })
+        .minus({ days: 1 }).weekNumber,
     };
 
     return {
