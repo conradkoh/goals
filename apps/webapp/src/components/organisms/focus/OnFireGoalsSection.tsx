@@ -1,6 +1,6 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Eye, EyeOff, Flame, Info, Star } from 'lucide-react';
+import { Eye, Flame, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
@@ -231,7 +231,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                   <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
                 )}
                 {quarterlyGoal.state?.isPinned && (
-                  <EyeOff className="h-3.5 w-3.5 text-blue-400 flex-shrink-0" />
+                  <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                 )}
                 <GoalDetailsPopover
                   goal={quarterlyGoal}
