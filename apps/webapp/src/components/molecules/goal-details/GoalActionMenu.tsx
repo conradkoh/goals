@@ -1,8 +1,8 @@
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Edit2, FileText, Maximize2, MoreVertical } from 'lucide-react';
+import { CalendarDays, Edit2, FileText, Maximize2, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,18 +10,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { GoalDetailsFullScreenModal } from './GoalDetailsFullScreenModal';
 import { useGoalEditContext } from './GoalEditContext';
-
-interface GoalActionMenuProps {
+import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
+/**
+ * Props for the GoalActionMenu component providing action options for goals.
+ *
+ * @example
+ * ```typescript
+ * <GoalActionMenu
+ *   goal={weeklyGoal}
+ *   onSave={handleSave}
+ *   isQuarterlyGoal={false}
+ *   className="ml-2"
+ * />
+ * ```
+ */
+export interface GoalActionMenuProps {
+  /** The goal for which actions are available */
   goal: GoalWithDetailsAndChildren;
+  /** Callback fired when goal is saved after editing */
   onSave: (title: string, details?: string) => Promise<void>;
+  /** Whether this is a quarterly goal (affects available actions) */
   isQuarterlyGoal?: boolean;
+  /** Additional CSS classes to apply to the trigger button */
   className?: string;
 }
 
+interface _DropdownState {
+  isOpen: boolean;
+}
+
+interface _ModalState {
+  isFullScreenOpen: boolean;
+}
+/**
+ * Action menu component providing contextual actions for goals.
+ * Displays a dropdown with options like edit, move, view details, and summary.
+ * Actions vary based on goal type (quarterly vs weekly) and depth.
+ */
 export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
   goal,
   onSave,
@@ -30,30 +60,80 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
 }) => {
   const { startEditing } = useGoalEditContext();
   const router = useRouter();
-  const { year, quarter } = useWeek();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isFullScreenModalOpen, setIsFullScreenModalOpen] = useState(false);
+  const { year, quarter, weekNumber } = useWeek();
+  const [dropdownState, setDropdownState] = useState<_DropdownState>({ isOpen: false });
+  const [modalState, setModalState] = useState<_ModalState>({ isFullScreenOpen: false });
 
-  const handleEditClick = () => {
+  const {
+    openMoveModal,
+    closeMoveModal,
+    moveGoalToWeek,
+    modalState: moveModalState,
+    destinationWeeks,
+    defaultDestinationWeek,
+    getMoveMode,
+    isSubmitting,
+  } = useMoveWeeklyGoal(year, quarter, weekNumber);
+
+  const isWeeklyGoal = goal.depth === 1;
+
+  /**
+   * Handles edit action click, opening the edit modal and closing dropdown.
+   */
+  const handleEditClick = useCallback(() => {
     startEditing(goal);
-    setIsDropdownOpen(false);
-  };
+    setDropdownState({ isOpen: false });
+  }, [startEditing, goal]);
 
-  const handleSummaryClick = () => {
-    // Navigate directly to the quarterly summary page
+  /**
+   * Handles summary view action for quarterly goals, navigating to summary page.
+   */
+  const handleSummaryClick = useCallback(() => {
     const summaryUrl = `/app/goal/${goal._id}/quarterly-summary?year=${year}&quarter=${quarter}`;
     router.push(summaryUrl);
-    setIsDropdownOpen(false);
-  };
+    setDropdownState({ isOpen: false });
+  }, [goal._id, year, quarter, router]);
 
-  const handleFullScreenClick = () => {
-    setIsFullScreenModalOpen(true);
-    setIsDropdownOpen(false);
-  };
+  /**
+   * Handles full screen modal open action, closing dropdown.
+   */
+  const handleFullScreenClick = useCallback(() => {
+    setModalState({ isFullScreenOpen: true });
+    setDropdownState({ isOpen: false });
+  }, []);
+
+  /**
+   * Handles move to week action for weekly goals, opening move modal.
+   */
+  const handleMoveToWeekClick = useCallback(() => {
+    setDropdownState({ isOpen: false });
+    openMoveModal(goal);
+  }, [openMoveModal, goal]);
+
+  /**
+   * Handles move modal confirmation, executing the move operation.
+   */
+  const handleMoveConfirm = useCallback(
+    async (destination: Parameters<typeof moveGoalToWeek>[1]) => {
+      if (!moveModalState.goal) return;
+      await moveGoalToWeek(moveModalState.goal, destination);
+    },
+    [moveGoalToWeek, moveModalState.goal]
+  );
+
+  /**
+   * Handles full screen modal close action.
+   */
+  const handleFullScreenClose = useCallback(() => {
+    setModalState({ isFullScreenOpen: false });
+  }, []);
 
   return (
     <>
-      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+      <DropdownMenu
+        open={dropdownState.isOpen}
+        onOpenChange={(isOpen) => setDropdownState({ isOpen })}
+      >
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -89,6 +169,18 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
               <span>View Summary</span>
             </DropdownMenuItem>
           )}
+          {isWeeklyGoal && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleMoveToWeekClick();
+              }}
+              className="flex items-center cursor-pointer"
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              <span>Move to Week…</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -102,12 +194,22 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Full Screen Modal */}
       <GoalDetailsFullScreenModal
         goal={goal}
         onSave={onSave}
-        isOpen={isFullScreenModalOpen}
-        onClose={() => setIsFullScreenModalOpen(false)}
+        isOpen={modalState.isFullScreenOpen}
+        onClose={handleFullScreenClose}
+      />
+
+      <MoveGoalToWeekModal
+        goal={moveModalState.goal}
+        isOpen={moveModalState.isOpen}
+        onClose={closeMoveModal}
+        destinationWeeks={destinationWeeks}
+        defaultDestinationWeek={defaultDestinationWeek}
+        onConfirm={handleMoveConfirm}
+        moveMode={moveModalState.goal ? getMoveMode(moveModalState.goal) : 'move_all'}
+        isSubmitting={isSubmitting}
       />
     </>
   );

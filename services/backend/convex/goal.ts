@@ -12,10 +12,10 @@ import {
   getQuarterWeeks,
 } from '../src/usecase/quarter';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { getNextPath, joinPath } from '../src/util/path';
+import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
 import { api, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
-import { action, internalMutation, internalQuery, mutation } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -93,6 +93,79 @@ export const moveGoalsFromLastNonEmptyWeek = mutation({
     });
 
     return result;
+  },
+});
+
+/**
+ * Represents a week option available for goal movement within a quarter.
+ * Used by the frontend to display week selection options in the move modal.
+ */
+export type WeekOption = {
+  /** The year of the week */
+  year: number;
+  /** The quarter number (1-4) */
+  quarter: number;
+  /** The week number within the quarter */
+  weekNumber: number;
+  /** Human-readable label for display (e.g., "Week 42 (next)") */
+  label: string;
+};
+
+/**
+ * Retrieves all available weeks in the current quarter for goal movement.
+ * Weeks are labeled with context indicators (current, next, past) based on the provided current week.
+ *
+ * @param ctx - Convex query context
+ * @param args - Query arguments containing session and current week information
+ * @returns Promise resolving to array of week options with labels
+ *
+ * @example
+ * ```typescript
+ * const weeks = await getAvailableWeeks(ctx, {
+ *   sessionId: "session123",
+ *   currentWeek: { year: 2024, quarter: 3, weekNumber: 42 }
+ * });
+ * // Returns: [
+ * //   { year: 2024, quarter: 3, weekNumber: 41, label: "Week 41 (past)" },
+ * //   { year: 2024, quarter: 3, weekNumber: 42, label: "Week 42 (current)" },
+ * //   { year: 2024, quarter: 3, weekNumber: 43, label: "Week 43 (next)" }
+ * // ]
+ * ```
+ */
+export const getAvailableWeeks = query({
+  args: {
+    sessionId: v.id('sessions'),
+    currentWeek: v.object({
+      year: v.number(),
+      quarter: v.number(),
+      weekNumber: v.number(),
+    }),
+  },
+  handler: async (ctx, args): Promise<WeekOption[]> => {
+    const { sessionId, currentWeek } = args;
+    await requireLogin(ctx, sessionId);
+
+    const { year, quarter, weekNumber } = currentWeek;
+    const { weeks } = getQuarterWeeks(year, quarter);
+    const nextWeek = weeks.find((week) => week > weekNumber);
+
+    return weeks.map((week) => {
+      let suffix = '';
+      if (week === weekNumber) {
+        suffix = ' (current)';
+      } else if (nextWeek && week === nextWeek) {
+        suffix = ' (next)';
+      } else if (week < weekNumber) {
+        suffix = ' (past)';
+      }
+
+      return {
+        year,
+        quarter,
+        weekNumber: week,
+        label: `Week ${week}${suffix}`,
+      };
+    });
   },
 });
 
@@ -1046,6 +1119,328 @@ export const moveQuarterlyGoal = mutation({
     return {
       newGoalId: newQuarterlyGoalId,
       weeklyGoalsMigrated: incompleteWeeklyGoals.length,
+    };
+  },
+});
+
+/**
+ * Result of moving a weekly goal to a target week.
+ * Contains success status, new goal ID, and target week information.
+ */
+export type MoveWeeklyGoalResult = {
+  /** Whether the move operation completed successfully */
+  success: boolean;
+  /** ID of the newly created goal in the target week */
+  newGoalId: Id<'goals'>;
+  /** Target week information where the goal was moved */
+  targetWeek: {
+    year: number;
+    quarter: number;
+    weekNumber: number;
+  };
+};
+
+/**
+ * Moves or copies a weekly goal to a specific week within the same quarter.
+ * Supports two modes based on child goal completion status:
+ * - move_all: Moves the weekly goal and all incomplete children (or all if no completed children)
+ * - copy_children: Copies the weekly goal to target week, moves only incomplete children, preserves completed children in original week
+ *
+ * Daily goals are reset to Monday in the destination week to avoid stale day assignments.
+ *
+ * @param ctx - Convex mutation context
+ * @param args - Mutation arguments containing session, goal ID, current week, and target week
+ * @returns Promise resolving to move result with new goal ID and target week info
+ *
+ * @example
+ * ```typescript
+ * const result = await moveWeeklyGoalToWeek(ctx, {
+ *   sessionId: "session123",
+ *   goalId: "goal456",
+ *   currentWeek: { year: 2024, quarter: 3, weekNumber: 42 },
+ *   targetWeek: { year: 2024, quarter: 3, weekNumber: 43 }
+ * });
+ * // Returns: { success: true, newGoalId: "goal789", targetWeek: {...} }
+ * ```
+ */
+export const moveWeeklyGoalToWeek = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    goalId: v.id('goals'),
+    currentWeek: v.object({
+      year: v.number(),
+      quarter: v.number(),
+      weekNumber: v.number(),
+    }),
+    targetWeek: v.object({
+      year: v.number(),
+      quarter: v.number(),
+      weekNumber: v.number(),
+    }),
+  },
+  handler: async (ctx, args): Promise<MoveWeeklyGoalResult> => {
+    const { sessionId, goalId, currentWeek, targetWeek } = args;
+
+    // Auth check
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the goal
+    const goal = await ctx.db.get(goalId);
+    if (!goal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Goal not found',
+      });
+    }
+
+    // Verify ownership
+    if (goal.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to move this goal',
+      });
+    }
+
+    // Verify it's a weekly goal
+    if (goal.depth !== 1) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Only weekly goals can be moved to next week',
+      });
+    }
+
+    // Check for child goals
+    const childGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('parentId', goalId)
+      )
+      .collect();
+
+    // Validate target week is within the same quarter
+    const { weeks } = getQuarterWeeks(currentWeek.year, currentWeek.quarter);
+    if (!weeks.includes(targetWeek.weekNumber)) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: `Target week ${targetWeek.weekNumber} is not within quarter ${currentWeek.quarter}`,
+      });
+    }
+
+    const targetYear = targetWeek.year;
+    const targetQuarter = targetWeek.quarter;
+    const targetWeekNumber = targetWeek.weekNumber;
+
+    // Get or create the parent quarterly goal in the target quarter
+    let targetParentId = goal.parentId;
+
+    // If moving to a different quarter, we need to handle the parent
+    if (targetQuarter !== goal.quarter || targetYear !== goal.year) {
+      if (goal.parentId) {
+        const parentGoal = await ctx.db.get(goal.parentId);
+        if (parentGoal) {
+          // Check if parent exists in target quarter
+          const existingParentInTargetQuarter = await ctx.db
+            .query('goals')
+            .withIndex('by_user_and_year_and_quarter', (q) =>
+              q.eq('userId', userId).eq('year', targetYear).eq('quarter', targetQuarter)
+            )
+            .filter((q) =>
+              q.and(q.eq(q.field('depth'), 0), q.eq(q.field('title'), parentGoal.title))
+            )
+            .first();
+
+          if (existingParentInTargetQuarter) {
+            targetParentId = existingParentInTargetQuarter._id;
+          } else {
+            // Create the parent in the new quarter
+            targetParentId = await ctx.db.insert('goals', {
+              userId,
+              year: targetYear,
+              quarter: targetQuarter,
+              title: parentGoal.title,
+              details: parentGoal.details,
+              inPath: '/',
+              depth: 0,
+              isComplete: false,
+            });
+
+            // Create goal state for the parent in all weeks of the new quarter
+            const { weeks: allTargetWeeks } = getQuarterWeeks(targetYear, targetQuarter);
+            const newParentId = targetParentId;
+            await Promise.all(
+              allTargetWeeks.map((weekNum) =>
+                ctx.db.insert('goalStateByWeek', {
+                  userId,
+                  year: targetYear,
+                  quarter: targetQuarter,
+                  goalId: newParentId,
+                  weekNumber: weekNum,
+                  isStarred: false,
+                  isPinned: false,
+                })
+              )
+            );
+          }
+        } else {
+          // Parent doesn't exist, create as standalone
+          targetParentId = undefined;
+        }
+      }
+    }
+
+    const hasChildren = childGoals.length > 0;
+    const hasCompletedChildren = childGoals.some((child) => child.isComplete);
+    const moveMode = !hasChildren || !hasCompletedChildren ? 'move_all' : 'copy_children';
+
+    // Helper to create destination weekly goal
+    const createDestinationWeeklyGoal = async (): Promise<Id<'goals'>> => {
+      const inPath = targetParentId ? joinPath('/', targetParentId) : '/';
+      if (!validateGoalPath(1, inPath)) {
+        throw new ConvexError({
+          code: 'INVALID_STATE',
+          message: `Invalid path "${inPath}" for weekly goal`,
+        });
+      }
+
+      return ctx.db.insert('goals', {
+        userId,
+        year: targetYear,
+        quarter: targetQuarter,
+        title: goal.title,
+        details: goal.details,
+        parentId: targetParentId,
+        inPath,
+        depth: 1,
+        isComplete: false,
+      });
+    };
+
+    const destinationGoalId = await createDestinationWeeklyGoal();
+
+    await ctx.db.insert('goalStateByWeek', {
+      userId,
+      year: targetYear,
+      quarter: targetQuarter,
+      goalId: destinationGoalId,
+      weekNumber: targetWeekNumber,
+      isStarred: false,
+      isPinned: false,
+    });
+
+    const childStatesByGoalId = new Map<Id<'goals'>, Doc<'goalStateByWeek'>>();
+    if (childGoals.length > 0) {
+      const childGoalIds = childGoals.map((child) => child._id);
+      const childGoalStates = await ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('year', currentWeek.year)
+            .eq('quarter', currentWeek.quarter)
+            .eq('weekNumber', currentWeek.weekNumber)
+        )
+        .filter((q) => q.or(...childGoalIds.map((goalId) => q.eq(q.field('goalId'), goalId))))
+        .collect();
+
+      childGoalStates.forEach((state) => {
+        childStatesByGoalId.set(state.goalId, state);
+      });
+    }
+
+    /**
+     * Moves a child goal to the destination week, resetting day of week to Monday.
+     * Updates both the goal record and its weekly state.
+     *
+     * @param childGoal - The child goal to move
+     */
+    const _moveChildGoal = async (childGoal: Doc<'goals'>) => {
+      const childState = childStatesByGoalId.get(childGoal._id);
+
+      const childQuarterlyParentId = targetParentId;
+      const childInPath = childQuarterlyParentId
+        ? joinPath('/', childQuarterlyParentId, destinationGoalId)
+        : joinPath('/', destinationGoalId);
+
+      if (!validateGoalPath(2, childInPath)) {
+        throw new ConvexError({
+          code: 'INVALID_STATE',
+          message: `Invalid path "${childInPath}" for daily goal`,
+        });
+      }
+
+      await ctx.db.patch(childGoal._id, {
+        parentId: destinationGoalId,
+        year: targetYear,
+        quarter: targetQuarter,
+        inPath: childInPath,
+      });
+
+      if (childState) {
+        await ctx.db.patch(childState._id, {
+          year: targetYear,
+          quarter: targetQuarter,
+          weekNumber: targetWeekNumber,
+          goalId: childGoal._id,
+          // Reset day of week to Monday when moving daily goals
+          daily: childState.daily
+            ? {
+                ...childState.daily,
+                dayOfWeek: DayOfWeek.MONDAY,
+              }
+            : undefined,
+        });
+      } else {
+        await ctx.db.insert('goalStateByWeek', {
+          userId,
+          year: targetYear,
+          quarter: targetQuarter,
+          weekNumber: targetWeekNumber,
+          goalId: childGoal._id,
+          isStarred: false,
+          isPinned: false,
+          // Default to Monday for moved daily goals
+          daily: {
+            dayOfWeek: DayOfWeek.MONDAY,
+          },
+        });
+      }
+    };
+
+    if (moveMode === 'move_all') {
+      await Promise.all(childGoals.map(_moveChildGoal));
+
+      const originalStates = await ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
+          q.eq('userId', userId).eq('goalId', goal._id)
+        )
+        .collect();
+      await Promise.all(originalStates.map((state) => ctx.db.delete(state._id)));
+
+      await ctx.db.delete(goal._id);
+    } else {
+      const incompleteChildGoals = childGoals.filter((child) => !child.isComplete);
+      await ctx.db.patch(goal._id, {
+        isComplete: false,
+        year: currentWeek.year,
+        quarter: currentWeek.quarter,
+      });
+      await Promise.all(incompleteChildGoals.map(_moveChildGoal));
+    }
+
+    return {
+      success: true,
+      newGoalId: destinationGoalId,
+      targetWeek: {
+        year: targetYear,
+        quarter: targetQuarter,
+        weekNumber: targetWeekNumber,
+      },
     };
   },
 });
