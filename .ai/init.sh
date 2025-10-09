@@ -212,7 +212,48 @@ else
 fi
 echo
 
-# Step 3: Summary
+# Step 3: Copy codemap templates
+echo -e "${YELLOW}Step 3: Copying codemap templates...${NC}"
+
+if [ ! -d ".ai/data/codemaps/templates" ]; then
+    echo -e "${RED}✗ Directory .ai/data/codemaps/templates/ not found${NC}"
+else
+    if [ "$DRY_RUN" = false ]; then
+        mkdir -p codemaps/templates
+        echo -e "${GREEN}✓ Target directory codemaps/templates/ verified${NC}"
+    else
+        echo -e "${BLUE}→ Would create: codemaps/templates${NC}"
+    fi
+    
+    TEMPLATE_COUNT=0
+    for template_file in .ai/data/codemaps/templates/*; do
+        if [ ! -f "$template_file" ]; then
+            continue
+        fi
+        
+        TEMPLATE_COUNT=$((TEMPLATE_COUNT + 1))
+        basename=$(basename "$template_file")
+        
+        echo -e "  ${BLUE}Processing: ${basename}${NC}"
+        
+        target="codemaps/templates/${basename}"
+        if [ "$DRY_RUN" = false ]; then
+            cp "$template_file" "$target"
+            echo -e "    ${GREEN}✓ Copied to codemaps/templates/${basename}${NC}"
+        else
+            echo -e "    ${BLUE}→ Would copy to codemaps/templates/${basename}${NC}"
+        fi
+    done
+    
+    if [ $TEMPLATE_COUNT -eq 0 ]; then
+        echo -e "${YELLOW}  No template files found in .ai/data/codemaps/templates/${NC}"
+    else
+        echo -e "${GREEN}✓ Copied ${TEMPLATE_COUNT} template(s)${NC}"
+    fi
+fi
+echo
+
+# Step 4: Summary
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
 if [ "$DRY_RUN" = true ]; then
     echo -e "${GREEN}✓ Dry run complete! No files were modified.${NC}"
@@ -224,8 +265,10 @@ echo
 echo -e "${YELLOW}Summary:${NC}"
 if [ "$DRY_RUN" = true ]; then
     echo -e "  • Would distribute ${COMMAND_COUNT} command(s) from .ai/commands/"
+    echo -e "  • Would copy ${TEMPLATE_COUNT:-0} template(s) from .ai/data/codemaps/templates/"
 else
     echo -e "  • Distributed ${COMMAND_COUNT} command(s) from .ai/commands/"
+    echo -e "  • Copied ${TEMPLATE_COUNT:-0} template(s) from .ai/data/codemaps/templates/"
 fi
 echo
 echo -e "${YELLOW}Distribution Mapping:${NC}"
@@ -233,6 +276,10 @@ echo -e "  ${BLUE}Commands:${NC}"
 echo -e "    .ai/commands/<name>.md"
 echo -e "      ├─→ .github/prompts/<name>.prompt.md (+ frontmatter)"
 echo -e "      └─→ .cursor/commands/<name>.md (+ frontmatter)"
+echo
+echo -e "  ${BLUE}Codemap Templates:${NC}"
+echo -e "    .ai/data/codemaps/templates/<template>"
+echo -e "      └─→ codemaps/templates/<template>"
 echo
 if [ "$DRY_RUN" = true ]; then
     echo -e "${YELLOW}Next Steps:${NC}"
