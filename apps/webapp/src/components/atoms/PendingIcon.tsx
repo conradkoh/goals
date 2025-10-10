@@ -25,7 +25,9 @@ export const PendingIcon: React.FC<PendingIconProps> = ({ goalId, className }) =
         type="button"
         className={cn(
           'text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity',
-          isPending ? 'text-yellow-500 opacity-100' : 'hover:text-yellow-500',
+          isPending
+            ? 'text-orange-600 dark:text-orange-400 opacity-100'
+            : 'hover:text-orange-600 dark:hover:text-orange-400',
           className
         )}
         title={isPending ? 'Update pending status' : 'Mark as pending'}

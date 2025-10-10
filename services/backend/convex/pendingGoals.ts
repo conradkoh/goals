@@ -98,17 +98,20 @@ export const clearPendingStatus = mutation({
       await ctx.db.delete(existingPending._id);
     }
 
-    // Simple behavior: when pending is cleared, tag the goal as on fire again
-    const existingFireGoal = await ctx.db
-      .query('fireGoals')
-      .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
-      .first();
-    if (!existingFireGoal) {
-      await ctx.db.insert('fireGoals', {
-        userId,
-        goalId,
-        createdAt: Date.now(),
-      });
+    // Only restore fire status if goal is not complete
+    // When pending is cleared, tag the goal as on fire again (only if incomplete)
+    if (!goal.isComplete) {
+      const existingFireGoal = await ctx.db
+        .query('fireGoals')
+        .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
+        .first();
+      if (!existingFireGoal) {
+        await ctx.db.insert('fireGoals', {
+          userId,
+          goalId,
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return true;

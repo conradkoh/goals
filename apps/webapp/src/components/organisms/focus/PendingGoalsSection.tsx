@@ -169,15 +169,15 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   }
 
   return (
-    <div className="bg-yellow-50 rounded-lg p-4 mb-4">
+    <div className="rounded-lg border border-border bg-muted p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-yellow-500" />
-          <h2 className="text-lg font-semibold text-yellow-700">Pending Items</h2>
+          <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400" />
+          <h2 className="text-lg font-semibold text-foreground">Pending Items</h2>
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-yellow-400 hover:text-yellow-500 transition-colors" />
+                <Info className="h-4 w-4 text-muted-foreground hover:text-orange-500 dark:hover:text-orange-400 transition-colors" />
               </TooltipTrigger>
               <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                 <p className="text-xs max-w-xs">
@@ -192,7 +192,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       <div className="space-y-4">
         {Array.from(pendingGoalsByQuarterly.entries()).map(
           ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
-            <div key={quarterlyId} className="border-b border-yellow-100 pb-3 last:border-b-0">
+            <div key={quarterlyId} className="border-b border-border pb-3 last:border-b-0">
               {/* Quarterly Goal Header with Popover */}
               <div className="flex items-center gap-1.5 mb-2">
                 {quarterlyGoal.state?.isStarred && (
@@ -206,7 +206,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                   onSave={(title, details) =>
                     handleUpdateGoalTitle(quarterlyGoal._id, title, details)
                   }
-                  triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-yellow-800 hover:text-yellow-900 hover:no-underline"
+                  triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-foreground hover:text-orange-600 dark:hover:text-orange-400 hover:no-underline"
                   titleClassName={cn(
                     'break-words w-full whitespace-pre-wrap flex items-center',
                     quarterlyGoal.isComplete ? 'flex items-center' : ''
@@ -229,8 +229,8 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                           />
                           {/* Show pending description if available */}
                           {isWeeklyPending && pendingDescription && (
-                            <div className="mt-1 ml-6 text-xs text-yellow-600 italic">
-                              Pending: {pendingDescription}
+                            <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
+                              <span className="font-medium">Pending:</span> {pendingDescription}
                             </div>
                           )}
                         </div>
@@ -250,8 +250,9 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                                 />
                                 {/* Show pending description for daily goal */}
                                 {dailyPendingDescription && (
-                                  <div className="mt-1 ml-6 text-xs text-yellow-600 italic">
-                                    Pending: {dailyPendingDescription}
+                                  <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
+                                    <span className="font-medium">Pending:</span>{' '}
+                                    {dailyPendingDescription}
                                   </div>
                                 )}
                               </div>

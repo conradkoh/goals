@@ -71,7 +71,7 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <Clock className="h-4 w-4 text-orange-500 dark:text-orange-400" />
             {isPending ? 'Update Pending Status' : 'Mark as Pending'}
           </DialogTitle>
         </DialogHeader>
@@ -97,7 +97,7 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
                 <Button
                   variant="outline"
                   onClick={handleClear}
-                  className="text-yellow-600 hover:text-yellow-700"
+                  className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
                 >
                   Clear Pending
                 </Button>
@@ -108,7 +108,10 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
               <Button variant="outline" onClick={() => setIsOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} className="bg-yellow-500 hover:bg-yellow-600 text-white">
+              <Button
+                onClick={handleSave}
+                className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white"
+              >
                 {isPending ? 'Update' : 'Mark Pending'}
                 <span className="ml-2 text-xs opacity-75">⌘↵</span>
               </Button>
