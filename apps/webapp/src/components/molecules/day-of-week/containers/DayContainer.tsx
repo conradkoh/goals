@@ -35,7 +35,12 @@ interface WeeklyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -64,8 +69,8 @@ const WeeklyGoalSection = ({
 
   // Handle saving edits
   const handleSave = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(weeklyGoal._id, title, details);
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateTitle(weeklyGoal._id, title, details, dueDate);
     },
     [weeklyGoal._id, onUpdateTitle]
   );
@@ -140,7 +145,12 @@ interface QuarterlyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,

@@ -101,12 +101,13 @@ export const WeekCardQuarterlyGoals = ({
   );
 
   const handleUpdateTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
           title,
           details,
+          dueDate,
         });
       } catch (error) {
         console.error('Failed to update goal title:', error);

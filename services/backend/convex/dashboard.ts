@@ -55,12 +55,27 @@ export const createQuarterlyGoal = mutation({
     quarter: v.number(),
     title: v.string(),
     details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
     weekNumber: v.number(),
     isPinned: v.optional(v.boolean()),
     isStarred: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, title, details, weekNumber, isPinned, isStarred } = args;
+    const { sessionId, year, quarter, title, details, dueDate, weekNumber, isPinned, isStarred } =
+      args;
+    console.log('[Backend] createQuarterlyGoal received:', {
+      year,
+      quarter,
+      title,
+      hasDetails: !!details,
+      detailsLength: details?.length,
+      hasDueDate: dueDate !== undefined,
+      dueDate,
+      dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+      weekNumber,
+      isPinned,
+      isStarred,
+    });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -75,16 +90,29 @@ export const createQuarterlyGoal = mutation({
     }
 
     // Create the quarterly goal
+    console.log('[Backend] Creating quarterly goal in DB with data:', {
+      userId,
+      year,
+      quarter,
+      title,
+      hasDetails: !!details,
+      hasDueDate: dueDate !== undefined,
+      dueDate,
+      inPath,
+      depth,
+    });
     const goalId = await ctx.db.insert('goals', {
       userId,
       year,
       quarter,
       title,
       details,
+      dueDate,
       inPath,
       depth, // 0 for quarterly goals
       isComplete: false,
     });
+    console.log('[Backend] createQuarterlyGoal created goal:', goalId);
 
     // Calculate all week numbers in this quarter using the proper utility
     const { weeks } = getQuarterWeeks(year, quarter);
@@ -150,9 +178,19 @@ export const updateQuarterlyGoalTitle = mutation({
     goalId: v.id('goals'),
     title: v.string(),
     details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, title, details } = args;
+    const { sessionId, goalId, title, details, dueDate } = args;
+    console.log('[Backend] updateQuarterlyGoalTitle received:', {
+      goalId,
+      title,
+      hasDetails: details !== undefined,
+      detailsLength: details?.length,
+      hasDueDate: dueDate !== undefined,
+      dueDate,
+      dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+    });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -165,11 +203,20 @@ export const updateQuarterlyGoalTitle = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Update the goal title and details
-    await ctx.db.patch(goalId, {
+    // Update the goal title, details, and dueDate
+    const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
+      ...(dueDate !== undefined ? { dueDate } : {}),
+    };
+    console.log('[Backend] Patching goal with data:', {
+      goalId,
+      patchData,
+      hasDueDate: 'dueDate' in patchData,
+      dueDateValue: patchData.dueDate,
     });
+    await ctx.db.patch(goalId, patchData);
+    console.log('[Backend] updateQuarterlyGoalTitle completed:', goalId);
 
     return goalId;
   },
@@ -181,9 +228,17 @@ export const updateGoalTitle = mutation({
     goalId: v.id('goals'),
     title: v.string(),
     details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, title, details } = args;
+    const { sessionId, goalId, title, details, dueDate } = args;
+    console.log('[Backend] updateGoalTitle received:', {
+      goalId,
+      title,
+      hasDetails: details !== undefined,
+      hasDueDate: dueDate !== undefined,
+      dueDate,
+    });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -196,11 +251,15 @@ export const updateGoalTitle = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Update the goal title and details
-    await ctx.db.patch(goalId, {
+    // Update the goal title, details, and dueDate
+    const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
-    });
+      ...(dueDate !== undefined ? { dueDate } : {}),
+    };
+    console.log('[Backend] updateGoalTitle patching with:', patchData);
+    await ctx.db.patch(goalId, patchData);
+    console.log('[Backend] updateGoalTitle completed:', goalId);
 
     return goalId;
   },
@@ -211,11 +270,20 @@ export const createWeeklyGoal = mutation({
     sessionId: v.id('sessions'),
     title: v.string(),
     details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
   },
   handler: async (ctx, args) => {
-    const { sessionId, title, details, parentId, weekNumber } = args;
+    const { sessionId, title, details, dueDate, parentId, weekNumber } = args;
+    console.log('[Backend] createWeeklyGoal received:', {
+      title,
+      hasDetails: !!details,
+      hasDueDate: dueDate !== undefined,
+      dueDate,
+      parentId,
+      weekNumber,
+    });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -243,17 +311,20 @@ export const createWeeklyGoal = mutation({
     }
 
     // Create the weekly goal
+    console.log('[Backend] Creating weekly goal in DB with dueDate:', dueDate);
     const goalId = await ctx.db.insert('goals', {
       userId,
       year: parentGoal.year,
       quarter: parentGoal.quarter,
       title,
       details,
+      dueDate,
       parentId,
       inPath,
       depth: 1, // 1 for weekly goals
       isComplete: false,
     });
+    console.log('[Backend] createWeeklyGoal created:', goalId);
 
     // Create initial weekly state
     await ctx.db.insert('goalStateByWeek', {
@@ -275,6 +346,7 @@ export const createDailyGoal = mutation({
     sessionId: v.id('sessions'),
     title: v.string(),
     details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
     dayOfWeek: v.union(
@@ -289,6 +361,15 @@ export const createDailyGoal = mutation({
     dateTimestamp: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    console.log('[Backend] createDailyGoal received:', {
+      title: args.title,
+      hasDetails: !!args.details,
+      hasDueDate: args.dueDate !== undefined,
+      dueDate: args.dueDate,
+      parentId: args.parentId,
+      weekNumber: args.weekNumber,
+      dayOfWeek: args.dayOfWeek,
+    });
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
       throw new Error('Session not found');
@@ -328,17 +409,20 @@ export const createDailyGoal = mutation({
     }
 
     // Create the goal
+    console.log('[Backend] Creating daily goal in DB with dueDate:', args.dueDate);
     const goalId = await ctx.db.insert('goals', {
       userId,
       year: weeklyParent.year,
       quarter: weeklyParent.quarter,
       title: args.title,
       details: args.details,
+      dueDate: args.dueDate,
       parentId: args.parentId,
       inPath,
       depth: 2, // Daily goals are depth 2
       isComplete: false,
     });
+    console.log('[Backend] createDailyGoal created:', goalId);
 
     // Create the weekly goal data
     await ctx.db.insert('goalStateByWeek', {

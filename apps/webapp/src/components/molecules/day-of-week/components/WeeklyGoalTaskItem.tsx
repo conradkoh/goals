@@ -16,7 +16,12 @@ import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
  */
 export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }
 
 /**
@@ -52,8 +57,8 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemPr
    * Handles updating the goal title and details.
    */
   const _handleUpdateTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(goal._id, title, details);
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateTitle(goal._id, title, details, dueDate);
     },
     [onUpdateTitle, goal._id]
   );

@@ -8,7 +8,12 @@ import { DailyGoalList } from './DailyGoalList';
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoalTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   className?: string;

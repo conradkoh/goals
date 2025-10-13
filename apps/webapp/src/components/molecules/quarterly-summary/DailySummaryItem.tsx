@@ -72,9 +72,9 @@ export function DailySummaryItem({
   }, [goalActions, dailyGoal, weekNumber]);
 
   const handleEdit = React.useCallback(
-    async (title: string, details?: string) => {
+    async (title: string, details?: string, dueDate?: number) => {
       if (goalActions) {
-        await goalActions.handleEditGoal(dailyGoal._id, title, details);
+        await goalActions.handleEditGoal(dailyGoal._id, title, details, dueDate);
       }
     },
     [goalActions, dailyGoal._id]

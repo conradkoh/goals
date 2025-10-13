@@ -1,13 +1,15 @@
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
-import { Pin, Star, X } from 'lucide-react';
+import { CalendarIcon, Pin, Star, X } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import {
   Select,
@@ -22,6 +24,7 @@ import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { GoalActionMenu } from './GoalActionMenu';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
 import { GoalDetailsContent } from './GoalDetailsContent';
@@ -29,7 +32,7 @@ import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsFullScreenModalProps {
   goal: GoalWithDetailsAndChildren;
-  onSave: (title: string, details?: string) => Promise<void>;
+  onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
   onToggleComplete?: (isComplete: boolean) => Promise<void>;
   isOpen: boolean;
   onClose: () => void;
@@ -37,11 +40,12 @@ interface GoalDetailsFullScreenModalProps {
 
 // Component that renders the edit modal content using context
 const GoalEditModalContent: React.FC<{
-  onSave: (title: string, details?: string) => Promise<void>;
+  onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
 }> = ({ onSave }) => {
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const [editTitle, setEditTitle] = useState('');
   const [editDetails, setEditDetails] = useState('');
+  const [editDueDate, setEditDueDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
@@ -54,8 +58,16 @@ const GoalEditModalContent: React.FC<{
   // Initialize form data and preserve it across re-renders
   React.useEffect(() => {
     if (isEditing && editingGoal && !hasInitialized) {
+      console.log('[GoalDetailsFullScreenModal] Initializing edit form:', {
+        goalId: editingGoal._id,
+        title: editingGoal.title,
+        hasDueDate: !!editingGoal.dueDate,
+        dueDate: editingGoal.dueDate,
+        dueDateAsDate: editingGoal.dueDate ? new Date(editingGoal.dueDate) : undefined,
+      });
       setEditTitle(editingGoal.title);
       setEditDetails(editingGoal.details || '');
+      setEditDueDate(editingGoal.dueDate ? new Date(editingGoal.dueDate) : undefined);
       setHasInitialized(true);
     }
   }, [isEditing, editingGoal, hasInitialized]);
@@ -80,20 +92,34 @@ const GoalEditModalContent: React.FC<{
       return;
     }
 
+    const dueDateTimestamp = editDueDate?.getTime();
+    console.log('[GoalDetailsFullScreenModal] Saving goal:', {
+      goalId: editingGoal._id,
+      title: trimmedTitle,
+      hasDetails: !!editDetails,
+      detailsLength: editDetails?.length,
+      hasDueDate: !!editDueDate,
+      dueDate: editDueDate,
+      dueDateTimestamp,
+      dueDateFormatted: editDueDate ? editDueDate.toISOString() : undefined,
+    });
+
     setIsSubmitting(true);
     try {
-      await onSave(trimmedTitle, editDetails);
+      await onSave(trimmedTitle, editDetails, dueDateTimestamp);
+      console.log('[GoalDetailsFullScreenModal] Save successful');
       stopEditing();
       // Clear form state after successful save
       setEditTitle('');
       setEditDetails('');
+      setEditDueDate(undefined);
       setHasInitialized(false);
       toast({
         title: 'Success',
         description: 'Goal updated successfully',
       });
     } catch (error) {
-      console.error('Failed to save goal:', error);
+      console.error('[GoalDetailsFullScreenModal] Failed to save goal:', error);
       toast({
         title: 'Error',
         description: 'Failed to save goal. Please try again.',
@@ -136,6 +162,46 @@ const GoalEditModalContent: React.FC<{
               placeholder="Add goal details..."
             />
           </div>
+          <div className="space-y-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
+            <label className="text-sm font-medium">Due Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full justify-start text-left font-normal',
+                    !editDueDate && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {editDueDate
+                    ? DateTime.fromJSDate(editDueDate).toFormat('LLL dd, yyyy')
+                    : 'Set due date...'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={editDueDate}
+                  onSelect={setEditDueDate}
+                  initialFocus
+                />
+                {editDueDate && (
+                  <div className="p-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setEditDueDate(undefined)}
+                    >
+                      Clear due date
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               Cancel
@@ -157,6 +223,16 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
   isOpen,
   onClose,
 }) => {
+  console.log('[GoalDetailsFullScreenModal] Rendering with goal:', {
+    goalId: goal._id,
+    title: goal.title,
+    depth: goal.depth,
+    hasDueDate: !!goal.dueDate,
+    dueDate: goal.dueDate,
+    dueDateFormatted: goal.dueDate ? new Date(goal.dueDate).toISOString() : undefined,
+    isOpen,
+  });
+
   const {
     weekNumber,
     year,
@@ -303,6 +379,26 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
       {isComplete && goal.completedAt && (
         <div className="text-sm text-muted-foreground">
           Completed on {DateTime.fromMillis(goal.completedAt).toFormat('LLL d, yyyy')}
+        </div>
+      )}
+
+      {/* Display due date if set */}
+      {goal.dueDate && (
+        <div
+          className={cn(
+            'text-sm flex items-center gap-2',
+            DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete
+              ? 'text-red-600 dark:text-red-400 font-medium'
+              : DateTime.fromMillis(goal.dueDate) < DateTime.now().plus({ days: 3 }) && !isComplete
+                ? 'text-yellow-600 dark:text-yellow-400 font-medium'
+                : 'text-muted-foreground'
+          )}
+        >
+          <CalendarIcon className="h-4 w-4" />
+          <span>
+            Due: {DateTime.fromMillis(goal.dueDate).toFormat('LLL d, yyyy')}
+            {DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete && ' (overdue)'}
+          </span>
         </div>
       )}
 

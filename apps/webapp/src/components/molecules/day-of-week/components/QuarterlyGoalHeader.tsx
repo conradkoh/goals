@@ -7,7 +7,12 @@ import { useWeek } from '@/hooks/useWeek';
 
 export interface QuarterlyGoalHeaderProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }
 
 export const QuarterlyGoalHeader = ({ goal, onUpdateTitle }: QuarterlyGoalHeaderProps) => {
@@ -29,8 +34,8 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateTitle }: QuarterlyGoalHeader
   );
 
   const handleSaveTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(goal._id, title, details);
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateTitle(goal._id, title, details, dueDate);
     },
     [goal._id, onUpdateTitle]
   );

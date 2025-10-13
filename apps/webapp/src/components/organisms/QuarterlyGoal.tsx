@@ -12,7 +12,12 @@ import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
   onToggleStatus: (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => Promise<void>;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateTitle: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }
 
 export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: QuarterlyGoalProps) {
@@ -50,8 +55,8 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: Quarterly
   );
 
   const handleSaveTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(goal._id, title, details);
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateTitle(goal._id, title, details, dueDate);
     },
     [goal._id, onUpdateTitle]
   );

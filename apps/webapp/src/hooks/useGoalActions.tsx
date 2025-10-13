@@ -25,6 +25,7 @@ export const useGoalActions = () => {
       createQuarterlyGoal: async ({
         title,
         details,
+        dueDate,
         weekNumber,
         isPinned,
         isStarred,
@@ -33,12 +34,23 @@ export const useGoalActions = () => {
       }: {
         title: string;
         details?: string;
+        dueDate?: number;
         weekNumber: number;
         isPinned?: boolean;
         isStarred?: boolean;
         year: number;
         quarter: number;
       }) => {
+        console.log('[useGoalActions] createQuarterlyGoal called:', {
+          title,
+          hasDetails: !!details,
+          hasDueDate: dueDate !== undefined,
+          dueDate,
+          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+          weekNumber,
+          year,
+          quarter,
+        });
         await createQuarterlyGoalMutation({
           sessionId,
           year,
@@ -46,34 +58,52 @@ export const useGoalActions = () => {
           weekNumber,
           title,
           details,
+          dueDate,
           isPinned,
           isStarred,
-        });
+          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+        } as any);
+        console.log('[useGoalActions] createQuarterlyGoal completed');
       },
 
       createWeeklyGoal: async ({
         title,
         details,
+        dueDate,
         parentId,
         weekNumber,
       }: {
         title: string;
         details?: string;
+        dueDate?: number;
         parentId: Id<'goals'>;
         weekNumber: number;
       }) => {
+        console.log('[useGoalActions] createWeeklyGoal called:', {
+          title,
+          hasDetails: !!details,
+          hasDueDate: dueDate !== undefined,
+          dueDate,
+          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+          parentId,
+          weekNumber,
+        });
         await createWeeklyGoalMutation({
           sessionId,
           title,
           details,
+          dueDate,
           parentId,
           weekNumber,
-        });
+          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+        } as any);
+        console.log('[useGoalActions] createWeeklyGoal completed');
       },
 
       createDailyGoal: async ({
         title,
         details,
+        dueDate,
         parentId,
         weekNumber,
         dayOfWeek,
@@ -81,20 +111,34 @@ export const useGoalActions = () => {
       }: {
         title: string;
         details?: string;
+        dueDate?: number;
         parentId: Id<'goals'>;
         weekNumber: number;
         dayOfWeek: DayOfWeek;
         dateTimestamp?: number;
       }) => {
+        console.log('[useGoalActions] createDailyGoal called:', {
+          title,
+          hasDetails: !!details,
+          hasDueDate: dueDate !== undefined,
+          dueDate,
+          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+          parentId,
+          weekNumber,
+          dayOfWeek,
+        });
         await createDailyGoalMutation({
           sessionId,
           title,
           details,
+          dueDate,
           parentId,
           weekNumber,
           dayOfWeek,
           dateTimestamp,
-        });
+          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+        } as any);
+        console.log('[useGoalActions] createDailyGoal completed');
       },
 
       updateQuarterlyGoalStatus: async ({
@@ -127,17 +171,31 @@ export const useGoalActions = () => {
         goalId,
         title,
         details,
+        dueDate,
       }: {
         goalId: Id<'goals'>;
         title: string;
         details?: string;
+        dueDate?: number;
       }) => {
+        console.log('[useGoalActions] updateQuarterlyGoalTitle called:', {
+          goalId,
+          title,
+          hasDetails: !!details,
+          detailsLength: details?.length,
+          hasDueDate: dueDate !== undefined,
+          dueDate,
+          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+        });
         await updateQuarterlyGoalTitleMutation({
           sessionId,
           goalId,
           title,
           details,
-        });
+          dueDate,
+          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+        } as any);
+        console.log('[useGoalActions] updateQuarterlyGoalTitle completed');
       },
 
       deleteGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
