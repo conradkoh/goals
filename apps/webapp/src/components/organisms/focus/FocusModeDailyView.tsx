@@ -111,16 +111,17 @@ const FocusModeDailyViewInner = ({
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek]);
 
   // Handlers for the OnFireGoalsSection
-  const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+  const handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
           title,
           details,
+          dueDate,
         });
       } catch (error) {
-        console.error('Failed to update goal title:', error);
+        console.error('Failed to update goal:', error);
       }
     },
     [updateQuarterlyGoalTitle]
@@ -174,7 +175,7 @@ const FocusModeDailyViewInner = ({
       <OnFireGoalsSection
         weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
         selectedDayOfWeek={selectedDayOfWeek}
-        onUpdateGoalTitle={handleUpdateGoalTitle}
+        onUpdateGoal={handleUpdateGoal}
         onDeleteGoal={handleDeleteGoal}
         isFocusModeEnabled={isFocusModeEnabled}
       />
@@ -182,7 +183,7 @@ const FocusModeDailyViewInner = ({
       <PendingGoalsSection
         weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
         selectedDayOfWeek={selectedDayOfWeek}
-        onUpdateGoalTitle={handleUpdateGoalTitle}
+        onUpdateGoal={handleUpdateGoal}
         onDeleteGoal={handleDeleteGoal}
       />
 

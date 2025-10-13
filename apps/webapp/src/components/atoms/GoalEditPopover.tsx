@@ -10,7 +10,7 @@ import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 interface GoalEditPopoverProps {
   title: string;
   details?: string;
-  onSave: (title: string, details: string) => Promise<void>;
+  onSave: (title: string, details: string, dueDate?: number) => Promise<void>;
   trigger?: React.ReactNode;
 }
 

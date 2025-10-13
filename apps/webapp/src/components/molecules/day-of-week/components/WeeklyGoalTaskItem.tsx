@@ -16,7 +16,7 @@ import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
  */
 export interface WeeklyGoalTaskItemProps {
   goal: GoalWithOptimisticStatus;
-  onUpdateTitle: (
+  onUpdateGoal: (
     goalId: Id<'goals'>,
     title: string,
     details?: string,
@@ -27,7 +27,7 @@ export interface WeeklyGoalTaskItemProps {
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
  */
-export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemProps) => {
+export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemProps) => {
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.isComplete;
@@ -56,11 +56,11 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemPr
   /**
    * Handles updating the goal title and details.
    */
-  const _handleUpdateTitle = useCallback(
+  const _handleUpdateGoal = useCallback(
     async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateTitle(goal._id, title, details, dueDate);
+      await onUpdateGoal(goal._id, title, details, dueDate);
     },
-    [onUpdateTitle, goal._id]
+    [onUpdateGoal, goal._id]
   );
 
   /**
@@ -85,7 +85,7 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemPr
 
           <GoalDetailsPopover
             goal={goal}
-            onSave={_handleUpdateTitle}
+            onSave={_handleUpdateGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             onToggleComplete={_handleToggleCompletion}
           />
@@ -100,7 +100,7 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateTitle }: WeeklyGoalTaskItemPr
                 <GoalEditPopover
                   title={goal.title}
                   details={goal.details}
-                  onSave={_handleUpdateTitle}
+                  onSave={_handleUpdateGoal}
                   trigger={
                     <button
                       type="button"

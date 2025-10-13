@@ -11,8 +11,8 @@ import { DayContainer, type DayContainerProps } from './DayContainer';
  * Props for the past days container component.
  */
 export interface PastDaysContainerProps {
-  days: Omit<DayContainerProps, 'onUpdateGoalTitle' | 'onDeleteGoal' | 'onCreateGoal'>[];
-  onUpdateGoalTitle: DayContainerProps['onUpdateGoalTitle'];
+  days: Omit<DayContainerProps, 'onUpdateGoal' | 'onDeleteGoal' | 'onCreateGoal'>[];
+  onUpdateGoal: DayContainerProps['onUpdateGoal'];
   onDeleteGoal: DayContainerProps['onDeleteGoal'];
   onCreateGoal: DayContainerProps['onCreateDailyGoal'];
   isCreating?: Record<string, boolean>;
@@ -26,7 +26,7 @@ export interface PastDaysContainerProps {
  */
 export const PastDaysContainer = ({
   days,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   onCreateGoal,
   isCreating = {},
@@ -53,7 +53,7 @@ export const PastDaysContainer = ({
             <DayContainer
               key={`day-container-${day.dayOfWeek}`}
               {...day}
-              onUpdateGoalTitle={onUpdateGoalTitle}
+              onUpdateGoal={onUpdateGoal}
               onDeleteGoal={onDeleteGoal}
               onCreateDailyGoal={onCreateGoal}
               isCreating={isCreating}

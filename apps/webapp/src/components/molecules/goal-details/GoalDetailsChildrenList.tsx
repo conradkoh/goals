@@ -13,13 +13,14 @@ interface GoalDetailsChildrenListProps {
 export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildrenListProps) {
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
 
-  // Handle title update for child goals
-  const handleUpdateTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+  // Handle updating child goals
+  const handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       await updateQuarterlyGoalTitle({
         goalId,
         title,
         details,
+        dueDate,
       });
     },
     [updateQuarterlyGoalTitle]
@@ -50,12 +51,12 @@ export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildr
           <div key={child._id}>
             {isQuarterlyParent ? (
               // Render weekly goals when parent is quarterly
-              <WeeklyGoalTaskItem goal={child} onUpdateTitle={handleUpdateTitle} />
+              <WeeklyGoalTaskItem goal={child} onUpdateGoal={handleUpdateGoal} />
             ) : (
               // Render daily goals when parent is weekly
               <DailyGoalTaskItem
                 goal={child}
-                onUpdateTitle={handleUpdateTitle}
+                onUpdateGoal={handleUpdateGoal}
                 onDelete={() => handleDeleteGoal(child._id)}
               />
             )}
@@ -68,7 +69,7 @@ export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildr
                   <DailyGoalTaskItem
                     key={grandchild._id}
                     goal={grandchild}
-                    onUpdateTitle={handleUpdateTitle}
+                    onUpdateGoal={handleUpdateGoal}
                     onDelete={() => handleDeleteGoal(grandchild._id)}
                   />
                 ))}

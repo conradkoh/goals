@@ -50,10 +50,15 @@ function getIsComplete(goal: GoalWithDetailsAndChildren): boolean {
 // Internal component for rendering a weekly goal
 const WeeklyGoal = ({
   goal,
-  onUpdateTitle,
+  onUpdateGoal,
 }: {
   goal: GoalWithOptimisticStatus;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const { fireGoals } = useFireGoals();
@@ -129,8 +134,8 @@ const WeeklyGoal = ({
             {/* View Mode */}
             <GoalDetailsPopover
               goal={goal}
-              onSave={async (title, details) => {
-                await onUpdateTitle(goal._id, title, details);
+              onSave={async (title, details, dueDate) => {
+                await onUpdateGoal(goal._id, title, details, dueDate);
               }}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               onToggleComplete={handleToggleCompletion}
@@ -145,8 +150,8 @@ const WeeklyGoal = ({
                   <GoalEditPopover
                     title={goal.title}
                     details={goal.details}
-                    onSave={async (title, details) => {
-                      await onUpdateTitle(goal._id, title, details);
+                    onSave={async (title, details, dueDate) => {
+                      await onUpdateGoal(goal._id, title, details, dueDate);
                     }}
                     trigger={
                       <button
@@ -202,11 +207,16 @@ const WeeklyGoal = ({
 const WeeklyGoalGroup = ({
   quarterlyGoal,
   weeklyGoals,
-  onUpdateTitle,
+  onUpdateGoal,
 }: {
   quarterlyGoal: GoalWithOptimisticStatus;
   weeklyGoals: GoalWithOptimisticStatus[];
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -249,7 +259,7 @@ const WeeklyGoalGroup = ({
   return (
     <div className="space-y-1">
       {weeklyGoals.map((weeklyGoal) => (
-        <WeeklyGoal key={weeklyGoal._id} goal={weeklyGoal} onUpdateTitle={onUpdateTitle} />
+        <WeeklyGoal key={weeklyGoal._id} goal={weeklyGoal} onUpdateGoal={onUpdateGoal} />
       ))}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
@@ -307,16 +317,17 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
         });
     }, [quarterlyGoals]);
 
-    const handleUpdateWeeklyGoalTitle = useCallback(
-      async (goalId: Id<'goals'>, title: string, details?: string) => {
+    const handleUpdateWeeklyGoal = useCallback(
+      async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
         try {
           await updateQuarterlyGoalTitle({
             goalId,
             title,
             details,
+            dueDate,
           });
         } catch (error) {
-          console.error('Failed to update weekly goal title:', error);
+          console.error('Failed to update weekly goal:', error);
           throw error;
         }
       },
@@ -386,8 +397,8 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                   >
                     <GoalDetailsPopover
                       goal={goal}
-                      onSave={async (title, details) => {
-                        await handleUpdateWeeklyGoalTitle(goal._id, title, details);
+                      onSave={async (title, details, dueDate) => {
+                        await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
                       }}
                       triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
                       onToggleComplete={(newState) =>
@@ -398,7 +409,7 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                   <WeeklyGoalGroup
                     quarterlyGoal={goal}
                     weeklyGoals={weeklyGoals}
-                    onUpdateTitle={handleUpdateWeeklyGoalTitle}
+                    onUpdateGoal={handleUpdateWeeklyGoal}
                   />
                 </div>
               );

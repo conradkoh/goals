@@ -18,7 +18,7 @@ interface OnFireGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoalTitle: (
+  onUpdateGoal: (
     goalId: Id<'goals'>,
     title: string,
     details?: string,
@@ -31,7 +31,7 @@ interface OnFireGoalsSectionProps {
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   isFocusModeEnabled = false,
 }) => {
@@ -147,13 +147,13 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
   /**
-   * Handles updating goal titles with proper error handling.
+   * Handles updating goals with proper error handling.
    */
-  const _handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
-      await onUpdateGoalTitle(goalId, title, details);
+  const _handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goalId, title, details, dueDate);
     },
-    [onUpdateGoalTitle]
+    [onUpdateGoal]
   );
 
   if (!onFireGoalsByQuarterly) {
@@ -240,8 +240,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                 )}
                 <GoalDetailsPopover
                   goal={quarterlyGoal}
-                  onSave={(title, details) =>
-                    _handleUpdateGoalTitle(quarterlyGoal._id, title, details)
+                  onSave={(title, details, dueDate) =>
+                    _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
                   }
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
                   titleClassName={cn(
@@ -259,10 +259,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {/* Always show the weekly goal if it's on fire or has daily goals */}
                     {(isWeeklyOnFire || dailyGoals.length > 0) && (
                       <div className="mb-1">
-                        <WeeklyGoalTaskItem
-                          goal={weeklyGoal}
-                          onUpdateTitle={_handleUpdateGoalTitle}
-                        />
+                        <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={_handleUpdateGoal} />
                       </div>
                     )}
 
@@ -273,7 +270,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                           <DailyGoalTaskItem
                             key={dailyGoal._id.toString()}
                             goal={dailyGoal}
-                            onUpdateTitle={_handleUpdateGoalTitle}
+                            onUpdateGoal={_handleUpdateGoal}
                             onDelete={() => onDeleteGoal(dailyGoal._id)}
                           />
                         ))}

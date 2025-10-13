@@ -14,7 +14,7 @@ export interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (
+  onUpdateGoal: (
     goalId: Id<'goals'>,
     title: string,
     details?: string,
@@ -31,7 +31,7 @@ export const DailyGoalGroup = ({
   weeklyGoal,
   quarterlyGoal,
   dayOfWeek,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   onCreateGoal,
   isCreating = false,
@@ -89,8 +89,8 @@ export const DailyGoalGroup = ({
             <GoalEditPopover
               title={quarterlyGoal.title}
               details={quarterlyGoal.details}
-              onSave={async (title, details) => {
-                await onUpdateGoalTitle(quarterlyGoal._id, title, details);
+              onSave={async (title, details, dueDate) => {
+                await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
               }}
               trigger={
                 <Button
@@ -107,8 +107,8 @@ export const DailyGoalGroup = ({
           <GoalEditPopover
             title={weeklyGoal.title}
             details={weeklyGoal.details}
-            onSave={async (title, details) => {
-              await onUpdateGoalTitle(weeklyGoal._id, title, details);
+            onSave={async (title, details, dueDate) => {
+              await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
             }}
             trigger={
               <Button
@@ -129,7 +129,7 @@ export const DailyGoalGroup = ({
               <DailyGoalTaskItem
                 key={goal._id}
                 goal={goal}
-                onUpdateTitle={onUpdateGoalTitle}
+                onUpdateGoal={onUpdateGoal}
                 onDelete={() => onDeleteGoal(goal._id)}
               />
             ))}

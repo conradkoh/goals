@@ -18,12 +18,13 @@ import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
+import type { GoalUpdateHandler } from '@/models/goal-handlers';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDelete: (goalId: Id<'goals'>) => void;
   inSidebar?: boolean;
   className?: string;
@@ -31,7 +32,7 @@ interface DailyGoalItemProps {
 
 export const DailyGoalTaskItem = ({
   goal,
-  onUpdateTitle,
+  onUpdateGoal,
   onDelete: _onDelete,
   inSidebar: _inSidebar = false,
   className: _className,
@@ -89,7 +90,7 @@ export const DailyGoalTaskItem = ({
         <GoalDetailsPopover
           goal={goal}
           onSave={async (newTitle: string, newDetails?: string) => {
-            await onUpdateTitle(goal._id, newTitle, newDetails);
+            await onUpdateGoal(goal._id, newTitle, newDetails);
           }}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           onToggleComplete={async (checked) => {
@@ -142,7 +143,7 @@ export const DailyGoalTaskItem = ({
                 title={title}
                 details={details}
                 onSave={async (newTitle: string, newDetails?: string) => {
-                  await onUpdateTitle(goal._id, newTitle, newDetails);
+                  await onUpdateGoal(goal._id, newTitle, newDetails);
                 }}
                 trigger={
                   <button

@@ -8,7 +8,7 @@ import { DailyGoalList } from './DailyGoalList';
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (
+  onUpdateGoal: (
     goalId: Id<'goals'>,
     title: string,
     details?: string,
@@ -24,7 +24,7 @@ export interface DailyGoalListContainerProps {
 
 export const DailyGoalListContainer = ({
   goals,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   // biome-ignore lint/correctness/noUnusedFunctionParameters: reserved for future delete capability in this container
   onDeleteGoal,
   onCreateGoal,
@@ -50,7 +50,7 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList goals={goals} onUpdateGoalTitle={onUpdateGoalTitle} />
+      <DailyGoalList goals={goals} onUpdateGoal={onUpdateGoal} />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         onMouseEnter={() => setIsHovering(true)}
