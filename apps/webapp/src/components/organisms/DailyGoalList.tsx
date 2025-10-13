@@ -12,31 +12,14 @@ import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
-  onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
 
-export const DailyGoalList = ({
-  goals,
-  onUpdateGoal,
-  onDeleteGoal = () => Promise.resolve(),
-  className,
-}: DailyGoalListProps) => {
+export const DailyGoalList = ({ goals, className }: DailyGoalListProps) => {
   return (
     <div className={className}>
       {goals.map((goal) => (
-        <DailyGoalTaskItem
-          key={goal._id}
-          goal={goal}
-          onUpdateGoal={onUpdateGoal}
-          onDelete={() => onDeleteGoal(goal._id)}
-        />
+        <DailyGoalTaskItem key={goal._id} goal={goal} />
       ))}
     </div>
   );
@@ -60,8 +43,6 @@ export interface DailyGoalListContainerProps {
 
 export const DailyGoalListContainer = ({
   goals,
-  onUpdateGoal,
-  onDeleteGoal,
   onCreateGoal,
   className,
   createInputPlaceholder = 'Add a goal...',
@@ -86,7 +67,7 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList goals={goals} onUpdateGoal={onUpdateGoal} onDeleteGoal={onDeleteGoal} />
+      <DailyGoalList goals={goals} />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         onMouseEnter={() => setIsHovering(true)}

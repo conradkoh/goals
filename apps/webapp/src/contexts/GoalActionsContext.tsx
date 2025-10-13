@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { createContext, type ReactNode, useContext } from 'react';
 import type { GoalDeleteHandler, GoalUpdateHandler } from '@/models/goal-handlers';
 

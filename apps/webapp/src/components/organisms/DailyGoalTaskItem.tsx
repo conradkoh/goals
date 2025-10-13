@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -13,30 +12,27 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useFireGoalStatus, usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
-import type { GoalUpdateHandler } from '@/models/goal-handlers';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateGoal: GoalUpdateHandler;
-  onDelete: (goalId: Id<'goals'>) => void;
   inSidebar?: boolean;
   className?: string;
 }
 
 export const DailyGoalTaskItem = ({
   goal,
-  onUpdateGoal,
-  onDelete: _onDelete,
   inSidebar: _inSidebar = false,
   className: _className,
 }: DailyGoalItemProps) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const { isComplete = goal.isComplete } = goal;
   const isOptimistic = isOptimisticId(goal._id);

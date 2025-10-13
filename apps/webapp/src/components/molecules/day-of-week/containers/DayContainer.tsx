@@ -57,6 +57,7 @@ const WeeklyGoalSection = ({
   mode,
   sortDailyGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
   onUpdateGoal,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: Kept for compatibility, children use context
   onDelete,
   onCreateDailyGoal,
   // biome-ignore lint/correctness/noUnusedFunctionParameters: future enhancement will use this callback
@@ -118,11 +119,7 @@ const WeeklyGoalSection = ({
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
           <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalTaskItem
-              goal={dailyGoal}
-              onUpdateGoal={onUpdateGoal}
-              onDelete={() => onDelete(dailyGoal._id)}
-            />
+            <DailyGoalTaskItem goal={dailyGoal} />
           </div>
         ))}
 

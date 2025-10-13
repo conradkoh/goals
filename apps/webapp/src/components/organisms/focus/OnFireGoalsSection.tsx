@@ -7,6 +7,7 @@ import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -18,23 +19,15 @@ interface OnFireGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   isFocusModeEnabled?: boolean;
 }
 
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
-  onUpdateGoal,
-  onDeleteGoal,
   isFocusModeEnabled = false,
 }) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { weeklyGoals } = useWeek();
   const { fireGoals } = useFireGoals();
 
@@ -267,12 +260,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {dailyGoals.length > 0 && (
                       <div className="space-y-1 ml-4">
                         {dailyGoals.map((dailyGoal) => (
-                          <DailyGoalTaskItem
-                            key={dailyGoal._id.toString()}
-                            goal={dailyGoal}
-                            onUpdateGoal={_handleUpdateGoal}
-                            onDelete={() => onDeleteGoal(dailyGoal._id)}
-                          />
+                          <DailyGoalTaskItem key={dailyGoal._id.toString()} goal={dailyGoal} />
                         ))}
                       </div>
                     )}

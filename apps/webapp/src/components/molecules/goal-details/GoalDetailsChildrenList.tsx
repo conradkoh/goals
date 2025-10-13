@@ -27,7 +27,7 @@ export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildr
   );
 
   // Handle goal deletion
-  const handleDeleteGoal = useCallback(
+  const _handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       await deleteGoalOptimistic(goalId);
     },
@@ -54,11 +54,7 @@ export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildr
               <WeeklyGoalTaskItem goal={child} onUpdateGoal={handleUpdateGoal} />
             ) : (
               // Render daily goals when parent is weekly
-              <DailyGoalTaskItem
-                goal={child}
-                onUpdateGoal={handleUpdateGoal}
-                onDelete={() => handleDeleteGoal(child._id)}
-              />
+              <DailyGoalTaskItem goal={child} />
             )}
 
             {/* If the parent is a quarterly goal and we have grandchildren (daily goals), 
@@ -66,12 +62,7 @@ export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildr
             {isQuarterlyParent && child.children && child.children.length > 0 && (
               <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-gray-100 pl-3">
                 {child.children.map((grandchild) => (
-                  <DailyGoalTaskItem
-                    key={grandchild._id}
-                    goal={grandchild}
-                    onUpdateGoal={handleUpdateGoal}
-                    onDelete={() => handleDeleteGoal(grandchild._id)}
-                  />
+                  <DailyGoalTaskItem key={grandchild._id} goal={grandchild} />
                 ))}
               </div>
             )}

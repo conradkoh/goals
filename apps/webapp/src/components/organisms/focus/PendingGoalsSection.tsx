@@ -6,6 +6,7 @@ import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/component
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -17,21 +18,13 @@ interface PendingGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
 }
 
 export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
-  onUpdateGoal,
-  onDeleteGoal,
 }) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { weeklyGoals } = useWeek();
   const { pendingGoals, getPendingDescription } = useGoalStatus();
 
@@ -245,11 +238,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                             const dailyPendingDescription = getPendingDescription(dailyGoal._id);
                             return (
                               <div key={dailyGoal._id.toString()}>
-                                <DailyGoalTaskItem
-                                  goal={dailyGoal}
-                                  onUpdateGoal={handleUpdateGoal}
-                                  onDelete={() => onDeleteGoal(dailyGoal._id)}
-                                />
+                                <DailyGoalTaskItem goal={dailyGoal} />
                                 {/* Show pending description for daily goal */}
                                 {dailyPendingDescription && (
                                   <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
