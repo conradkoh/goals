@@ -100,7 +100,7 @@ export const WeekCardQuarterlyGoals = ({
     [updateQuarterlyGoalStatus, weekNumber, year, quarter]
   );
 
-  const handleUpdateTitle = useCallback(
+  const handleUpdateGoal = useCallback(
     async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       try {
         await updateQuarterlyGoalTitle({
@@ -110,7 +110,7 @@ export const WeekCardQuarterlyGoals = ({
           dueDate,
         });
       } catch (error) {
-        console.error('Failed to update goal title:', error);
+        console.error('Failed to update goal:', error);
         throw error;
       }
     },
@@ -160,7 +160,7 @@ export const WeekCardQuarterlyGoals = ({
             key={goal._id}
             goal={goal}
             onToggleStatus={handleToggleStatus}
-            onUpdateTitle={handleUpdateTitle}
+            onUpdateGoal={handleUpdateGoal}
           />
         ))}
 
@@ -176,7 +176,7 @@ export const WeekCardQuarterlyGoals = ({
                   key={goal._id}
                   goal={goal}
                   onToggleStatus={handleToggleStatus}
-                  onUpdateTitle={handleUpdateTitle}
+                  onUpdateGoal={handleUpdateGoal}
                 />
               ))}
             </CollapsibleMinimalContent>

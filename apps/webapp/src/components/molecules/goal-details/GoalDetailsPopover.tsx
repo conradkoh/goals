@@ -25,6 +25,7 @@ import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 import { GoalActionMenu } from './GoalActionMenu';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
 import { GoalDetailsContent } from './GoalDetailsContent';
@@ -32,12 +33,12 @@ import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsPopoverProps {
   goal: GoalWithDetailsAndChildren;
-  onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
+  onSave: GoalSaveHandler;
   triggerClassName?: string;
   buttonVariant?: 'default' | 'ghost' | 'outline';
   titleClassName?: string;
   additionalContent?: ReactNode;
-  onToggleComplete?: (isComplete: boolean) => Promise<void>;
+  onToggleComplete?: GoalCompletionHandler;
 }
 
 export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
@@ -69,7 +70,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
 
   // Component that renders the edit modal content using context
   const GoalEditModalContent: React.FC<{
-    onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
+    onSave: GoalSaveHandler;
   }> = ({ onSave }) => {
     const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
     const [editTitle, setEditTitle] = useState('');
