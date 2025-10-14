@@ -369,7 +369,7 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
               />
             </GoalStarPinContainer>
           )}
-          <GoalActionMenu goal={goal} onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
+          <GoalActionMenu onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
         </div>
       </div>
 
