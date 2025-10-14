@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { GoalProvider, useOptionalGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
@@ -32,7 +33,8 @@ import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsFullScreenModalProps {
-  goal: GoalWithDetailsAndChildren;
+  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
+  goal?: GoalWithDetailsAndChildren;
   onSave: GoalSaveHandler;
   onToggleComplete?: GoalCompletionHandler;
   isOpen: boolean;
@@ -218,12 +220,22 @@ const GoalEditModalContent: React.FC<{
 };
 
 export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProps> = ({
-  goal,
+  goal: goalProp,
   onSave,
   onToggleComplete,
   isOpen,
   onClose,
 }) => {
+  // Prefer goal from context, fall back to prop during migration
+  const contextGoal = useOptionalGoalContext();
+  const goal = contextGoal?.goal ?? goalProp;
+
+  if (!goal) {
+    throw new Error(
+      'GoalDetailsFullScreenModal must be used within GoalProvider or receive goal prop'
+    );
+  }
+
   console.log('[GoalDetailsFullScreenModal] Rendering with goal:', {
     goalId: goal._id,
     title: goal.title,
@@ -525,7 +537,7 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
     </div>
   );
 
-  return (
+  const content = (
     <GoalEditProvider>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
@@ -538,4 +550,8 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
       <GoalEditModalContent onSave={onSave} />
     </GoalEditProvider>
   );
+
+  // If goal came from prop (backward compat), wrap with GoalProvider
+  // Otherwise, assume we're already in a GoalProvider
+  return contextGoal ? content : <GoalProvider goal={goal}>{content}</GoalProvider>;
 };

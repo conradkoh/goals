@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useOptionalGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
@@ -30,8 +31,8 @@ import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
  * ```
  */
 export interface GoalActionMenuProps {
-  /** The goal for which actions are available */
-  goal: GoalWithDetailsAndChildren;
+  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
+  goal?: GoalWithDetailsAndChildren;
   /** Callback fired when goal is saved after editing */
   onSave: (
     title: string,
@@ -57,11 +58,18 @@ interface _ModalState {
  * Actions vary based on goal type (quarterly vs weekly) and depth.
  */
 export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
-  goal,
+  goal: goalProp,
   onSave,
   isQuarterlyGoal = false,
   className,
 }) => {
+  // Prefer goal from context, fall back to prop during migration
+  const contextGoal = useOptionalGoalContext();
+  const goal = contextGoal?.goal ?? goalProp;
+
+  if (!goal) {
+    throw new Error('GoalActionMenu must be used within GoalProvider or receive goal prop');
+  }
   const { startEditing } = useGoalEditContext();
   const router = useRouter();
   const { year, quarter, weekNumber } = useWeek();
@@ -198,8 +206,8 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* GoalDetailsFullScreenModal gets goal from context */}
       <GoalDetailsFullScreenModal
-        goal={goal}
         onSave={onSave}
         isOpen={modalState.isFullScreenOpen}
         onClose={handleFullScreenClose}

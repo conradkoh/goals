@@ -8,6 +8,8 @@ import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 
@@ -15,8 +17,10 @@ import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
  * Props for the weekly goal task item component.
  */
 export interface WeeklyGoalTaskItemProps {
-  goal: GoalWithOptimisticStatus;
-  onUpdateGoal: (
+  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
+  goal?: GoalWithOptimisticStatus;
+  /** @deprecated Use GoalActionsProvider instead. This prop is only kept for backward compatibility during migration. */
+  onUpdateGoal?: (
     goalId: Id<'goals'>,
     title: string,
     details?: string,
@@ -27,7 +31,28 @@ export interface WeeklyGoalTaskItemProps {
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
  */
-export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemProps) => {
+export const WeeklyGoalTaskItem = ({
+  goal: goalProp,
+  onUpdateGoal: onUpdateGoalProp,
+}: WeeklyGoalTaskItemProps) => {
+  // Prefer goal from context, fall back to prop during migration
+  const contextGoal = useGoalContext();
+  const goal = (contextGoal.goal ?? goalProp) as GoalWithOptimisticStatus;
+
+  if (!goal) {
+    throw new Error('WeeklyGoalTaskItem must be used within GoalProvider or receive goal prop');
+  }
+
+  // Prefer actions from context, fall back to prop during migration
+  const contextActions = useGoalActionsContext();
+  const onUpdateGoal = contextActions?.onUpdateGoal ?? onUpdateGoalProp;
+
+  if (!onUpdateGoal) {
+    throw new Error(
+      'WeeklyGoalTaskItem must be used within GoalActionsProvider or receive onUpdateGoal prop'
+    );
+  }
+
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.isComplete;
@@ -83,8 +108,8 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemPro
             className="flex-shrink-0"
           />
 
+          {/* GoalDetailsPopover gets goal from context */}
           <GoalDetailsPopover
-            goal={goal}
             onSave={_handleUpdateGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             onToggleComplete={_handleToggleCompletion}
