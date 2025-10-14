@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
@@ -131,9 +132,8 @@ const WeeklyGoal = ({
               className="flex-shrink-0"
             />
 
-            {/* View Mode */}
+            {/* View Mode - GoalDetailsPopover gets goal from context */}
             <GoalDetailsPopover
-              goal={goal}
               onSave={async (title, details, dueDate) => {
                 await onUpdateGoal(goal._id, title, details, dueDate);
               }}
@@ -260,7 +260,10 @@ const WeeklyGoalGroup = ({
   return (
     <div className="space-y-1">
       {weeklyGoals.map((weeklyGoal) => (
-        <WeeklyGoal key={weeklyGoal._id} goal={weeklyGoal} onUpdateGoal={onUpdateGoal} />
+        <GoalProvider key={weeklyGoal._id} goal={weeklyGoal}>
+          {/* WeeklyGoal gets goal from context */}
+          <WeeklyGoal goal={weeklyGoal} onUpdateGoal={onUpdateGoal} />
+        </GoalProvider>
       ))}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
