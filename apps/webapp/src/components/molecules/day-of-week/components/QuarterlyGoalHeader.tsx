@@ -46,7 +46,6 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateGoal }: QuarterlyGoalHeaderP
       {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />}
       {isComplete && <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
       <GoalDetailsPopover
-        goal={goal}
         onSave={handleSaveGoal}
         triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
         titleClassName=""

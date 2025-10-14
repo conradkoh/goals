@@ -399,16 +399,17 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                         (isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50')
                     )}
                   >
-                    <GoalDetailsPopover
-                      goal={goal}
-                      onSave={async (title, details, dueDate) => {
-                        await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
-                      }}
-                      triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
-                      onToggleComplete={(newState) =>
-                        handleToggleQuarterlyCompletion(goal._id, newState)
-                      }
-                    />
+                    <GoalProvider goal={goal}>
+                      <GoalDetailsPopover
+                        onSave={async (title, details, dueDate) => {
+                          await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
+                        }}
+                        triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
+                        onToggleComplete={(newState) =>
+                          handleToggleQuarterlyCompletion(goal._id, newState)
+                        }
+                      />
+                    </GoalProvider>
                   </div>
                   <WeeklyGoalGroup
                     quarterlyGoal={goal}

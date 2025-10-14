@@ -7,6 +7,7 @@ import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -199,17 +200,18 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                 {quarterlyGoal.state?.isPinned && (
                   <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                 )}
-                <GoalDetailsPopover
-                  goal={quarterlyGoal}
-                  onSave={(title, details, dueDate) =>
-                    handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
-                  }
-                  triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-foreground hover:text-orange-600 dark:hover:text-orange-400 hover:no-underline"
-                  titleClassName={cn(
-                    'break-words w-full whitespace-pre-wrap flex items-center',
-                    quarterlyGoal.isComplete ? 'flex items-center' : ''
-                  )}
-                />
+                <GoalProvider goal={quarterlyGoal}>
+                  <GoalDetailsPopover
+                    onSave={(title, details, dueDate) =>
+                      handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
+                    }
+                    triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-foreground hover:text-orange-600 dark:hover:text-orange-400 hover:no-underline"
+                    titleClassName={cn(
+                      'break-words w-full whitespace-pre-wrap flex items-center',
+                      quarterlyGoal.isComplete ? 'flex items-center' : ''
+                    )}
+                  />
+                </GoalProvider>
               </div>
 
               {/* Weekly Goals */}
@@ -221,7 +223,9 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                       {/* Always show the weekly goal if it's pending or has daily goals */}
                       {(isWeeklyPending || dailyGoals.length > 0) && (
                         <div className="mb-1">
-                          <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={handleUpdateGoal} />
+                          <GoalProvider goal={weeklyGoal}>
+                            <WeeklyGoalTaskItem />
+                          </GoalProvider>
                           {/* Show pending description if available */}
                           {isWeeklyPending && pendingDescription && (
                             <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">

@@ -338,7 +338,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               />
             </GoalStarPinContainer>
           )}
-          <GoalActionMenu goal={goal} onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
+          <GoalActionMenu onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
         </div>
       </div>
 

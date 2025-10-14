@@ -7,6 +7,7 @@ import {
   CollapsibleMinimalTrigger,
 } from '@/components/ui/collapsible-minimal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { QuarterlyGoal } from './QuarterlyGoal';
@@ -156,12 +157,9 @@ export const WeekCardQuarterlyGoals = ({
       <div className="space-y-1">
         {/* Important goals are always visible */}
         {importantGoals.map((goal) => (
-          <QuarterlyGoal
-            key={goal._id}
-            goal={goal}
-            onToggleStatus={handleToggleStatus}
-            onUpdateGoal={handleUpdateGoal}
-          />
+          <GoalProvider key={goal._id} goal={goal}>
+            <QuarterlyGoal onToggleStatus={handleToggleStatus} onUpdateGoal={handleUpdateGoal} />
+          </GoalProvider>
         ))}
 
         {/* Other goals are shown when expanded */}
@@ -172,12 +170,12 @@ export const WeekCardQuarterlyGoals = ({
             </CollapsibleMinimalTrigger>
             <CollapsibleMinimalContent>
               {otherGoals.map((goal) => (
-                <QuarterlyGoal
-                  key={goal._id}
-                  goal={goal}
-                  onToggleStatus={handleToggleStatus}
-                  onUpdateGoal={handleUpdateGoal}
-                />
+                <GoalProvider key={goal._id} goal={goal}>
+                  <QuarterlyGoal
+                    onToggleStatus={handleToggleStatus}
+                    onUpdateGoal={handleUpdateGoal}
+                  />
+                </GoalProvider>
               ))}
             </CollapsibleMinimalContent>
           </CollapsibleMinimal>

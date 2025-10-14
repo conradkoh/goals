@@ -83,7 +83,7 @@ export const WeeklyGoalTaskItem = () => {
           />
 
           <div className="flex items-center gap-1">
-            {goal.isOptimistic ? (
+            {'isOptimistic' in goal && goal.isOptimistic ? (
               <Spinner className="h-4 w-4" />
             ) : (
               <>

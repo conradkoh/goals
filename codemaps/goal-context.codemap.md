@@ -207,19 +207,23 @@ No new URL parameters. Existing `goalId` route usage remains unchanged.
 ## Migration Status
 
 ### ✅ Phase A: Complete
+
 - Created `GoalContext` and provider
 - Migrated leaf components (atoms/molecules)
 - All components now use context
 
 ### ✅ Phase B: Complete
+
 - Migrated organism components
 - Updated list renderers to wrap items with `GoalProvider`
 
 ### ✅ Phase C: Complete
+
 - Migrated remaining components
 - All quarterly summary components updated
 
 ### ✅ Cleanup: Complete
+
 - Removed all deprecated `goal` props
 - Removed backward compatibility fallbacks
 - Cleaned up unused imports
@@ -230,6 +234,7 @@ No new URL parameters. Existing `goalId` route usage remains unchanged.
 ### Is this a good change?
 
 ✅ **Yes!** The migration successfully:
+
 - Eliminated prop drilling of `goal` objects through multiple component layers
 - Centralized goal data access at exact render boundaries
 - Keeps providers local (per item), minimizing global re-renders
