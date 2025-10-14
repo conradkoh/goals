@@ -6,8 +6,8 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
  *
  * @param goalId - The ID of the goal to update
  * @param title - The new title for the goal
- * @param details - Optional rich text details/description
- * @param dueDate - Optional due date as Unix timestamp (milliseconds)
+ * @param details - Optional rich text details/description (undefined clears details)
+ * @param dueDate - Required parameter for due date as Unix timestamp (undefined clears due date)
  *
  * @example
  * const handleUpdate: GoalUpdateHandler = async (goalId, title, details, dueDate) => {
@@ -17,8 +17,8 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
 export type GoalUpdateHandler = (
   goalId: Id<'goals'>,
   title: string,
-  details?: string,
-  dueDate?: number
+  details: string | undefined,
+  dueDate: number | undefined
 ) => Promise<void>;
 
 /**
@@ -26,10 +26,14 @@ export type GoalUpdateHandler = (
  * Used in contexts where the goal is already known (e.g., modal editing).
  *
  * @param title - The new title for the goal
- * @param details - Optional rich text details/description
- * @param dueDate - Optional due date as Unix timestamp (milliseconds)
+ * @param details - Optional rich text details/description (undefined clears details)
+ * @param dueDate - Required parameter for due date as Unix timestamp (undefined clears due date)
  */
-export type GoalSaveHandler = (title: string, details?: string, dueDate?: number) => Promise<void>;
+export type GoalSaveHandler = (
+  title: string,
+  details: string | undefined,
+  dueDate: number | undefined
+) => Promise<void>;
 
 /**
  * Handler for toggling goal completion status.

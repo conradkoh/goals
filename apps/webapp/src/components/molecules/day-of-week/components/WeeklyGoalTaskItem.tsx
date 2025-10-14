@@ -100,6 +100,7 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemPro
                 <GoalEditPopover
                   title={goal.title}
                   details={goal.details}
+                  initialDueDate={goal.dueDate}
                   onSave={_handleUpdateGoal}
                   trigger={
                     <button

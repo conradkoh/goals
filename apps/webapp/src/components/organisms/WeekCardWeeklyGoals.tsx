@@ -150,6 +150,7 @@ const WeeklyGoal = ({
                   <GoalEditPopover
                     title={goal.title}
                     details={goal.details}
+                    initialDueDate={goal.dueDate}
                     onSave={async (title, details, dueDate) => {
                       await onUpdateGoal(goal._id, title, details, dueDate);
                     }}

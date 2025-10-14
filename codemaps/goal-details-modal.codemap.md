@@ -98,6 +98,7 @@ The goal details modal is not a route-based component. It is invoked from variou
 - `apps/webapp/src/components/molecules/goal-details/GoalDetailsContent.tsx` - Displays goal details (rich text) with expandable full view
 - `apps/webapp/src/components/molecules/goal-details/GoalDetailsChildrenList.tsx` - Lists child goals within the modal
 - `apps/webapp/src/components/molecules/goal-details/GoalActionMenu.tsx` - Action menu for goal operations (edit, delete, move, etc.)
+- `apps/webapp/src/components/atoms/GoalEditPopover.tsx` - Inline edit popover (pencil icon) used in list items
 
 ### Supporting Components
 
@@ -753,3 +754,106 @@ Implemented display logic:
 - ✅ **Popover**: ShadCN's Popover component
 - ✅ **Icons**: `CalendarIcon` from `lucide-react`
 - ✅ **Date Library**: `luxon` for date formatting and comparison
+
+## Inline Edit Popover (Pencil) Flow
+
+### Component
+
+- `apps/webapp/src/components/atoms/GoalEditPopover.tsx`
+
+### Behavior
+
+- Provides compact editing for title, details, and due date directly from list items
+- Uses ShadCN `Popover`, `Calendar` and `RichTextEditor`
+- Calls parent `onSave(title: string, details: string, dueDate?: number)`
+
+### Integration Points
+
+- Used by:
+  - `apps/webapp/src/components/organisms/QuarterlyGoal.tsx`
+  - `apps/webapp/src/components/molecules/day-of-week/components/WeeklyGoalTaskItem.tsx`
+  - `apps/webapp/src/components/organisms/DailyGoalTaskItem.tsx`
+  - `apps/webapp/src/components/organisms/DailyGoalGroup.tsx` (quarterly and weekly)
+  - `apps/webapp/src/components/organisms/WeekCardWeeklyGoals.tsx`
+  - `apps/webapp/src/components/molecules/quarterly-summary/WeeklyTaskItem.tsx`
+  - `apps/webapp/src/components/molecules/quarterly-summary/DailySummaryItem.tsx`
+  - `apps/webapp/src/components/molecules/quarterly-summary/WeeklySummarySection.tsx`
+
+### Sequence (Inline Edit)
+
+```plantuml
+@startuml
+actor User
+participant "GoalEditPopover" as Inline
+participant "Parent List Item" as Parent
+participant "useWeek / useGoalActions" as Actions
+participant "Convex Mutation" as API
+database "Convex DB" as DB
+
+User -> Inline: Open popover and edit fields
+User -> Inline: Select due date or clear
+User -> Inline: Save
+Inline -> Parent: onSave(title, details, dueDate?)
+Parent -> Actions: updateQuarterlyGoalTitle({ goalId, title, details, dueDate })
+Actions -> API: api.dashboard.updateQuarterlyGoalTitle(args)
+API -> DB: patch goals { title, details?, dueDate }
+DB --> API: OK
+API --> Actions: OK
+Actions --> Parent: OK
+Parent --> Inline: Close and reflect updates
+@enduml
+```
+
+---
+
+## Due Date Feature Coverage Summary
+
+### ✅ Editing Goals (All Types Supported)
+
+**Entry Points for Setting/Clearing Due Dates:**
+
+1. **GoalDetailsFullScreenModal** (`GoalDetailsFullScreenModal.tsx`)
+
+   - Edit modal (via pencil icon in action menu)
+   - Inline due date picker in details view
+   - Supports: Quarterly ✅, Weekly ✅, Daily ✅
+
+2. **GoalDetailsPopover** (`GoalDetailsPopover.tsx`)
+
+   - Edit modal (via pencil icon in action menu)
+   - Shows current due date with color coding
+   - Supports: Quarterly ✅, Weekly ✅, Daily ✅
+
+3. **GoalEditPopover** (Inline Pencil - `GoalEditPopover.tsx`)
+   - Compact popover with due date calendar
+   - Used in 8+ components across the app
+   - Supports: Quarterly ✅, Weekly ✅, Daily ✅
+
+### 🔄 Backend Support
+
+**Mutations Accepting Due Date:**
+
+- ✅ `createQuarterlyGoal` - `dueDate?: v.optional(v.number())`
+- ✅ `createWeeklyGoal` - `dueDate?: v.optional(v.number())`
+- ✅ `createDailyGoal` - `dueDate?: v.optional(v.number())`
+- ✅ `updateQuarterlyGoalTitle` - `dueDate?: v.optional(v.number())`
+- ✅ `updateGoalTitle` - `dueDate?: v.optional(v.number())`
+
+**Bug Fix Applied:**
+
+- Backend mutations now always include `dueDate` key in patch object
+- Allows unsetting by passing `undefined` (Convex removes optional fields)
+
+### 📝 Note on Creation Flow
+
+**Current Behavior:**
+
+- Goal creation (`CreateGoalInput`) is intentionally minimal - title only
+- Due dates can be set immediately after creation via edit flows
+- This keeps the creation UX fast and focused
+
+**To Add Due Date to Creation (Future Enhancement):**
+
+- Would need to extend `CreateGoalInput` with optional due date picker
+- All backend mutations already support `dueDate` parameter
+- Frontend hooks already pass through `dueDate` parameter

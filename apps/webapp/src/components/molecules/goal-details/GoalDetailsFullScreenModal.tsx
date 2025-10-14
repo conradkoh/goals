@@ -1,7 +1,7 @@
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarIcon, Pin, Star, X } from 'lucide-react';
 import { DateTime } from 'luxon';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { Button } from '@/components/ui/button';
@@ -251,6 +251,7 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
   const [newDailyGoalTitle, setNewDailyGoalTitle] = useState('');
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(() => currentWeekday);
+  const [currentDueDate, setCurrentDueDate] = useState<number | undefined>(goal.dueDate);
 
   const shouldShowChildGoals = goal && (goal.depth === 0 || goal.depth === 1);
   const isQuarterlyGoal = goal?.depth === 0;
@@ -320,6 +321,20 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
     }
   };
 
+  // Handle inline due date change from the details view (no edit modal)
+  const handleInlineDueDateChange = useCallback(
+    async (date: Date | undefined) => {
+      try {
+        const dueDateMillis = date ? date.getTime() : undefined;
+        await onSave(goal.title, goal.details ?? '', dueDateMillis);
+        setCurrentDueDate(dueDateMillis);
+      } catch (error) {
+        console.error('[GoalDetailsFullScreenModal] Failed to update due date inline:', error);
+      }
+    },
+    [onSave, goal.title, goal.details]
+  );
+
   const modalContent = (
     <div className="space-y-6">
       {/* Header with close button */}
@@ -383,25 +398,54 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
         </div>
       )}
 
-      {/* Display due date if set */}
-      {goal.dueDate && (
-        <div
-          className={cn(
-            'text-sm flex items-center gap-2',
-            DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete
-              ? 'text-red-600 dark:text-red-400 font-medium'
-              : DateTime.fromMillis(goal.dueDate) < DateTime.now().plus({ days: 3 }) && !isComplete
-                ? 'text-yellow-600 dark:text-yellow-400 font-medium'
-                : 'text-muted-foreground'
-          )}
-        >
-          <CalendarIcon className="h-4 w-4" />
-          <span>
-            Due: {DateTime.fromMillis(goal.dueDate).toFormat('LLL d, yyyy')}
-            {DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete && ' (overdue)'}
-          </span>
-        </div>
-      )}
+      {/* Inline due date editor */}
+      <div className="space-y-2">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
+        <label className="text-sm font-medium text-muted-foreground">Due Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'w-full justify-start text-left font-normal',
+                !currentDueDate && 'text-muted-foreground',
+                currentDueDate &&
+                  (DateTime.fromMillis(currentDueDate) < DateTime.now() && !isComplete
+                    ? 'text-red-600 dark:text-red-400 font-medium'
+                    : DateTime.fromMillis(currentDueDate) < DateTime.now().plus({ days: 3 }) &&
+                        !isComplete
+                      ? 'text-yellow-600 dark:text-yellow-400 font-medium'
+                      : 'text-foreground')
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {currentDueDate
+                ? DateTime.fromMillis(currentDueDate).toFormat('LLL d, yyyy')
+                : 'Set due date...'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={currentDueDate ? new Date(currentDueDate) : undefined}
+              onSelect={(date) => handleInlineDueDateChange(date)}
+              initialFocus
+            />
+            {currentDueDate && (
+              <div className="p-3 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleInlineDueDateChange(undefined)}
+                >
+                  Clear due date
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
 
       {/* Goal details */}
       {goal.details && (

@@ -204,10 +204,12 @@ export const updateQuarterlyGoalTitle = mutation({
     }
 
     // Update the goal title, details, and dueDate
+    // Always include dueDate key to allow unsetting when undefined
     const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
-      ...(dueDate !== undefined ? { dueDate } : {}),
+      // Include the key even when value is undefined so Convex unsets the optional field
+      dueDate,
     };
     console.log('[Backend] Patching goal with data:', {
       goalId,
@@ -252,10 +254,12 @@ export const updateGoalTitle = mutation({
     }
 
     // Update the goal title, details, and dueDate
+    // Always include dueDate key to allow unsetting when undefined
     const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
-      ...(dueDate !== undefined ? { dueDate } : {}),
+      // Include the key even when value is undefined so Convex unsets the optional field
+      dueDate,
     };
     console.log('[Backend] updateGoalTitle patching with:', patchData);
     await ctx.db.patch(goalId, patchData);

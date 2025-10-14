@@ -138,6 +138,7 @@ export function DailySummaryItem({
           <GoalEditPopover
             title={dailyGoal.title}
             details={dailyGoal.details}
+            initialDueDate={dailyGoal.dueDate}
             onSave={handleEdit}
             trigger={
               <Button

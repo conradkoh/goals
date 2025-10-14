@@ -93,6 +93,7 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateGoal }: QuarterlyG
         <GoalEditPopover
           title={goal.title}
           details={goal.details || ''}
+          initialDueDate={goal.dueDate}
           onSave={handleSaveGoal}
           trigger={
             <button

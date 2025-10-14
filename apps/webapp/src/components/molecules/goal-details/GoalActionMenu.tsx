@@ -33,7 +33,11 @@ export interface GoalActionMenuProps {
   /** The goal for which actions are available */
   goal: GoalWithDetailsAndChildren;
   /** Callback fired when goal is saved after editing */
-  onSave: (title: string, details?: string) => Promise<void>;
+  onSave: (
+    title: string,
+    details: string | undefined,
+    dueDate: number | undefined
+  ) => Promise<void>;
   /** Whether this is a quarterly goal (affects available actions) */
   isQuarterlyGoal?: boolean;
   /** Additional CSS classes to apply to the trigger button */

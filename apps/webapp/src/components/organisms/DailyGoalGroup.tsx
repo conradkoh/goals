@@ -81,6 +81,7 @@ export const DailyGoalGroup = ({
             <GoalEditPopover
               title={quarterlyGoal.title}
               details={quarterlyGoal.details}
+              initialDueDate={quarterlyGoal.dueDate}
               onSave={async (title, details, dueDate) => {
                 await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
               }}
@@ -99,6 +100,7 @@ export const DailyGoalGroup = ({
           <GoalEditPopover
             title={weeklyGoal.title}
             details={weeklyGoal.details}
+            initialDueDate={weeklyGoal.dueDate}
             onSave={async (title, details, dueDate) => {
               await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
             }}

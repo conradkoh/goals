@@ -382,8 +382,8 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
     }, [weeklyGoals, quarterlyGoals, selectedDayOfWeek, days]);
 
     const handleUpdateGoalTitle = useCallback(
-      (goalId: Id<'goals'>, title: string, details?: string) => {
-        return updateQuarterlyGoalTitle({ goalId, title, details });
+      (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+        return updateQuarterlyGoalTitle({ goalId, title, details, dueDate });
       },
       [updateQuarterlyGoalTitle]
     );

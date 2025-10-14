@@ -159,6 +159,7 @@ export function WeeklySummarySection({
                 <GoalEditPopover
                   title={weeklyGoal.title}
                   details={weeklyGoal.details}
+                  initialDueDate={weeklyGoal.dueDate}
                   onSave={handleEdit}
                   trigger={
                     <Button

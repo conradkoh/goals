@@ -85,8 +85,8 @@ export const DailyGoalTaskItem = ({
         {/* View Mode */}
         <GoalDetailsPopover
           goal={goal}
-          onSave={async (newTitle: string, newDetails?: string) => {
-            await onUpdateGoal(goal._id, newTitle, newDetails);
+          onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
+            await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
           }}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           onToggleComplete={async (checked) => {
@@ -138,8 +138,9 @@ export const DailyGoalTaskItem = ({
               <GoalEditPopover
                 title={title}
                 details={details}
-                onSave={async (newTitle: string, newDetails?: string) => {
-                  await onUpdateGoal(goal._id, newTitle, newDetails);
+                initialDueDate={goal.dueDate}
+                onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
+                  await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
                 }}
                 trigger={
                   <button
