@@ -199,29 +199,59 @@ No new URL parameters. Existing `goalId` route usage remains unchanged.
 
 ## Acceptance Criteria
 
-- No component should require drilling `goal` solely for descendant consumption.
-- All files listed have either been wrapped with `GoalProvider` or updated to use `useGoalContext()` where appropriate.
+- ✅ No component should require drilling `goal` solely for descendant consumption.
+- ✅ All files listed have either been wrapped with `GoalProvider` or updated to use `useGoalContext()` where appropriate.
+- ✅ All deprecated `goal` props have been removed from component interfaces.
+- ✅ All backward compatibility code has been cleaned up.
+
+## Migration Status
+
+### ✅ Phase A: Complete
+- Created `GoalContext` and provider
+- Migrated leaf components (atoms/molecules)
+- All components now use context
+
+### ✅ Phase B: Complete
+- Migrated organism components
+- Updated list renderers to wrap items with `GoalProvider`
+
+### ✅ Phase C: Complete
+- Migrated remaining components
+- All quarterly summary components updated
+
+### ✅ Cleanup: Complete
+- Removed all deprecated `goal` props
+- Removed backward compatibility fallbacks
+- Cleaned up unused imports
+- All components now enforce context-only pattern
 
 ## Reflection and Future Work
 
 ### Is this a good change?
 
-- Reduces prop drilling and centralizes access to the goal object at the exact render boundary, which is the primary pain today.
-- Keeps providers local (per item), minimizing global re-renders and avoiding a heavy global store.
-- Aligns with existing `GoalActionsContext` and `GoalStatusContext` without forcing an architectural rewrite.
+✅ **Yes!** The migration successfully:
+- Eliminated prop drilling of `goal` objects through multiple component layers
+- Centralized goal data access at exact render boundaries
+- Keeps providers local (per item), minimizing global re-renders
+- Aligns with existing `GoalActionsContext` and `GoalStatusContext` patterns
+- Simplified component interfaces by removing drilling props
+
+### What was accomplished?
+
+- **16 files migrated** across 3 phases
+- **All deprecated props removed** - no more backward compatibility code
+- **Consistent patterns** - all goal-related components use the same context approach
+- **Cleaner interfaces** - components have simpler, focused prop interfaces
 
 ### What fragmentation remains?
 
-- Dual-access period: components that are used in and out of a `GoalProvider` may temporarily support both props and context. This is a transitional and intentional duplication.
 - Multiple contexts: `GoalContext` (data), `GoalActionsContext` (mutations), and `GoalStatusContext` (fire/pending) can feel scattered. Coalescing these into a single scope could simplify mental overhead, at the cost of a larger context value.
-- Boundary components: top-level orchestrators will still pass goal collections and wrap providers; that’s expected and acceptable.
+- Boundary components: top-level orchestrators still pass goal collections and wrap providers; that's expected and acceptable.
 
-### Future Work (optional, post-migration)
+### Future Work (optional)
 
-- Consolidate scope: introduce a `GoalScopeProvider` that composes `GoalContext`, `GoalActionsContext`, and `GoalStatusContext` for item subtrees, exposing a single hook `useGoalScope()` with `{ goal, actions, status }`. Start where item trees are deepest (goal-details components).
-- Selector-based context: if re-render hot paths appear, adopt selector patterns (e.g., `useContextSelector`) or split contexts by concern fields to reduce unnecessary renders.
-- ESLint rule + codemod: add a custom lint rule to forbid drilling `goal` more than one layer; provide a codemod to replace `props.goal` access with `useGoalContext()` when a provider exists.
-- Testing: add unit tests for `GoalProvider` and lightweight render tests verifying consumers work with and without provider (fallback to props), then remove fallback once migration is complete.
-- Telemetry/metrics: track occurrences of `goal:` prop usage and `goalId` drilling; set a target reduction and verify via CI grep check.
-- Deprecation plan: mark `goal` prop on migrated components as deprecated (JSDoc) once context is broadly adopted; remove in a subsequent cleanup.
-- Docs: add a short guide in `docs/` explaining when to wrap with `GoalProvider` vs. pass explicit props (rare cases: cross-goal comparisons, list-level algorithms).
+- **Consolidate scope**: introduce a `GoalScopeProvider` that composes `GoalContext`, `GoalActionsContext`, and `GoalStatusContext` for item subtrees, exposing a single hook `useGoalScope()` with `{ goal, actions, status }`.
+- **Selector-based context**: if re-render hot paths appear, adopt selector patterns (e.g., `useContextSelector`) or split contexts by concern fields to reduce unnecessary renders.
+- **ESLint rule**: add a custom lint rule to enforce context usage and prevent accidental prop drilling.
+- **Testing**: add unit tests for `GoalProvider` to ensure proper context provision.
+- **Docs**: add a guide explaining when to wrap with `GoalProvider` vs. pass explicit props (rare cases: cross-goal comparisons, list-level algorithms).
