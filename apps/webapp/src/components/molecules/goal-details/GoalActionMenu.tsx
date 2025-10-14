@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarDays, Edit2, FileText, Maximize2, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
@@ -10,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useOptionalGoalContext } from '@/contexts/GoalContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
@@ -31,8 +30,6 @@ import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
  * ```
  */
 export interface GoalActionMenuProps {
-  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
-  goal?: GoalWithDetailsAndChildren;
   /** Callback fired when goal is saved after editing */
   onSave: (
     title: string,
@@ -58,18 +55,11 @@ interface _ModalState {
  * Actions vary based on goal type (quarterly vs weekly) and depth.
  */
 export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
-  goal: goalProp,
   onSave,
   isQuarterlyGoal = false,
   className,
 }) => {
-  // Prefer goal from context, fall back to prop during migration
-  const contextGoal = useOptionalGoalContext();
-  const goal = contextGoal?.goal ?? goalProp;
-
-  if (!goal) {
-    throw new Error('GoalActionMenu must be used within GoalProvider or receive goal prop');
-  }
+  const { goal } = useGoalContext();
   const { startEditing } = useGoalEditContext();
   const router = useRouter();
   const { year, quarter, weekNumber } = useWeek();

@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
@@ -23,24 +22,15 @@ import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
-  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
-  goal?: GoalWithDetailsAndChildren;
   inSidebar?: boolean;
   className?: string;
 }
 
 export const DailyGoalTaskItem = ({
-  goal: goalProp,
   inSidebar: _inSidebar = false,
   className: _className,
 }: DailyGoalItemProps) => {
-  // Prefer goal from context, fall back to prop during migration
-  const contextGoal = useGoalContext();
-  const goal = contextGoal.goal ?? goalProp;
-
-  if (!goal) {
-    throw new Error('DailyGoalTaskItem must be used within GoalProvider or receive goal prop');
-  }
+  const { goal } = useGoalContext();
 
   const { onUpdateGoal } = useGoalActionsContext();
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();

@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import { useCallback } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -11,47 +10,15 @@ import { Spinner } from '@/components/ui/spinner';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
-import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
-
-/**
- * Props for the weekly goal task item component.
- */
-export interface WeeklyGoalTaskItemProps {
-  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
-  goal?: GoalWithOptimisticStatus;
-  /** @deprecated Use GoalActionsProvider instead. This prop is only kept for backward compatibility during migration. */
-  onUpdateGoal?: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
-}
+import { useWeek } from '@/hooks/useWeek';
 
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
+ * Must be wrapped with GoalProvider and GoalActionsProvider.
  */
-export const WeeklyGoalTaskItem = ({
-  goal: goalProp,
-  onUpdateGoal: onUpdateGoalProp,
-}: WeeklyGoalTaskItemProps) => {
-  // Prefer goal from context, fall back to prop during migration
-  const contextGoal = useGoalContext();
-  const goal = (contextGoal.goal ?? goalProp) as GoalWithOptimisticStatus;
-
-  if (!goal) {
-    throw new Error('WeeklyGoalTaskItem must be used within GoalProvider or receive goal prop');
-  }
-
-  // Prefer actions from context, fall back to prop during migration
-  const contextActions = useGoalActionsContext();
-  const onUpdateGoal = contextActions?.onUpdateGoal ?? onUpdateGoalProp;
-
-  if (!onUpdateGoal) {
-    throw new Error(
-      'WeeklyGoalTaskItem must be used within GoalActionsProvider or receive onUpdateGoal prop'
-    );
-  }
+export const WeeklyGoalTaskItem = () => {
+  const { goal } = useGoalContext();
+  const { onUpdateGoal } = useGoalActionsContext();
 
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();

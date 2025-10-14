@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarIcon, Pin, Star } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { type ReactNode, useMemo, useState } from 'react';
@@ -20,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { GoalProvider, useOptionalGoalContext } from '@/contexts/GoalContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
@@ -33,8 +32,6 @@ import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsPopoverProps {
-  /** @deprecated Use GoalProvider instead. This prop is only kept for backward compatibility during migration. */
-  goal?: GoalWithDetailsAndChildren;
   onSave: GoalSaveHandler;
   triggerClassName?: string;
   buttonVariant?: 'default' | 'ghost' | 'outline';
@@ -44,7 +41,6 @@ interface GoalDetailsPopoverProps {
 }
 
 export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
-  goal: goalProp,
   onSave,
   triggerClassName = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
   buttonVariant = 'ghost',
@@ -52,13 +48,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   additionalContent,
   onToggleComplete,
 }) => {
-  // Prefer goal from context, fall back to prop during migration
-  const contextGoal = useOptionalGoalContext();
-  const goal = contextGoal?.goal ?? goalProp;
-
-  if (!goal) {
-    throw new Error('GoalDetailsPopover must be used within GoalProvider or receive goal prop');
-  }
+  const { goal } = useGoalContext();
   const {
     weekNumber,
     year,
@@ -477,7 +467,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
     </div>
   );
 
-  const content = (
+  return (
     <GoalEditProvider>
       <Popover key={`goal-details-${goal._id.toString()}`}>
         <PopoverTrigger asChild>
@@ -494,8 +484,4 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
       <GoalEditModalContent onSave={onSave} />
     </GoalEditProvider>
   );
-
-  // If goal came from prop (backward compat), wrap with GoalProvider
-  // Otherwise, assume we're already in a GoalProvider
-  return contextGoal ? content : <GoalProvider goal={goal}>{content}</GoalProvider>;
 };
