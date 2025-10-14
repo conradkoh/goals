@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarDays, Edit2, FileText, Maximize2, MoreVertical } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
@@ -10,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
@@ -30,8 +30,6 @@ import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
  * ```
  */
 export interface GoalActionMenuProps {
-  /** The goal for which actions are available */
-  goal: GoalWithDetailsAndChildren;
   /** Callback fired when goal is saved after editing */
   onSave: (
     title: string,
@@ -57,11 +55,11 @@ interface _ModalState {
  * Actions vary based on goal type (quarterly vs weekly) and depth.
  */
 export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
-  goal,
   onSave,
   isQuarterlyGoal = false,
   className,
 }) => {
+  const { goal } = useGoalContext();
   const { startEditing } = useGoalEditContext();
   const router = useRouter();
   const { year, quarter, weekNumber } = useWeek();
@@ -198,8 +196,8 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* GoalDetailsFullScreenModal gets goal from context */}
       <GoalDetailsFullScreenModal
-        goal={goal}
         onSave={onSave}
         isOpen={modalState.isFullScreenOpen}
         onClose={handleFullScreenClose}

@@ -1,8 +1,8 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { useCallback } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import type { GoalUpdateHandler } from '@/models/goal-handlers';
@@ -11,12 +11,12 @@ import { GoalStarPin, GoalStarPinContainer } from '../atoms/GoalStarPin';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface QuarterlyGoalProps {
-  goal: GoalWithDetailsAndChildren;
   onToggleStatus: (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => Promise<void>;
   onUpdateGoal: GoalUpdateHandler;
 }
 
-export function QuarterlyGoal({ goal, onToggleStatus, onUpdateGoal }: QuarterlyGoalProps) {
+export function QuarterlyGoal({ onToggleStatus, onUpdateGoal }: QuarterlyGoalProps) {
+  const { goal } = useGoalContext();
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isComplete = goal.isComplete;
   const isAllWeeklyGoalsComplete =
@@ -80,9 +80,8 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateGoal }: QuarterlyG
           />
         </GoalStarPinContainer>
 
-        {/* View Mode */}
+        {/* View Mode - GoalDetailsPopover gets goal from context */}
         <GoalDetailsPopover
-          goal={goal}
           onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           titleClassName="text-gray-600 flex items-center"

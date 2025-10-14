@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarIcon, Pin, Star } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { type ReactNode, useMemo, useState } from 'react';
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
@@ -32,7 +32,6 @@ import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsPopoverProps {
-  goal: GoalWithDetailsAndChildren;
   onSave: GoalSaveHandler;
   triggerClassName?: string;
   buttonVariant?: 'default' | 'ghost' | 'outline';
@@ -42,7 +41,6 @@ interface GoalDetailsPopoverProps {
 }
 
 export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
-  goal,
   onSave,
   triggerClassName = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
   buttonVariant = 'ghost',
@@ -50,6 +48,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
   additionalContent,
   onToggleComplete,
 }) => {
+  const { goal } = useGoalContext();
   const {
     weekNumber,
     year,
@@ -339,7 +338,7 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               />
             </GoalStarPinContainer>
           )}
-          <GoalActionMenu goal={goal} onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
+          <GoalActionMenu onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
         </div>
       </div>
 

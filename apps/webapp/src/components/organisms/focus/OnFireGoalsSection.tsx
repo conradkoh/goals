@@ -8,6 +8,7 @@ import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -231,17 +232,18 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                 {quarterlyGoal.state?.isPinned && (
                   <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                 )}
-                <GoalDetailsPopover
-                  goal={quarterlyGoal}
-                  onSave={(title, details, dueDate) =>
-                    _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
-                  }
-                  triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
-                  titleClassName={cn(
-                    'break-words w-full whitespace-pre-wrap flex items-center',
-                    quarterlyGoal.isComplete ? 'flex items-center' : ''
-                  )}
-                />
+                <GoalProvider goal={quarterlyGoal}>
+                  <GoalDetailsPopover
+                    onSave={(title, details, dueDate) =>
+                      _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
+                    }
+                    triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
+                    titleClassName={cn(
+                      'break-words w-full whitespace-pre-wrap flex items-center',
+                      quarterlyGoal.isComplete ? 'flex items-center' : ''
+                    )}
+                  />
+                </GoalProvider>
               </div>
 
               {/* Weekly Goals */}
@@ -252,7 +254,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {/* Always show the weekly goal if it's on fire or has daily goals */}
                     {(isWeeklyOnFire || dailyGoals.length > 0) && (
                       <div className="mb-1">
-                        <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={_handleUpdateGoal} />
+                        <GoalProvider goal={weeklyGoal}>
+                          {/* WeeklyGoalTaskItem gets goal from context */}
+                          <WeeklyGoalTaskItem />
+                        </GoalProvider>
                       </div>
                     )}
 
@@ -260,7 +265,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {dailyGoals.length > 0 && (
                       <div className="space-y-1 ml-4">
                         {dailyGoals.map((dailyGoal) => (
-                          <DailyGoalTaskItem key={dailyGoal._id.toString()} goal={dailyGoal} />
+                          <GoalProvider key={dailyGoal._id.toString()} goal={dailyGoal}>
+                            {/* DailyGoalTaskItem gets goal from context */}
+                            <DailyGoalTaskItem />
+                          </GoalProvider>
                         ))}
                       </div>
                     )}

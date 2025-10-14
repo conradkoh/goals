@@ -7,6 +7,7 @@ import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { GoalProvider } from '@/contexts/GoalContext';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -120,7 +121,10 @@ export const DailyGoalGroup = ({
         <div className="space-y-2 mt-2">
           <div>
             {dailyGoals.map((goal) => (
-              <DailyGoalTaskItem key={goal._id} goal={goal} />
+              <GoalProvider key={goal._id} goal={goal}>
+                {/* DailyGoalTaskItem gets goal from context */}
+                <DailyGoalTaskItem />
+              </GoalProvider>
             ))}
           </div>
 

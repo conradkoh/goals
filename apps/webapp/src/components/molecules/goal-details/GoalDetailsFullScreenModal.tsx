@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { CalendarIcon, Pin, Star, X } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { useCallback, useMemo, useState } from 'react';
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
@@ -32,7 +32,6 @@ import { GoalDetailsContent } from './GoalDetailsContent';
 import { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 
 interface GoalDetailsFullScreenModalProps {
-  goal: GoalWithDetailsAndChildren;
   onSave: GoalSaveHandler;
   onToggleComplete?: GoalCompletionHandler;
   isOpen: boolean;
@@ -218,12 +217,13 @@ const GoalEditModalContent: React.FC<{
 };
 
 export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProps> = ({
-  goal,
   onSave,
   onToggleComplete,
   isOpen,
   onClose,
 }) => {
+  const { goal } = useGoalContext();
+
   console.log('[GoalDetailsFullScreenModal] Rendering with goal:', {
     goalId: goal._id,
     title: goal.title,
@@ -369,7 +369,7 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
               />
             </GoalStarPinContainer>
           )}
-          <GoalActionMenu goal={goal} onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
+          <GoalActionMenu onSave={onSave} isQuarterlyGoal={isQuarterlyGoal} />
         </div>
       </div>
 

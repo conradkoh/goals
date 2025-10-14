@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import { useCallback } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -8,26 +7,19 @@ import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
-import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
-
-/**
- * Props for the weekly goal task item component.
- */
-export interface WeeklyGoalTaskItemProps {
-  goal: GoalWithOptimisticStatus;
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
-}
+import { useWeek } from '@/hooks/useWeek';
 
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
+ * Must be wrapped with GoalProvider and GoalActionsProvider.
  */
-export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemProps) => {
+export const WeeklyGoalTaskItem = () => {
+  const { goal } = useGoalContext();
+  const { onUpdateGoal } = useGoalActionsContext();
+
   const { toggleGoalCompletion } = useWeek();
   const { weekNumber: currentWeekNumber } = useWeek();
   const isComplete = goal.isComplete;
@@ -83,15 +75,15 @@ export const WeeklyGoalTaskItem = ({ goal, onUpdateGoal }: WeeklyGoalTaskItemPro
             className="flex-shrink-0"
           />
 
+          {/* GoalDetailsPopover gets goal from context */}
           <GoalDetailsPopover
-            goal={goal}
             onSave={_handleUpdateGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             onToggleComplete={_handleToggleCompletion}
           />
 
           <div className="flex items-center gap-1">
-            {goal.isOptimistic ? (
+            {'isOptimistic' in goal && goal.isOptimistic ? (
               <Spinner className="h-4 w-4" />
             ) : (
               <>

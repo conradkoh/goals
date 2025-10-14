@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
@@ -13,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoalStatus, usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { isOptimisticId } from '@/hooks/useOptimistic';
@@ -22,16 +22,16 @@ import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
-  goal: GoalWithDetailsAndChildren;
   inSidebar?: boolean;
   className?: string;
 }
 
 export const DailyGoalTaskItem = ({
-  goal,
   inSidebar: _inSidebar = false,
   className: _className,
 }: DailyGoalItemProps) => {
+  const { goal } = useGoalContext();
+
   const { onUpdateGoal } = useGoalActionsContext();
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const { isComplete = goal.isComplete } = goal;
@@ -82,9 +82,8 @@ export const DailyGoalTaskItem = ({
           className="flex-shrink-0"
         />
 
-        {/* View Mode */}
+        {/* View Mode - GoalDetailsPopover gets goal from context */}
         <GoalDetailsPopover
-          goal={goal}
           onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
             await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
           }}
