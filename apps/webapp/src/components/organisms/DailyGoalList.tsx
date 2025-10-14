@@ -4,6 +4,7 @@ import { Check, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { Spinner } from '@/components/ui/spinner';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -19,7 +20,10 @@ export const DailyGoalList = ({ goals, className }: DailyGoalListProps) => {
   return (
     <div className={className}>
       {goals.map((goal) => (
-        <DailyGoalTaskItem key={goal._id} goal={goal} />
+        <GoalProvider key={goal._id} goal={goal}>
+          {/* DailyGoalTaskItem gets goal from context */}
+          <DailyGoalTaskItem />
+        </GoalProvider>
       ))}
     </div>
   );
@@ -162,30 +166,34 @@ export const DailyGoalGroupHeader = ({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <GoalDetailsPopover
-          goal={weeklyGoal}
-          onSave={handleSaveWeeklyGoal}
-          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          onToggleComplete={async (newState) => {
-            await toggleGoalCompletion({
-              goalId: weeklyGoal._id,
-              weekNumber,
-              isComplete: newState,
-              updateChildren: false,
-            });
-          }}
-        />
+        <GoalProvider goal={weeklyGoal}>
+          {/* GoalDetailsPopover gets goal from context */}
+          <GoalDetailsPopover
+            onSave={handleSaveWeeklyGoal}
+            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            onToggleComplete={async (newState) => {
+              await toggleGoalCompletion({
+                goalId: weeklyGoal._id,
+                weekNumber,
+                isComplete: newState,
+                updateChildren: false,
+              });
+            }}
+          />
+        </GoalProvider>
       </div>
       <div className="flex items-center gap-1.5 text-sm text-gray-500">
         {isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
         {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
-        <GoalDetailsPopover
-          goal={quarterlyGoal}
-          onSave={handleSaveQuarterlyGoal}
-          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          onToggleComplete={handleToggleCompletion}
-        />
+        <GoalProvider goal={quarterlyGoal}>
+          {/* GoalDetailsPopover gets goal from context */}
+          <GoalDetailsPopover
+            onSave={handleSaveQuarterlyGoal}
+            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            onToggleComplete={handleToggleCompletion}
+          />
+        </GoalProvider>
       </div>
     </div>
   );

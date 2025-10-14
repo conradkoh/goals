@@ -6,6 +6,7 @@ import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
+import { GoalProvider } from '@/contexts/GoalContext';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { DayHeader } from '../components/DayHeader';
@@ -109,30 +110,35 @@ const WeeklyGoalSection = ({
   const shouldShowAddTask = mode === 'focus' || isAddingTask;
 
   return (
-    <div>
-      <GoalDetailsPopover
-        goal={weeklyGoal}
-        onSave={handleSave}
-        triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-      />
+    <GoalProvider goal={weeklyGoal}>
+      <div>
+        {/* GoalDetailsPopover gets goal from context */}
+        <GoalDetailsPopover
+          onSave={handleSave}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+        />
 
-      <div className="space-y-1">
-        {sortedDailyGoals.map((dailyGoal) => (
-          <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalTaskItem goal={dailyGoal} />
-          </div>
-        ))}
+        <div className="space-y-1">
+          {sortedDailyGoals.map((dailyGoal) => (
+            <GoalProvider key={dailyGoal._id.toString()} goal={dailyGoal}>
+              <div className="ml-1">
+                {/* DailyGoalTaskItem gets goal from context */}
+                <DailyGoalTaskItem />
+              </div>
+            </GoalProvider>
+          ))}
 
-        {shouldShowAddTask && (
-          <AddTaskInput
-            parentGoalId={weeklyGoal._id}
-            isOptimistic={true}
-            onCreateGoal={onCreateDailyGoal}
-            forDayOfWeek={dayOfWeek}
-          />
-        )}
+          {shouldShowAddTask && (
+            <AddTaskInput
+              parentGoalId={weeklyGoal._id}
+              isOptimistic={true}
+              onCreateGoal={onCreateDailyGoal}
+              forDayOfWeek={dayOfWeek}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </GoalProvider>
   );
 };
 
@@ -266,11 +272,10 @@ const QuarterlyGoalSection = ({
           <div className="ml-1 space-y-1 border-b border-gray-100">
             <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
             {weeklyGoalsForChecklist.map((weeklyGoal) => (
-              <WeeklyGoalTaskItem
-                key={weeklyGoal._id.toString()}
-                goal={weeklyGoal}
-                onUpdateGoal={onUpdateGoal}
-              />
+              <GoalProvider key={weeklyGoal._id.toString()} goal={weeklyGoal}>
+                {/* WeeklyGoalTaskItem gets goal from context */}
+                <WeeklyGoalTaskItem />
+              </GoalProvider>
             ))}
             <AddTaskInput
               parentGoalId={quarterlyGoal._id}

@@ -252,7 +252,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {/* Always show the weekly goal if it's on fire or has daily goals */}
                     {(isWeeklyOnFire || dailyGoals.length > 0) && (
                       <div className="mb-1">
-                        <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={_handleUpdateGoal} />
+                        <GoalProvider goal={weeklyGoal}>
+                          {/* WeeklyGoalTaskItem gets goal from context */}
+                          <WeeklyGoalTaskItem />
+                        </GoalProvider>
                       </div>
                     )}
 
@@ -260,7 +263,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {dailyGoals.length > 0 && (
                       <div className="space-y-1 ml-4">
                         {dailyGoals.map((dailyGoal) => (
-                          <DailyGoalTaskItem key={dailyGoal._id.toString()} goal={dailyGoal} />
+                          <GoalProvider key={dailyGoal._id.toString()} goal={dailyGoal}>
+                            {/* DailyGoalTaskItem gets goal from context */}
+                            <DailyGoalTaskItem />
+                          </GoalProvider>
                         ))}
                       </div>
                     )}

@@ -238,7 +238,10 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                             const dailyPendingDescription = getPendingDescription(dailyGoal._id);
                             return (
                               <div key={dailyGoal._id.toString()}>
-                                <DailyGoalTaskItem goal={dailyGoal} />
+                                <GoalProvider goal={dailyGoal}>
+                                  {/* DailyGoalTaskItem gets goal from context */}
+                                  <DailyGoalTaskItem />
+                                </GoalProvider>
                                 {/* Show pending description for daily goal */}
                                 {dailyPendingDescription && (
                                   <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
