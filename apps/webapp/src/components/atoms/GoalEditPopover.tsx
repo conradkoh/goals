@@ -1,17 +1,21 @@
-import { Edit2 } from 'lucide-react';
+import { CalendarIcon, Edit2 } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useToast } from '@/components/ui/use-toast';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import { cn } from '@/lib/utils';
 
 interface GoalEditPopoverProps {
   title: string;
   details?: string;
-  onSave: (title: string, details: string) => Promise<void>;
+  onSave: (title: string, details: string, dueDate?: number) => Promise<void>;
   trigger?: React.ReactNode;
+  initialDueDate?: number;
 }
 
 export function GoalEditPopover({
@@ -19,10 +23,14 @@ export function GoalEditPopover({
   details: initialDetails,
   onSave,
   trigger,
+  initialDueDate,
 }: GoalEditPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
   const [details, setDetails] = useState(initialDetails ?? '');
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    initialDueDate ? new Date(initialDueDate) : undefined
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -40,11 +48,19 @@ export function GoalEditPopover({
     }
   }, [isOpen, initialDetails]);
 
+  // Sync due date when popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setDueDate(initialDueDate ? new Date(initialDueDate) : undefined);
+    }
+  }, [isOpen, initialDueDate]);
+
   const handleCancel = useCallback(() => {
     setTitle(initialTitle);
     setDetails(initialDetails ?? '');
+    setDueDate(initialDueDate ? new Date(initialDueDate) : undefined);
     setIsOpen(false);
-  }, [initialTitle, initialDetails]);
+  }, [initialTitle, initialDetails, initialDueDate]);
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) return;
@@ -54,7 +70,7 @@ export function GoalEditPopover({
       // Optimistically close the dialog immediately
       setIsOpen(false);
       // Then perform the save operation
-      await onSave(title.trim(), details);
+      await onSave(title.trim(), details, dueDate?.getTime());
     } catch (error) {
       console.error('Failed to save goal:', error);
 
@@ -69,7 +85,9 @@ export function GoalEditPopover({
             size="sm"
             onClick={() => {
               // Try again with the same data
-              onSave(title.trim(), details).catch((e) => console.error('Retry failed:', e));
+              onSave(title.trim(), details, dueDate?.getTime()).catch((e) =>
+                console.error('Retry failed:', e)
+              );
             }}
           >
             Retry
@@ -79,7 +97,7 @@ export function GoalEditPopover({
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, details, onSave, toast]);
+  }, [title, details, dueDate, onSave, toast]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -145,6 +163,41 @@ export function GoalEditPopover({
             placeholder="Add details..."
             className="min-h-[150px] p-3 rounded-md border"
           />
+        </div>
+        <div className="space-y-2">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
+          <label className="text-sm font-medium text-muted-foreground">Due Date</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'w-full justify-start text-left font-normal',
+                  !dueDate && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dueDate
+                  ? DateTime.fromJSDate(dueDate).toFormat('LLL dd, yyyy')
+                  : 'Set due date...'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
+              {dueDate && (
+                <div className="p-3 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setDueDate(undefined)}
+                  >
+                    Clear due date
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>

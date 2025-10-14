@@ -7,10 +7,15 @@ import { useWeek } from '@/hooks/useWeek';
 
 export interface QuarterlyGoalHeaderProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }
 
-export const QuarterlyGoalHeader = ({ goal, onUpdateTitle }: QuarterlyGoalHeaderProps) => {
+export const QuarterlyGoalHeader = ({ goal, onUpdateGoal }: QuarterlyGoalHeaderProps) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = goal.state?.isStarred ?? false;
   const isPinned = goal.state?.isPinned ?? false;
@@ -28,11 +33,11 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateTitle }: QuarterlyGoalHeader
     [goal._id, weekNumber, toggleGoalCompletion]
   );
 
-  const handleSaveTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(goal._id, title, details);
+  const handleSaveGoal = useCallback(
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goal._id, title, details, dueDate);
     },
-    [goal._id, onUpdateTitle]
+    [goal._id, onUpdateGoal]
   );
 
   return (
@@ -42,7 +47,7 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateTitle }: QuarterlyGoalHeader
       {isComplete && <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
       <GoalDetailsPopover
         goal={goal}
-        onSave={handleSaveTitle}
+        onSave={handleSaveGoal}
         triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
         titleClassName=""
         onToggleComplete={handleToggleCompletion}

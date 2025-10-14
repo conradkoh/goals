@@ -4,6 +4,7 @@ import {
   CollapsibleMinimalContent,
   CollapsibleMinimalTrigger,
 } from '@/components/ui/collapsible-minimal';
+import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { DayContainer, type DayContainerProps } from './DayContainer';
 
@@ -11,8 +12,8 @@ import { DayContainer, type DayContainerProps } from './DayContainer';
  * Props for the past days container component.
  */
 export interface PastDaysContainerProps {
-  days: Omit<DayContainerProps, 'onUpdateGoalTitle' | 'onDeleteGoal' | 'onCreateGoal'>[];
-  onUpdateGoalTitle: DayContainerProps['onUpdateGoalTitle'];
+  days: Omit<DayContainerProps, 'onUpdateGoal' | 'onDeleteGoal' | 'onCreateGoal'>[];
+  onUpdateGoal: DayContainerProps['onUpdateGoal'];
   onDeleteGoal: DayContainerProps['onDeleteGoal'];
   onCreateGoal: DayContainerProps['onCreateDailyGoal'];
   isCreating?: Record<string, boolean>;
@@ -26,7 +27,7 @@ export interface PastDaysContainerProps {
  */
 export const PastDaysContainer = ({
   days,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   onCreateGoal,
   isCreating = {},
@@ -50,15 +51,17 @@ export const PastDaysContainer = ({
       <CollapsibleMinimalContent>
         {days.map((day) => (
           <FireGoalsProvider key={`fire-provider-${day.dayOfWeek}`}>
-            <DayContainer
-              key={`day-container-${day.dayOfWeek}`}
-              {...day}
-              onUpdateGoalTitle={onUpdateGoalTitle}
-              onDeleteGoal={onDeleteGoal}
-              onCreateDailyGoal={onCreateGoal}
-              isCreating={isCreating}
-              sortDailyGoals={sortDailyGoals}
-            />
+            <GoalActionsProvider onUpdateGoal={onUpdateGoal} onDeleteGoal={onDeleteGoal}>
+              <DayContainer
+                key={`day-container-${day.dayOfWeek}`}
+                {...day}
+                onUpdateGoal={onUpdateGoal}
+                onDeleteGoal={onDeleteGoal}
+                onCreateDailyGoal={onCreateGoal}
+                isCreating={isCreating}
+                sortDailyGoals={sortDailyGoals}
+              />
+            </GoalActionsProvider>
           </FireGoalsProvider>
         ))}
       </CollapsibleMinimalContent>

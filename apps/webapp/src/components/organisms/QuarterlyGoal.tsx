@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
+import type { GoalUpdateHandler } from '@/models/goal-handlers';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { GoalStarPin, GoalStarPinContainer } from '../atoms/GoalStarPin';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
@@ -12,10 +13,10 @@ import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 interface QuarterlyGoalProps {
   goal: GoalWithDetailsAndChildren;
   onToggleStatus: (goalId: Id<'goals'>, isStarred: boolean, isPinned: boolean) => Promise<void>;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
 }
 
-export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: QuarterlyGoalProps) {
+export function QuarterlyGoal({ goal, onToggleStatus, onUpdateGoal }: QuarterlyGoalProps) {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isComplete = goal.isComplete;
   const isAllWeeklyGoalsComplete =
@@ -49,11 +50,11 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: Quarterly
     [goal._id, weekNumber, toggleGoalCompletion]
   );
 
-  const handleSaveTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(goal._id, title, details);
+  const handleSaveGoal = useCallback(
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goal._id, title, details, dueDate);
     },
-    [goal._id, onUpdateTitle]
+    [goal._id, onUpdateGoal]
   );
 
   return (
@@ -82,7 +83,7 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: Quarterly
         {/* View Mode */}
         <GoalDetailsPopover
           goal={goal}
-          onSave={handleSaveTitle}
+          onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           titleClassName="text-gray-600 flex items-center"
           onToggleComplete={handleToggleCompletion}
@@ -92,7 +93,8 @@ export function QuarterlyGoal({ goal, onToggleStatus, onUpdateTitle }: Quarterly
         <GoalEditPopover
           title={goal.title}
           details={goal.details || ''}
-          onSave={handleSaveTitle}
+          initialDueDate={goal.dueDate}
+          onSave={handleSaveGoal}
           trigger={
             <button
               type="button"

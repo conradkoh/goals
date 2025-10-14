@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -7,6 +6,7 @@ import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -14,8 +14,6 @@ export interface DailyGoalGroupProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   isCreating?: boolean;
   className?: string;
@@ -26,13 +24,12 @@ export const DailyGoalGroup = ({
   weeklyGoal,
   quarterlyGoal,
   dayOfWeek,
-  onUpdateGoalTitle,
-  onDeleteGoal,
   onCreateGoal,
   isCreating = false,
   className,
   sortGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
 }: DailyGoalGroupProps) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -84,8 +81,9 @@ export const DailyGoalGroup = ({
             <GoalEditPopover
               title={quarterlyGoal.title}
               details={quarterlyGoal.details}
-              onSave={async (title, details) => {
-                await onUpdateGoalTitle(quarterlyGoal._id, title, details);
+              initialDueDate={quarterlyGoal.dueDate}
+              onSave={async (title, details, dueDate) => {
+                await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
               }}
               trigger={
                 <Button
@@ -102,8 +100,9 @@ export const DailyGoalGroup = ({
           <GoalEditPopover
             title={weeklyGoal.title}
             details={weeklyGoal.details}
-            onSave={async (title, details) => {
-              await onUpdateGoalTitle(weeklyGoal._id, title, details);
+            initialDueDate={weeklyGoal.dueDate}
+            onSave={async (title, details, dueDate) => {
+              await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
             }}
             trigger={
               <Button
@@ -121,12 +120,7 @@ export const DailyGoalGroup = ({
         <div className="space-y-2 mt-2">
           <div>
             {dailyGoals.map((goal) => (
-              <DailyGoalTaskItem
-                key={goal._id}
-                goal={goal}
-                onUpdateTitle={onUpdateGoalTitle}
-                onDelete={() => onDeleteGoal(goal._id)}
-              />
+              <DailyGoalTaskItem key={goal._id} goal={goal} />
             ))}
           </div>
 

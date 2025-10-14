@@ -62,9 +62,9 @@ export function WeeklyTaskItem({
   }, [goalActions, weeklyGoal]);
 
   const handleEdit = React.useCallback(
-    async (title: string, details?: string) => {
+    async (title: string, details?: string, dueDate?: number) => {
       if (goalActions) {
-        await goalActions.handleEditGoal(weeklyGoal._id, title, details);
+        await goalActions.handleEditGoal(weeklyGoal._id, title, details, dueDate);
       }
     },
     [goalActions, weeklyGoal._id]
@@ -129,6 +129,7 @@ export function WeeklyTaskItem({
               <GoalEditPopover
                 title={weeklyGoal.title}
                 details={weeklyGoal.details}
+                initialDueDate={weeklyGoal.dueDate}
                 onSave={handleEdit}
                 trigger={
                   <Button

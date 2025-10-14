@@ -6,7 +6,12 @@ import { useGoalActions } from './useGoalActions';
 
 export interface SummaryGoalActions {
   handleToggleComplete: (goal: GoalWithDetailsAndChildren, weekNumber: number) => Promise<void>;
-  handleEditGoal: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  handleEditGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   handleDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   isLoading: boolean;
 }
@@ -53,7 +58,7 @@ export function useSummaryGoalActions({
   );
 
   const handleEditGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       try {
         // For now, we'll use the quarterly goal update function for all goals
         // This might need to be expanded based on goal type
@@ -61,6 +66,7 @@ export function useSummaryGoalActions({
           goalId,
           title,
           details,
+          dueDate,
         });
 
         toast({

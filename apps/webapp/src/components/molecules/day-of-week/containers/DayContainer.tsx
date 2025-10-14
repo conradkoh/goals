@@ -35,7 +35,12 @@ interface WeeklyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -51,7 +56,8 @@ const WeeklyGoalSection = ({
   dayOfWeek,
   mode,
   sortDailyGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
-  onUpdateTitle,
+  onUpdateGoal,
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: Kept for compatibility, children use context
   onDelete,
   onCreateDailyGoal,
   // biome-ignore lint/correctness/noUnusedFunctionParameters: future enhancement will use this callback
@@ -64,10 +70,10 @@ const WeeklyGoalSection = ({
 
   // Handle saving edits
   const handleSave = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateTitle(weeklyGoal._id, title, details);
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
     },
-    [weeklyGoal._id, onUpdateTitle]
+    [weeklyGoal._id, onUpdateGoal]
   );
 
   // Handle creating a new daily goal
@@ -113,11 +119,7 @@ const WeeklyGoalSection = ({
       <div className="space-y-1">
         {sortedDailyGoals.map((dailyGoal) => (
           <div key={dailyGoal._id.toString()} className="ml-1">
-            <DailyGoalTaskItem
-              goal={dailyGoal}
-              onUpdateTitle={onUpdateTitle}
-              onDelete={() => onDelete(dailyGoal._id)}
-            />
+            <DailyGoalTaskItem goal={dailyGoal} />
           </div>
         ))}
 
@@ -140,7 +142,12 @@ interface QuarterlyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -157,7 +164,7 @@ const QuarterlyGoalSection = ({
   dayOfWeek,
   mode,
   sortDailyGoals,
-  onUpdateTitle,
+  onUpdateGoal,
   onDelete,
   onCreateDailyGoal,
   onCreateWeeklyGoal,
@@ -253,7 +260,7 @@ const QuarterlyGoalSection = ({
           !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
         )}
       >
-        <QuarterlyGoalHeader goal={quarterlyGoal} onUpdateTitle={onUpdateTitle} />
+        <QuarterlyGoalHeader goal={quarterlyGoal} onUpdateGoal={onUpdateGoal} />
         <ConditionalRender condition={mode === 'focus'}>
           {/* this adhoc checklist always renders in the focus mode */}
           <div className="ml-1 space-y-1 border-b border-gray-100">
@@ -262,7 +269,7 @@ const QuarterlyGoalSection = ({
               <WeeklyGoalTaskItem
                 key={weeklyGoal._id.toString()}
                 goal={weeklyGoal}
-                onUpdateTitle={onUpdateTitle}
+                onUpdateGoal={onUpdateGoal}
               />
             ))}
             <AddTaskInput
@@ -281,7 +288,7 @@ const QuarterlyGoalSection = ({
               dayOfWeek={dayOfWeek}
               mode={mode}
               sortDailyGoals={sortDailyGoals}
-              onUpdateTitle={onUpdateTitle}
+              onUpdateGoal={onUpdateGoal}
               onDelete={onDelete}
               onCreateDailyGoal={onCreateDailyGoal}
               onCreateWeeklyGoal={onCreateWeeklyGoal}
@@ -302,7 +309,12 @@ export interface DayContainerProps {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -320,7 +332,7 @@ export const DayContainer = ({
   weekNumber,
   dateTimestamp,
   weeklyGoalsWithQuarterly,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   onCreateDailyGoal,
   onCreateWeeklyGoal,
@@ -329,11 +341,11 @@ export const DayContainer = ({
   mode = 'plan',
 }: DayContainerProps) => {
   // Memoize the callback functions to prevent unnecessary re-renders
-  const handleUpdateGoalTitle = useCallback(
-    (goalId: Id<'goals'>, title: string, details?: string) => {
-      return onUpdateGoalTitle(goalId, title, details);
+  const handleUpdateGoal = useCallback(
+    (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      return onUpdateGoal(goalId, title, details, dueDate);
     },
-    [onUpdateGoalTitle]
+    [onUpdateGoal]
   );
 
   const handleDeleteGoal = useCallback(
@@ -414,7 +426,7 @@ export const DayContainer = ({
             dayOfWeek={dayOfWeek}
             mode={mode}
             sortDailyGoals={sortDailyGoals}
-            onUpdateTitle={handleUpdateGoalTitle}
+            onUpdateGoal={handleUpdateGoal}
             onDelete={handleDeleteGoal}
             onCreateDailyGoal={handleCreateDailyGoal}
             onCreateWeeklyGoal={handleCreateWeeklyGoal}

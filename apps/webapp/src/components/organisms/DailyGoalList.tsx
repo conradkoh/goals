@@ -12,26 +12,14 @@ import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
-  onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   className?: string;
 }
 
-export const DailyGoalList = ({
-  goals,
-  onUpdateGoalTitle,
-  onDeleteGoal = () => Promise.resolve(),
-  className,
-}: DailyGoalListProps) => {
+export const DailyGoalList = ({ goals, className }: DailyGoalListProps) => {
   return (
     <div className={className}>
       {goals.map((goal) => (
-        <DailyGoalTaskItem
-          key={goal._id}
-          goal={goal}
-          onUpdateTitle={onUpdateGoalTitle}
-          onDelete={() => onDeleteGoal(goal._id)}
-        />
+        <DailyGoalTaskItem key={goal._id} goal={goal} />
       ))}
     </div>
   );
@@ -39,7 +27,12 @@ export const DailyGoalList = ({
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   className?: string;
@@ -50,8 +43,6 @@ export interface DailyGoalListContainerProps {
 
 export const DailyGoalListContainer = ({
   goals,
-  onUpdateGoalTitle,
-  onDeleteGoal,
   onCreateGoal,
   className,
   createInputPlaceholder = 'Add a goal...',
@@ -76,11 +67,7 @@ export const DailyGoalListContainer = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <DailyGoalList
-        goals={goals}
-        onUpdateGoalTitle={onUpdateGoalTitle}
-        onDeleteGoal={onDeleteGoal}
-      />
+      <DailyGoalList goals={goals} />
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         onMouseEnter={() => setIsHovering(true)}
@@ -128,13 +115,18 @@ export const DailyGoalListContainer = ({
 export interface DailyGoalGroupHeaderProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
 }
 
 export const DailyGoalGroupHeader = ({
   weeklyGoal,
   quarterlyGoal,
-  onUpdateGoalTitle,
+  onUpdateGoal,
 }: DailyGoalGroupHeaderProps) => {
   const { toggleGoalCompletion, weekNumber } = useWeek();
   const isStarred = quarterlyGoal.state?.isStarred ?? false;
@@ -153,18 +145,18 @@ export const DailyGoalGroupHeader = ({
     [quarterlyGoal._id, weekNumber, toggleGoalCompletion]
   );
 
-  const handleSaveWeeklyGoalTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateGoalTitle(weeklyGoal._id, title, details);
+  const handleSaveWeeklyGoal = useCallback(
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
     },
-    [weeklyGoal._id, onUpdateGoalTitle]
+    [weeklyGoal._id, onUpdateGoal]
   );
 
-  const handleSaveQuarterlyGoalTitle = useCallback(
-    async (title: string, details?: string) => {
-      await onUpdateGoalTitle(quarterlyGoal._id, title, details);
+  const handleSaveQuarterlyGoal = useCallback(
+    async (title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
     },
-    [quarterlyGoal._id, onUpdateGoalTitle]
+    [quarterlyGoal._id, onUpdateGoal]
   );
 
   return (
@@ -172,7 +164,7 @@ export const DailyGoalGroupHeader = ({
       <div className="flex items-center justify-between">
         <GoalDetailsPopover
           goal={weeklyGoal}
-          onSave={handleSaveWeeklyGoalTitle}
+          onSave={handleSaveWeeklyGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           onToggleComplete={async (newState) => {
             await toggleGoalCompletion({
@@ -190,7 +182,7 @@ export const DailyGoalGroupHeader = ({
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
         <GoalDetailsPopover
           goal={quarterlyGoal}
-          onSave={handleSaveQuarterlyGoalTitle}
+          onSave={handleSaveQuarterlyGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           onToggleComplete={handleToggleCompletion}
         />
@@ -203,7 +195,12 @@ export interface DailyGoalGroupContainerProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
+  onUpdateGoal: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => Promise<void>;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   isCreating?: boolean;
@@ -214,7 +211,7 @@ export const DailyGoalGroupContainer = ({
   weeklyGoal,
   quarterlyGoal,
   dayOfWeek,
-  onUpdateGoalTitle,
+  onUpdateGoal,
   onDeleteGoal,
   onCreateGoal,
   isCreating = false,
@@ -233,11 +230,11 @@ export const DailyGoalGroupContainer = ({
     [sortedDailyGoals]
   );
 
-  const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
-      await onUpdateGoalTitle(goalId, title, details);
+  const handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goalId, title, details, dueDate);
     },
-    [onUpdateGoalTitle]
+    [onUpdateGoal]
   );
 
   const handleDeleteGoal = useCallback(
@@ -265,11 +262,11 @@ export const DailyGoalGroupContainer = ({
         <DailyGoalGroupHeader
           weeklyGoal={weeklyGoal}
           quarterlyGoal={quarterlyGoal}
-          onUpdateGoalTitle={handleUpdateGoalTitle}
+          onUpdateGoal={handleUpdateGoal}
         />
         <DailyGoalListContainer
           goals={sortedDailyGoals}
-          onUpdateGoalTitle={handleUpdateGoalTitle}
+          onUpdateGoal={handleUpdateGoal}
           onDeleteGoal={handleDeleteGoal}
           onCreateGoal={handleCreateGoal}
           createInputPlaceholder="Add a task..."

@@ -1,4 +1,3 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useFireGoalStatus, usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { isOptimisticId } from '@/hooks/useOptimistic';
@@ -23,19 +23,16 @@ import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface DailyGoalItemProps {
   goal: GoalWithDetailsAndChildren;
-  onUpdateTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
-  onDelete: (goalId: Id<'goals'>) => void;
   inSidebar?: boolean;
   className?: string;
 }
 
 export const DailyGoalTaskItem = ({
   goal,
-  onUpdateTitle,
-  onDelete: _onDelete,
   inSidebar: _inSidebar = false,
   className: _className,
 }: DailyGoalItemProps) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { toggleGoalCompletion, updateDailyGoalDay, weekNumber } = useWeek();
   const { isComplete = goal.isComplete } = goal;
   const isOptimistic = isOptimisticId(goal._id);
@@ -88,8 +85,8 @@ export const DailyGoalTaskItem = ({
         {/* View Mode */}
         <GoalDetailsPopover
           goal={goal}
-          onSave={async (newTitle: string, newDetails?: string) => {
-            await onUpdateTitle(goal._id, newTitle, newDetails);
+          onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
+            await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
           }}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           onToggleComplete={async (checked) => {
@@ -141,8 +138,9 @@ export const DailyGoalTaskItem = ({
               <GoalEditPopover
                 title={title}
                 details={details}
-                onSave={async (newTitle: string, newDetails?: string) => {
-                  await onUpdateTitle(goal._id, newTitle, newDetails);
+                initialDueDate={goal.dueDate}
+                onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
+                  await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
                 }}
                 trigger={
                   <button

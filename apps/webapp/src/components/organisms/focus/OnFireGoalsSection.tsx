@@ -7,6 +7,7 @@ import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -18,18 +19,15 @@ interface OnFireGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   isFocusModeEnabled?: boolean;
 }
 
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
-  onUpdateGoalTitle,
-  onDeleteGoal,
   isFocusModeEnabled = false,
 }) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { weeklyGoals } = useWeek();
   const { fireGoals } = useFireGoals();
 
@@ -142,13 +140,13 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
   /**
-   * Handles updating goal titles with proper error handling.
+   * Handles updating goals with proper error handling.
    */
-  const _handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
-      await onUpdateGoalTitle(goalId, title, details);
+  const _handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goalId, title, details, dueDate);
     },
-    [onUpdateGoalTitle]
+    [onUpdateGoal]
   );
 
   if (!onFireGoalsByQuarterly) {
@@ -235,8 +233,8 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                 )}
                 <GoalDetailsPopover
                   goal={quarterlyGoal}
-                  onSave={(title, details) =>
-                    _handleUpdateGoalTitle(quarterlyGoal._id, title, details)
+                  onSave={(title, details, dueDate) =>
+                    _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
                   }
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
                   titleClassName={cn(
@@ -254,10 +252,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {/* Always show the weekly goal if it's on fire or has daily goals */}
                     {(isWeeklyOnFire || dailyGoals.length > 0) && (
                       <div className="mb-1">
-                        <WeeklyGoalTaskItem
-                          goal={weeklyGoal}
-                          onUpdateTitle={_handleUpdateGoalTitle}
-                        />
+                        <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={_handleUpdateGoal} />
                       </div>
                     )}
 
@@ -265,12 +260,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     {dailyGoals.length > 0 && (
                       <div className="space-y-1 ml-4">
                         {dailyGoals.map((dailyGoal) => (
-                          <DailyGoalTaskItem
-                            key={dailyGoal._id.toString()}
-                            goal={dailyGoal}
-                            onUpdateTitle={_handleUpdateGoalTitle}
-                            onDelete={() => onDeleteGoal(dailyGoal._id)}
-                          />
+                          <DailyGoalTaskItem key={dailyGoal._id.toString()} goal={dailyGoal} />
                         ))}
                       </div>
                     )}

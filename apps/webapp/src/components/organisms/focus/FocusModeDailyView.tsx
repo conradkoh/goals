@@ -6,6 +6,7 @@ import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionM
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
+import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { GoalStatusProvider, useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek, type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -111,16 +112,17 @@ const FocusModeDailyViewInner = ({
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek]);
 
   // Handlers for the OnFireGoalsSection
-  const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
+  const handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
           title,
           details,
+          dueDate,
         });
       } catch (error) {
-        console.error('Failed to update goal title:', error);
+        console.error('Failed to update goal:', error);
       }
     },
     [updateQuarterlyGoalTitle]
@@ -150,52 +152,50 @@ const FocusModeDailyViewInner = ({
   }, [weekData.days, selectedDayOfWeek]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <div className="flex justify-end mb-2 gap-2">
-        <JumpToCurrentButton
-          viewMode="daily"
-          year={year}
-          quarter={quarter}
-          selectedWeek={weekNumber}
-          selectedDay={selectedDayOfWeek}
-          onJumpToCurrentDay={onJumpToCurrent}
-        />
-      </div>
-
-      {/* Task Pull Action Menu - above urgent items section */}
-      {currentDay && (
-        <TaskPullActionMenu
-          dayOfWeek={selectedDayOfWeek}
-          weekNumber={weekNumber}
-          dateTimestamp={currentDay.dateTimestamp}
-        />
-      )}
-
-      <OnFireGoalsSection
-        weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
-        selectedDayOfWeek={selectedDayOfWeek}
-        onUpdateGoalTitle={handleUpdateGoalTitle}
-        onDeleteGoal={handleDeleteGoal}
-        isFocusModeEnabled={isFocusModeEnabled}
-      />
-
-      <PendingGoalsSection
-        weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
-        selectedDayOfWeek={selectedDayOfWeek}
-        onUpdateGoalTitle={handleUpdateGoalTitle}
-        onDeleteGoal={handleDeleteGoal}
-      />
-
-      {!shouldHideContent && (
-        <div data-testid="focus-mode-daily-goals">
-          <FocusModeDailyViewDailyGoals
-            weekNumber={weekNumber}
+    <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={handleDeleteGoal}>
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="flex justify-end mb-2 gap-2">
+          <JumpToCurrentButton
+            viewMode="daily"
             year={year}
-            selectedDayOfWeek={selectedDayOfWeek}
+            quarter={quarter}
+            selectedWeek={weekNumber}
+            selectedDay={selectedDayOfWeek}
+            onJumpToCurrentDay={onJumpToCurrent}
           />
         </div>
-      )}
-    </div>
+
+        {/* Task Pull Action Menu - above urgent items section */}
+        {currentDay && (
+          <TaskPullActionMenu
+            dayOfWeek={selectedDayOfWeek}
+            weekNumber={weekNumber}
+            dateTimestamp={currentDay.dateTimestamp}
+          />
+        )}
+
+        <OnFireGoalsSection
+          weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
+          selectedDayOfWeek={selectedDayOfWeek}
+          isFocusModeEnabled={isFocusModeEnabled}
+        />
+
+        <PendingGoalsSection
+          weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
+          selectedDayOfWeek={selectedDayOfWeek}
+        />
+
+        {!shouldHideContent && (
+          <div data-testid="focus-mode-daily-goals">
+            <FocusModeDailyViewDailyGoals
+              weekNumber={weekNumber}
+              year={year}
+              selectedDayOfWeek={selectedDayOfWeek}
+            />
+          </div>
+        )}
+      </div>
+    </GoalActionsProvider>
   );
 };
 

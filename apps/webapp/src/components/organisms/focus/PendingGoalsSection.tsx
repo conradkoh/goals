@@ -6,6 +6,7 @@ import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/component
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -17,16 +18,13 @@ interface PendingGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
-  onUpdateGoalTitle: (goalId: Id<'goals'>, title: string, details?: string) => Promise<void>;
-  onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
 }
 
 export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
-  onUpdateGoalTitle,
-  onDeleteGoal,
 }) => {
+  const { onUpdateGoal } = useGoalActionsContext();
   const { weeklyGoals } = useWeek();
   const { pendingGoals, getPendingDescription } = useGoalStatus();
 
@@ -157,11 +155,11 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     getPendingDescription,
   ]);
 
-  const handleUpdateGoalTitle = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string) => {
-      await onUpdateGoalTitle(goalId, title, details);
+  const handleUpdateGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      await onUpdateGoal(goalId, title, details, dueDate);
     },
-    [onUpdateGoalTitle]
+    [onUpdateGoal]
   );
 
   if (!pendingGoalsByQuarterly) {
@@ -203,8 +201,8 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                 )}
                 <GoalDetailsPopover
                   goal={quarterlyGoal}
-                  onSave={(title, details) =>
-                    handleUpdateGoalTitle(quarterlyGoal._id, title, details)
+                  onSave={(title, details, dueDate) =>
+                    handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
                   }
                   triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-foreground hover:text-orange-600 dark:hover:text-orange-400 hover:no-underline"
                   titleClassName={cn(
@@ -223,10 +221,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                       {/* Always show the weekly goal if it's pending or has daily goals */}
                       {(isWeeklyPending || dailyGoals.length > 0) && (
                         <div className="mb-1">
-                          <WeeklyGoalTaskItem
-                            goal={weeklyGoal}
-                            onUpdateTitle={handleUpdateGoalTitle}
-                          />
+                          <WeeklyGoalTaskItem goal={weeklyGoal} onUpdateGoal={handleUpdateGoal} />
                           {/* Show pending description if available */}
                           {isWeeklyPending && pendingDescription && (
                             <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
@@ -243,11 +238,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                             const dailyPendingDescription = getPendingDescription(dailyGoal._id);
                             return (
                               <div key={dailyGoal._id.toString()}>
-                                <DailyGoalTaskItem
-                                  goal={dailyGoal}
-                                  onUpdateTitle={handleUpdateGoalTitle}
-                                  onDelete={() => onDeleteGoal(dailyGoal._id)}
-                                />
+                                <DailyGoalTaskItem goal={dailyGoal} />
                                 {/* Show pending description for daily goal */}
                                 {dailyPendingDescription && (
                                   <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
