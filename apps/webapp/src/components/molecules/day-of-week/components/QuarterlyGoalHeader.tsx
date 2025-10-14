@@ -3,6 +3,7 @@ import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/g
 import { Check, Pin, Star } from 'lucide-react';
 import { useCallback } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 
 export interface QuarterlyGoalHeaderProps {
@@ -41,16 +42,21 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateGoal }: QuarterlyGoalHeaderP
   );
 
   return (
-    <div className="flex items-center gap-1.5 mb-2">
-      {isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />}
-      {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />}
-      {isComplete && <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
-      <GoalDetailsPopover
-        onSave={handleSaveGoal}
-        triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-        titleClassName=""
-        onToggleComplete={handleToggleCompletion}
-      />
-    </div>
+    <GoalProvider goal={goal}>
+      <div className="flex items-center gap-1.5 mb-2">
+        {isStarred && (
+          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+        )}
+        {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />}
+        {isComplete && <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
+        {/* GoalDetailsPopover gets goal from context */}
+        <GoalDetailsPopover
+          onSave={handleSaveGoal}
+          triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          titleClassName=""
+          onToggleComplete={handleToggleCompletion}
+        />
+      </div>
+    </GoalProvider>
   );
 };
