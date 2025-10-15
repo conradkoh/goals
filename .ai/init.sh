@@ -216,10 +216,14 @@ for cmd_file in .ai/commands/*.md; do
         echo -e "    ${BLUE}→ Would sync to .cursor/commands/${name}.md${NC}"
     fi
     
-    # OpenCode Commands: Copy content directly without frontmatter
+    # OpenCode Commands: Copy content and append arguments placeholder
     opencode_target=".opencode/command/${name}.md"
     if [ "$DRY_RUN" = false ]; then
         cat "$cmd_file" > "$opencode_target"
+        echo "" >> "$opencode_target"
+        echo "---------------" >> "$opencode_target"
+        echo "" >> "$opencode_target"
+        echo "\$ARGUMENTS" >> "$opencode_target"
         echo -e "    ${GREEN}✓ Synced to .opencode/command/${name}.md${NC}"
     else
         echo -e "    ${BLUE}→ Would sync to .opencode/command/${name}.md${NC}"
