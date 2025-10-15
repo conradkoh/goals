@@ -376,12 +376,9 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
               !isComplete
               ? 'text-red-600 dark:text-red-400 font-medium'
               : DateTime.fromMillis(goal.dueDate).startOf('day') <
-                    DateTime.now().startOf('day').plus({ days: 2 }) && !isComplete
-                ? 'text-orange-600 dark:text-orange-400 font-medium'
-                : DateTime.fromMillis(goal.dueDate).startOf('day') <
-                      DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
-                  ? 'text-yellow-600 dark:text-yellow-400 font-medium'
-                  : 'text-muted-foreground'
+                    DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
+                ? 'text-yellow-600 dark:text-yellow-400 font-medium'
+                : 'text-muted-foreground'
           )}
         >
           <CalendarIcon className="h-3.5 w-3.5" />

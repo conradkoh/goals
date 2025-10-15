@@ -5,8 +5,7 @@
 This feature adds visual styling to goals based on due date urgency. Goals are color-coded to help users quickly identify items requiring attention:
 
 1. **Red (Overdue)**: Goals past their due date and not completed - displayed in red
-2. **Orange (Approaching - 2 days)**: Goals less than 2 days from due date and not completed - displayed in orange
-3. **Yellow (Approaching - 3 days)**: Goals less than 3 days from due date and not completed - displayed in yellow
+2. **Yellow (Approaching - 3 days)**: Goals less than 3 days from due date and not completed - displayed in yellow
 
 The styling is applied to goal titles throughout the application (week view, focus mode, summary views) and the due date tags in goal details modals/popovers.
 
@@ -71,11 +70,6 @@ Popover --> User: Display due date status (overdue shown in red)
       // Overdue: past due date (date-only comparison)
       if (daysDiff < 0) {
         return 'text-red-600 dark:text-red-400';
-      }
-      
-      // Approaching: less than 2 days away
-      if (daysDiff < 2) {
-        return 'text-orange-600 dark:text-orange-400';
       }
       
       // Approaching: less than 3 days away
@@ -176,20 +170,18 @@ These components display individual goal items and need to apply red text stylin
   - No changes needed - component already supports the feature
   
   - **Due Date Tag Update (Lines 370-388)**:
-  - Updated to 3-tier color system with date-only comparison
+  - Updated to 2-tier color system with date-only comparison
   - Implementation:
     ```typescript
     DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day') && !isComplete
       ? 'text-red-600 dark:text-red-400 font-medium'
-      : DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day').plus({ days: 2 }) && !isComplete
-        ? 'text-orange-600 dark:text-orange-400 font-medium'
-        : DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
+      : DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
           ? 'text-yellow-600 dark:text-yellow-400 font-medium'
           : 'text-muted-foreground'
     ```
 
 - `apps/webapp/src/components/molecules/goal-details/GoalDetailsFullScreenModal.tsx`
-  - Apply same 3-tier due date tag update with date-only comparison for consistency
+  - Apply same 2-tier due date tag update with date-only comparison for consistency
   - Lines 409-418: Updated due date picker button styling
 
 ### Additional Components Potentially Affected
@@ -387,16 +379,15 @@ The codebase already has comprehensive due date support:
 
 ### Color Coding Standards
 
-3-tier due date color coding system:
+2-tier due date color coding system:
 
 - 🔴 Red (`text-red-600 dark:text-red-400`): Overdue (past due date, not complete)
-- 🟠 Orange (`text-orange-600 dark:text-orange-400`): Approaching (less than 2 days away, not complete)
 - 🟡 Yellow (`text-yellow-600 dark:text-yellow-400`): Approaching (less than 3 days away, not complete)
 - Default: All other states
 
 This feature updates both:
 1. Goal title text styling in all list views
-2. Due date tag styling in `GoalDetailsPopover.tsx` and `GoalDetailsFullScreenModal.tsx` with 3-tier color system
+2. Due date tag styling in `GoalDetailsPopover.tsx` and `GoalDetailsFullScreenModal.tsx` with 2-tier color system
 
 ### Date Comparison Logic
 

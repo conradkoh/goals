@@ -21,10 +21,6 @@ export function getDueDateStyle(
     return 'text-red-600 dark:text-red-400';
   }
 
-  if (daysDiff < 2) {
-    return 'text-orange-600 dark:text-orange-400';
-  }
-
   if (daysDiff < 3) {
     return 'text-yellow-600 dark:text-yellow-400';
   }
