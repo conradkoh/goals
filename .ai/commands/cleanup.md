@@ -171,20 +171,22 @@ import { type MutationCtx, type QueryCtx } from "./_generated/server";
 4. Move all exported functions/components next
 5. Move all internal helper functions to the bottom
 
+Note: comments containing rules should be omitted from the final output
+
 ```typescript
-// 1. Imports (external first, then internal)
+// 1. Rule: Imports (external first, then internal)
 import React from "react";
 import { api } from "@/convex/_generated/api";
 
-// 2. Public interfaces and types
+// 2. Rule: Public interfaces and types
 export interface UserProfileProps {}
 export type UserRole = "admin" | "user" | "guest";
 
-// 3. Internal interfaces and types (prefixed with _)
+// 3. Rule: Internal interfaces and types (prefixed with _)
 interface _UserState {}
 type _ValidationResult = {};
 
-// 4. Main exported functions/components
+// 4. Rule: Main exported functions/components
 export function UserProfile({ userId }: UserProfileProps) {}
 export async function createUser(
   userData: CreateUserRequest

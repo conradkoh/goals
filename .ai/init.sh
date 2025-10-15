@@ -30,11 +30,12 @@ EXAMPLES:
     .ai/init.sh --force
 
 PROCESS:
-    1. Verifies .cursor/ and .github/ directories are clean (unless --force)
+    1. Verifies .cursor/, .github/, and .opencode/ directories are clean (unless --force)
     2. Creates target directories if needed
     3. Distributes commands from .ai/commands/ to:
        - .github/prompts/*.prompt.md
        - .cursor/commands/*.md
+       - .opencode/command/*.md
 
 SOURCE OF TRUTH:
     • Commands: .ai/commands/*.md
@@ -96,11 +97,12 @@ echo
 # Step 0: Check git status for target directories
 echo -e "${YELLOW}Step 0: Checking target directories...${NC}"
 
-# Check if .cursor/ or .github/ have uncommitted changes
+# Check if .cursor/, .github/, or .opencode/ have uncommitted changes
 CURSOR_CHANGES=$(git status --porcelain .cursor/ 2>/dev/null || echo "")
 GITHUB_CHANGES=$(git status --porcelain .github/ 2>/dev/null || echo "")
+OPENCODE_CHANGES=$(git status --porcelain .opencode/ 2>/dev/null || echo "")
 
-if [[ -n "$CURSOR_CHANGES" || -n "$GITHUB_CHANGES" ]]; then
+if [[ -n "$CURSOR_CHANGES" || -n "$GITHUB_CHANGES" || -n "$OPENCODE_CHANGES" ]]; then
     if [ "$FORCE" = false ] && [ "$DRY_RUN" = false ]; then
         echo -e "${RED}✗ Target directories have uncommitted changes:${NC}"
         if [[ -n "$CURSOR_CHANGES" ]]; then
@@ -108,6 +110,9 @@ if [[ -n "$CURSOR_CHANGES" || -n "$GITHUB_CHANGES" ]]; then
         fi
         if [[ -n "$GITHUB_CHANGES" ]]; then
             echo -e "${YELLOW}  .github/ has changes${NC}"
+        fi
+        if [[ -n "$OPENCODE_CHANGES" ]]; then
+            echo -e "${YELLOW}  .opencode/ has changes${NC}"
         fi
         echo -e "${YELLOW}  Please commit or stash changes in these directories before running init.${NC}"
         echo -e "${YELLOW}  Or use --force to override this check, or --dry-run to preview changes.${NC}"
@@ -120,6 +125,9 @@ if [[ -n "$CURSOR_CHANGES" || -n "$GITHUB_CHANGES" ]]; then
         if [[ -n "$GITHUB_CHANGES" ]]; then
             echo -e "${YELLOW}  .github/ has changes (will be overwritten)${NC}"
         fi
+        if [[ -n "$OPENCODE_CHANGES" ]]; then
+            echo -e "${YELLOW}  .opencode/ has changes (will be overwritten)${NC}"
+        fi
     elif [ "$DRY_RUN" = true ]; then
         echo -e "${YELLOW}⚠ Target directories have uncommitted changes (dry run mode)${NC}"
         if [[ -n "$CURSOR_CHANGES" ]]; then
@@ -127,6 +135,9 @@ if [[ -n "$CURSOR_CHANGES" || -n "$GITHUB_CHANGES" ]]; then
         fi
         if [[ -n "$GITHUB_CHANGES" ]]; then
             echo -e "${YELLOW}  .github/ has changes${NC}"
+        fi
+        if [[ -n "$OPENCODE_CHANGES" ]]; then
+            echo -e "${YELLOW}  .opencode/ has changes${NC}"
         fi
     fi
 else
@@ -143,11 +154,13 @@ if [ "$DRY_RUN" = false ]; then
     mkdir -p .github/prompts
     mkdir -p .cursor/commands
     mkdir -p .cursor/rules
+    mkdir -p .opencode/command
     echo -e "${GREEN}✓ Target directories verified${NC}"
 else
     echo -e "${BLUE}→ Would create: .github/prompts${NC}"
     echo -e "${BLUE}→ Would create: .cursor/commands${NC}"
     echo -e "${BLUE}→ Would create: .cursor/rules${NC}"
+    echo -e "${BLUE}→ Would create: .opencode/command${NC}"
 fi
 echo
 
@@ -201,6 +214,15 @@ for cmd_file in .ai/commands/*.md; do
         echo -e "    ${GREEN}✓ Synced to .cursor/commands/${name}.md${NC}"
     else
         echo -e "    ${BLUE}→ Would sync to .cursor/commands/${name}.md${NC}"
+    fi
+    
+    # OpenCode Commands: Copy content directly without frontmatter
+    opencode_target=".opencode/command/${name}.md"
+    if [ "$DRY_RUN" = false ]; then
+        cat "$cmd_file" > "$opencode_target"
+        echo -e "    ${GREEN}✓ Synced to .opencode/command/${name}.md${NC}"
+    else
+        echo -e "    ${BLUE}→ Would sync to .opencode/command/${name}.md${NC}"
     fi
     
 done
@@ -275,7 +297,8 @@ echo -e "${YELLOW}Distribution Mapping:${NC}"
 echo -e "  ${BLUE}Commands:${NC}"
 echo -e "    .ai/commands/<name>.md"
 echo -e "      ├─→ .github/prompts/<name>.prompt.md (+ frontmatter)"
-echo -e "      └─→ .cursor/commands/<name>.md (+ frontmatter)"
+echo -e "      ├─→ .cursor/commands/<name>.md (+ frontmatter)"
+echo -e "      └─→ .opencode/command/<name>.md"
 echo
 echo -e "  ${BLUE}Codemap Templates:${NC}"
 echo -e "    .ai/data/codemaps/templates/<template>"
