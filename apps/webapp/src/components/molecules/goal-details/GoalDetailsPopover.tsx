@@ -372,17 +372,24 @@ export const GoalDetailsPopover: React.FC<GoalDetailsPopoverProps> = ({
         <div
           className={cn(
             'text-xs flex items-center gap-2 mt-1',
-            DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete
+            DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day') &&
+              !isComplete
               ? 'text-red-600 dark:text-red-400 font-medium'
-              : DateTime.fromMillis(goal.dueDate) < DateTime.now().plus({ days: 3 }) && !isComplete
-                ? 'text-yellow-600 dark:text-yellow-400 font-medium'
-                : 'text-muted-foreground'
+              : DateTime.fromMillis(goal.dueDate).startOf('day') <
+                    DateTime.now().startOf('day').plus({ days: 2 }) && !isComplete
+                ? 'text-orange-600 dark:text-orange-400 font-medium'
+                : DateTime.fromMillis(goal.dueDate).startOf('day') <
+                      DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
+                  ? 'text-yellow-600 dark:text-yellow-400 font-medium'
+                  : 'text-muted-foreground'
           )}
         >
           <CalendarIcon className="h-3.5 w-3.5" />
           <span>
             Due: {DateTime.fromMillis(goal.dueDate).toFormat('LLL d, yyyy')}
-            {DateTime.fromMillis(goal.dueDate) < DateTime.now() && !isComplete && ' (overdue)'}
+            {DateTime.fromMillis(goal.dueDate).startOf('day') < DateTime.now().startOf('day') &&
+              !isComplete &&
+              ' (overdue)'}
           </span>
         </div>
       )}

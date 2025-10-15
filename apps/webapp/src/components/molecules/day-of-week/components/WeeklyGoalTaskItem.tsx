@@ -11,6 +11,8 @@ import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
+import { cn } from '@/lib/utils';
 
 /**
  * Displays a weekly goal as a task item with completion checkbox and action buttons.
@@ -79,6 +81,9 @@ export const WeeklyGoalTaskItem = () => {
           <GoalDetailsPopover
             onSave={_handleUpdateGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            titleClassName={cn(
+              getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+            )}
             onToggleComplete={_handleToggleCompletion}
           />
 

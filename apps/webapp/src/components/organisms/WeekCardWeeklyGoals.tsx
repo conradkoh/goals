@@ -21,6 +21,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
@@ -138,6 +139,9 @@ const WeeklyGoal = ({
                 await onUpdateGoal(goal._id, title, details, dueDate);
               }}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+              titleClassName={cn(
+                getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+              )}
               onToggleComplete={handleToggleCompletion}
             />
 
@@ -405,6 +409,12 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                           await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
                         }}
                         triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
+                        titleClassName={cn(
+                          getDueDateStyle(
+                            goal.dueDate ? new Date(goal.dueDate) : null,
+                            goal.isComplete
+                          )
+                        )}
                         onToggleComplete={(newState) =>
                           handleToggleQuarterlyCompletion(goal._id, newState)
                         }

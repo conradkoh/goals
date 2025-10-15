@@ -18,6 +18,8 @@ import { useDailyGoal } from '@/hooks/useDailyGoal';
 import { isOptimisticId } from '@/hooks/useOptimistic';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
+import { cn } from '@/lib/utils';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
@@ -88,6 +90,9 @@ export const DailyGoalTaskItem = ({
             await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
           }}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+          titleClassName={cn(
+            getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+          )}
           onToggleComplete={async (checked) => {
             await toggleGoalCompletion({
               goalId: goal._id,

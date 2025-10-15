@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
 import type { GoalUpdateHandler } from '@/models/goal-handlers';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
@@ -84,7 +85,10 @@ export function QuarterlyGoal({ onToggleStatus, onUpdateGoal }: QuarterlyGoalPro
         <GoalDetailsPopover
           onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          titleClassName="text-gray-600 flex items-center"
+          titleClassName={cn(
+            'text-gray-600 flex items-center',
+            getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+          )}
           onToggleComplete={handleToggleCompletion}
         />
 

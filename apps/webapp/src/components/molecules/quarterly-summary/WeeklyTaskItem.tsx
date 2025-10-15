@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import type { DayOfWeek } from '@/lib/constants';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
 import { DailySummaryItem } from './DailySummaryItem';
 
@@ -105,7 +106,11 @@ export function WeeklyTaskItem({
             <h4
               className={cn(
                 'font-semibold text-base leading-tight mb-1',
-                !disableStrikethrough && isComplete && 'line-through text-muted-foreground'
+                !disableStrikethrough && isComplete && 'line-through text-muted-foreground',
+                getDueDateStyle(
+                  weeklyGoal.dueDate ? new Date(weeklyGoal.dueDate) : null,
+                  weeklyGoal.isComplete
+                )
               )}
             >
               {weeklyGoal.title}
