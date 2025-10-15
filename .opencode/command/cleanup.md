@@ -347,3 +347,7 @@ function _validateEmail(email: string): boolean {
    - Repeat until all files are processed
 
 This systematic approach ensures no files are missed and all code meets consistent quality standards.
+
+---------------
+
+$ARGUMENTS

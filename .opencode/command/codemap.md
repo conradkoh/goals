@@ -244,3 +244,7 @@ A projectmap is a high-level architectural overview that documents the entire pr
 8. Testing strategy MUST explicitly document validation approaches or gaps where absent
 9. Architecture documentation MUST be updated when major structural changes occur
 10. Technology versions SHOULD be documented where relevant for major dependencies
+
+---------------
+
+$ARGUMENTS

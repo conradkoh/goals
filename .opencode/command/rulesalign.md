@@ -57,3 +57,7 @@ Follow the cross-surface workflow (reference the framework document for principl
 - **MUST preserve** all tool-specific directories (e.g., `.cursor/rules/`, `.cursor/instructions/`) - never delete them during alignment.
 - **SHOULD schedule** a codemap regeneration (`/codemap`) when instruction mismatches stem from outdated structural documentation.
 - **MAY defer** low-risk cosmetic differences (formatting-only) but must log them as follow-ups if left unresolved.
+
+---------------
+
+$ARGUMENTS
