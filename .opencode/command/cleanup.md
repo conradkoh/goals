@@ -1,7 +1,3 @@
----
-mode: agent
----
-
 # Code Quality Cleanup Routine
 
 ## Main Process
