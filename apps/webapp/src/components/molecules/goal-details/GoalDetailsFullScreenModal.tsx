@@ -412,11 +412,15 @@ export const GoalDetailsFullScreenModal: React.FC<GoalDetailsFullScreenModalProp
                 currentDueDate &&
                   (DateTime.fromMillis(currentDueDate).startOf('day') <
                     DateTime.now().startOf('day') && !isComplete
-                    ? 'text-red-600 dark:text-red-400 font-medium'
-                    : DateTime.fromMillis(currentDueDate).startOf('day') <
-                          DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
-                      ? 'text-yellow-600 dark:text-yellow-400 font-medium'
-                      : 'text-foreground')
+                    ? 'text-purple-700 dark:text-purple-500 font-medium'
+                    : DateTime.fromMillis(currentDueDate)
+                          .startOf('day')
+                          .equals(DateTime.now().startOf('day')) && !isComplete
+                      ? 'text-red-600 dark:text-red-400 font-medium'
+                      : DateTime.fromMillis(currentDueDate).startOf('day') <
+                            DateTime.now().startOf('day').plus({ days: 3 }) && !isComplete
+                        ? 'text-yellow-600 dark:text-yellow-400 font-medium'
+                        : 'text-foreground')
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />

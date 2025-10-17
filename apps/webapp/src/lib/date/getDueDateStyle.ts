@@ -18,6 +18,10 @@ export function getDueDateStyle(
   const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
 
   if (daysDiff < 0) {
+    return 'text-purple-700 dark:text-purple-500';
+  }
+
+  if (daysDiff === 0) {
     return 'text-red-600 dark:text-red-400';
   }
 
