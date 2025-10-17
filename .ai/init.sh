@@ -221,9 +221,11 @@ for cmd_file in .ai/commands/*.md; do
     if [ "$DRY_RUN" = false ]; then
         cat "$cmd_file" > "$opencode_target"
         echo "" >> "$opencode_target"
-        echo "---------------" >> "$opencode_target"
-        echo "" >> "$opencode_target"
+        echo "---" >> "$opencode_target"
+        echo "<!-- Ignore section if arguments are not replaced -->" >> "$opencode_target"
+        echo "<userinput>" >> "$opencode_target"
         echo "\$ARGUMENTS" >> "$opencode_target"
+        echo "</userinput>" >> "$opencode_target"
         echo -e "    ${GREEN}✓ Synced to .opencode/command/${name}.md${NC}"
     else
         echo -e "    ${BLUE}→ Would sync to .opencode/command/${name}.md${NC}"

@@ -58,6 +58,8 @@ Follow the cross-surface workflow (reference the framework document for principl
 - **SHOULD schedule** a codemap regeneration (`/codemap`) when instruction mismatches stem from outdated structural documentation.
 - **MAY defer** low-risk cosmetic differences (formatting-only) but must log them as follow-ups if left unresolved.
 
----------------
-
+---
+<!-- Ignore section if arguments are not replaced -->
+<userinput>
 $ARGUMENTS
+</userinput>

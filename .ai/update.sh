@@ -32,6 +32,12 @@ mv "$AI_DIR" "$BACKUP_DIR"
 echo "Copying new .ai folder..."
 cp -r "$TEMP_DIR/.ai" "$PROJECT_ROOT/"
 
+echo ""
+echo "Running init script to distribute commands..."
+cd "$PROJECT_ROOT"
+bash "$PROJECT_ROOT/.ai/init.sh"
+
+echo ""
 echo "Update complete!"
 echo "Backup saved to: $BACKUP_DIR"
 echo "You can remove the backup with: rm -rf $BACKUP_DIR"
