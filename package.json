@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "nx run-many --target=dev --all --parallel",
+    "dev": "nx run @apps/webapp:dev",
     "build": "nx run-many --target=build --all --parallel",
     "lint": "biome check .",
     "lint:fix": "biome check --apply .",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
-    "nx": "^20.4.2"
+    "nx": "^21.6.5"
   },
   "dependencies": {
     "@biomejs/biome": "^2.1.4",
