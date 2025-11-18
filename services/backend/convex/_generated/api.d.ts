@@ -13,8 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as adhocGoal from "../adhocGoal.js";
 import type * as auth from "../auth.js";
 import type * as dashboard from "../dashboard.js";
+import type * as domain from "../domain.js";
 import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
 import type * as pendingGoals from "../pendingGoals.js";
@@ -29,8 +31,10 @@ import type * as sync from "../sync.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adhocGoal: typeof adhocGoal;
   auth: typeof auth;
   dashboard: typeof dashboard;
+  domain: typeof domain;
   fireGoal: typeof fireGoal;
   goal: typeof goal;
   pendingGoals: typeof pendingGoals;
