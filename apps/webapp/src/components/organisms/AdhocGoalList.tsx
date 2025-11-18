@@ -161,12 +161,10 @@ export function AdhocGoalList({
   const handleDelete = async (goalId: Id<'goals'>) => {
     if (!onDeleteGoal) return;
 
-    if (confirm('Are you sure you want to delete this adhoc goal?')) {
-      try {
-        await onDeleteGoal(goalId);
-      } catch (error) {
-        console.error('Failed to delete adhoc goal:', error);
-      }
+    try {
+      await onDeleteGoal(goalId);
+    } catch (error) {
+      console.error('Failed to delete adhoc goal:', error);
     }
   };
 

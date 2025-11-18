@@ -35,9 +35,7 @@ export function AdhocGoalItem({
   };
 
   const handleDelete = () => {
-    if (confirm('Delete this adhoc task?')) {
-      onDelete?.(goal._id);
-    }
+    onDelete?.(goal._id);
   };
 
   const formatDueDate = (timestamp: number) => {
