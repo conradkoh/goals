@@ -8,12 +8,15 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   const adhocGoals = useQuery(api.adhocGoal.getAllAdhocGoals, { sessionId }) || [];
 
   const createAdhocGoalMutation = useMutation(api.adhocGoal.createAdhocGoal);
   const updateAdhocGoalMutation = useMutation(api.adhocGoal.updateAdhocGoal);
   const deleteAdhocGoalMutation = useMutation(api.adhocGoal.deleteAdhocGoal);
+  const moveAdhocGoalsFromWeekMutation = useMutation(api.adhocGoal.moveAdhocGoalsFromWeek);
+  const moveAdhocGoalsFromDayMutation = useMutation(api.adhocGoal.moveAdhocGoalsFromDay);
 
   const createAdhocGoal = async (
     title: string,
@@ -76,14 +79,63 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     }
   };
 
+  const moveAdhocGoalsFromWeek = async (
+    from: { year: number; weekNumber: number },
+    to: { year: number; weekNumber: number },
+    dryRun = false
+  ) => {
+    if (!dryRun) {
+      setIsMoving(true);
+    }
+    try {
+      const result = await moveAdhocGoalsFromWeekMutation({
+        sessionId,
+        from,
+        to,
+        dryRun,
+      });
+      return result;
+    } finally {
+      if (!dryRun) {
+        setIsMoving(false);
+      }
+    }
+  };
+
+  const moveAdhocGoalsFromDay = async (
+    from: { year: number; weekNumber: number; dayOfWeek: DayOfWeek },
+    to: { year: number; weekNumber: number; dayOfWeek: DayOfWeek },
+    dryRun = false
+  ) => {
+    if (!dryRun) {
+      setIsMoving(true);
+    }
+    try {
+      const result = await moveAdhocGoalsFromDayMutation({
+        sessionId,
+        from,
+        to,
+        dryRun,
+      });
+      return result;
+    } finally {
+      if (!dryRun) {
+        setIsMoving(false);
+      }
+    }
+  };
+
   return {
     adhocGoals,
     createAdhocGoal,
     updateAdhocGoal,
     deleteAdhocGoal,
+    moveAdhocGoalsFromWeek,
+    moveAdhocGoalsFromDay,
     isCreating,
     isUpdating,
     isDeleting,
+    isMoving,
   };
 }
 

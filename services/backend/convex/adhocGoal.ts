@@ -458,3 +458,249 @@ export const getAllAdhocGoals = query({
     }));
   },
 });
+
+/**
+ * Moves incomplete adhoc goals from a previous week to a target week.
+ *
+ * @param ctx - Convex mutation context
+ * @param args - Mutation arguments containing session, source week, target week, and dry-run flag
+ * @returns Promise resolving to preview data (if dry-run) or result with count of moved goals
+ *
+ * @example
+ * ```typescript
+ * // Preview what would be moved
+ * const preview = await moveAdhocGoalsFromWeek(ctx, {
+ *   sessionId: "session123",
+ *   from: { year: 2024, weekNumber: 46 },
+ *   to: { year: 2024, weekNumber: 47 },
+ *   dryRun: true
+ * });
+ *
+ * // Actually move the goals
+ * const result = await moveAdhocGoalsFromWeek(ctx, {
+ *   sessionId: "session123",
+ *   from: { year: 2024, weekNumber: 46 },
+ *   to: { year: 2024, weekNumber: 47 },
+ *   dryRun: false
+ * });
+ * ```
+ */
+export const moveAdhocGoalsFromWeek = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    from: v.object({
+      year: v.number(),
+      weekNumber: v.number(),
+    }),
+    to: v.object({
+      year: v.number(),
+      weekNumber: v.number(),
+    }),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, from, to, dryRun = false } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get all incomplete adhoc goals from the source week
+    const incompleteGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+      )
+      .filter((q) => q.eq(q.field('isComplete'), false))
+      .collect();
+
+    // Get domain information for preview
+    const domainIds = [
+      ...new Set(
+        incompleteGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]
+      ),
+    ];
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
+
+    // If dry-run, return preview data
+    if (dryRun) {
+      return {
+        canMove: incompleteGoals.length > 0,
+        from: { year: from.year, weekNumber: from.weekNumber },
+        to: { year: to.year, weekNumber: to.weekNumber },
+        goals: incompleteGoals.map((goal) => ({
+          ...goal,
+          domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
+        })),
+      };
+    }
+
+    // Update each incomplete goal to the target week
+    await Promise.all(
+      incompleteGoals.map(async (goal) => {
+        if (!goal.adhoc) return;
+
+        await ctx.db.patch(goal._id, {
+          adhoc: {
+            ...goal.adhoc,
+            year: to.year,
+            weekNumber: to.weekNumber,
+          },
+        });
+
+        // Update adhoc goal state
+        const state = await ctx.db
+          .query('adhocGoalStates')
+          .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goal._id))
+          .first();
+
+        if (state) {
+          await ctx.db.patch(state._id, {
+            year: to.year,
+            weekNumber: to.weekNumber,
+          });
+        }
+      })
+    );
+
+    return {
+      goalsMoved: incompleteGoals.length,
+    };
+  },
+});
+
+/**
+ * Moves incomplete adhoc goals from a previous day to a target day.
+ * Only moves goals that have a specific dayOfWeek set.
+ *
+ * @param ctx - Convex mutation context
+ * @param args - Mutation arguments containing session, source day, target day, and dry-run flag
+ * @returns Promise resolving to preview data (if dry-run) or result with count of moved goals
+ *
+ * @example
+ * ```typescript
+ * // Preview what would be moved
+ * const preview = await moveAdhocGoalsFromDay(ctx, {
+ *   sessionId: "session123",
+ *   from: { year: 2024, weekNumber: 47, dayOfWeek: DayOfWeek.MONDAY },
+ *   to: { year: 2024, weekNumber: 47, dayOfWeek: DayOfWeek.TUESDAY },
+ *   dryRun: true
+ * });
+ *
+ * // Actually move the goals
+ * const result = await moveAdhocGoalsFromDay(ctx, {
+ *   sessionId: "session123",
+ *   from: { year: 2024, weekNumber: 47, dayOfWeek: DayOfWeek.MONDAY },
+ *   to: { year: 2024, weekNumber: 47, dayOfWeek: DayOfWeek.TUESDAY },
+ *   dryRun: false
+ * });
+ * ```
+ */
+export const moveAdhocGoalsFromDay = mutation({
+  args: {
+    sessionId: v.id('sessions'),
+    from: v.object({
+      year: v.number(),
+      weekNumber: v.number(),
+      dayOfWeek: v.union(
+        v.literal(DayOfWeek.MONDAY),
+        v.literal(DayOfWeek.TUESDAY),
+        v.literal(DayOfWeek.WEDNESDAY),
+        v.literal(DayOfWeek.THURSDAY),
+        v.literal(DayOfWeek.FRIDAY),
+        v.literal(DayOfWeek.SATURDAY),
+        v.literal(DayOfWeek.SUNDAY)
+      ),
+    }),
+    to: v.object({
+      year: v.number(),
+      weekNumber: v.number(),
+      dayOfWeek: v.union(
+        v.literal(DayOfWeek.MONDAY),
+        v.literal(DayOfWeek.TUESDAY),
+        v.literal(DayOfWeek.WEDNESDAY),
+        v.literal(DayOfWeek.THURSDAY),
+        v.literal(DayOfWeek.FRIDAY),
+        v.literal(DayOfWeek.SATURDAY),
+        v.literal(DayOfWeek.SUNDAY)
+      ),
+    }),
+    dryRun: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, from, to, dryRun = false } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get all incomplete adhoc goals from the source week that match the specific day
+    const weekGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+      )
+      .filter((q) => q.eq(q.field('isComplete'), false))
+      .collect();
+
+    // Filter for goals that have the specific dayOfWeek set (not week-level goals)
+    const incompleteGoals = weekGoals.filter((goal) => goal.adhoc?.dayOfWeek === from.dayOfWeek);
+
+    // Get domain information for preview
+    const domainIds = [
+      ...new Set(
+        incompleteGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]
+      ),
+    ];
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
+
+    // If dry-run, return preview data
+    if (dryRun) {
+      return {
+        canMove: incompleteGoals.length > 0,
+        from: { year: from.year, weekNumber: from.weekNumber, dayOfWeek: from.dayOfWeek },
+        to: { year: to.year, weekNumber: to.weekNumber, dayOfWeek: to.dayOfWeek },
+        goals: incompleteGoals.map((goal) => ({
+          ...goal,
+          domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
+        })),
+      };
+    }
+
+    // Update each incomplete goal to the target day
+    await Promise.all(
+      incompleteGoals.map(async (goal) => {
+        if (!goal.adhoc) return;
+
+        await ctx.db.patch(goal._id, {
+          adhoc: {
+            ...goal.adhoc,
+            year: to.year,
+            weekNumber: to.weekNumber,
+            dayOfWeek: to.dayOfWeek,
+          },
+        });
+
+        // Update adhoc goal state
+        const state = await ctx.db
+          .query('adhocGoalStates')
+          .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goal._id))
+          .first();
+
+        if (state) {
+          await ctx.db.patch(state._id, {
+            year: to.year,
+            weekNumber: to.weekNumber,
+            dayOfWeek: to.dayOfWeek,
+          });
+        }
+      })
+    );
+
+    return {
+      goalsMoved: incompleteGoals.length,
+    };
+  },
+});
