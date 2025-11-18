@@ -59,7 +59,7 @@ export function AdhocGoalItem({
         disabled={isOptimistic}
       />
 
-      <div className="flex-1 min-w-0 flex items-start justify-between group/title">
+      <div className="flex-1 min-w-0 flex items-center justify-between group/title">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span
@@ -91,7 +91,7 @@ export function AdhocGoalItem({
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {isOptimistic ? (
             <Spinner className="h-3.5 w-3.5" />
           ) : (

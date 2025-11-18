@@ -32,6 +32,13 @@ interface AdhocGoalFormProps {
   }) => Promise<void>;
   onCancel?: () => void;
   onDomainCreate?: (name: string, description?: string, color?: string) => Promise<void>;
+  onDomainUpdate?: (
+    domainId: Id<'domains'>,
+    name: string,
+    description?: string,
+    color?: string
+  ) => Promise<void>;
+  onDomainDelete?: (domainId: Id<'domains'>) => Promise<void>;
   submitLabel?: string;
   className?: string;
 }
@@ -52,6 +59,8 @@ export function AdhocGoalForm({
   onSubmit,
   onCancel,
   onDomainCreate,
+  onDomainUpdate,
+  onDomainDelete,
   submitLabel = 'Create Adhoc Goal',
   className,
 }: AdhocGoalFormProps) {
@@ -124,6 +133,8 @@ export function AdhocGoalForm({
           selectedDomainId={domainId}
           onDomainChange={(value) => setDomainId(value as Id<'domains'> | null)}
           onDomainCreate={handleDomainCreate}
+          onDomainUpdate={onDomainUpdate}
+          onDomainDelete={onDomainDelete}
           placeholder="Select a domain (optional)"
         />
       </div>

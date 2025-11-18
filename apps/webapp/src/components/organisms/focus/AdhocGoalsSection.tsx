@@ -37,7 +37,7 @@ export function AdhocGoalsSection({
 
   const { adhocGoals, createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } =
     useAdhocGoals(sessionId);
-  const { domains, createDomain } = useDomains(sessionId);
+  const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
   // Filter adhoc goals based on week and optionally day
   const filteredAdhocGoals = dayOfWeek
@@ -229,6 +229,12 @@ export function AdhocGoalsSection({
                 selectedDomainId={selectedDomainId}
                 onDomainChange={(value) => setSelectedDomainId(value as Id<'domains'> | null)}
                 onDomainCreate={handleDomainCreate}
+                onDomainUpdate={async (domainId, name, description, color) => {
+                  await updateDomain(domainId, { name, description, color });
+                }}
+                onDomainDelete={async (domainId) => {
+                  await deleteDomain(domainId);
+                }}
                 placeholder="Select domain (optional)"
               />
             </div>

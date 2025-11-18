@@ -11,7 +11,7 @@ export default function AdhocGoalsPage() {
   const { sessionId } = useSession();
   const { adhocGoals, createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } =
     useAdhocGoals(sessionId);
-  const { domains, createDomain } = useDomains(sessionId);
+  const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
   const handleCreateGoal = async (data: {
     title: string;
@@ -62,6 +62,10 @@ export default function AdhocGoalsPage() {
         onUpdateGoal={handleUpdateGoal}
         onDeleteGoal={deleteAdhocGoal}
         onDomainCreate={handleDomainCreate}
+        onDomainUpdate={async (domainId, name, description, color) => {
+          await updateDomain(domainId, { name, description, color });
+        }}
+        onDomainDelete={deleteDomain}
       />
     </div>
   );

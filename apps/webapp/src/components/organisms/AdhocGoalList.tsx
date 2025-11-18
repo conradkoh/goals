@@ -40,6 +40,13 @@ interface AdhocGoalListProps {
   ) => Promise<void>;
   onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
   onDomainCreate?: (name: string, description?: string, color?: string) => Promise<void>;
+  onDomainUpdate?: (
+    domainId: Id<'domains'>,
+    name: string,
+    description?: string,
+    color?: string
+  ) => Promise<void>;
+  onDomainDelete?: (domainId: Id<'domains'>) => Promise<void>;
   title?: string;
   showCreateButton?: boolean;
   showFilters?: boolean;
@@ -55,6 +62,8 @@ export function AdhocGoalList({
   onUpdateGoal,
   onDeleteGoal,
   onDomainCreate,
+  onDomainUpdate,
+  onDomainDelete,
   title = 'Adhoc Goals',
   showCreateButton = true,
   showFilters = true,
@@ -261,6 +270,8 @@ export function AdhocGoalList({
             onSubmit={handleCreateGoal}
             onCancel={() => setIsCreateDialogOpen(false)}
             onDomainCreate={onDomainCreate}
+            onDomainUpdate={onDomainUpdate}
+            onDomainDelete={onDomainDelete}
           />
         </DialogContent>
       </Dialog>
@@ -278,6 +289,8 @@ export function AdhocGoalList({
               onSubmit={(data) => handleUpdateGoal(editingGoal._id, data)}
               onCancel={() => setEditingGoal(null)}
               onDomainCreate={onDomainCreate}
+              onDomainUpdate={onDomainUpdate}
+              onDomainDelete={onDomainDelete}
               submitLabel="Update Goal"
             />
           )}
