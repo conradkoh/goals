@@ -1,3 +1,4 @@
+import { getISOWeekYear } from '@services/backend/src/util/isoWeek';
 import { CalendarDays, History, MoreVertical } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
@@ -17,8 +18,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
+import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
+import { useSession } from '@/modules/auth/useSession';
 
 interface TaskPullActionMenuProps {
   dayOfWeek: DayOfWeek;
@@ -31,7 +34,9 @@ export const TaskPullActionMenu = ({
   weekNumber,
   dateTimestamp,
 }: TaskPullActionMenuProps) => {
+  const { sessionId } = useSession();
   const { moveGoalsFromDay } = useWeek();
+  const { moveAdhocGoalsFromDay } = useAdhocGoals(sessionId);
   const [isMovingTasks, setIsMovingTasks] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
@@ -109,9 +114,11 @@ export const TaskPullActionMenu = ({
         if (fromAllPastDays) {
           // Get all past days in the week
           const allTasks: PreviewTask[] = [];
+          const isoYear = getISOWeekYear(new Date(dateTimestamp));
 
           // Preview tasks from each past day
           for (const pastDay of allPastDaysOfWeek) {
+            // Preview regular goals
             const previewData = await moveGoalsFromDay({
               from: {
                 year,
@@ -132,6 +139,46 @@ export const TaskPullActionMenu = ({
             if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
               allTasks.push(...previewData.tasks);
             }
+
+            // Preview adhoc goals
+            const adhocPreviewData = await moveAdhocGoalsFromDay(
+              {
+                year: isoYear,
+                weekNumber,
+                dayOfWeek: pastDay,
+              },
+              {
+                year: isoYear,
+                weekNumber,
+                dayOfWeek,
+              },
+              true // dry-run
+            );
+
+            if (
+              'canMove' in adhocPreviewData &&
+              adhocPreviewData.canMove &&
+              adhocPreviewData.goals
+            ) {
+              // Convert adhoc goals to PreviewTask format
+              const adhocTasks = adhocPreviewData.goals.map((goal) => ({
+                id: goal._id,
+                title: goal.title,
+                details: goal.details,
+                isComplete: goal.isComplete,
+                quarterlyGoal: {
+                  id: 'adhoc',
+                  title: 'Adhoc Tasks',
+                  isStarred: false,
+                  isPinned: false,
+                },
+                weeklyGoal: {
+                  id: 'adhoc',
+                  title: goal.domain?.name || 'Uncategorized',
+                },
+              }));
+              allTasks.push(...adhocTasks);
+            }
           }
 
           if (allTasks.length > 0) {
@@ -150,6 +197,10 @@ export const TaskPullActionMenu = ({
           }
         } else {
           // Original functionality for single previous day
+          const isoYear = getISOWeekYear(new Date(dateTimestamp));
+          const allTasks: PreviewTask[] = [];
+
+          // Preview regular goals
           const previewData = await moveGoalsFromDay({
             from: {
               year,
@@ -167,15 +218,55 @@ export const TaskPullActionMenu = ({
             moveOnlyIncomplete: true,
           });
 
-          // Check if we have preview data
-          if ('canMove' in previewData && previewData.canMove) {
+          if ('canMove' in previewData && previewData.canMove && previewData.tasks.length > 0) {
+            allTasks.push(...previewData.tasks);
+          }
+
+          // Preview adhoc goals
+          const adhocPreviewData = await moveAdhocGoalsFromDay(
+            {
+              year: isoYear,
+              weekNumber,
+              dayOfWeek: previousDayOfWeek,
+            },
+            {
+              year: isoYear,
+              weekNumber,
+              dayOfWeek,
+            },
+            true // dry-run
+          );
+
+          if ('canMove' in adhocPreviewData && adhocPreviewData.canMove && adhocPreviewData.goals) {
+            // Convert adhoc goals to PreviewTask format
+            const adhocTasks = adhocPreviewData.goals.map((goal) => ({
+              id: goal._id,
+              title: goal.title,
+              details: goal.details,
+              isComplete: goal.isComplete,
+              quarterlyGoal: {
+                id: 'adhoc',
+                title: 'Adhoc Tasks',
+                isStarred: false,
+                isPinned: false,
+              },
+              weeklyGoal: {
+                id: 'adhoc',
+                title: goal.domain?.name || 'Uncategorized',
+              },
+            }));
+            allTasks.push(...adhocTasks);
+          }
+
+          // Check if we have any tasks to move
+          if (allTasks.length > 0) {
             setPreview({
-              previousDay: previewData.sourceDay.name,
-              targetDay: previewData.targetDay.name,
-              tasks: previewData.tasks,
+              previousDay: getDayName(previousDayOfWeek),
+              targetDay: getDayName(dayOfWeek),
+              tasks: allTasks,
             });
             setShowConfirmDialog(true);
-          } else if (!('canMove' in previewData) || !previewData.canMove) {
+          } else {
             toast({
               title: 'Cannot move tasks',
               description: 'No incomplete tasks to move',
@@ -194,9 +285,11 @@ export const TaskPullActionMenu = ({
     },
     [
       isMonday,
+      dateTimestamp,
       dateCalculations,
       allPastDaysOfWeek,
       moveGoalsFromDay,
+      moveAdhocGoalsFromDay,
       weekNumber,
       dayOfWeek,
       previousDayOfWeek,
@@ -208,13 +301,16 @@ export const TaskPullActionMenu = ({
     try {
       setIsMovingTasks(true);
       const { year, quarter } = dateCalculations;
+      const isoYear = getISOWeekYear(new Date(dateTimestamp));
 
       if (isPullingFromAllPastDays) {
         // Handle pulling from all past days
         let totalTasksMoved = 0;
+        let totalAdhocGoalsMoved = 0;
 
         // Move tasks from each past day
         for (const pastDay of allPastDaysOfWeek) {
+          // Move regular goals
           const result = await moveGoalsFromDay({
             from: {
               year,
@@ -240,19 +336,44 @@ export const TaskPullActionMenu = ({
           ) {
             totalTasksMoved += result.tasksMoved;
           }
+
+          // Move adhoc goals
+          const adhocResult = await moveAdhocGoalsFromDay(
+            {
+              year: isoYear,
+              weekNumber,
+              dayOfWeek: pastDay,
+            },
+            {
+              year: isoYear,
+              weekNumber,
+              dayOfWeek,
+            },
+            false // not dry-run
+          );
+
+          if (
+            adhocResult &&
+            typeof adhocResult === 'object' &&
+            'goalsMoved' in adhocResult &&
+            typeof adhocResult.goalsMoved === 'number'
+          ) {
+            totalAdhocGoalsMoved += adhocResult.goalsMoved;
+          }
         }
 
+        const totalMoved = totalTasksMoved + totalAdhocGoalsMoved;
         setShowConfirmDialog(false);
         toast({
           title: 'Tasks moved',
-          description: `Moved ${totalTasksMoved} incomplete tasks from all previous days to ${getDayName(
+          description: `Moved ${totalMoved} incomplete task${totalMoved !== 1 ? 's' : ''} from all previous days to ${getDayName(
             dayOfWeek
           )}.`,
           variant: 'default',
         });
       } else {
         // Original functionality for single previous day
-        await moveGoalsFromDay({
+        const result = await moveGoalsFromDay({
           from: {
             year,
             quarter,
@@ -269,10 +390,43 @@ export const TaskPullActionMenu = ({
           moveOnlyIncomplete: true,
         });
 
+        // Move adhoc goals
+        const adhocResult = await moveAdhocGoalsFromDay(
+          {
+            year: isoYear,
+            weekNumber,
+            dayOfWeek: previousDayOfWeek,
+          },
+          {
+            year: isoYear,
+            weekNumber,
+            dayOfWeek,
+          },
+          false // not dry-run
+        );
+
+        let totalMoved = 0;
+        if (
+          result &&
+          typeof result === 'object' &&
+          'tasksMoved' in result &&
+          typeof result.tasksMoved === 'number'
+        ) {
+          totalMoved += result.tasksMoved;
+        }
+        if (
+          adhocResult &&
+          typeof adhocResult === 'object' &&
+          'goalsMoved' in adhocResult &&
+          typeof adhocResult.goalsMoved === 'number'
+        ) {
+          totalMoved += adhocResult.goalsMoved;
+        }
+
         setShowConfirmDialog(false);
         toast({
           title: 'Tasks moved',
-          description: `Moved incomplete tasks from ${getDayName(
+          description: `Moved ${totalMoved} incomplete task${totalMoved !== 1 ? 's' : ''} from ${getDayName(
             previousDayOfWeek
           )} to ${getDayName(dayOfWeek)}.`,
           variant: 'default',
@@ -290,10 +444,12 @@ export const TaskPullActionMenu = ({
     }
   }, [
     isMonday,
+    dateTimestamp,
     dateCalculations,
     isPullingFromAllPastDays,
     allPastDaysOfWeek,
     moveGoalsFromDay,
+    moveAdhocGoalsFromDay,
     weekNumber,
     dayOfWeek,
     previousDayOfWeek,
