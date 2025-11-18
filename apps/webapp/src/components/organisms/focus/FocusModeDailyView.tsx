@@ -3,6 +3,7 @@ import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/g
 import { useCallback, useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionMenu';
+import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
@@ -178,6 +179,13 @@ const FocusModeDailyViewInner = ({
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
           selectedDayOfWeek={selectedDayOfWeek}
           isFocusModeEnabled={isFocusModeEnabled}
+        />
+
+        <AdhocGoalsSection
+          weekNumber={weekNumber}
+          dayOfWeek={selectedDayOfWeek}
+          variant="card"
+          showHeader={true}
         />
 
         <PendingGoalsSection

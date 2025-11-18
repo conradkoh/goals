@@ -343,7 +343,12 @@ export const FocusModeDailyViewDailyGoals = ({
       />
 
       {/* Adhoc Goals Section */}
-      <AdhocGoalsSection weekNumber={weekNumber} dayOfWeek={selectedDayOfWeek} />
+      <AdhocGoalsSection
+        weekNumber={weekNumber}
+        dayOfWeek={selectedDayOfWeek}
+        showHeader={false}
+        variant="inline"
+      />
     </div>
   );
 };

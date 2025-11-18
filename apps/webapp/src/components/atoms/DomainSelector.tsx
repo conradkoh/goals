@@ -68,15 +68,17 @@ export function DomainSelector({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="__none__">Uncategorized</SelectItem>
+          <SelectItem value="__none__" className="text-muted-foreground">
+            Uncategorized
+          </SelectItem>
           {domains.map((domain) => (
             <SelectItem key={domain._id} value={domain._id}>
               <div className="flex items-center gap-2">
                 <div
-                  className="w-3 h-3 rounded-full"
+                  className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: domain.color || '#3B82F6' }}
                 />
-                {domain.name}
+                <span className="truncate">{domain.name}</span>
               </div>
             </SelectItem>
           ))}
@@ -85,15 +87,15 @@ export function DomainSelector({
               <DialogTrigger asChild>
                 <SelectItem
                   value="__create__"
-                  className="text-blue-600 focus:text-blue-600"
+                  className="text-muted-foreground hover:text-foreground focus:text-foreground"
                   onSelect={(e) => {
                     e.preventDefault();
                     setIsCreateDialogOpen(true);
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Create new domain
+                    <Plus className="h-3.5 w-3.5" />
+                    <span className="text-sm">Create new domain</span>
                   </div>
                 </SelectItem>
               </DialogTrigger>
