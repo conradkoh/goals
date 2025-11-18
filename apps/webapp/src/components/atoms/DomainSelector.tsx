@@ -2,7 +2,14 @@ import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -68,6 +75,7 @@ export function DomainSelector({
   const [newDomainDescription, setNewDomainDescription] = useState('');
   const [newDomainColor, setNewDomainColor] = useState(COLOR_PRESETS[7].value); // Default to Blue
   const [editingDomain, setEditingDomain] = useState<Doc<'domains'> | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const selectedDomain = domains.find((d) => d._id === selectedDomainId);
 
@@ -88,6 +96,7 @@ export function DomainSelector({
   const handleEditClick = () => {
     if (selectedDomain) {
       setEditingDomain(selectedDomain);
+      setDeleteError(null);
       setIsEditDialogOpen(true);
     }
   };
@@ -119,7 +128,9 @@ export function DomainSelector({
       setEditingDomain(null);
     } catch (error) {
       console.error('Failed to delete domain:', error);
-      alert(error instanceof Error ? error.message : 'Failed to delete domain');
+      setDeleteError(
+        error instanceof Error ? error.message : 'Failed to delete domain. Please try again.'
+      );
     }
   };
 
@@ -181,6 +192,10 @@ export function DomainSelector({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Domain</DialogTitle>
+            <DialogDescription>
+              Domains help you group adhoc tasks into meaningful buckets (e.g. Home, Health, Work).
+              You can always rename or recolor them later.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -203,7 +218,7 @@ export function DomainSelector({
                 rows={2}
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label>Color</Label>
               <div className="grid grid-cols-7 gap-2 mt-2">
                 {COLOR_PRESETS.map((preset) => (
@@ -212,7 +227,7 @@ export function DomainSelector({
                     type="button"
                     onClick={() => setNewDomainColor(preset.value)}
                     className={cn(
-                      'w-10 h-10 rounded-lg transition-all hover:scale-110',
+                      'w-9 h-9 rounded-full border border-border/40 bg-background/90 shadow-sm transition-all hover:scale-110',
                       newDomainColor === preset.value && 'ring-2 ring-offset-2 ring-foreground'
                     )}
                     style={{ backgroundColor: preset.value }}
@@ -225,7 +240,7 @@ export function DomainSelector({
                   type="color"
                   value={newDomainColor}
                   onChange={(e) => setNewDomainColor(e.target.value)}
-                  className="w-16 h-10"
+                  className="h-10 w-12 rounded-md border border-border bg-background shadow-sm cursor-pointer p-1 [appearance-none]"
                 />
                 <Input
                   value={newDomainColor}
@@ -235,14 +250,14 @@ export function DomainSelector({
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            <DialogFooter className="mt-2">
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleCreateDomain} disabled={!newDomainName.trim()}>
                 Create Domain
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
@@ -253,8 +268,28 @@ export function DomainSelector({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Domain</DialogTitle>
+              <DialogDescription>
+                Update how this domain appears on adhoc tasks. Changes apply everywhere this domain
+                is used.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Live preview */}
+              <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{
+                      backgroundColor: editingDomain.color || COLOR_PRESETS[7].value,
+                    }}
+                  />
+                  <span className="text-sm font-medium">{editingDomain.name || 'Domain name'}</span>
+                </div>
+                <span className="hidden text-xs text-muted-foreground sm:inline">
+                  Shown as a pill on adhoc tasks for quick scanning.
+                </span>
+              </div>
+
               <div>
                 <Label htmlFor="edit-domain-name">Name</Label>
                 <Input
@@ -286,7 +321,7 @@ export function DomainSelector({
                       type="button"
                       onClick={() => setEditingDomain({ ...editingDomain, color: preset.value })}
                       className={cn(
-                        'w-10 h-10 rounded-lg transition-all hover:scale-110',
+                        'w-9 h-9 rounded-full border border-border/40 bg-background/90 shadow-sm transition-all hover:scale-110',
                         editingDomain.color === preset.value &&
                           'ring-2 ring-offset-2 ring-foreground'
                       )}
@@ -300,7 +335,7 @@ export function DomainSelector({
                     type="color"
                     value={editingDomain.color || COLOR_PRESETS[7].value}
                     onChange={(e) => setEditingDomain({ ...editingDomain, color: e.target.value })}
-                    className="w-16 h-10"
+                    className="h-10 w-12 rounded-md border border-border bg-background shadow-sm cursor-pointer p-1 [appearance-none]"
                   />
                   <Input
                     value={editingDomain.color || ''}
@@ -310,12 +345,17 @@ export function DomainSelector({
                   />
                 </div>
               </div>
-              <div className="flex justify-between items-center pt-2">
-                <Button variant="destructive" onClick={handleDeleteDomain} className="gap-2">
+              {deleteError && <p className="text-xs text-destructive pt-1">{deleteError}</p>}
+              <DialogFooter className="mt-2 flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteDomain}
+                  className="gap-2 justify-center sm:justify-start border-destructive text-destructive bg-background hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+                >
                   <Trash2 className="h-4 w-4" />
                   Delete Domain
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex gap-2 sm:justify-end">
                   <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -323,7 +363,7 @@ export function DomainSelector({
                     Save Changes
                   </Button>
                 </div>
-              </div>
+              </DialogFooter>
             </div>
           </DialogContent>
         </Dialog>
