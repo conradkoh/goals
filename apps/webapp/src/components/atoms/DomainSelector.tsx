@@ -189,7 +189,14 @@ export function DomainSelector({
 
       {/* Create Domain Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          onKeyDown={(e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && newDomainName.trim()) {
+              e.preventDefault();
+              handleCreateDomain();
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle>Create New Domain</DialogTitle>
             <DialogDescription>
@@ -265,7 +272,14 @@ export function DomainSelector({
       {/* Edit Domain Dialog */}
       {editingDomain && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && editingDomain.name.trim()) {
+                e.preventDefault();
+                handleUpdateDomain();
+              }
+            }}
+          >
             <DialogHeader>
               <DialogTitle>Edit Domain</DialogTitle>
               <DialogDescription>
