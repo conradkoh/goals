@@ -1,4 +1,5 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@services/backend/src/constants';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AdhocGoalForm } from '@/components/molecules/AdhocGoalForm';
@@ -22,7 +23,7 @@ interface AdhocGoalListProps {
     details?: string;
     domainId?: Id<'domains'> | null;
     weekNumber?: number;
-    dayOfWeek?: any;
+    dayOfWeek?: DayOfWeek;
     dueDate?: number;
   }) => Promise<void>;
   onUpdateGoal?: (
@@ -32,7 +33,7 @@ interface AdhocGoalListProps {
       details?: string;
       domainId?: Id<'domains'> | null;
       weekNumber?: number;
-      dayOfWeek?: any;
+      dayOfWeek?: DayOfWeek;
       dueDate?: number;
       isComplete?: boolean;
     }
@@ -103,7 +104,7 @@ export function AdhocGoalList({
     >
   );
 
-  const handleCreateGoal = async (data: any) => {
+  const handleCreateGoal = async (data: Parameters<NonNullable<typeof onCreateGoal>>[0]) => {
     if (!onCreateGoal) return;
 
     try {
@@ -114,7 +115,10 @@ export function AdhocGoalList({
     }
   };
 
-  const handleUpdateGoal = async (goalId: Id<'goals'>, updates: any) => {
+  const handleUpdateGoal = async (
+    goalId: Id<'goals'>,
+    updates: Parameters<NonNullable<typeof onUpdateGoal>>[1]
+  ) => {
     if (!onUpdateGoal) return;
 
     try {
@@ -125,26 +129,41 @@ export function AdhocGoalList({
     }
   };
 
-  const handleCompleteChange = async (goalId: string, isComplete: boolean) => {
+  const handleCompleteChange = async (goalId: Id<'goals'>, isComplete: boolean) => {
     if (!onUpdateGoal) return;
 
     try {
-      await onUpdateGoal(goalId as Id<'goals'>, { isComplete });
+      await onUpdateGoal(goalId, { isComplete });
     } catch (error) {
       console.error('Failed to update goal completion:', error);
     }
   };
 
-  const handleEdit = (goal: Doc<'goals'> & { domain?: Doc<'domains'> }) => {
+  const handleUpdateGoalItem = async (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number
+  ) => {
+    if (!onUpdateGoal) return;
+
+    try {
+      await onUpdateGoal(goalId, { title, details, dueDate });
+    } catch (error) {
+      console.error('Failed to update adhoc goal:', error);
+    }
+  };
+
+  const _handleEdit = (goal: Doc<'goals'> & { domain?: Doc<'domains'> }) => {
     setEditingGoal(goal);
   };
 
-  const handleDelete = async (goalId: string) => {
+  const handleDelete = async (goalId: Id<'goals'>) => {
     if (!onDeleteGoal) return;
 
     if (confirm('Are you sure you want to delete this adhoc goal?')) {
       try {
-        await onDeleteGoal(goalId as Id<'goals'>);
+        await onDeleteGoal(goalId);
       } catch (error) {
         console.error('Failed to delete adhoc goal:', error);
       }
@@ -216,7 +235,7 @@ export function AdhocGoalList({
                   key={goal._id}
                   goal={goal}
                   onCompleteChange={handleCompleteChange}
-                  onEdit={onUpdateGoal ? handleEdit : undefined}
+                  onUpdate={onUpdateGoal ? handleUpdateGoalItem : undefined}
                   onDelete={onDeleteGoal ? handleDelete : undefined}
                 />
               ))}

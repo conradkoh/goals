@@ -39,7 +39,6 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     color: v.optional(v.string()),
-    createdAt: v.number(), // Unix timestamp
   }).index('by_user', ['userId']),
 
   goals: defineTable({
@@ -63,7 +62,8 @@ export default defineSchema({
     adhoc: v.optional(
       v.object({
         domainId: v.optional(v.id('domains')), // Links to domain (undefined = uncategorized)
-        weekNumber: v.number(), // ISO week number (1-52)
+        year: v.number(), // ISO week year for proper partitioning
+        weekNumber: v.number(), // ISO week number (1-53)
         dayOfWeek: v.optional(
           v.union(
             v.literal(DayOfWeek.MONDAY),
@@ -75,14 +75,13 @@ export default defineSchema({
             v.literal(DayOfWeek.SUNDAY)
           )
         ),
-        dueDate: v.optional(v.number()), // Optional specific due date
+        dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
       })
     ),
   })
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
     .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
-    .index('by_user_and_adhoc', ['userId', 'adhoc'])
-    .index('by_user_and_adhoc_week', ['userId', 'adhoc.weekNumber']),
+    .index('by_user_and_adhoc_year_week', ['userId', 'adhoc.year', 'adhoc.weekNumber']),
 
   // timeseries data for snapshotting
   goalStateByWeek: defineTable({

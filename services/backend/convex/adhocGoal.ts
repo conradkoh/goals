@@ -77,19 +77,25 @@ export const createAdhocGoal = mutation({
       }
     }
 
-    // Get current year for ISO week calculation
+    // Calculate the ISO week year for the given week number
+    // Note: We use current date's year as approximation, but this could span year boundaries
     const now = new Date();
-    const year = getISOWeekYear(now);
+    const currentYear = getISOWeekYear(now);
+
+    // For adhoc goals, we use the year associated with the week number
+    // Week 1 of year N contains the first Thursday of year N
+    const adhocYear = currentYear; // This is a simplification; proper logic would check if weekNumber is valid for currentYear
 
     // Create the adhoc goal
     const goalId = await ctx.db.insert('goals', {
       userId,
-      year, // Use current year for partitioning
-      quarter: Math.ceil((new Date().getMonth() + 1) / 3), // Current quarter
+      year: adhocYear, // Use adhoc year for partitioning
+      quarter: Math.ceil((new Date().getMonth() + 1) / 3), // Current quarter (used for general partitioning)
       title: title.trim(),
       details: details?.trim(),
       adhoc: {
         domainId: domainId || undefined,
+        year: adhocYear, // Store year in adhoc object for querying
         weekNumber,
         dayOfWeek,
         dueDate,
@@ -103,7 +109,7 @@ export const createAdhocGoal = mutation({
     await ctx.db.insert('adhocGoalStates', {
       userId,
       goalId,
-      year,
+      year: adhocYear,
       weekNumber,
       dayOfWeek,
       isComplete: false,
@@ -222,6 +228,7 @@ export const updateAdhocGoal = mutation({
       const currentAdhoc = goal.adhoc || {};
       const adhocUpdates = {
         domainId: domainId !== undefined ? domainId : currentAdhoc.domainId,
+        year: currentAdhoc.year || getISOWeekYear(new Date()), // Preserve existing year or calculate
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
         dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
@@ -327,29 +334,22 @@ export const getAdhocGoalsForWeek = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Get adhoc goal states for week
-    const goalStates = await ctx.db
-      .query('adhocGoalStates')
-      .withIndex('by_user_and_year_and_week', (q) =>
-        q.eq('userId', userId).eq('year', year).eq('weekNumber', weekNumber)
+    // Query goals directly using the adhoc index
+    const adhocGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
-
-    // Get corresponding goals
-    const goalIds = goalStates.map((state) => state.goalId);
-    const goals = await Promise.all(goalIds.map((id) => ctx.db.get(id)));
-
-    // Filter out nulls and verify they are adhoc goals
-    const adhocGoals = goals.filter(
-      (goal): goal is Doc<'goals'> => goal !== null && goal.adhoc !== undefined
-    );
 
     // Get domain information for goals that have domains
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
-    const domainMap = new Map(domains.filter(Boolean).map((domain) => [domain!._id, domain!]));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => ({
@@ -364,7 +364,7 @@ export const getAdhocGoalsForWeek = query({
  *
  * @param ctx - Convex query context
  * @param args - Query arguments containing session, year, week number, and day of week
- * @returns Promise resolving to array of adhoc goals for specified day
+ * @returns Promise resolving to array of adhoc goals for specified day (includes week goals without specific day)
  */
 export const getAdhocGoalsForDay = query({
   args: {
@@ -386,25 +386,17 @@ export const getAdhocGoalsForDay = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Get adhoc goal states for specific day
-    const goalStates = await ctx.db
-      .query('adhocGoalStates')
-      .withIndex('by_user_and_year_and_week_and_day', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', year)
-          .eq('weekNumber', weekNumber)
-          .eq('dayOfWeek', dayOfWeek)
+    // Query goals for the week, then filter for specific day or no day
+    const weekGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
 
-    // Get corresponding goals
-    const goalIds = goalStates.map((state) => state.goalId);
-    const goals = await Promise.all(goalIds.map((id) => ctx.db.get(id)));
-
-    // Filter out nulls and verify they are adhoc goals
-    const adhocGoals = goals.filter(
-      (goal): goal is Doc<'goals'> => goal !== null && goal.adhoc !== undefined
+    // Filter for goals assigned to this day OR goals with no specific day
+    const adhocGoals = weekGoals.filter(
+      (goal) => goal.adhoc?.dayOfWeek === dayOfWeek || !goal.adhoc?.dayOfWeek
     );
 
     // Get domain information for goals that have domains
@@ -412,7 +404,9 @@ export const getAdhocGoalsForDay = query({
       ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
-    const domainMap = new Map(domains.filter(Boolean).map((domain) => [domain!._id, domain!]));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => ({
@@ -424,6 +418,7 @@ export const getAdhocGoalsForDay = query({
 
 /**
  * Retrieves all adhoc goals for authenticated user.
+ * Note: This query is less efficient for large datasets. Consider using getAdhocGoalsForWeek instead.
  *
  * @param ctx - Convex query context
  * @param args - Query arguments containing session
@@ -438,19 +433,23 @@ export const getAllAdhocGoals = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Get all adhoc goals for user
-    const adhocGoals = await ctx.db
+    // Get all goals for user and filter for adhoc goals
+    // Note: This is less efficient than querying by week; consider paginating or filtering by year
+    const allGoals = await ctx.db
       .query('goals')
-      .withIndex('by_user_and_adhoc', (q) => q.eq('userId', userId))
-      .filter((q) => q.neq(q.field('adhoc'), undefined))
+      .withIndex('by_user_and_year_and_quarter', (q) => q.eq('userId', userId))
       .collect();
+
+    const adhocGoals = allGoals.filter((goal) => goal.adhoc !== undefined);
 
     // Get domain information for goals that have domains
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
-    const domainMap = new Map(domains.filter(Boolean).map((domain) => [domain!._id, domain!]));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => ({

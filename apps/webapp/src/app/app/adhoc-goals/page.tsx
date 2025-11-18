@@ -1,6 +1,7 @@
 'use client';
 
 import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@services/backend/src/constants';
 import { AdhocGoalList } from '@/components/organisms/AdhocGoalList';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
@@ -17,7 +18,7 @@ export default function AdhocGoalsPage() {
     details?: string;
     domainId?: Id<'domains'> | null;
     weekNumber?: number;
-    dayOfWeek?: any;
+    dayOfWeek?: DayOfWeek;
     dueDate?: number;
   }) => {
     await createAdhocGoal(
@@ -37,7 +38,7 @@ export default function AdhocGoalsPage() {
       details?: string;
       domainId?: Id<'domains'> | null;
       weekNumber?: number;
-      dayOfWeek?: any;
+      dayOfWeek?: DayOfWeek;
       dueDate?: number;
       isComplete?: boolean;
     }

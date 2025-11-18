@@ -83,11 +83,12 @@ export function AdhocGoalsSection({
     const tempId = `temp-${Date.now()}` as Id<'goals'>;
 
     // Create optimistic goal
+    const currentYear = new Date().getFullYear();
     const optimisticGoal: OptimisticAdhocGoal = {
       _id: tempId,
       _creationTime: Date.now(),
-      userId: sessionId,
-      year: new Date().getFullYear(),
+      userId: '' as Id<'users'>, // Placeholder for optimistic update
+      year: currentYear,
       quarter: Math.ceil((new Date().getMonth() + 1) / 3),
       title,
       inPath: '/',
@@ -95,6 +96,7 @@ export function AdhocGoalsSection({
       isComplete: false,
       isOptimistic: true,
       adhoc: {
+        year: currentYear,
         weekNumber,
         dayOfWeek,
         domainId: selectedDomainId || undefined,

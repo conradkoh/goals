@@ -1,5 +1,5 @@
 import { api } from '@services/backend/convex/_generated/api';
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';

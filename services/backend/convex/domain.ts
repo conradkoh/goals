@@ -59,7 +59,6 @@ export const createDomain = mutation({
       name: name.trim(),
       description: description?.trim(),
       color,
-      createdAt: Date.now(),
     });
 
     return domainId;
@@ -170,7 +169,7 @@ export const deleteDomain = mutation({
     // Check if any adhoc goals are using this domain
     const adhocGoalsUsingDomain = await ctx.db
       .query('goals')
-      .withIndex('by_user_and_adhoc', (q) => q.eq('userId', userId))
+      .withIndex('by_user_and_year_and_quarter', (q) => q.eq('userId', userId))
       .filter((q) =>
         q.and(q.neq(q.field('adhoc'), undefined), q.eq(q.field('adhoc.domainId'), domainId))
       )
@@ -209,10 +208,10 @@ export const getDomains = query({
       .withIndex('by_user', (q) => q.eq('userId', userId))
       .collect();
 
-    // Sort by creation date (newest first) then by name
+    // Sort by creation time (newest first) then by name
     return domains.sort((a, b) => {
-      if (a.createdAt !== b.createdAt) {
-        return b.createdAt - a.createdAt;
+      if (a._creationTime !== b._creationTime) {
+        return b._creationTime - a._creationTime;
       }
       return a.name.localeCompare(b.name);
     });
