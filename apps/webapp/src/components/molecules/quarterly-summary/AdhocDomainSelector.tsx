@@ -159,10 +159,6 @@ export function AdhocDomainSelector({
           );
         })}
       </div>
-
-      <p className="text-xs text-muted-foreground bg-blue-50 text-blue-700 p-3 rounded-lg">
-        Tip: If no domains are selected, all adhoc goals will be included.
-      </p>
     </div>
   );
 }
