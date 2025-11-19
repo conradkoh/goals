@@ -27,35 +27,69 @@ function _hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 }
 
 /**
+ * Calculates the relative luminance of a color.
+ * Used to determine if a color is light or dark.
+ */
+function _getLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    const sRGB = c / 255;
+    return sRGB <= 0.03928 ? sRGB / 12.92 : ((sRGB + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/**
+ * Darkens a color by reducing its lightness.
+ */
+function _darkenColor(r: number, g: number, b: number, factor = 0.6): string {
+  return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
+}
+
+/**
  * Generates color variations for domain pills based on the base domain color.
- * Returns foreground, background, and border colors with appropriate opacity.
+ * For light colors (like yellow), darkens the text for better contrast.
+ * Uses the domain color with appropriate opacity for backgrounds.
  */
 function _getDomainPillColors(domainColor?: string): {
   foreground: string;
   background: string;
   border: string;
+  dotColor: string;
 } {
   if (!domainColor) {
     return {
-      foreground: 'rgb(107, 114, 128)', // gray-500
+      foreground: 'rgb(55, 65, 81)', // gray-700
       background: 'rgb(243, 244, 246)', // gray-100
       border: 'rgb(229, 231, 235)', // gray-200
+      dotColor: 'rgb(107, 114, 128)', // gray-500
     };
   }
 
   const rgb = _hexToRgb(domainColor);
   if (!rgb) {
     return {
-      foreground: domainColor,
-      background: `${domainColor}20`,
-      border: `${domainColor}40`,
+      foreground: '#000000',
+      background: domainColor,
+      border: domainColor,
+      dotColor: '#000000',
     };
   }
 
+  // Calculate luminance to determine if it's a light or dark color
+  const luminance = _getLuminance(rgb.r, rgb.g, rgb.b);
+
+  // For light colors (luminance > 0.5), darken the text significantly for contrast
+  // For dark colors, use the original color for text
+  const textColor =
+    luminance > 0.5
+      ? _darkenColor(rgb.r, rgb.g, rgb.b, 0.4) // Darken to 40% for light colors
+      : `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`; // Use original for dark colors
+
   return {
-    foreground: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`,
-    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`,
+    foreground: textColor,
+    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`,
+    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`,
+    dotColor: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
   };
 }
 
@@ -253,7 +287,7 @@ export function AdhocGoalsSection({
                 >
                   <span
                     className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: colors.foreground }}
+                    style={{ backgroundColor: colors.dotColor }}
                   />
                   {domain ? domain.name : 'Uncategorized'} ({goals.length})
                 </div>
