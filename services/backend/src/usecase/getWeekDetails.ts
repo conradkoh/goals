@@ -59,6 +59,7 @@ export type QuarterlyGoalSummary = {
 // Multiple quarterly goals summary data structure
 export type MultipleQuarterlyGoalsSummary = {
   quarterlyGoals: QuarterlyGoalSummary[];
+  adhocGoals?: Doc<'goals'>[];
   year: number;
   quarter: number;
   weekRange: {

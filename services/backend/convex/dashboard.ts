@@ -5,6 +5,7 @@ import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDeta
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { joinPath, validateGoalPath } from '../src/util/path';
+import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 
 // Get the overview of all weeks in a quarter
@@ -839,26 +840,29 @@ export const getAllQuarterlyGoalsForQuarter = query({
   },
 });
 
-// Get comprehensive summary for multiple quarterly goals
-export const getMultipleQuarterlyGoalsSummary = query({
+// Get comprehensive summary for the quarter, including selected quarterly goals and optionally adhoc goals
+export const getQuarterSummary = query({
   args: {
     sessionId: v.id('sessions'),
-    quarterlyGoalIds: v.array(v.id('goals')),
     year: v.number(),
     quarter: v.number(),
+    selectedQuarterlyGoalIds: v.optional(v.array(v.id('goals'))),
+    includeAdhocGoals: v.optional(v.boolean()),
+    adhocDomainIds: v.optional(v.array(v.id('domains'))),
   },
   handler: async (ctx, args) => {
-    const { sessionId, quarterlyGoalIds, year, quarter } = args;
+    const {
+      sessionId,
+      year,
+      quarter,
+      selectedQuarterlyGoalIds,
+      includeAdhocGoals,
+      adhocDomainIds,
+    } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Validate that we have at least one goal ID
-    if (quarterlyGoalIds.length === 0) {
-      throw new ConvexError({
-        code: 'INVALID_STATE',
-        message: 'At least one quarterly goal ID is required',
-      });
-    }
+    const quarterlyGoalIds = selectedQuarterlyGoalIds || [];
 
     // Get summaries for each quarterly goal
     const summaryPromises = quarterlyGoalIds.map(async (goalId) => {
@@ -870,7 +874,7 @@ export const getMultipleQuarterlyGoalsSummary = query({
           message: `Quarterly goal ${goalId} not found`,
         });
       }
-
+      // ... rest of map implementation
       // Verify it's actually a quarterly goal (depth 0)
       if (quarterlyGoal.depth !== 0) {
         throw new ConvexError({
@@ -945,16 +949,45 @@ export const getMultipleQuarterlyGoalsSummary = query({
 
     const quarterlyGoals = await Promise.all(summaryPromises);
 
+    // Fetch adhoc goals if requested
+    let adhocGoals: Doc<'goals'>[] = [];
+    if (includeAdhocGoals) {
+      const { weeks } = getQuarterWeeks(year, quarter);
+      const adhocPromises = weeks.map((weekNum) =>
+        ctx.db
+          .query('goals')
+          .withIndex('by_user_and_adhoc_year_week', (q) =>
+            q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNum)
+          )
+          .collect()
+      );
+      const results = await Promise.all(adhocPromises);
+      adhocGoals = results.flat().filter((goal) => {
+        if (!goal.adhoc) return false;
+        // Filter by domain if specific domains are selected
+        if (adhocDomainIds && adhocDomainIds.length > 0) {
+          // If goal has no domain, it shouldn't be included if we are filtering by domain
+          // UNLESS we want to include "No Domain" as a selection option?
+          // For now, assume filtering strictly by provided IDs.
+          // If we want to include goals with NO domain, we might need a special value or handle it.
+          // Let's assume if domainIds are provided, we ONLY show goals matching those IDs.
+          return goal.adhoc.domainId && adhocDomainIds.includes(goal.adhoc.domainId);
+        }
+        return true;
+      });
+    }
+
     // Calculate overall week range from the first goal (should be the same for all)
+    // If no quarterly goals, calculate from quarter dates
+    const { startWeek, endWeek } = getQuarterWeeks(year, quarter);
     const weekRange = quarterlyGoals[0]?.weekRange || {
-      startWeek: DateTime.local(year, (quarter - 1) * 3 + 1, 1).weekNumber,
-      endWeek: DateTime.local(year, (quarter - 1) * 3 + 1, 1)
-        .plus({ months: 3 })
-        .minus({ days: 1 }).weekNumber,
+      startWeek,
+      endWeek,
     };
 
     return {
       quarterlyGoals,
+      adhocGoals: adhocGoals.length > 0 ? adhocGoals : undefined,
       year,
       quarter,
       weekRange,

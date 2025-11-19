@@ -6,13 +6,16 @@ import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 import {
-  MultiQuarterlyGoalSummaryView,
+  AdhocDomainSelector,
   MultiQuarterlySummaryMarkdownView,
   QuarterlyGoalSelector,
+  QuarterSummaryResults,
 } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
-import { useMultipleQuarterlyGoalsSummary } from '@/hooks/useMultipleQuarterlyGoalsSummary';
+import { useDomains } from '@/hooks/useDomains';
+import { useQuarterSummary } from '@/hooks/useQuarterSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { useSession } from '@/modules/auth/useSession';
 
 /**
  * Renders the multi-goal quarterly summary page.
@@ -48,13 +51,32 @@ export default function MultiGoalQuarterlySummaryPage() {
     return [];
   });
 
+  const { sessionId } = useSession();
+  const { domains } = useDomains(sessionId);
+
+  // Get selected adhoc domain IDs from URL params
+  const [selectedAdhocDomainIds, setSelectedAdhocDomainIds] = React.useState<Id<'domains'>[]>(
+    () => {
+      const domainsParam = searchParams.get('adhocDomains');
+      if (domainsParam) {
+        return domainsParam.split(',') as Id<'domains'>[];
+      }
+      return [];
+    }
+  );
+
   const goalActions = useSummaryGoalActions();
 
+  // Derived state: include adhoc goals if any domains are selected
+  const includeAdhocGoals = selectedAdhocDomainIds.length > 0;
+
   // Get the multi-goal summary data
-  const { summaryData } = useMultipleQuarterlyGoalsSummary({
+  const { summaryData } = useQuarterSummary({
     quarterlyGoalIds: selectedGoalIds,
     year,
     quarter,
+    includeAdhocGoals,
+    adhocDomainIds: selectedAdhocDomainIds,
   });
 
   // Update URL when selection changes
@@ -65,10 +87,13 @@ export default function MultiGoalQuarterlySummaryPage() {
     if (selectedGoalIds.length > 0) {
       params.set('goals', selectedGoalIds.join(','));
     }
+    if (selectedAdhocDomainIds.length > 0) {
+      params.set('adhocDomains', selectedAdhocDomainIds.join(','));
+    }
 
     const newUrl = `/app/goal/quarterly-summary?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
-  }, [selectedGoalIds, year, quarter]);
+  }, [selectedGoalIds, selectedAdhocDomainIds, year, quarter]);
 
   // Set page title
   React.useEffect(() => {
@@ -94,17 +119,15 @@ export default function MultiGoalQuarterlySummaryPage() {
 
   const handleSelectionChange = React.useCallback((goalIds: Id<'goals'>[]) => {
     setSelectedGoalIds(goalIds);
-    // Note: Removed auto-switch to summary view to allow goal curation
-    // Users can manually switch to summary view using the toggle buttons
   }, []);
 
   const handleGenerateSummary = React.useCallback(() => {
-    if (selectedGoalIds.length > 0) {
+    if (selectedGoalIds.length > 0 || includeAdhocGoals) {
       setViewMode('summary');
     }
-  }, [selectedGoalIds]);
+  }, [selectedGoalIds, includeAdhocGoals]);
 
-  const canShowSummary = selectedGoalIds.length > 0;
+  const canShowSummary = selectedGoalIds.length > 0 || includeAdhocGoals;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -189,22 +212,79 @@ export default function MultiGoalQuarterlySummaryPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'selection' && (
-          <QuarterlyGoalSelector
-            year={year}
-            quarter={quarter}
-            selectedGoalIds={selectedGoalIds}
-            onSelectionChange={handleSelectionChange}
-            onGenerateSummary={handleGenerateSummary}
-            showGenerateButton={true}
-            className="bg-white rounded-lg shadow-sm border p-6"
-          />
+          <div className="max-w-3xl mx-auto space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900">Create Report</h1>
+              <p className="text-lg text-muted-foreground mt-2">
+                Select the goals you want to include in your quarterly summary.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-gray-50/50">
+                <h2 className="text-lg font-semibold text-gray-900">Quarterly Goals</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Strategic high-level goals for the quarter
+                </p>
+              </div>
+              <div className="p-6">
+                <QuarterlyGoalSelector
+                  year={year}
+                  quarter={quarter}
+                  selectedGoalIds={selectedGoalIds}
+                  onSelectionChange={handleSelectionChange}
+                  onGenerateSummary={handleGenerateSummary}
+                  showGenerateButton={false}
+                  className="border-none shadow-none p-0"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-gray-50/50">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Adhoc Goals</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Tactical tasks and smaller wins - select domains to include
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {domains && domains.length > 0 ? (
+                  <AdhocDomainSelector
+                    domains={domains}
+                    selectedDomainIds={selectedAdhocDomainIds}
+                    onSelectionChange={setSelectedAdhocDomainIds}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No domains available. Adhoc goals are organized by domains.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 pb-12">
+              <Button
+                size="lg"
+                onClick={handleGenerateSummary}
+                className="w-full sm:w-auto text-lg h-12 px-8 shadow-lg hover:shadow-xl transition-all"
+                disabled={!canShowSummary}
+              >
+                Generate Report
+              </Button>
+            </div>
+          </div>
         )}
 
         {viewMode === 'summary' && canShowSummary && (
-          <MultiQuarterlyGoalSummaryView
+          <QuarterSummaryResults
             quarterlyGoalIds={selectedGoalIds}
             year={year}
             quarter={quarter}
+            includeAdhocGoals={includeAdhocGoals}
+            adhocDomainIds={selectedAdhocDomainIds}
             goalActions={goalActions}
             className="bg-white rounded-lg shadow-sm border p-6"
           />

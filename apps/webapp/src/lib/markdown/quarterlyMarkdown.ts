@@ -189,7 +189,7 @@ export function generateMultipleQuarterlyGoalsMarkdown(
   summaryData: MultipleQuarterlyGoalsSummary,
   options: QuarterlySummaryMarkdownOptions = {}
 ): string {
-  const { quarterlyGoals, quarter, year, weekRange } = summaryData;
+  const { quarterlyGoals, adhocGoals, quarter, year, weekRange } = summaryData;
   const { omitIncomplete = false } = options;
 
   // Build the markdown content
@@ -202,6 +202,9 @@ export function generateMultipleQuarterlyGoalsMarkdown(
     `**Quarter:** Q${quarter} ${year} (Weeks ${weekRange.startWeek}-${weekRange.endWeek})`
   );
   lines.push(`**Goals Included:** ${quarterlyGoals.length}`);
+  if (adhocGoals && adhocGoals.length > 0) {
+    lines.push(`**Adhoc Goals Included:** ${adhocGoals.length}`);
+  }
   if (omitIncomplete) {
     lines.push('**Note:** Only completed goals are shown');
   }
@@ -230,6 +233,18 @@ export function generateMultipleQuarterlyGoalsMarkdown(
     });
   });
 
+  // Calculate adhoc goal statistics
+  let totalAdhocGoals = 0;
+  let completedAdhocGoals = 0;
+  if (adhocGoals && adhocGoals.length > 0) {
+    // Filter adhoc goals based on omitIncomplete option
+    const filteredAdhocGoals = omitIncomplete
+      ? adhocGoals.filter((goal) => goal.isComplete)
+      : adhocGoals;
+    totalAdhocGoals = filteredAdhocGoals.length;
+    completedAdhocGoals = filteredAdhocGoals.filter((goal) => goal.isComplete).length;
+  }
+
   // Overall summary statistics
   lines.push('## Overall Summary');
   lines.push(
@@ -237,6 +252,9 @@ export function generateMultipleQuarterlyGoalsMarkdown(
   );
   lines.push(`- **Weekly Goals:** ${completedWeeklyGoals}/${totalWeeklyGoals} completed`);
   lines.push(`- **Daily Goals:** ${completedDailyGoals}/${totalDailyGoals} completed`);
+  if (adhocGoals && adhocGoals.length > 0) {
+    lines.push(`- **Adhoc Goals:** ${completedAdhocGoals}/${totalAdhocGoals} completed`);
+  }
   lines.push('');
 
   // Table of contents
@@ -245,6 +263,9 @@ export function generateMultipleQuarterlyGoalsMarkdown(
     const status = summary.quarterlyGoal.isComplete ? '✓' : '○';
     lines.push(`${index + 1}. [${status} ${summary.quarterlyGoal.title}](#goal-${index + 1})`);
   });
+  if (adhocGoals && adhocGoals.length > 0) {
+    lines.push(`${quarterlyGoals.length + 1}. [Adhoc Goals](#adhoc-goals)`);
+  }
   lines.push('');
 
   // Individual goal sections
@@ -393,12 +414,64 @@ export function generateMultipleQuarterlyGoalsMarkdown(
       lines.push('');
     }
 
-    // Add separator between goals (except for the last one)
-    if (index < quarterlyGoals.length - 1) {
+    // Add separator between goals (except for the last one or if there are adhoc goals to add)
+    if (index < quarterlyGoals.length - 1 || (adhocGoals && adhocGoals.length > 0)) {
       lines.push('---');
       lines.push('');
     }
   });
+
+  // Add Adhoc Goals section if applicable
+  if (adhocGoals && adhocGoals.length > 0) {
+    const filteredAdhocGoals = omitIncomplete
+      ? adhocGoals.filter((goal) => goal.isComplete)
+      : adhocGoals;
+
+    if (filteredAdhocGoals.length > 0) {
+      lines.push('### Adhoc Goals');
+      lines.push('');
+      lines.push('Tactical tasks and smaller wins achieved during the quarter.');
+      lines.push('');
+
+      // Group adhoc goals by week
+      const adhocGoalsByWeek: Record<number, typeof adhocGoals> = {};
+      filteredAdhocGoals.forEach((goal) => {
+        if (goal.adhoc?.weekNumber) {
+          const weekNumber = goal.adhoc.weekNumber;
+          if (!adhocGoalsByWeek[weekNumber]) {
+            adhocGoalsByWeek[weekNumber] = [];
+          }
+          adhocGoalsByWeek[weekNumber].push(goal);
+        }
+      });
+
+      // Sort weeks
+      const sortedWeeks = Object.keys(adhocGoalsByWeek)
+        .map(Number)
+        .sort((a, b) => a - b);
+
+      sortedWeeks.forEach((weekNumber) => {
+        const weekGoals = adhocGoalsByWeek[weekNumber];
+        lines.push(`**Week ${weekNumber}**`);
+        lines.push('');
+
+        weekGoals.forEach((goal) => {
+          const status = goal.isComplete ? '[x]' : '[ ]';
+          lines.push(`- ${status} ${goal.title}`);
+
+          // Add goal details if available
+          if (goal.details?.trim()) {
+            const detailLines = goal.details.trim().split('\n');
+            detailLines.forEach((line) => {
+              lines.push(`  - ${line.trim()}`);
+            });
+          }
+        });
+
+        lines.push('');
+      });
+    }
+  }
 
   // Add generation timestamp
   lines.push('---');
