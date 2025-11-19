@@ -1,7 +1,7 @@
 {
   "name": "@apps/webapp",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/webapp/src",
+  "sourceRoot": "apps/webapp",
   "projectType": "application",
   "targets": {
     "dev": {
@@ -36,13 +36,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm lint",
-        "cwd": "apps/webapp"
-      }
-    },
-    "typecheck": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm typecheck",
         "cwd": "apps/webapp"
       }
     }

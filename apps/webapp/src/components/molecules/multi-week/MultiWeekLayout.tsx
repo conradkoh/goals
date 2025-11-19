@@ -2,6 +2,7 @@ import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { DateTime } from 'luxon';
 import type React from 'react';
 import { memo, useMemo } from 'react';
+import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
@@ -90,6 +91,10 @@ const WeekCardContent = ({
                 isLoading={isLoading}
               />
             </FireGoalsProvider>
+          </WeekCardSection>
+
+          <WeekCardSection title="📋 Adhoc Tasks">
+            <AdhocGoalsSection weekNumber={week.weekNumber} showHeader={false} variant="inline" />
           </WeekCardSection>
 
           <WeekCardSection title="🔍 Daily Goals">

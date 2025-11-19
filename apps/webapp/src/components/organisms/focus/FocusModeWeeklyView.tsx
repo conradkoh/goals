@@ -2,6 +2,7 @@ import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
+import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import {
   MoveGoalsForWeekProvider,
@@ -68,9 +69,9 @@ const FocusModeWeeklyViewInner = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm p-4">
+      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="font-semibold">💭 Quarterly Goals</div>
+          <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
           <div className="flex items-center gap-2">
             <JumpToCurrentButton
               viewMode="weekly"
@@ -88,15 +89,20 @@ const FocusModeWeeklyViewInner = ({
         </WeekProviderWithoutDashboard>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="font-semibold mb-4">🚀 Weekly Goals</div>
+      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
+        <div className="font-semibold text-foreground mb-4">🚀 Weekly Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           <FireGoalsProvider>{weeklyGoalsComponent}</FireGoalsProvider>
         </WeekProviderWithoutDashboard>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="font-semibold mb-4">🔍 Daily Goals</div>
+      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
+        <div className="font-semibold text-foreground mb-4">📋 Adhoc Tasks</div>
+        <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
+      </div>
+
+      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
+        <div className="font-semibold text-foreground mb-4">🔍 Daily Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
           {dailyGoalsComponent}
         </WeekProviderWithoutDashboard>

@@ -34,6 +34,13 @@ export default defineSchema({
     )
   ),
 
+  domains: defineTable({
+    userId: v.id('users'),
+    name: v.string(),
+    description: v.optional(v.string()),
+    color: v.optional(v.string()),
+  }).index('by_user', ['userId']),
+
   goals: defineTable({
     //partition
     userId: v.id('users'),
@@ -50,9 +57,31 @@ export default defineSchema({
     carryOver: v.optional(carryOverSchema), // Track if this goal was carried over from a previous week
     isComplete: v.boolean(), // Whether the goal is complete
     completedAt: v.optional(v.number()), // Unix timestamp when the goal was completed
+
+    // Adhoc goal fields - grouped into optional object
+    adhoc: v.optional(
+      v.object({
+        domainId: v.optional(v.id('domains')), // Links to domain (undefined = uncategorized)
+        year: v.number(), // ISO week year for proper partitioning
+        weekNumber: v.number(), // ISO week number (1-53)
+        dayOfWeek: v.optional(
+          v.union(
+            v.literal(DayOfWeek.MONDAY),
+            v.literal(DayOfWeek.TUESDAY),
+            v.literal(DayOfWeek.WEDNESDAY),
+            v.literal(DayOfWeek.THURSDAY),
+            v.literal(DayOfWeek.FRIDAY),
+            v.literal(DayOfWeek.SATURDAY),
+            v.literal(DayOfWeek.SUNDAY)
+          )
+        ),
+        dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
+      })
+    ),
   })
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
-    .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId']),
+    .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
+    .index('by_user_and_adhoc_year_week', ['userId', 'adhoc.year', 'adhoc.weekNumber']),
 
   // timeseries data for snapshotting
   goalStateByWeek: defineTable({
@@ -127,4 +156,27 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_and_goal', ['userId', 'goalId']),
+
+  adhocGoalStates: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    year: v.number(),
+    weekNumber: v.number(), // ISO week number
+    dayOfWeek: v.optional(
+      v.union(
+        v.literal(DayOfWeek.MONDAY),
+        v.literal(DayOfWeek.TUESDAY),
+        v.literal(DayOfWeek.WEDNESDAY),
+        v.literal(DayOfWeek.THURSDAY),
+        v.literal(DayOfWeek.FRIDAY),
+        v.literal(DayOfWeek.SATURDAY),
+        v.literal(DayOfWeek.SUNDAY)
+      )
+    ),
+    isComplete: v.boolean(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_user_and_year_and_week', ['userId', 'year', 'weekNumber'])
+    .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_user_and_year_and_week_and_day', ['userId', 'year', 'weekNumber', 'dayOfWeek']),
 });
