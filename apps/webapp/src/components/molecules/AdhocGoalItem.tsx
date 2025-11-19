@@ -13,6 +13,7 @@ interface AdhocGoalItemProps {
   onUpdate?: (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => void;
   onDelete?: (goalId: Id<'goals'>) => void;
   showDueDate?: boolean;
+  showDomain?: boolean;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ export function AdhocGoalItem({
   onUpdate,
   onDelete,
   showDueDate = true,
+  showDomain = true,
   className,
 }: AdhocGoalItemProps) {
   const handleCompleteChange = (checked: boolean | 'indeterminate') => {
@@ -67,7 +69,7 @@ export function AdhocGoalItem({
             >
               {goal.title}
             </span>
-            {goal.domain && <DomainBadge domain={goal.domain} />}
+            {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
           </div>
 
           {goal.details && (

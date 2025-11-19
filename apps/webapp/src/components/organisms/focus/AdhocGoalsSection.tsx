@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
 import type { DayOfWeek } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 interface AdhocGoalsSectionProps {
@@ -193,7 +194,13 @@ export function AdhocGoalsSection({
         <div className="space-y-3">
           {sortedGroups.map(([domainId, { domain, goals }]) => (
             <div key={domainId} className="space-y-1">
-              <div className="text-xs font-medium text-muted-foreground px-2">
+              <div
+                className={cn(
+                  'text-xs font-medium px-2',
+                  !domain?.color && 'text-muted-foreground'
+                )}
+                style={{ color: domain?.color ?? undefined }}
+              >
                 {domain ? domain.name : 'Uncategorized'} ({goals.length})
               </div>
               <div className="space-y-0.5">
@@ -205,6 +212,7 @@ export function AdhocGoalsSection({
                     onUpdate={handleUpdate}
                     onDelete={handleDelete}
                     showDueDate={!dayOfWeek} // Only show due date in weekly view
+                    showDomain={false}
                   />
                 ))}
               </div>

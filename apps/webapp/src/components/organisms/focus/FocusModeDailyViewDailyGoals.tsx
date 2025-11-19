@@ -7,7 +7,6 @@ import {
   DayContainer,
   wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
-import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 
@@ -340,14 +339,6 @@ export const FocusModeDailyViewDailyGoals = ({
         sortDailyGoals={_sortDailyGoals}
         mode="focus"
         isCreating={creatingGoals}
-      />
-
-      {/* Adhoc Goals Section */}
-      <AdhocGoalsSection
-        weekNumber={weekNumber}
-        dayOfWeek={selectedDayOfWeek}
-        showHeader={false}
-        variant="inline"
       />
     </div>
   );
