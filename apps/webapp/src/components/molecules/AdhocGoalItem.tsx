@@ -1,8 +1,11 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { format } from 'date-fns';
-import { Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Edit2 } from 'lucide-react';
 import { DomainBadge } from '@/components/atoms/DomainBadge';
+import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -36,10 +39,6 @@ export function AdhocGoalItem({
     onUpdate?.(goal._id, title, details, dueDate);
   };
 
-  const handleDelete = () => {
-    onDelete?.(goal._id);
-  };
-
   const formatDueDate = (timestamp: number) => {
     return format(new Date(timestamp), 'MMM d, yyyy');
   };
@@ -62,42 +61,84 @@ export function AdhocGoalItem({
       />
 
       <div className="flex-1 min-w-0 flex items-center justify-between group/title">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn('text-sm', goal.isComplete && 'line-through text-muted-foreground')}
-            >
-              {goal.title}
-            </span>
-            {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+        {onUpdate ? (
+          <GoalEditPopover
+            title={goal.title}
+            details={goal.details}
+            initialDueDate={goal.adhoc?.dueDate}
+            onSave={handleUpdate}
+            trigger={
+              <button
+                type="button"
+                className="flex-1 min-w-0 text-left hover:bg-accent/30 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-0"
+                disabled={isOptimistic}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'text-sm',
+                      goal.isComplete && 'line-through text-muted-foreground'
+                    )}
+                  >
+                    {goal.title}
+                  </span>
+                  {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                  {showDueDate && goal.adhoc?.dueDate && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {formatDueDate(goal.adhoc.dueDate)}
+                    </div>
+                  )}
+
+                  {goal.adhoc?.dayOfWeek && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][goal.adhoc.dayOfWeek - 1]}
+                    </div>
+                  )}
+                </div>
+              </button>
+            }
+          />
+        ) : (
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn('text-sm', goal.isComplete && 'line-through text-muted-foreground')}
+              >
+                {goal.title}
+              </span>
+              {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+            </div>
+
+            <div className="flex items-center gap-2 mt-1">
+              {showDueDate && goal.adhoc?.dueDate && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  {formatDueDate(goal.adhoc.dueDate)}
+                </div>
+              )}
+
+              {goal.adhoc?.dayOfWeek && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][goal.adhoc.dayOfWeek - 1]}
+                </div>
+              )}
+            </div>
           </div>
-
-          {goal.details && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{goal.details}</p>
-          )}
-
-          <div className="flex items-center gap-2 mt-1">
-            {showDueDate && goal.adhoc?.dueDate && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                {formatDueDate(goal.adhoc.dueDate)}
-              </div>
-            )}
-
-            {goal.adhoc?.dayOfWeek && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][goal.adhoc.dayOfWeek - 1]}
-              </div>
-            )}
-          </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-1 flex-shrink-0">
           {isOptimistic ? (
             <Spinner className="h-3.5 w-3.5" />
           ) : (
             <>
+              <FireIcon goalId={goal._id} />
+              <PendingIcon goalId={goal._id} />
               {onUpdate && (
                 <GoalEditPopover
                   title={goal.title}
@@ -107,22 +148,14 @@ export function AdhocGoalItem({
                   trigger={
                     <button
                       type="button"
-                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
                   }
                 />
               )}
-              {onDelete && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
+              {onDelete && <DeleteGoalIconButton requireConfirmation={false} goalId={goal._id} />}
             </>
           )}
         </div>
