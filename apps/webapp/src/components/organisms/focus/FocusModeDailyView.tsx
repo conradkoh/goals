@@ -178,6 +178,7 @@ const FocusModeDailyViewInner = ({
         <OnFireGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
           selectedDayOfWeek={selectedDayOfWeek}
+          weekNumber={weekNumber}
           isFocusModeEnabled={isFocusModeEnabled}
         />
 
