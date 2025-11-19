@@ -12,6 +12,53 @@ import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
+/**
+ * Converts hex color to RGB values.
+ */
+function _hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: Number.parseInt(result[1], 16),
+        g: Number.parseInt(result[2], 16),
+        b: Number.parseInt(result[3], 16),
+      }
+    : null;
+}
+
+/**
+ * Generates color variations for domain pills based on the base domain color.
+ * Returns foreground, background, and border colors with appropriate opacity.
+ */
+function _getDomainPillColors(domainColor?: string): {
+  foreground: string;
+  background: string;
+  border: string;
+} {
+  if (!domainColor) {
+    return {
+      foreground: 'rgb(107, 114, 128)', // gray-500
+      background: 'rgb(243, 244, 246)', // gray-100
+      border: 'rgb(229, 231, 235)', // gray-200
+    };
+  }
+
+  const rgb = _hexToRgb(domainColor);
+  if (!rgb) {
+    return {
+      foreground: domainColor,
+      background: `${domainColor}20`,
+      border: `${domainColor}40`,
+    };
+  }
+
+  return {
+    foreground: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
+    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`,
+    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`,
+  };
+}
+
 interface AdhocGoalsSectionProps {
   weekNumber: number;
   dayOfWeek?: DayOfWeek;
@@ -192,32 +239,40 @@ export function AdhocGoalsSection({
       {/* Grouped Goals */}
       {sortedGroups.length > 0 && (
         <div className="space-y-3">
-          {sortedGroups.map(([domainId, { domain, goals }]) => (
-            <div key={domainId} className="space-y-1">
-              <div
-                className={cn(
-                  'text-xs font-medium px-2',
-                  !domain?.color && 'text-muted-foreground'
-                )}
-                style={{ color: domain?.color ?? undefined }}
-              >
-                {domain ? domain.name : 'Uncategorized'} ({goals.length})
-              </div>
-              <div className="space-y-0.5">
-                {goals.map((goal) => (
-                  <AdhocGoalItem
-                    key={goal._id}
-                    goal={goal}
-                    onCompleteChange={handleCompleteChange}
-                    onUpdate={handleUpdate}
-                    onDelete={handleDelete}
-                    showDueDate={!dayOfWeek} // Only show due date in weekly view
-                    showDomain={false}
+          {sortedGroups.map(([domainId, { domain, goals }]) => {
+            const colors = _getDomainPillColors(domain?.color);
+            return (
+              <div key={domainId} className="space-y-1">
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
+                  style={{
+                    color: colors.foreground,
+                    backgroundColor: colors.background,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: colors.foreground }}
                   />
-                ))}
+                  {domain ? domain.name : 'Uncategorized'} ({goals.length})
+                </div>
+                <div className="space-y-0.5">
+                  {goals.map((goal) => (
+                    <AdhocGoalItem
+                      key={goal._id}
+                      goal={goal}
+                      onCompleteChange={handleCompleteChange}
+                      onUpdate={handleUpdate}
+                      onDelete={handleDelete}
+                      showDueDate={!dayOfWeek} // Only show due date in weekly view
+                      showDomain={false}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
