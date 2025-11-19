@@ -1,7 +1,8 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Eye, Flame, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
+import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
@@ -10,10 +11,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
+import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/modules/auth/useSession';
 
 interface OnFireGoalsSectionProps {
   weeklyGoalsWithQuarterly: Array<{
@@ -21,17 +24,21 @@ interface OnFireGoalsSectionProps {
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
   selectedDayOfWeek: DayOfWeek;
+  weekNumber: number;
   isFocusModeEnabled?: boolean;
 }
 
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
+  weekNumber,
   isFocusModeEnabled = false,
 }) => {
   const { onUpdateGoal } = useGoalActionsContext();
   const { weeklyGoals } = useWeek();
   const { fireGoals } = useFireGoals();
+  const { sessionId } = useSession();
+  const { adhocGoals, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
 
   // Group on-fire goals by quarterly goal
   const onFireGoalsByQuarterly = useMemo(() => {
@@ -141,6 +148,26 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     return result.size > 0 ? result : null;
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
+  // Filter adhoc goals that are on fire for the selected day
+  const onFireAdhocGoals = useMemo(() => {
+    if (fireGoals.size === 0 || !adhocGoals) return [];
+
+    return adhocGoals.filter((goal) => {
+      // Must be on fire
+      if (!fireGoals.has(goal._id.toString())) return false;
+
+      // Must be for this week
+      if (goal.adhoc?.weekNumber !== weekNumber) return false;
+
+      // Must be for this day OR have no specific day assigned
+      if (goal.adhoc?.dayOfWeek && goal.adhoc.dayOfWeek !== selectedDayOfWeek) return false;
+
+      return true;
+    });
+  }, [fireGoals, adhocGoals, weekNumber, selectedDayOfWeek]);
+
+  const hasAnyFireGoals = onFireGoalsByQuarterly !== null || onFireAdhocGoals.length > 0;
+
   /**
    * Handles updating goals with proper error handling.
    */
@@ -151,7 +178,37 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [onUpdateGoal]
   );
 
-  if (!onFireGoalsByQuarterly) {
+  /**
+   * Handles updating adhoc goals.
+   */
+  const _handleUpdateAdhocGoal = useCallback(
+    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      await updateAdhocGoal(goalId, { title, details, dueDate });
+    },
+    [updateAdhocGoal]
+  );
+
+  /**
+   * Handles adhoc goal completion changes.
+   */
+  const _handleAdhocCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      await updateAdhocGoal(goalId, { isComplete });
+    },
+    [updateAdhocGoal]
+  );
+
+  /**
+   * Handles deleting adhoc goals.
+   */
+  const _handleDeleteAdhocGoal = useCallback(
+    async (goalId: Id<'goals'>) => {
+      await deleteAdhocGoal(goalId);
+    },
+    [deleteAdhocGoal]
+  );
+
+  if (!hasAnyFireGoals) {
     // If there are no visible fire goals but focus mode is enabled and toggle function is available,
     // still render the toggle button to allow disabling focus mode
     if (isFocusModeEnabled) {
@@ -222,66 +279,89 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       </div>
 
       <div className="space-y-4">
-        {Array.from(onFireGoalsByQuarterly.entries()).map(
-          ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
-            <div key={quarterlyId} className="border-b border-red-100 pb-3 last:border-b-0">
-              {/* Quarterly Goal Header with Popover */}
-              <div className="flex items-center gap-1.5 mb-2">
-                {quarterlyGoal.state?.isStarred && (
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
-                )}
-                {quarterlyGoal.state?.isPinned && (
-                  <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
-                )}
-                <GoalProvider goal={quarterlyGoal}>
-                  <GoalDetailsPopover
-                    onSave={(title, details, dueDate) =>
-                      _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
-                    }
-                    triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
-                    titleClassName={cn(
-                      'break-words w-full whitespace-pre-wrap flex items-center',
-                      quarterlyGoal.isComplete ? 'flex items-center' : '',
-                      getDueDateStyle(
-                        quarterlyGoal.dueDate ? new Date(quarterlyGoal.dueDate) : null,
-                        quarterlyGoal.isComplete
-                      )
-                    )}
-                  />
-                </GoalProvider>
-              </div>
+        {onFireGoalsByQuarterly &&
+          Array.from(onFireGoalsByQuarterly.entries()).map(
+            ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
+              <div key={quarterlyId} className="border-b border-red-100 pb-3 last:border-b-0">
+                {/* Quarterly Goal Header with Popover */}
+                <div className="flex items-center gap-1.5 mb-2">
+                  {quarterlyGoal.state?.isStarred && (
+                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                  )}
+                  {quarterlyGoal.state?.isPinned && (
+                    <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
+                  )}
+                  <GoalProvider goal={quarterlyGoal}>
+                    <GoalDetailsPopover
+                      onSave={(title, details, dueDate) =>
+                        _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
+                      }
+                      triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full text-red-800 hover:text-red-900 hover:no-underline"
+                      titleClassName={cn(
+                        'break-words w-full whitespace-pre-wrap flex items-center',
+                        quarterlyGoal.isComplete ? 'flex items-center' : '',
+                        getDueDateStyle(
+                          quarterlyGoal.dueDate ? new Date(quarterlyGoal.dueDate) : null,
+                          quarterlyGoal.isComplete
+                        )
+                      )}
+                    />
+                  </GoalProvider>
+                </div>
 
-              {/* Weekly Goals */}
-              <div className="space-y-2 ml-4">
-                {/* Render all weekly goals with their associated daily goals */}
-                {weeklyGoals.map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
-                  <div key={`weekly-${weeklyGoal._id.toString()}`}>
-                    {/* Always show the weekly goal if it's on fire or has daily goals */}
-                    {(isWeeklyOnFire || dailyGoals.length > 0) && (
-                      <div className="mb-1">
-                        <GoalProvider goal={weeklyGoal}>
-                          {/* WeeklyGoalTaskItem gets goal from context */}
-                          <WeeklyGoalTaskItem />
-                        </GoalProvider>
-                      </div>
-                    )}
-
-                    {/* Daily Goals */}
-                    {dailyGoals.length > 0 && (
-                      <div className="space-y-1 ml-4">
-                        {dailyGoals.map((dailyGoal) => (
-                          <GoalProvider key={dailyGoal._id.toString()} goal={dailyGoal}>
-                            {/* DailyGoalTaskItem gets goal from context */}
-                            <DailyGoalTaskItem />
+                {/* Weekly Goals */}
+                <div className="space-y-2 ml-4">
+                  {/* Render all weekly goals with their associated daily goals */}
+                  {weeklyGoals.map(({ weeklyGoal, dailyGoals, isWeeklyOnFire }) => (
+                    <div key={`weekly-${weeklyGoal._id.toString()}`}>
+                      {/* Always show the weekly goal if it's on fire or has daily goals */}
+                      {(isWeeklyOnFire || dailyGoals.length > 0) && (
+                        <div className="mb-1">
+                          <GoalProvider goal={weeklyGoal}>
+                            {/* WeeklyGoalTaskItem gets goal from context */}
+                            <WeeklyGoalTaskItem />
                           </GoalProvider>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                        </div>
+                      )}
+
+                      {/* Daily Goals */}
+                      {dailyGoals.length > 0 && (
+                        <div className="space-y-1 ml-4">
+                          {dailyGoals.map((dailyGoal) => (
+                            <GoalProvider key={dailyGoal._id.toString()} goal={dailyGoal}>
+                              {/* DailyGoalTaskItem gets goal from context */}
+                              <DailyGoalTaskItem />
+                            </GoalProvider>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
+            )
+          )}
+
+        {/* Adhoc Goals Section */}
+        {onFireAdhocGoals.length > 0 && (
+          <div className="border-b border-red-100 pb-3 last:border-b-0">
+            <div className="flex items-center gap-1.5 mb-2">
+              <h3 className="font-semibold text-red-800">Adhoc Tasks</h3>
             </div>
-          )
+            <div className="space-y-1 ml-4">
+              {onFireAdhocGoals.map((goal) => (
+                <AdhocGoalItem
+                  key={goal._id}
+                  goal={goal}
+                  onCompleteChange={_handleAdhocCompleteChange}
+                  onUpdate={_handleUpdateAdhocGoal}
+                  onDelete={_handleDeleteAdhocGoal}
+                  showDueDate={false}
+                  showDomain={true}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
