@@ -133,7 +133,7 @@ export const updateAdhocGoal = mutation({
     goalId: v.id('goals'),
     title: v.optional(v.string()),
     details: v.optional(v.string()),
-    domainId: v.optional(v.id('domains')),
+    domainId: v.optional(v.union(v.id('domains'), v.null())),
     weekNumber: v.optional(v.number()),
     dayOfWeek: v.optional(
       v.union(

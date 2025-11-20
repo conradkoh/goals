@@ -152,12 +152,13 @@ export function AdhocGoalList({
     goalId: Id<'goals'>,
     title: string,
     details?: string,
-    dueDate?: number
+    dueDate?: number,
+    domainId?: Id<'domains'> | null
   ) => {
     if (!onUpdateGoal) return;
 
     try {
-      await onUpdateGoal(goalId, { title, details, dueDate });
+      await onUpdateGoal(goalId, { title, details, dueDate, domainId });
     } catch (error) {
       console.error('Failed to update adhoc goal:', error);
     }

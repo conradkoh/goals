@@ -182,8 +182,14 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
    * Handles updating adhoc goals.
    */
   const _handleUpdateAdhocGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-      await updateAdhocGoal(goalId, { title, details, dueDate });
+    async (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null
+    ) => {
+      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
     },
     [updateAdhocGoal]
   );

@@ -1,21 +1,32 @@
+import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { CalendarIcon, Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useToast } from '@/components/ui/use-toast';
+import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/modules/auth/useSession';
 
 interface GoalEditPopoverProps {
   title: string;
   details?: string;
-  onSave: (title: string, details: string, dueDate?: number) => Promise<void>;
+  onSave: (
+    title: string,
+    details: string,
+    dueDate?: number,
+    domainId?: Id<'domains'> | null
+  ) => Promise<void>;
   trigger?: React.ReactNode;
   initialDueDate?: number;
+  initialDomainId?: Id<'domains'> | null;
+  showDomainSelector?: boolean; // Whether to show the domain selector (for adhoc goals)
 }
 
 export function GoalEditPopover({
@@ -24,6 +35,8 @@ export function GoalEditPopover({
   onSave,
   trigger,
   initialDueDate,
+  initialDomainId,
+  showDomainSelector = false,
 }: GoalEditPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -31,8 +44,11 @@ export function GoalEditPopover({
   const [dueDate, setDueDate] = useState<Date | undefined>(
     initialDueDate ? new Date(initialDueDate) : undefined
   );
+  const [domainId, setDomainId] = useState<Id<'domains'> | null | undefined>(initialDomainId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { sessionId } = useSession();
+  const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
   // Sync title with external data when it changes or popover opens
   useEffect(() => {
@@ -55,12 +71,20 @@ export function GoalEditPopover({
     }
   }, [isOpen, initialDueDate]);
 
+  // Sync domain when popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setDomainId(initialDomainId);
+    }
+  }, [isOpen, initialDomainId]);
+
   const handleCancel = useCallback(() => {
     setTitle(initialTitle);
     setDetails(initialDetails ?? '');
     setDueDate(initialDueDate ? new Date(initialDueDate) : undefined);
+    setDomainId(initialDomainId);
     setIsOpen(false);
-  }, [initialTitle, initialDetails, initialDueDate]);
+  }, [initialTitle, initialDetails, initialDueDate, initialDomainId]);
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) return;
@@ -70,7 +94,7 @@ export function GoalEditPopover({
       // Optimistically close the dialog immediately
       setIsOpen(false);
       // Then perform the save operation
-      await onSave(title.trim(), details, dueDate?.getTime());
+      await onSave(title.trim(), details, dueDate?.getTime(), domainId);
     } catch (error) {
       console.error('Failed to save goal:', error);
 
@@ -85,7 +109,7 @@ export function GoalEditPopover({
             size="sm"
             onClick={() => {
               // Try again with the same data
-              onSave(title.trim(), details, dueDate?.getTime()).catch((e) =>
+              onSave(title.trim(), details, dueDate?.getTime(), domainId).catch((e) =>
                 console.error('Retry failed:', e)
               );
             }}
@@ -97,7 +121,7 @@ export function GoalEditPopover({
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, details, dueDate, onSave, toast]);
+  }, [title, details, dueDate, domainId, onSave, toast]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -199,6 +223,29 @@ export function GoalEditPopover({
             </PopoverContent>
           </Popover>
         </div>
+        {showDomainSelector && (
+          <div className="space-y-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with DomainSelector below */}
+            <label className="text-sm font-medium text-muted-foreground">Domain</label>
+            <DomainSelector
+              domains={domains}
+              selectedDomainId={domainId === null ? null : domainId}
+              onDomainChange={(newDomainId) => setDomainId(newDomainId as Id<'domains'> | null)}
+              onDomainCreate={async (name, description, color) => {
+                const newDomainId = await createDomain(name, description, color);
+                setDomainId(newDomainId);
+              }}
+              onDomainUpdate={async (domainIdToUpdate, name, description, color) => {
+                await updateDomain(domainIdToUpdate, { name, description, color });
+              }}
+              onDomainDelete={deleteDomain}
+              allowCreate={true}
+              allowEdit={true}
+              placeholder="Select a domain..."
+              className="w-full"
+            />
+          </div>
+        )}
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel

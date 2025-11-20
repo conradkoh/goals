@@ -13,7 +13,13 @@ import { cn } from '@/lib/utils';
 interface AdhocGoalItemProps {
   goal: Doc<'goals'> & { domain?: Doc<'domains'>; isOptimistic?: boolean };
   onCompleteChange?: (goalId: Id<'goals'>, isComplete: boolean) => void;
-  onUpdate?: (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => void;
+  onUpdate?: (
+    goalId: Id<'goals'>,
+    title: string,
+    details?: string,
+    dueDate?: number,
+    domainId?: Id<'domains'> | null
+  ) => void;
   onDelete?: (goalId: Id<'goals'>) => void;
   showDueDate?: boolean;
   showDomain?: boolean;
@@ -35,9 +41,17 @@ export function AdhocGoalItem({
     }
   };
 
-  const handleUpdate = async (title: string, details: string, dueDate?: number) => {
-    onUpdate?.(goal._id, title, details, dueDate);
+  const handleUpdate = async (
+    title: string,
+    details: string,
+    dueDate?: number,
+    domainId?: Id<'domains'> | null
+  ) => {
+    onUpdate?.(goal._id, title, details, dueDate, domainId);
   };
+
+  // Get the effective domain ID (prefer goal.domainId, fallback to goal.adhoc.domainId)
+  const effectiveDomainId = goal.domainId || goal.adhoc?.domainId || null;
 
   const formatDueDate = (timestamp: number) => {
     return format(new Date(timestamp), 'MMM d, yyyy');
@@ -66,6 +80,8 @@ export function AdhocGoalItem({
             title={goal.title}
             details={goal.details}
             initialDueDate={goal.adhoc?.dueDate}
+            initialDomainId={effectiveDomainId}
+            showDomainSelector={true}
             onSave={handleUpdate}
             trigger={
               <button
@@ -144,6 +160,8 @@ export function AdhocGoalItem({
                   title={goal.title}
                   details={goal.details}
                   initialDueDate={goal.adhoc?.dueDate}
+                  initialDomainId={effectiveDomainId}
+                  showDomainSelector={true}
                   onSave={handleUpdate}
                   trigger={
                     <button

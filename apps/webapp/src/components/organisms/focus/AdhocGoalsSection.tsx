@@ -228,10 +228,11 @@ export function AdhocGoalsSection({
     goalId: Id<'goals'>,
     title: string,
     details?: string,
-    dueDate?: number
+    dueDate?: number,
+    domainId?: Id<'domains'> | null
   ) => {
     try {
-      await updateAdhocGoal(goalId, { title, details, dueDate });
+      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
     } catch (error) {
       console.error('Failed to update adhoc goal:', error);
     }

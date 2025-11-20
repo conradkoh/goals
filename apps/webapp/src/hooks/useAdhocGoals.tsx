@@ -48,7 +48,7 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     updates: {
       title?: string;
       details?: string;
-      domainId?: Id<'domains'>;
+      domainId?: Id<'domains'> | null;
       weekNumber?: number;
       dayOfWeek?: DayOfWeek;
       dueDate?: number;
