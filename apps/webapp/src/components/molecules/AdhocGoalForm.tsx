@@ -31,7 +31,7 @@ interface AdhocGoalFormProps {
     dueDate?: number;
   }) => Promise<void>;
   onCancel?: () => void;
-  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<void>;
+  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<Id<'domains'>>;
   onDomainUpdate?: (
     domainId: Id<'domains'>,
     name: string,
@@ -98,8 +98,11 @@ export function AdhocGoalForm({
 
   const handleDomainCreate = async (name: string, description?: string, color?: string) => {
     if (onDomainCreate) {
-      await onDomainCreate(name, description, color);
+      const newDomainId = await onDomainCreate(name, description, color);
+      setDomainId(newDomainId);
+      return newDomainId;
     }
+    throw new Error('Domain creation handler not provided');
   };
 
   return (

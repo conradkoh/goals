@@ -248,9 +248,12 @@ export function AdhocGoalsSection({
 
   const handleDomainCreate = async (name: string, description?: string, color?: string) => {
     try {
-      await createDomain(name, description, color);
+      const newDomainId = await createDomain(name, description, color);
+      setSelectedDomainId(newDomainId);
+      return newDomainId;
     } catch (error) {
       console.error('Failed to create domain:', error);
+      throw error;
     }
   };
 

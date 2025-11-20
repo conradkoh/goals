@@ -234,6 +234,7 @@ export function GoalEditPopover({
               onDomainCreate={async (name, description, color) => {
                 const newDomainId = await createDomain(name, description, color);
                 setDomainId(newDomainId);
+                return newDomainId;
               }}
               onDomainUpdate={async (domainIdToUpdate, name, description, color) => {
                 await updateDomain(domainIdToUpdate, { name, description, color });

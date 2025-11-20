@@ -51,7 +51,7 @@ export default function AdhocGoalsPage() {
   };
 
   const handleDomainCreate = async (name: string, description?: string, color?: string) => {
-    await createDomain(name, description, color);
+    return await createDomain(name, description, color);
   };
 
   return (

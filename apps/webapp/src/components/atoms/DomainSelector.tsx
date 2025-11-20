@@ -43,7 +43,7 @@ interface DomainSelectorProps {
   domains: Doc<'domains'>[];
   selectedDomainId?: string | null;
   onDomainChange: (domainId: string | null) => void;
-  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<void>;
+  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<Id<'domains'>>;
   onDomainUpdate?: (
     domainId: Id<'domains'>,
     name: string,
@@ -83,7 +83,12 @@ export function DomainSelector({
     if (!newDomainName.trim() || !onDomainCreate) return;
 
     try {
-      await onDomainCreate(newDomainName.trim(), newDomainDescription.trim(), newDomainColor);
+      const newDomainId = await onDomainCreate(
+        newDomainName.trim(),
+        newDomainDescription.trim(),
+        newDomainColor
+      );
+      onDomainChange(newDomainId);
       setNewDomainName('');
       setNewDomainDescription('');
       setNewDomainColor(COLOR_PRESETS[7].value);

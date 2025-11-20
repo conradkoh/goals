@@ -39,7 +39,7 @@ interface AdhocGoalListProps {
     }
   ) => Promise<void>;
   onDeleteGoal?: (goalId: Id<'goals'>) => Promise<void>;
-  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<void>;
+  onDomainCreate?: (name: string, description?: string, color?: string) => Promise<Id<'domains'>>;
   onDomainUpdate?: (
     domainId: Id<'domains'>,
     name: string,

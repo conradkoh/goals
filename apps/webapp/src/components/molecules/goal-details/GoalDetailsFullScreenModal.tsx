@@ -229,6 +229,7 @@ const GoalEditModalContent: React.FC<{
                 onDomainCreate={async (name, description, color) => {
                   const newDomainId = await createDomain(name, description, color);
                   setEditDomainId(newDomainId);
+                  return newDomainId;
                 }}
                 onDomainUpdate={async (domainId, name, description, color) => {
                   await updateDomain(domainId, { name, description, color });
