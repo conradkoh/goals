@@ -65,6 +65,20 @@ const GoalEditModalContent: React.FC<{
   // Check if the goal is an adhoc goal (depth === -1)
   const isAdhocGoal = editingGoal?.depth === -1;
 
+  // Debug logging
+  React.useEffect(() => {
+    if (isEditing && editingGoal) {
+      console.log('[GoalEditModalContent] Goal info:', {
+        goalId: editingGoal._id,
+        depth: editingGoal.depth,
+        isAdhocGoal,
+        hasAdhoc: !!editingGoal.adhoc,
+        domainId: editingGoal.domainId,
+        adhocDomainId: editingGoal.adhoc?.domainId,
+      });
+    }
+  }, [isEditing, editingGoal, isAdhocGoal]);
+
   // Initialize form data and preserve it across re-renders
   React.useEffect(() => {
     if (isEditing && editingGoal && !hasInitialized) {
