@@ -18,7 +18,8 @@ export type GoalUpdateHandler = (
   goalId: Id<'goals'>,
   title: string,
   details: string | undefined,
-  dueDate: number | undefined
+  dueDate: number | undefined,
+  domainId?: Id<'domains'> | null
 ) => Promise<void>;
 
 /**
@@ -32,7 +33,8 @@ export type GoalUpdateHandler = (
 export type GoalSaveHandler = (
   title: string,
   details: string | undefined,
-  dueDate: number | undefined
+  dueDate: number | undefined,
+  domainId?: Id<'domains'> | null
 ) => Promise<void>;
 
 /**

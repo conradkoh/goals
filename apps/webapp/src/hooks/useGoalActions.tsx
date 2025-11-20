@@ -172,11 +172,13 @@ export const useGoalActions = () => {
         title,
         details,
         dueDate,
+        domainId,
       }: {
         goalId: Id<'goals'>;
         title: string;
         details?: string;
         dueDate?: number;
+        domainId?: Id<'domains'> | null;
       }) => {
         console.log('[useGoalActions] updateQuarterlyGoalTitle called:', {
           goalId,
@@ -186,6 +188,8 @@ export const useGoalActions = () => {
           hasDueDate: dueDate !== undefined,
           dueDate,
           dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+          hasDomainId: domainId !== undefined,
+          domainId,
         });
         await updateQuarterlyGoalTitleMutation({
           sessionId,
@@ -193,6 +197,7 @@ export const useGoalActions = () => {
           title,
           details,
           dueDate,
+          domainId,
           // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
         } as any);
         console.log('[useGoalActions] updateQuarterlyGoalTitle completed');

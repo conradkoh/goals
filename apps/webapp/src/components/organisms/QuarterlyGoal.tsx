@@ -52,8 +52,8 @@ export function QuarterlyGoal({ onToggleStatus, onUpdateGoal }: QuarterlyGoalPro
   );
 
   const handleSaveGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(goal._id, title, details, dueDate);
+    async (title: string, details?: string, dueDate?: number, domainId?: Id<'domains'> | null) => {
+      await onUpdateGoal(goal._id, title, details, dueDate, domainId);
     },
     [goal._id, onUpdateGoal]
   );

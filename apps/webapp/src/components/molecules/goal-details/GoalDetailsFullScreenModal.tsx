@@ -1,7 +1,9 @@
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { CalendarIcon, Pin, Star, X } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { useCallback, useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -21,11 +23,13 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
+import { useSession } from '@/modules/auth/useSession';
 import { GoalActionMenu } from './GoalActionMenu';
 import { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
 import { GoalDetailsContent } from './GoalDetailsContent';
@@ -46,14 +50,20 @@ const GoalEditModalContent: React.FC<{
   const [editTitle, setEditTitle] = useState('');
   const [editDetails, setEditDetails] = useState('');
   const [editDueDate, setEditDueDate] = useState<Date | undefined>(undefined);
+  const [editDomainId, setEditDomainId] = useState<Id<'domains'> | null | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
+  const { sessionId } = useSession();
+  const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
   const handleKeyDown = useFormSubmitShortcut({
     onSubmit: handleSave,
     shouldPreventDefault: true,
   });
+
+  // Check if the goal is an adhoc goal (depth === -1)
+  const isAdhocGoal = editingGoal?.depth === -1;
 
   // Initialize form data and preserve it across re-renders
   React.useEffect(() => {
@@ -64,10 +74,13 @@ const GoalEditModalContent: React.FC<{
         hasDueDate: !!editingGoal.dueDate,
         dueDate: editingGoal.dueDate,
         dueDateAsDate: editingGoal.dueDate ? new Date(editingGoal.dueDate) : undefined,
+        hasDomainId: !!editingGoal.domainId,
+        domainId: editingGoal.domainId,
       });
       setEditTitle(editingGoal.title);
       setEditDetails(editingGoal.details || '');
       setEditDueDate(editingGoal.dueDate ? new Date(editingGoal.dueDate) : undefined);
+      setEditDomainId(editingGoal.domainId || null);
       setHasInitialized(true);
     }
   }, [isEditing, editingGoal, hasInitialized]);
@@ -102,17 +115,20 @@ const GoalEditModalContent: React.FC<{
       dueDate: editDueDate,
       dueDateTimestamp,
       dueDateFormatted: editDueDate ? editDueDate.toISOString() : undefined,
+      hasDomainId: editDomainId !== undefined,
+      domainId: editDomainId,
     });
 
     setIsSubmitting(true);
     try {
-      await onSave(trimmedTitle, editDetails, dueDateTimestamp);
+      await onSave(trimmedTitle, editDetails, dueDateTimestamp, editDomainId);
       console.log('[GoalDetailsFullScreenModal] Save successful');
       stopEditing();
       // Clear form state after successful save
       setEditTitle('');
       setEditDetails('');
       setEditDueDate(undefined);
+      setEditDomainId(undefined);
       setHasInitialized(false);
       toast({
         title: 'Success',
@@ -202,6 +218,29 @@ const GoalEditModalContent: React.FC<{
               </PopoverContent>
             </Popover>
           </div>
+          {isAdhocGoal && (
+            <div className="space-y-2">
+              {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with DomainSelector below */}
+              <label className="text-sm font-medium">Domain</label>
+              <DomainSelector
+                domains={domains}
+                selectedDomainId={editDomainId === null ? null : editDomainId}
+                onDomainChange={(domainId) => setEditDomainId(domainId as Id<'domains'> | null)}
+                onDomainCreate={async (name, description, color) => {
+                  const newDomainId = await createDomain(name, description, color);
+                  setEditDomainId(newDomainId);
+                }}
+                onDomainUpdate={async (domainId, name, description, color) => {
+                  await updateDomain(domainId, { name, description, color });
+                }}
+                onDomainDelete={deleteDomain}
+                allowCreate={true}
+                allowEdit={true}
+                placeholder="Select a domain..."
+                className="w-full"
+              />
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               Cancel
