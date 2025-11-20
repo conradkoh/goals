@@ -93,8 +93,9 @@ export const createAdhocGoal = mutation({
       quarter: Math.ceil((new Date().getMonth() + 1) / 3), // Current quarter (used for general partitioning)
       title: title.trim(),
       details: details?.trim(),
+      domainId: domainId || undefined, // Store domain at goal level
       adhoc: {
-        domainId: domainId || undefined,
+        domainId: domainId || undefined, // Keep for backward compatibility
         year: adhocYear, // Store year in adhoc object for querying
         weekNumber,
         dayOfWeek,
@@ -213,6 +214,10 @@ export const updateAdhocGoal = mutation({
     const goalUpdates: Partial<Doc<'goals'>> = {};
     if (title !== undefined) goalUpdates.title = title.trim();
     if (details !== undefined) goalUpdates.details = details?.trim();
+    if (domainId !== undefined) {
+      // Update domain at goal level
+      goalUpdates.domainId = domainId === null ? undefined : domainId;
+    }
     if (isComplete !== undefined) {
       goalUpdates.isComplete = isComplete;
       goalUpdates.completedAt = isComplete ? Date.now() : undefined;
@@ -227,7 +232,12 @@ export const updateAdhocGoal = mutation({
     ) {
       const currentAdhoc = goal.adhoc || {};
       const adhocUpdates = {
-        domainId: domainId !== undefined ? domainId : currentAdhoc.domainId,
+        domainId:
+          domainId !== undefined
+            ? domainId === null
+              ? undefined
+              : domainId
+            : currentAdhoc.domainId, // Keep for backward compatibility
         year: currentAdhoc.year || getISOWeekYear(new Date()), // Preserve existing year or calculate
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
         dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
@@ -343,8 +353,13 @@ export const getAdhocGoalsForWeek = query({
       .collect();
 
     // Get domain information for goals that have domains
+    // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
+      ...new Set(
+        adhocGoals
+          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .filter(Boolean) as Id<'domains'>[]
+      ),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -352,10 +367,13 @@ export const getAdhocGoalsForWeek = query({
     );
 
     // Combine goals with domain information
-    return adhocGoals.map((goal) => ({
-      ...goal,
-      domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
-    }));
+    return adhocGoals.map((goal) => {
+      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      return {
+        ...goal,
+        domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+      };
+    });
   },
 });
 
@@ -400,8 +418,13 @@ export const getAdhocGoalsForDay = query({
     );
 
     // Get domain information for goals that have domains
+    // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
+      ...new Set(
+        adhocGoals
+          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .filter(Boolean) as Id<'domains'>[]
+      ),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -409,10 +432,13 @@ export const getAdhocGoalsForDay = query({
     );
 
     // Combine goals with domain information
-    return adhocGoals.map((goal) => ({
-      ...goal,
-      domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
-    }));
+    return adhocGoals.map((goal) => {
+      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      return {
+        ...goal,
+        domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+      };
+    });
   },
 });
 
@@ -443,8 +469,13 @@ export const getAllAdhocGoals = query({
     const adhocGoals = allGoals.filter((goal) => goal.adhoc !== undefined);
 
     // Get domain information for goals that have domains
+    // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(adhocGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]),
+      ...new Set(
+        adhocGoals
+          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .filter(Boolean) as Id<'domains'>[]
+      ),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -452,10 +483,13 @@ export const getAllAdhocGoals = query({
     );
 
     // Combine goals with domain information
-    return adhocGoals.map((goal) => ({
-      ...goal,
-      domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
-    }));
+    return adhocGoals.map((goal) => {
+      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      return {
+        ...goal,
+        domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+      };
+    });
   },
 });
 
@@ -513,9 +547,12 @@ export const moveAdhocGoalsFromWeek = mutation({
       .collect();
 
     // Get domain information for preview
+    // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
       ...new Set(
-        incompleteGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]
+        incompleteGoals
+          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .filter(Boolean) as Id<'domains'>[]
       ),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
@@ -529,10 +566,13 @@ export const moveAdhocGoalsFromWeek = mutation({
         canMove: incompleteGoals.length > 0,
         from: { year: from.year, weekNumber: from.weekNumber },
         to: { year: to.year, weekNumber: to.weekNumber },
-        goals: incompleteGoals.map((goal) => ({
-          ...goal,
-          domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
-        })),
+        goals: incompleteGoals.map((goal) => {
+          const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+          return {
+            ...goal,
+            domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+          };
+        }),
       };
     }
 
@@ -646,9 +686,12 @@ export const moveAdhocGoalsFromDay = mutation({
     const incompleteGoals = weekGoals.filter((goal) => goal.adhoc?.dayOfWeek === from.dayOfWeek);
 
     // Get domain information for preview
+    // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
       ...new Set(
-        incompleteGoals.map((goal) => goal.adhoc?.domainId).filter(Boolean) as Id<'domains'>[]
+        incompleteGoals
+          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .filter(Boolean) as Id<'domains'>[]
       ),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
@@ -662,10 +705,13 @@ export const moveAdhocGoalsFromDay = mutation({
         canMove: incompleteGoals.length > 0,
         from: { year: from.year, weekNumber: from.weekNumber, dayOfWeek: from.dayOfWeek },
         to: { year: to.year, weekNumber: to.weekNumber, dayOfWeek: to.dayOfWeek },
-        goals: incompleteGoals.map((goal) => ({
-          ...goal,
-          domain: goal.adhoc?.domainId ? domainMap.get(goal.adhoc.domainId) : undefined,
-        })),
+        goals: incompleteGoals.map((goal) => {
+          const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+          return {
+            ...goal,
+            domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+          };
+        }),
       };
     }
 

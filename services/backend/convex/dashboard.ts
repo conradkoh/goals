@@ -975,14 +975,17 @@ export const getQuarterSummary = query({
           // Check if UNCATEGORIZED is in the selection
           const includeUncategorized = adhocDomainIds.some((id) => id === 'UNCATEGORIZED');
 
+          // Get effective domain ID (goal.domainId with fallback to goal.adhoc.domainId)
+          const effectiveDomainId = goal.domainId || goal.adhoc.domainId;
+
           // If goal has no domain
-          if (!goal.adhoc.domainId) {
+          if (!effectiveDomainId) {
             // Include it only if UNCATEGORIZED is selected
             return includeUncategorized;
           }
 
           // If goal has a domain, check if it's in the selected domains
-          return adhocDomainIds.includes(goal.adhoc.domainId);
+          return adhocDomainIds.includes(effectiveDomainId);
         }
         return true;
       });

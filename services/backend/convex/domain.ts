@@ -166,8 +166,13 @@ export const deleteDomain = mutation({
       });
     }
 
-    // Check if any adhoc goals are using this domain
-    const adhocGoalsUsingDomain = await ctx.db
+    // Check if any goals are using this domain (check both goal.domainId and goal.adhoc.domainId)
+    const goalsUsingDomainAtGoalLevel = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_domain', (q) => q.eq('userId', userId).eq('domainId', domainId))
+      .collect();
+
+    const goalsUsingDomainInAdhoc = await ctx.db
       .query('goals')
       .withIndex('by_user_and_year_and_quarter', (q) => q.eq('userId', userId))
       .filter((q) =>
@@ -175,10 +180,13 @@ export const deleteDomain = mutation({
       )
       .collect();
 
-    if (adhocGoalsUsingDomain.length > 0) {
+    const totalGoalsUsingDomain =
+      goalsUsingDomainAtGoalLevel.length + goalsUsingDomainInAdhoc.length;
+
+    if (totalGoalsUsingDomain > 0) {
       throw new ConvexError({
         code: 'RESOURCE_IN_USE',
-        message: `Cannot delete domain: ${adhocGoalsUsingDomain.length} adhoc goal(s) are using this domain. Move or delete these goals first.`,
+        message: `Cannot delete domain: ${totalGoalsUsingDomain} goal(s) are using this domain. Move or delete these goals first.`,
       });
     }
 

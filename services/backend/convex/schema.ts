@@ -51,6 +51,7 @@ export default defineSchema({
     title: v.string(),
     details: v.optional(v.string()), // Rich text content for the goal
     dueDate: v.optional(v.number()), // Unix timestamp for due date
+    domainId: v.optional(v.id('domains')), // Domain for categorization (primarily for adhoc goals)
     parentId: v.optional(v.id('goals')),
     inPath: v.string(), //recursive structure
     depth: v.number(), // 0 for quarterly, 1 for weekly, 2 for daily
@@ -61,7 +62,7 @@ export default defineSchema({
     // Adhoc goal fields - grouped into optional object
     adhoc: v.optional(
       v.object({
-        domainId: v.optional(v.id('domains')), // Links to domain (undefined = uncategorized)
+        domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
         year: v.number(), // ISO week year for proper partitioning
         weekNumber: v.number(), // ISO week number (1-53)
         dayOfWeek: v.optional(
@@ -81,7 +82,8 @@ export default defineSchema({
   })
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
     .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
-    .index('by_user_and_adhoc_year_week', ['userId', 'adhoc.year', 'adhoc.weekNumber']),
+    .index('by_user_and_adhoc_year_week', ['userId', 'adhoc.year', 'adhoc.weekNumber'])
+    .index('by_user_and_domain', ['userId', 'domainId']),
 
   // timeseries data for snapshotting
   goalStateByWeek: defineTable({
