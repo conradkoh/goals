@@ -180,9 +180,10 @@ export const updateQuarterlyGoalTitle = mutation({
     title: v.string(),
     details: v.optional(v.string()),
     dueDate: v.optional(v.number()),
+    domainId: v.optional(v.id('domains')),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, title, details, dueDate } = args;
+    const { sessionId, goalId, title, details, dueDate, domainId } = args;
     console.log('[Backend] updateQuarterlyGoalTitle received:', {
       goalId,
       title,
@@ -191,6 +192,8 @@ export const updateQuarterlyGoalTitle = mutation({
       hasDueDate: dueDate !== undefined,
       dueDate,
       dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
+      hasDomainId: domainId !== undefined,
+      domainId,
     });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
@@ -204,19 +207,22 @@ export const updateQuarterlyGoalTitle = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Update the goal title, details, and dueDate
-    // Always include dueDate key to allow unsetting when undefined
+    // Update the goal title, details, dueDate, and domainId
+    // Always include dueDate and domainId keys to allow unsetting when undefined
     const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
       // Include the key even when value is undefined so Convex unsets the optional field
       dueDate,
+      ...(domainId !== undefined ? { domainId } : {}),
     };
     console.log('[Backend] Patching goal with data:', {
       goalId,
       patchData,
       hasDueDate: 'dueDate' in patchData,
       dueDateValue: patchData.dueDate,
+      hasDomainId: 'domainId' in patchData,
+      domainIdValue: patchData.domainId,
     });
     await ctx.db.patch(goalId, patchData);
     console.log('[Backend] updateQuarterlyGoalTitle completed:', goalId);
@@ -232,15 +238,18 @@ export const updateGoalTitle = mutation({
     title: v.string(),
     details: v.optional(v.string()),
     dueDate: v.optional(v.number()),
+    domainId: v.optional(v.id('domains')),
   },
   handler: async (ctx, args) => {
-    const { sessionId, goalId, title, details, dueDate } = args;
+    const { sessionId, goalId, title, details, dueDate, domainId } = args;
     console.log('[Backend] updateGoalTitle received:', {
       goalId,
       title,
       hasDetails: details !== undefined,
       hasDueDate: dueDate !== undefined,
       dueDate,
+      hasDomainId: domainId !== undefined,
+      domainId,
     });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
@@ -254,13 +263,14 @@ export const updateGoalTitle = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Update the goal title, details, and dueDate
-    // Always include dueDate key to allow unsetting when undefined
+    // Update the goal title, details, dueDate, and domainId
+    // Always include dueDate and domainId keys to allow unsetting when undefined
     const patchData = {
       title,
       ...(details !== undefined ? { details } : {}),
       // Include the key even when value is undefined so Convex unsets the optional field
       dueDate,
+      ...(domainId !== undefined ? { domainId } : {}),
     };
     console.log('[Backend] updateGoalTitle patching with:', patchData);
     await ctx.db.patch(goalId, patchData);
