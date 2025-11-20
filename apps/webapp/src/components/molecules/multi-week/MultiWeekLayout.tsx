@@ -6,7 +6,6 @@ import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSectio
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import {
   useWeekWithoutDashboard,
@@ -83,14 +82,12 @@ const WeekCardContent = ({
           </WeekCardSection>
 
           <WeekCardSection title="🚀 Weekly Goals">
-            <FireGoalsProvider>
-              <WeekCardWeeklyGoals
-                weekNumber={week.weekNumber}
-                year={week.year}
-                quarter={week.quarter}
-                isLoading={isLoading}
-              />
-            </FireGoalsProvider>
+            <WeekCardWeeklyGoals
+              weekNumber={week.weekNumber}
+              year={week.year}
+              quarter={week.quarter}
+              isLoading={isLoading}
+            />
           </WeekCardSection>
 
           <WeekCardSection title="📋 Adhoc Tasks">

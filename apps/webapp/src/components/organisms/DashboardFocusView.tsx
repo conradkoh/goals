@@ -5,6 +5,7 @@ import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewMode
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
+import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
@@ -101,69 +102,71 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   );
 
   return (
-    <div id="db-focus-view" className="w-full h-full">
-      <ViewModeKeyboardShortcuts onViewModeChange={onViewModeChange} />
-      <div className="w-full">
-        <FocusMenuBar
-          viewMode={viewMode}
-          selectedWeek={selectedWeekNumber}
-          selectedDay={selectedDayOfWeek}
-          isAtMinBound={isAtMinBound}
-          isAtMaxBound={isAtMaxBound}
-          onPrevious={onPrevious}
-          onNext={onNext}
-          selectedYear={selectedYear}
-          selectedQuarter={selectedQuarter}
-          onViewModeChange={onViewModeChange}
-          onYearQuarterChange={onYearQuarterChange}
-          // Pass props for QuarterActionMenu
-          isFirstQuarter={isFirstQuarter}
-          isMovingGoals={isMovingGoals}
-          handlePreviewGoals={handlePreviewGoals}
-        />
+    <GoalStatusProvider>
+      <div id="db-focus-view" className="w-full h-full">
+        <ViewModeKeyboardShortcuts onViewModeChange={onViewModeChange} />
+        <div className="w-full">
+          <FocusMenuBar
+            viewMode={viewMode}
+            selectedWeek={selectedWeekNumber}
+            selectedDay={selectedDayOfWeek}
+            isAtMinBound={isAtMinBound}
+            isAtMaxBound={isAtMaxBound}
+            onPrevious={onPrevious}
+            onNext={onNext}
+            selectedYear={selectedYear}
+            selectedQuarter={selectedQuarter}
+            onViewModeChange={onViewModeChange}
+            onYearQuarterChange={onYearQuarterChange}
+            // Pass props for QuarterActionMenu
+            isFirstQuarter={isFirstQuarter}
+            isMovingGoals={isMovingGoals}
+            handlePreviewGoals={handlePreviewGoals}
+          />
+        </div>
+        <div className="w-full h-full">
+          {viewMode === 'quarterly' && (
+            <div key={quarterlyViewKey}>
+              <FocusModeQuarterlyView year={selectedYear} quarter={selectedQuarter} />
+            </div>
+          )}
+
+          {viewMode === 'weekly' && weekData && (
+            <div className="w-full h-full md:max-w-4xl mx-auto" key={weeklyViewKey}>
+              <FocusModeWeeklyView
+                weekNumber={selectedWeekNumber}
+                year={selectedYear}
+                quarter={selectedQuarter}
+                weekData={weekData}
+                onJumpToCurrent={handleJumpToCurrentWeek}
+              />
+            </div>
+          )}
+
+          {viewMode === 'daily' && weekData && (
+            <div className="w-full h-full md:max-w-4xl mx-auto" key={dailyViewKey}>
+              <FocusModeDailyView
+                weekNumber={selectedWeekNumber}
+                year={selectedYear}
+                quarter={selectedQuarter}
+                weekData={weekData}
+                selectedDayOfWeek={selectedDayOfWeek}
+                onJumpToCurrent={handleJumpToCurrentDay}
+                isFocusModeEnabled={isFocusModeEnabled}
+              />
+            </div>
+          )}
+
+          {(viewMode === 'weekly' || viewMode === 'daily') && !weekData && (
+            <div className="p-8 text-center bg-white rounded-lg shadow-sm">
+              <p className="text-muted-foreground">Loading week data...</p>
+            </div>
+          )}
+        </div>
+
+        {/* Render the quarter move dialog */}
+        {quarterMoveDialog}
       </div>
-      <div className="w-full h-full">
-        {viewMode === 'quarterly' && (
-          <div key={quarterlyViewKey}>
-            <FocusModeQuarterlyView year={selectedYear} quarter={selectedQuarter} />
-          </div>
-        )}
-
-        {viewMode === 'weekly' && weekData && (
-          <div className="w-full h-full md:max-w-4xl mx-auto" key={weeklyViewKey}>
-            <FocusModeWeeklyView
-              weekNumber={selectedWeekNumber}
-              year={selectedYear}
-              quarter={selectedQuarter}
-              weekData={weekData}
-              onJumpToCurrent={handleJumpToCurrentWeek}
-            />
-          </div>
-        )}
-
-        {viewMode === 'daily' && weekData && (
-          <div className="w-full h-full md:max-w-4xl mx-auto" key={dailyViewKey}>
-            <FocusModeDailyView
-              weekNumber={selectedWeekNumber}
-              year={selectedYear}
-              quarter={selectedQuarter}
-              weekData={weekData}
-              selectedDayOfWeek={selectedDayOfWeek}
-              onJumpToCurrent={handleJumpToCurrentDay}
-              isFocusModeEnabled={isFocusModeEnabled}
-            />
-          </div>
-        )}
-
-        {(viewMode === 'weekly' || viewMode === 'daily') && !weekData && (
-          <div className="p-8 text-center bg-white rounded-lg shadow-sm">
-            <p className="text-muted-foreground">Loading week data...</p>
-          </div>
-        )}
-      </div>
-
-      {/* Render the quarter move dialog */}
-      {quarterMoveDialog}
-    </div>
+    </GoalStatusProvider>
   );
 };

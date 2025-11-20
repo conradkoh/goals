@@ -8,7 +8,7 @@ import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/Focus
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
-import { GoalStatusProvider, useGoalStatus } from '@/contexts/GoalStatusContext';
+import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek, type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
@@ -208,13 +208,11 @@ const FocusModeDailyViewInner = ({
   );
 };
 
-// This is the outer component that provides the FireGoals context
+// This is the outer component that provides the week context
 export const FocusModeDailyView = (props: FocusModeDailyViewProps) => {
   return (
     <WeekProviderWithoutDashboard weekData={props.weekData}>
-      <GoalStatusProvider>
-        <FocusModeDailyViewInner {...props} />
-      </GoalStatusProvider>
+      <FocusModeDailyViewInner {...props} />
     </WeekProviderWithoutDashboard>
   );
 };

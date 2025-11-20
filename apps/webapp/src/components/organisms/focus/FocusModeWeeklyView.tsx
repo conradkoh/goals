@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
@@ -92,13 +91,15 @@ const FocusModeWeeklyViewInner = ({
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">🚀 Weekly Goals</div>
         <WeekProviderWithoutDashboard weekData={weekData}>
-          <FireGoalsProvider>{weeklyGoalsComponent}</FireGoalsProvider>
+          {weeklyGoalsComponent}
         </WeekProviderWithoutDashboard>
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">📋 Adhoc Tasks</div>
-        <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
+        <WeekProviderWithoutDashboard weekData={weekData}>
+          <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
+        </WeekProviderWithoutDashboard>
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
