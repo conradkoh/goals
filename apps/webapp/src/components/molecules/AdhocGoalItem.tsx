@@ -1,6 +1,7 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { format } from 'date-fns';
 import { Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
 import { DomainBadge } from '@/components/atoms/DomainBadge';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
@@ -11,9 +12,15 @@ import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { cn } from '@/lib/utils';
 
-interface AdhocGoalItemProps {
+/**
+ * Props for the AdhocGoalItem component.
+ */
+export interface AdhocGoalItemProps {
+  /** The adhoc goal to display with optional domain and optimistic flag */
   goal: Doc<'goals'> & { domain?: Doc<'domains'>; isOptimistic?: boolean };
+  /** Callback fired when the goal's completion status changes */
   onCompleteChange?: (goalId: Id<'goals'>, isComplete: boolean) => void;
+  /** Callback fired when the goal is updated */
   onUpdate?: (
     goalId: Id<'goals'>,
     title: string,
@@ -21,12 +28,20 @@ interface AdhocGoalItemProps {
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => void;
+  /** Callback fired when the goal is deleted */
   onDelete?: (goalId: Id<'goals'>) => void;
+  /** Whether to display the due date in the goal item */
   showDueDate?: boolean;
+  /** Whether to display the domain badge in the goal item */
   showDomain?: boolean;
+  /** Additional CSS classes to apply to the root element */
   className?: string;
 }
 
+/**
+ * Renders an individual adhoc goal item with interactive controls.
+ * Displays goal details via GoalDetailsPopover and provides actions for editing, completing, and deleting.
+ */
 export function AdhocGoalItem({
   goal,
   onCompleteChange,
@@ -36,36 +51,39 @@ export function AdhocGoalItem({
   showDomain = true,
   className,
 }: AdhocGoalItemProps) {
-  const handleCompleteChange = (checked: boolean | 'indeterminate') => {
-    if (checked !== 'indeterminate') {
-      onCompleteChange?.(goal._id, checked);
-    }
-  };
+  const handleCompleteChange = useCallback(
+    (checked: boolean | 'indeterminate') => {
+      if (checked !== 'indeterminate') {
+        onCompleteChange?.(goal._id, checked);
+      }
+    },
+    [goal._id, onCompleteChange]
+  );
 
-  const handleUpdate = async (
-    title: string,
-    details: string | undefined,
-    dueDate?: number,
-    domainId?: Id<'domains'> | null
-  ) => {
-    onUpdate?.(goal._id, title, details, dueDate, domainId);
-  };
+  const handleUpdate = useCallback(
+    async (
+      title: string,
+      details: string | undefined,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null
+    ) => {
+      onUpdate?.(goal._id, title, details, dueDate, domainId);
+    },
+    [goal._id, onUpdate]
+  );
 
-  const handleToggleComplete = async (isComplete: boolean) => {
-    onCompleteChange?.(goal._id, isComplete);
-  };
+  const handleToggleComplete = useCallback(
+    async (isComplete: boolean) => {
+      onCompleteChange?.(goal._id, isComplete);
+    },
+    [goal._id, onCompleteChange]
+  );
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     onDelete?.(goal._id);
-  };
+  }, [goal._id, onDelete]);
 
-  // Get the effective domain ID (prefer goal.domainId, fallback to goal.adhoc.domainId)
   const effectiveDomainId = goal.domainId || goal.adhoc?.domainId || null;
-
-  const formatDueDate = (timestamp: number) => {
-    return format(new Date(timestamp), 'MMM d, yyyy');
-  };
-
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
 
   const additionalContent = (
@@ -73,20 +91,19 @@ export function AdhocGoalItem({
       {showDueDate && goal.adhoc?.dueDate && (
         <div className="flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {formatDueDate(goal.adhoc.dueDate)}
+          {_formatDueDate(goal.adhoc.dueDate)}
         </div>
       )}
       {goal.adhoc?.dayOfWeek && (
         <div className="flex items-center gap-1">
           <Clock className="h-3 w-3" />
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][goal.adhoc.dayOfWeek - 1]}
+          {_formatDayOfWeek(goal.adhoc.dayOfWeek)}
         </div>
       )}
       {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
     </div>
   );
 
-  // Augment the adhoc goal with required fields for GoalDetailsPopover
   const goalWithChildren = {
     ...goal,
     path: '/',
@@ -133,14 +150,14 @@ export function AdhocGoalItem({
                 {showDueDate && goal.adhoc?.dueDate && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    {formatDueDate(goal.adhoc.dueDate)}
+                    {_formatDueDate(goal.adhoc.dueDate)}
                   </div>
                 )}
 
                 {goal.adhoc?.dayOfWeek && (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][goal.adhoc.dayOfWeek - 1]}
+                    {_formatDayOfWeek(goal.adhoc.dayOfWeek)}
                   </div>
                 )}
               </div>
@@ -188,4 +205,18 @@ export function AdhocGoalItem({
       </div>
     </GoalProvider>
   );
+}
+
+/**
+ * Formats a Unix timestamp as a date string.
+ */
+function _formatDueDate(timestamp: number): string {
+  return format(new Date(timestamp), 'MMM d, yyyy');
+}
+
+/**
+ * Formats a day of week number (1-7) as a short day name.
+ */
+function _formatDayOfWeek(dayOfWeek: number): string {
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek - 1];
 }

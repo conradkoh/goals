@@ -17,15 +17,26 @@ import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
+/**
+ * Props for the PendingGoalsSection component.
+ */
 interface PendingGoalsSectionProps {
+  /** Array of weekly goals with their parent quarterly goals */
   weeklyGoalsWithQuarterly: Array<{
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
+  /** The currently selected day of the week */
   selectedDayOfWeek: DayOfWeek;
+  /** The ISO week number being displayed */
   weekNumber: number;
 }
 
+/**
+ * Displays goals marked as "pending" (waiting for someone/something) for the selected day.
+ * Shows quarterly, weekly, daily, and adhoc goals that are marked as pending.
+ * Goals are grouped by their hierarchy for better organization.
+ */
 export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
@@ -37,7 +48,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   const { sessionId } = useSession();
   const { adhocGoals, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
 
-  // Group pending goals by quarterly goal
   const pendingGoalsByQuarterly = useMemo(() => {
     if (pendingGoals.size === 0) return null;
 
@@ -56,24 +66,20 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       }
     >();
 
-    // Process weekly goals with daily goals
     weeklyGoalsWithQuarterly.forEach(({ weeklyGoal, quarterlyGoal }) => {
       const quarterlyId = quarterlyGoal._id.toString();
       const weeklyId = weeklyGoal._id.toString();
       const isWeeklyPending = pendingGoalIds.has(weeklyId);
       const weeklyPendingDescription = getPendingDescription(weeklyGoal._id);
 
-      // Filter daily goals for the selected day that are pending
       const pendingDailyGoals = weeklyGoal.children.filter(
         (dailyGoal) =>
           dailyGoal.state?.daily?.dayOfWeek === selectedDayOfWeek &&
           pendingGoalIds.has(dailyGoal._id.toString())
       );
 
-      // Skip if no pending goals in this weekly goal
       if (!isWeeklyPending && pendingDailyGoals.length === 0) return;
 
-      // Initialize quarterly entry if needed
       if (!result.has(quarterlyId)) {
         result.set(quarterlyId, {
           quarterlyGoal,
@@ -81,7 +87,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
         });
       }
 
-      // Find existing weekly goal entry or create a new one
       let weeklyGoalEntry = result
         .get(quarterlyId)
         ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
@@ -95,20 +100,17 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
         };
         result.get(quarterlyId)?.weeklyGoals.push(weeklyGoalEntry);
       } else {
-        // Update pending status if it wasn't already set
         weeklyGoalEntry.isWeeklyPending = weeklyGoalEntry.isWeeklyPending || isWeeklyPending;
         if (weeklyPendingDescription) {
           weeklyGoalEntry.pendingDescription = weeklyPendingDescription;
         }
       }
 
-      // Add daily goals to the weekly goal entry
       if (pendingDailyGoals.length > 0) {
         weeklyGoalEntry.dailyGoals.push(...pendingDailyGoals);
       }
     });
 
-    // Process standalone weekly goals that are pending (those without daily goals for the selected day)
     weeklyGoals
       .filter(
         (goal) =>
@@ -124,7 +126,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
           const quarterlyId = parentQuarterlyGoal._id.toString();
           const weeklyPendingDescription = getPendingDescription(weeklyGoal._id);
 
-          // Initialize quarterly entry if needed
           if (!result.has(quarterlyId)) {
             result.set(quarterlyId, {
               quarterlyGoal: parentQuarterlyGoal,
@@ -132,13 +133,11 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
             });
           }
 
-          // Check if this weekly goal is already in the list
           const existingEntry = result
             .get(quarterlyId)
             ?.weeklyGoals.find((entry) => entry.weeklyGoal._id === weeklyGoal._id);
 
           if (!existingEntry) {
-            // Add weekly goal
             result.get(quarterlyId)?.weeklyGoals.push({
               weeklyGoal,
               dailyGoals: [],
@@ -146,7 +145,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
               pendingDescription: weeklyPendingDescription,
             });
           } else {
-            // Update pending status
             existingEntry.isWeeklyPending = true;
             if (weeklyPendingDescription) {
               existingEntry.pendingDescription = weeklyPendingDescription;
@@ -164,22 +162,15 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     getPendingDescription,
   ]);
 
-  // Filter pending adhoc goals for the selected day
   const pendingAdhocGoals = useMemo(() => {
     if (pendingGoals.size === 0 || !adhocGoals) return [];
 
     const pendingGoalIds = new Set(pendingGoals.keys());
 
     return adhocGoals.filter((goal) => {
-      // Must be pending
       if (!pendingGoalIds.has(goal._id.toString())) return false;
-
-      // Must be for this week
       if (goal.adhoc?.weekNumber !== weekNumber) return false;
-
-      // Must be for this day OR have no specific day assigned
       if (goal.adhoc?.dayOfWeek && goal.adhoc.dayOfWeek !== selectedDayOfWeek) return false;
-
       return true;
     });
   }, [pendingGoals, adhocGoals, weekNumber, selectedDayOfWeek]);
@@ -191,9 +182,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     [onUpdateGoal]
   );
 
-  /**
-   * Handles updating adhoc goals.
-   */
   const handleUpdateAdhocGoal = useCallback(
     async (
       goalId: Id<'goals'>,
@@ -207,9 +195,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     [updateAdhocGoal]
   );
 
-  /**
-   * Handles adhoc goal completion changes.
-   */
   const handleAdhocCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
       await updateAdhocGoal(goalId, { isComplete });
@@ -217,9 +202,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     [updateAdhocGoal]
   );
 
-  /**
-   * Handles deleting adhoc goals.
-   */
   const handleDeleteAdhocGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       await deleteAdhocGoal(goalId);
@@ -257,7 +239,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
           Array.from(pendingGoalsByQuarterly.entries()).map(
             ([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
               <div key={quarterlyId} className="border-b border-border pb-3 last:border-b-0">
-                {/* Quarterly Goal Header with Popover */}
                 <div className="flex items-center gap-1.5 mb-2">
                   {quarterlyGoal.state?.isStarred && (
                     <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
@@ -283,19 +264,15 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                   </GoalProvider>
                 </div>
 
-                {/* Weekly Goals */}
                 <div className="space-y-2 ml-4">
-                  {/* Render all weekly goals with their associated daily goals */}
                   {weeklyGoals.map(
                     ({ weeklyGoal, dailyGoals, isWeeklyPending, pendingDescription }) => (
                       <div key={`weekly-${weeklyGoal._id.toString()}`}>
-                        {/* Always show the weekly goal if it's pending or has daily goals */}
                         {(isWeeklyPending || dailyGoals.length > 0) && (
                           <div className="mb-1">
                             <GoalProvider goal={weeklyGoal}>
                               <WeeklyGoalTaskItem />
                             </GoalProvider>
-                            {/* Show pending description if available */}
                             {isWeeklyPending && pendingDescription && (
                               <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
                                 <span className="font-medium">Pending:</span> {pendingDescription}
@@ -304,7 +281,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                           </div>
                         )}
 
-                        {/* Daily Goals */}
                         {dailyGoals.length > 0 && (
                           <div className="space-y-1 ml-4">
                             {dailyGoals.map((dailyGoal) => {
@@ -312,10 +288,8 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                               return (
                                 <div key={dailyGoal._id.toString()}>
                                   <GoalProvider goal={dailyGoal}>
-                                    {/* DailyGoalTaskItem gets goal from context */}
                                     <DailyGoalTaskItem />
                                   </GoalProvider>
-                                  {/* Show pending description for daily goal */}
                                   {dailyPendingDescription && (
                                     <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
                                       <span className="font-medium">Pending:</span>{' '}
@@ -335,7 +309,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
             )
           )}
 
-        {/* Adhoc Goals Section */}
         {pendingAdhocGoals.length > 0 && (
           <div className="border-b border-border pb-3 last:border-b-0">
             <div className="flex items-center gap-1.5 mb-2">
@@ -354,7 +327,6 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                       showDueDate={false}
                       showDomain={true}
                     />
-                    {/* Show pending description */}
                     {pendingDescription && (
                       <div className="mt-1 ml-6 text-xs text-orange-600 dark:text-orange-400 italic">
                         <span className="font-medium">Pending:</span> {pendingDescription}
