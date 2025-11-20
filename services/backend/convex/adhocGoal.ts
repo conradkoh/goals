@@ -261,6 +261,17 @@ export const updateAdhocGoal = mutation({
           completedAt: isComplete ? Date.now() : undefined,
         });
       }
+
+      // Remove from fire goals when marked complete
+      if (isComplete) {
+        const existingFireGoal = await ctx.db
+          .query('fireGoals')
+          .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
+          .first();
+        if (existingFireGoal) {
+          await ctx.db.delete(existingFireGoal._id);
+        }
+      }
     }
 
     // Update week/day in adhoc goal state if changed
