@@ -44,11 +44,15 @@ export function AdhocGoalItem({
 
   const handleUpdate = async (
     title: string,
-    details: string,
+    details: string | undefined,
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => {
     onUpdate?.(goal._id, title, details, dueDate, domainId);
+  };
+
+  const handleToggleComplete = async (isComplete: boolean) => {
+    onCompleteChange?.(goal._id, isComplete);
   };
 
   const handleDelete = () => {
@@ -82,8 +86,15 @@ export function AdhocGoalItem({
     </div>
   );
 
+  // Augment the adhoc goal with required fields for GoalDetailsPopover
+  const goalWithChildren = {
+    ...goal,
+    path: '/',
+    children: [],
+  };
+
   return (
-    <GoalProvider goal={goal}>
+    <GoalProvider goal={goalWithChildren}>
       <div
         className={cn(
           'flex items-start gap-2 group/task rounded-sm hover:bg-accent/50 transition-colors py-1',
@@ -104,7 +115,7 @@ export function AdhocGoalItem({
               onSave={handleUpdate}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               titleClassName={cn(goal.isComplete && 'line-through text-muted-foreground')}
-              onToggleComplete={onCompleteChange}
+              onToggleComplete={handleToggleComplete}
               additionalContent={additionalContent}
             />
           ) : (
