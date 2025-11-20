@@ -1,11 +1,10 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { format } from 'date-fns';
-import { Calendar, Clock, Edit2 } from 'lucide-react';
+import { Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
 import { DomainBadge } from '@/components/atoms/DomainBadge';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
-import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
@@ -48,6 +47,10 @@ export function AdhocGoalItem({
     domainId?: Id<'domains'> | null
   ) => {
     onUpdate?.(goal._id, title, details, dueDate, domainId);
+  };
+
+  const handleDelete = () => {
+    onDelete?.(goal._id);
   };
 
   // Get the effective domain ID (prefer goal.domainId, fallback to goal.adhoc.domainId)
@@ -173,7 +176,15 @@ export function AdhocGoalItem({
                   }
                 />
               )}
-              {onDelete && <DeleteGoalIconButton requireConfirmation={false} goalId={goal._id} />}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
             </>
           )}
         </div>
