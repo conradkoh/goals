@@ -928,11 +928,17 @@ export const getQuarterSummary = query({
         }
       }
 
+      // If the goal wasn't found in any week data, it means it has no weekly goals assigned yet
+      // In this case, use the quarterly goal data we already fetched
       if (!quarterlyGoalDetails) {
-        throw new ConvexError({
-          code: 'NOT_FOUND',
-          message: `Quarterly goal ${goalId} not found in any week data`,
-        });
+        quarterlyGoalDetails = {
+          _id: quarterlyGoal._id,
+          title: quarterlyGoal.title,
+          details: quarterlyGoal.details,
+          isComplete: quarterlyGoal.isComplete,
+          completedAt: quarterlyGoal.completedAt,
+          state: undefined, // No state since it's not in any week
+        };
       }
 
       return {
