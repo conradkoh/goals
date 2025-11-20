@@ -192,6 +192,7 @@ const FocusModeDailyViewInner = ({
         <PendingGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
           selectedDayOfWeek={selectedDayOfWeek}
+          weekNumber={weekNumber}
         />
 
         {!shouldHideContent && (
