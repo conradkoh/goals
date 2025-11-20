@@ -156,6 +156,9 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       // Must be on fire
       if (!fireGoals.has(goal._id.toString())) return false;
 
+      // Must not be complete
+      if (goal.isComplete) return false;
+
       // Must be for this week
       if (goal.adhoc?.weekNumber !== weekNumber) return false;
 
