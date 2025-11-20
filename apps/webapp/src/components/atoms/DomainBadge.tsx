@@ -32,7 +32,7 @@ export function DomainBadge({ domain, className, showUncategorized = true }: Dom
         className
       )}
       style={{
-        backgroundColor: domain.color ? `${domain.color}20` : undefined,
+        backgroundColor: domain.color ? `${domain.color}40` : undefined,
         color: domain.color || undefined,
       }}
     >

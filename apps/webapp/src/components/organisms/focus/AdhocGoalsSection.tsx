@@ -87,8 +87,8 @@ function _getDomainPillColors(domainColor?: string): {
 
   return {
     foreground: textColor,
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`,
-    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`,
+    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`,
+    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`,
     dotColor: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
   };
 }
