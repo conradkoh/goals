@@ -19,8 +19,8 @@ export interface QuarterSummaryResultsProps {
   quarter: number;
   /** Whether to include adhoc goals in the results */
   includeAdhocGoals?: boolean;
-  /** Optional array of domain IDs to filter adhoc goals */
-  adhocDomainIds?: Id<'domains'>[];
+  /** Optional array of domain IDs to filter adhoc goals (can include 'UNCATEGORIZED') */
+  adhocDomainIds?: (Id<'domains'> | 'UNCATEGORIZED')[];
   /** Actions available for goals in the summary */
   goalActions?: SummaryGoalActions;
   /** Optional CSS class name for custom styling */

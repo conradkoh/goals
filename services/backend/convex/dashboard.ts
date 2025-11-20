@@ -848,7 +848,7 @@ export const getQuarterSummary = query({
     quarter: v.number(),
     selectedQuarterlyGoalIds: v.optional(v.array(v.id('goals'))),
     includeAdhocGoals: v.optional(v.boolean()),
-    adhocDomainIds: v.optional(v.array(v.id('domains'))),
+    adhocDomainIds: v.optional(v.array(v.union(v.id('domains'), v.literal('UNCATEGORIZED')))),
   },
   handler: async (ctx, args) => {
     const {
@@ -972,12 +972,17 @@ export const getQuarterSummary = query({
         if (!goal.adhoc) return false;
         // Filter by domain if specific domains are selected
         if (adhocDomainIds && adhocDomainIds.length > 0) {
-          // If goal has no domain, it shouldn't be included if we are filtering by domain
-          // UNLESS we want to include "No Domain" as a selection option?
-          // For now, assume filtering strictly by provided IDs.
-          // If we want to include goals with NO domain, we might need a special value or handle it.
-          // Let's assume if domainIds are provided, we ONLY show goals matching those IDs.
-          return goal.adhoc.domainId && adhocDomainIds.includes(goal.adhoc.domainId);
+          // Check if UNCATEGORIZED is in the selection
+          const includeUncategorized = adhocDomainIds.some((id) => id === 'UNCATEGORIZED');
+
+          // If goal has no domain
+          if (!goal.adhoc.domainId) {
+            // Include it only if UNCATEGORIZED is selected
+            return includeUncategorized;
+          }
+
+          // If goal has a domain, check if it's in the selected domains
+          return adhocDomainIds.includes(goal.adhoc.domainId);
         }
         return true;
       });

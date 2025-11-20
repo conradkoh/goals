@@ -54,16 +54,16 @@ export default function MultiGoalQuarterlySummaryPage() {
   const { sessionId } = useSession();
   const { domains } = useDomains(sessionId);
 
-  // Get selected adhoc domain IDs from URL params
-  const [selectedAdhocDomainIds, setSelectedAdhocDomainIds] = React.useState<Id<'domains'>[]>(
-    () => {
-      const domainsParam = searchParams.get('adhocDomains');
-      if (domainsParam) {
-        return domainsParam.split(',') as Id<'domains'>[];
-      }
-      return [];
+  // Get selected adhoc domain IDs from URL params (can include 'UNCATEGORIZED')
+  const [selectedAdhocDomainIds, setSelectedAdhocDomainIds] = React.useState<
+    (Id<'domains'> | 'UNCATEGORIZED')[]
+  >(() => {
+    const domainsParam = searchParams.get('adhocDomains');
+    if (domainsParam) {
+      return domainsParam.split(',') as (Id<'domains'> | 'UNCATEGORIZED')[];
     }
-  );
+    return [];
+  });
 
   const goalActions = useSummaryGoalActions();
 

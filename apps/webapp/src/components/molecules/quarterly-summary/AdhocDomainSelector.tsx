@@ -23,10 +23,10 @@ export interface Domain {
 export interface AdhocDomainSelectorProps {
   /** List of available domains to select from */
   domains: Domain[];
-  /** Currently selected domain IDs */
-  selectedDomainIds: Id<'domains'>[];
+  /** Currently selected domain IDs (can include 'UNCATEGORIZED' for uncategorized goals) */
+  selectedDomainIds: (Id<'domains'> | 'UNCATEGORIZED')[];
   /** Callback fired when domain selection changes */
-  onSelectionChange: (ids: Id<'domains'>[]) => void;
+  onSelectionChange: (ids: (Id<'domains'> | 'UNCATEGORIZED')[]) => void;
   /** Optional CSS class name for custom styling */
   className?: string;
 }
@@ -55,7 +55,7 @@ export function AdhocDomainSelector({
    * Handles toggling a single domain's selection state.
    */
   const handleDomainToggle = React.useCallback(
-    (domainId: Id<'domains'>, checked: boolean) => {
+    (domainId: Id<'domains'> | 'UNCATEGORIZED', checked: boolean) => {
       if (checked) {
         onSelectionChange([...selectedDomainIds, domainId]);
       } else {
@@ -66,11 +66,11 @@ export function AdhocDomainSelector({
   );
 
   /**
-   * Selects all available domains.
+   * Selects all available domains including uncategorized.
    */
   const handleSelectAll = React.useCallback(() => {
     if (domains) {
-      onSelectionChange(domains.map((domain) => domain._id));
+      onSelectionChange([...domains.map((domain) => domain._id), 'UNCATEGORIZED']);
     }
   }, [domains, onSelectionChange]);
 
@@ -82,10 +82,15 @@ export function AdhocDomainSelector({
   }, [onSelectionChange]);
 
   /**
-   * Determines if all domains are currently selected.
+   * Determines if all domains (including uncategorized) are currently selected.
    */
   const isAllSelected = React.useMemo(() => {
-    return domains && domains.length > 0 && domains.every((d) => selectedDomainIds.includes(d._id));
+    return (
+      domains &&
+      domains.length > 0 &&
+      domains.every((d) => selectedDomainIds.includes(d._id)) &&
+      selectedDomainIds.includes('UNCATEGORIZED')
+    );
   }, [domains, selectedDomainIds]);
 
   /**
@@ -99,11 +104,13 @@ export function AdhocDomainSelector({
     return null;
   }
 
+  const totalOptions = domains.length + 1; // +1 for uncategorized
+
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-900">
-          Filter by Domain ({selectedDomainIds.length} of {domains.length} selected)
+          Filter by Domain ({selectedDomainIds.length} of {totalOptions} selected)
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -158,6 +165,22 @@ export function AdhocDomainSelector({
             </div>
           );
         })}
+
+        {/* Uncategorized option */}
+        <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+          <Checkbox
+            checked={selectedDomainIds.includes('UNCATEGORIZED')}
+            onCheckedChange={(checked) => handleDomainToggle('UNCATEGORIZED', checked === true)}
+            className="flex-shrink-0"
+            id="domain-uncategorized"
+          />
+          <label
+            htmlFor="domain-uncategorized"
+            className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2 flex-1 text-muted-foreground italic"
+          >
+            Uncategorized
+          </label>
+        </div>
       </div>
     </div>
   );
