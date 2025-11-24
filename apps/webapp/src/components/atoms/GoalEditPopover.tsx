@@ -1,4 +1,4 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { CalendarIcon, Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';

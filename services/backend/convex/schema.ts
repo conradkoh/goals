@@ -63,7 +63,7 @@ export default defineSchema({
     adhoc: v.optional(
       v.object({
         domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
-        year: v.optional(v.number()), // DEPRECATED: Use goal.year instead - will be removed in future version
+        year: v.optional(v.number()), // DEPRECATED: Use goal.year instead - no longer written, only kept for reading old data
         weekNumber: v.number(), // ISO week number (1-53)
         dayOfWeek: v.optional(
           v.union(
@@ -75,7 +75,7 @@ export default defineSchema({
             v.literal(DayOfWeek.SATURDAY),
             v.literal(DayOfWeek.SUNDAY)
           )
-        ), // DEPRECATED: Adhoc tasks are week-level only - will be removed in future version
+        ), // DEPRECATED: Adhoc tasks are week-level only - no longer written, only kept for reading old data
         dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
       })
     ),
@@ -174,7 +174,7 @@ export default defineSchema({
         v.literal(DayOfWeek.SATURDAY),
         v.literal(DayOfWeek.SUNDAY)
       )
-    ),
+    ), // DEPRECATED: Adhoc tasks are week-level only - no longer written, only kept for reading old data
     isComplete: v.boolean(),
     completedAt: v.optional(v.number()),
   })

@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
-import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 interface AdhocGoalsSectionProps {
@@ -45,7 +44,7 @@ export function AdhocGoalsSection({
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
   // Filter adhoc goals for this specific week
-  const weekGoals = adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
+  const _weekGoals = adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
   const incompleteWeekGoals = incompleteAdhocGoals.filter(
     (goal) => goal.adhoc?.weekNumber === weekNumber
   );
@@ -76,7 +75,7 @@ export function AdhocGoalsSection({
       isComplete: false,
       isOptimistic: true,
       adhoc: {
-        year: currentYear,
+        // year removed - use root goal.year instead
         weekNumber,
         // No dayOfWeek - adhoc tasks are week-level only
         domainId: selectedDomainId || undefined,

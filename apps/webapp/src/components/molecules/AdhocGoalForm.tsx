@@ -9,13 +9,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +36,7 @@ interface AdhocGoalFormProps {
   className?: string;
 }
 
-const DAY_OPTIONS = [
+const _DAY_OPTIONS = [
   { value: DayOfWeek.MONDAY, label: 'Monday' },
   { value: DayOfWeek.TUESDAY, label: 'Tuesday' },
   { value: DayOfWeek.WEDNESDAY, label: 'Wednesday' },
@@ -70,7 +63,7 @@ export function AdhocGoalForm({
     initialGoal?.adhoc?.domainId || null
   );
   const [weekNumber, setWeekNumber] = useState<number | undefined>(initialGoal?.adhoc?.weekNumber);
-  const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek | undefined>(initialGoal?.adhoc?.dayOfWeek);
+  // dayOfWeek removed - adhoc tasks are week-level only
   const [dueDate, setDueDate] = useState<Date | undefined>(
     initialGoal?.adhoc?.dueDate ? new Date(initialGoal.adhoc.dueDate) : undefined
   );
@@ -88,7 +81,7 @@ export function AdhocGoalForm({
         details: details.trim() || undefined,
         domainId: domainId || undefined,
         weekNumber: weekNumber || getCurrentISOWeekNumber(),
-        dayOfWeek,
+        // dayOfWeek removed - adhoc tasks are week-level only
         dueDate: dueDate?.getTime(),
       });
     } finally {
@@ -155,27 +148,7 @@ export function AdhocGoalForm({
           />
         </div>
 
-        <div>
-          <Label>Day of Week (optional)</Label>
-          <Select
-            value={dayOfWeek?.toString() || '__none__'}
-            onValueChange={(value) =>
-              setDayOfWeek(value === '__none__' ? undefined : (Number.parseInt(value) as DayOfWeek))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">No specific day</SelectItem>
-              {DAY_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value.toString()}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Day of Week removed - adhoc tasks are week-level only */}
       </div>
 
       <div>
