@@ -318,81 +318,50 @@ export const WeekCardPreviewDialog = ({
     );
   }
 
-  // Build data for "To Move" tab
-  const toMoveQuarterlyGoals = new Map<string, IndexedGoal>();
-  const toMoveWeeklyGoals = new Map<string, IndexedGoal>();
+  // Index quarterly and weekly goals
+  const quarterlyGoals = new Map<string, IndexedGoal>();
+  const weeklyGoals = new Map<string, IndexedGoal>();
 
-  // Only include quarterly goals that have items being moved (not just status updates)
-  // Build from tasks first
+  // Seed from explicit quarterly goals in preview (quarterly-only updates)
+  (preview?.quarterlyGoals ?? []).forEach((q) => {
+    quarterlyGoals.set(q.id, {
+      id: q.id,
+      title: q.title || 'Unknown Quarterly Goal',
+      isStarred: q.isStarred || false,
+      isPinned: q.isPinned || false,
+    });
+  });
+
+  // First pass: build indices from tasks
   preview?.tasks.forEach((task) => {
-    if (task.quarterlyGoal?.id && !toMoveQuarterlyGoals.has(task.quarterlyGoal.id)) {
-      toMoveQuarterlyGoals.set(task.quarterlyGoal.id, {
+    if (task.quarterlyGoal?.id && !quarterlyGoals.has(task.quarterlyGoal.id)) {
+      quarterlyGoals.set(task.quarterlyGoal.id, {
         id: task.quarterlyGoal.id,
         title: task.quarterlyGoal.title || 'Unknown Quarterly Goal',
         isStarred: task.quarterlyGoal.isStarred || false,
         isPinned: task.quarterlyGoal.isPinned || false,
       });
     }
-    if (task.weeklyGoal?.id && !toMoveWeeklyGoals.has(task.weeklyGoal.id)) {
-      toMoveWeeklyGoals.set(task.weeklyGoal.id, {
+    if (task.weeklyGoal?.id && !weeklyGoals.has(task.weeklyGoal.id)) {
+      weeklyGoals.set(task.weeklyGoal.id, {
         id: task.weeklyGoal.id,
         title: task.weeklyGoal.title || 'Unknown Weekly Goal',
       });
     }
   });
 
-  // Add weekly goals from weekStates (goals being moved)
+  // Add weekly goals from weekStates
   (preview?.weeklyGoals ?? []).forEach((weeklyGoal) => {
     const id = weeklyGoal.carryOver.fromGoal.previousGoalId;
-    if (!toMoveWeeklyGoals.has(id)) {
-      toMoveWeeklyGoals.set(id, {
+    if (!weeklyGoals.has(id)) {
+      weeklyGoals.set(id, {
         id,
         title: weeklyGoal.title,
       });
     }
-    // Add quarterly goal if it has a weekly goal being moved
-    if (weeklyGoal.quarterlyGoalId && !toMoveQuarterlyGoals.has(weeklyGoal.quarterlyGoalId)) {
-      const quarterlyGoalInfo = (preview?.quarterlyGoals ?? []).find(
-        (q) => q.id === weeklyGoal.quarterlyGoalId
-      );
-      if (quarterlyGoalInfo) {
-        toMoveQuarterlyGoals.set(weeklyGoal.quarterlyGoalId, {
-          id: quarterlyGoalInfo.id,
-          title: quarterlyGoalInfo.title,
-          isStarred: quarterlyGoalInfo.isStarred || false,
-          isPinned: quarterlyGoalInfo.isPinned || false,
-        });
-      }
-    }
   });
 
-  // Build data for "Skipped" tab
-  const skippedQuarterlyGoals = new Map<string, IndexedGoal>();
-  const skippedWeeklyGoals = new Map<string, IndexedGoal>();
-
-  (preview?.skippedGoals ?? []).forEach((skippedGoal) => {
-    const id = skippedGoal.carryOver.fromGoal.previousGoalId;
-    skippedWeeklyGoals.set(id, {
-      id,
-      title: skippedGoal.title,
-    });
-    // Add quarterly goal for skipped weekly goals
-    if (skippedGoal.quarterlyGoalId && !skippedQuarterlyGoals.has(skippedGoal.quarterlyGoalId)) {
-      const quarterlyGoalInfo = (preview?.quarterlyGoals ?? []).find(
-        (q) => q.id === skippedGoal.quarterlyGoalId
-      );
-      if (quarterlyGoalInfo) {
-        skippedQuarterlyGoals.set(skippedGoal.quarterlyGoalId, {
-          id: quarterlyGoalInfo.id,
-          title: quarterlyGoalInfo.title,
-          isStarred: quarterlyGoalInfo.isStarred || false,
-          isPinned: quarterlyGoalInfo.isPinned || false,
-        });
-      }
-    }
-  });
-
-  // Group tasks by quarterly and weekly goals for "To Move" tab
+  // Second pass: group tasks by quarterly and weekly goals
   const tasksByGoalId = (preview?.tasks ?? []).reduce<TasksByGoalId>((acc, task) => {
     const quarterlyId = task.quarterlyGoal?.id;
     const weeklyId = task.weeklyGoal?.id;
@@ -401,13 +370,13 @@ export const WeekCardPreviewDialog = ({
     if (!quarterlyId || !weeklyId) return acc;
 
     // Get goals from indices with fallbacks
-    const quarterlyGoal = toMoveQuarterlyGoals.get(quarterlyId) || {
+    const quarterlyGoal = quarterlyGoals.get(quarterlyId) || {
       id: quarterlyId,
       title: 'Unknown Quarterly Goal',
       isStarred: false,
       isPinned: false,
     };
-    const weeklyGoal = toMoveWeeklyGoals.get(weeklyId) || {
+    const weeklyGoal = weeklyGoals.get(weeklyId) || {
       id: weeklyId,
       title: 'Unknown Weekly Goal',
     };
@@ -500,8 +469,8 @@ export const WeekCardPreviewDialog = ({
 
                 <TabsContent value="to-move" className="max-h-[50vh] overflow-y-auto mt-4">
                   <GoalListSection
-                    quarterlyGoals={toMoveQuarterlyGoals}
-                    weeklyGoals={toMoveWeeklyGoals}
+                    quarterlyGoals={quarterlyGoals}
+                    weeklyGoals={weeklyGoals}
                     tasksByGoalId={tasksByGoalId}
                     adhocGoals={preview?.adhocGoals}
                     weeklyGoalsData={preview?.weeklyGoals}
@@ -517,18 +486,26 @@ export const WeekCardPreviewDialog = ({
                           These goals already exist in this week and will not be moved again.
                         </p>
                       </div>
-                      <GoalListSection
-                        quarterlyGoals={skippedQuarterlyGoals}
-                        weeklyGoals={skippedWeeklyGoals}
-                        tasksByGoalId={{}}
-                        adhocGoals={[]}
-                        weeklyGoalsData={preview?.skippedGoals?.map((sg) => ({
-                          title: sg.title,
-                          carryOver: sg.carryOver,
-                          dailyGoalsCount: sg.dailyGoalsCount,
-                          quarterlyGoalId: sg.quarterlyGoalId,
-                        }))}
-                      />
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-sm text-foreground">
+                          Skipped Weekly Goals
+                        </h4>
+                        <div className="space-y-2">
+                          {(preview?.skippedGoals ?? []).map((goal) => (
+                            <div
+                              key={`skipped-${goal.id}`}
+                              className="px-2 py-1 rounded-md bg-muted dark:bg-muted/50 border border-border"
+                            >
+                              <div className="font-medium text-sm text-muted-foreground break-words">
+                                {goal.title}
+                                <span className="text-xs ml-2">
+                                  (Week {goal.carryOver.numWeeks})
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">

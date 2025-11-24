@@ -110,7 +110,7 @@ export const createAdhocGoal = mutation({
       adhoc: {
         domainId: domainId || undefined, // Keep for backward compatibility
         weekNumber,
-        dayOfWeek,
+        // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate,
       },
       inPath: '/', // Adhoc goals don't use hierarchical paths
@@ -124,7 +124,7 @@ export const createAdhocGoal = mutation({
       goalId,
       year: adhocYear,
       weekNumber,
-      dayOfWeek,
+      // dayOfWeek: removed - adhoc tasks are week-level only
       isComplete: false,
     });
 
@@ -239,7 +239,7 @@ export const updateAdhocGoal = mutation({
     if (
       domainId !== undefined ||
       weekNumber !== undefined ||
-      dayOfWeek !== undefined ||
+      // dayOfWeek removed - ignored parameter
       dueDate !== undefined
     ) {
       const currentAdhoc = goal.adhoc || {};
@@ -251,7 +251,7 @@ export const updateAdhocGoal = mutation({
               : domainId
             : currentAdhoc.domainId, // Keep for backward compatibility
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
-        dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
+        // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
       };
       goalUpdates.adhoc = adhocUpdates;

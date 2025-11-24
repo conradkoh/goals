@@ -75,7 +75,7 @@ export default defineSchema({
             v.literal(DayOfWeek.SATURDAY),
             v.literal(DayOfWeek.SUNDAY)
           )
-        ),
+        ), // DEPRECATED: Adhoc tasks are week-level only - will be removed in future version
         dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
       })
     ),
