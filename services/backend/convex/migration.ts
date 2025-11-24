@@ -191,6 +191,7 @@ export const removeAdhocDayOfWeekField = internalMutation({
       if (state && 'dayOfWeek' in state) {
         // Remove dayOfWeek from state by explicitly setting it to undefined
         await ctx.db.patch(state._id, {
+          // @ts-expect-error - dayOfWeek is being removed from schema, but we need to set it to undefined in migration
           dayOfWeek: undefined,
         });
 
@@ -244,6 +245,7 @@ export const removeAllAdhocGoalStatesDayOfWeek = internalMutation({
       if ('dayOfWeek' in state) {
         // Remove dayOfWeek from state by explicitly setting it to undefined
         await ctx.db.patch(state._id, {
+          // @ts-expect-error - dayOfWeek is being removed from schema, but we need to set it to undefined in migration
           dayOfWeek: undefined,
         });
 
