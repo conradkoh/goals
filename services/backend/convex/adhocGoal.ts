@@ -78,13 +78,26 @@ export const createAdhocGoal = mutation({
     }
 
     // Calculate the ISO week year for the given week number
-    // Note: We use current date's year as approximation, but this could span year boundaries
+    // We need to determine which year this week number belongs to
     const now = new Date();
     const currentYear = getISOWeekYear(now);
+    const currentWeekNumber =
+      Math.floor(
+        (now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)
+      ) + 1;
 
-    // For adhoc goals, we use the year associated with the week number
-    // Week 1 of year N contains the first Thursday of year N
-    const adhocYear = currentYear; // This is a simplification; proper logic would check if weekNumber is valid for currentYear
+    // If the week number is much higher than current week and we're early in the year,
+    // it's likely from the previous year (e.g., week 52 in January)
+    // If the week number is much lower than current week and we're late in the year,
+    // it's likely from the next year (e.g., week 1 in December)
+    let adhocYear = currentYear;
+    if (weekNumber > 50 && currentWeekNumber < 10) {
+      // Week 51-53 when we're in weeks 1-9 means it's from previous year
+      adhocYear = currentYear - 1;
+    } else if (weekNumber < 10 && currentWeekNumber > 50) {
+      // Week 1-9 when we're in weeks 51-53 means it's from next year
+      adhocYear = currentYear + 1;
+    }
 
     // Create the adhoc goal
     const goalId = await ctx.db.insert('goals', {

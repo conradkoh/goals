@@ -665,12 +665,17 @@ export const moveGoalsFromQuarter = action({
     }
 
     // === STAGE 1: Query only for incomplete quarterly goals from the previous quarter ===
+    console.log(
+      `[moveGoalsFromQuarter] Moving from Q${from.quarter} ${from.year} to Q${to.quarter} ${to.year}, dryRun: ${dryRun}`
+    );
+
     // Get all quarterly goals from the source quarter
     const quarterlyGoals = await ctx.runQuery(internal.goal.getIncompleteQuarterlyGoals, {
       userId,
       year: from.year,
       quarter: from.quarter,
     });
+    console.log(`[moveGoalsFromQuarter] Found ${quarterlyGoals.length} quarterly goals`);
 
     // Get incomplete adhoc goals from the source quarter
     const adhocGoals = await ctx.runQuery(internal.goal.getIncompleteAdhocGoalsForQuarter, {
@@ -678,6 +683,7 @@ export const moveGoalsFromQuarter = action({
       year: from.year,
       quarter: from.quarter,
     });
+    console.log(`[moveGoalsFromQuarter] Found ${adhocGoals.length} adhoc goals`);
 
     if (dryRun) {
       return {
@@ -821,6 +827,12 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
     const quarterWeeksInfo = getQuarterWeeks(year, quarter);
     const weekNumbers = quarterWeeksInfo.weeks;
 
+    console.log(`[getIncompleteAdhocGoalsForQuarter] Querying Q${quarter} ${year}`);
+    console.log(
+      `[getIncompleteAdhocGoalsForQuarter] Week range: ${quarterWeeksInfo.startWeek} to ${quarterWeeksInfo.endWeek}`
+    );
+    console.log('[getIncompleteAdhocGoalsForQuarter] Weeks to query:', weekNumbers);
+
     // Query adhoc goals for each week in the quarter
     // We need to do this because adhoc goals are indexed by week, not quarter
     const adhocGoalPromises = weekNumbers.map((weekNumber: number) =>
@@ -834,7 +846,21 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
     );
 
     const adhocGoalArrays = await Promise.all(adhocGoalPromises);
+
+    // Log results per week
+    adhocGoalArrays.forEach((goals, index) => {
+      if (goals.length > 0) {
+        console.log(
+          `[getIncompleteAdhocGoalsForQuarter] Week ${weekNumbers[index]}: found ${goals.length} goals`
+        );
+      }
+    });
+
     const incompleteAdhocGoals = adhocGoalArrays.flat();
+
+    console.log(
+      `[getIncompleteAdhocGoalsForQuarter] Total: ${incompleteAdhocGoals.length} incomplete adhoc goals`
+    );
 
     // Get domain information for these goals
     const domainIds = [
