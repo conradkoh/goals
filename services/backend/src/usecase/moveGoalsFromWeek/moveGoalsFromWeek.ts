@@ -680,8 +680,10 @@ export async function copyWeeklyGoals(
       const { _id, _creationTime, ...goalFieldsToCopy } = goal;
 
       // Check if this goal was already cloned in the target week
+      // We need to check if there's already a goal with the same rootGoalId
+      const rootGoalId = carryOver.fromGoal.rootGoalId;
       const existingGoalState = targetWeek.existingGoals.find(
-        (existingState) => existingState.carryOver?.fromGoal.rootGoalId === goal._id
+        (existingState) => existingState.carryOver?.fromGoal.rootGoalId === rootGoalId
       );
 
       if (existingGoalState) {
