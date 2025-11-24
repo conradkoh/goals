@@ -172,16 +172,10 @@ export const deleteDomain = mutation({
       .withIndex('by_user_and_domain', (q) => q.eq('userId', userId).eq('domainId', domainId))
       .collect();
 
-    const goalsUsingDomainInAdhoc = await ctx.db
-      .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) => q.eq('userId', userId))
-      .filter((q) =>
-        q.and(q.neq(q.field('adhoc'), undefined), q.eq(q.field('adhoc.domainId'), domainId))
-      )
-      .collect();
+    // No longer need to check adhoc.domainId - all domain IDs are at goal level now
+    // const goalsUsingDomainInAdhoc = ...
 
-    const totalGoalsUsingDomain =
-      goalsUsingDomainAtGoalLevel.length + goalsUsingDomainInAdhoc.length;
+    const totalGoalsUsingDomain = goalsUsingDomainAtGoalLevel.length;
 
     if (totalGoalsUsingDomain > 0) {
       throw new ConvexError({

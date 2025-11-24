@@ -83,7 +83,7 @@ export function AdhocGoalItem({
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);
 
-  const effectiveDomainId = goal.domainId || goal.adhoc?.domainId || null;
+  const effectiveDomainId = goal.domainId || null;
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
 
   const additionalContent = (

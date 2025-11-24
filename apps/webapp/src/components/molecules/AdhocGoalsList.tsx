@@ -112,7 +112,7 @@ export function AdhocGoalsList({
   // Group goals by domain
   const groupedGoals = goals.reduce(
     (acc, goal) => {
-      const domainId = goal.adhoc?.domainId || 'uncategorized';
+      const domainId = goal.domainId || 'uncategorized';
       if (!acc[domainId]) {
         acc[domainId] = {
           domain: goal.domain,

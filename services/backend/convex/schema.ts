@@ -62,20 +62,8 @@ export default defineSchema({
     // Adhoc goal fields - grouped into optional object
     adhoc: v.optional(
       v.object({
-        domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
-        year: v.optional(v.number()), // DEPRECATED: Use goal.year instead - no longer written, only kept for reading old data
+        domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead - no longer written, only kept for reading old data
         weekNumber: v.number(), // ISO week number (1-53)
-        dayOfWeek: v.optional(
-          v.union(
-            v.literal(DayOfWeek.MONDAY),
-            v.literal(DayOfWeek.TUESDAY),
-            v.literal(DayOfWeek.WEDNESDAY),
-            v.literal(DayOfWeek.THURSDAY),
-            v.literal(DayOfWeek.FRIDAY),
-            v.literal(DayOfWeek.SATURDAY),
-            v.literal(DayOfWeek.SUNDAY)
-          )
-        ), // DEPRECATED: Adhoc tasks are week-level only - no longer written, only kept for reading old data
         dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
       })
     ),
@@ -164,21 +152,9 @@ export default defineSchema({
     goalId: v.id('goals'),
     year: v.number(),
     weekNumber: v.number(), // ISO week number
-    dayOfWeek: v.optional(
-      v.union(
-        v.literal(DayOfWeek.MONDAY),
-        v.literal(DayOfWeek.TUESDAY),
-        v.literal(DayOfWeek.WEDNESDAY),
-        v.literal(DayOfWeek.THURSDAY),
-        v.literal(DayOfWeek.FRIDAY),
-        v.literal(DayOfWeek.SATURDAY),
-        v.literal(DayOfWeek.SUNDAY)
-      )
-    ), // DEPRECATED: Adhoc tasks are week-level only - no longer written, only kept for reading old data
     isComplete: v.boolean(),
     completedAt: v.optional(v.number()),
   })
     .index('by_user_and_year_and_week', ['userId', 'year', 'weekNumber'])
-    .index('by_user_and_goal', ['userId', 'goalId'])
-    .index('by_user_and_year_and_week_and_day', ['userId', 'year', 'weekNumber', 'dayOfWeek']),
+    .index('by_user_and_goal', ['userId', 'goalId']),
 });

@@ -173,7 +173,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
     const grouped = onFireAdhocGoals.reduce(
       (acc, goal) => {
-        const domainId = goal.adhoc?.domainId || 'uncategorized';
+        const domainId = goal.domainId || 'uncategorized';
         if (!acc[domainId]) {
           acc[domainId] = {
             domain: goal.domain,

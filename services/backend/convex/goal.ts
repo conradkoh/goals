@@ -866,7 +866,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
     const domainIds = [
       ...new Set(
         incompleteAdhocGoals
-          .map((goal: Doc<'goals'>) => goal.domainId || goal.adhoc?.domainId)
+          .map((goal: Doc<'goals'>) => goal.domainId)
           .filter(Boolean) as Id<'domains'>[]
       ),
     ];
@@ -877,7 +877,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
 
     // Format response data
     return incompleteAdhocGoals.map((goal: Doc<'goals'>) => {
-      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      const effectiveDomainId = goal.domainId;
       return {
         id: goal._id,
         title: goal.title,
