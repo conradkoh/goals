@@ -210,7 +210,7 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
         .withIndex('by_user_and_adhoc_year_week', (q) =>
           q
             .eq('userId', userId)
-            .eq('adhoc.year', candidate.year)
+            .eq('year', candidate.year)
             .eq('adhoc.weekNumber', candidate.weekNumber)
         )
         .filter((q) => q.eq(q.field('isComplete'), false))
@@ -865,7 +865,7 @@ async function getAdhocGoalsForWeek(
   const incompleteGoals = await ctx.db
     .query('goals')
     .withIndex('by_user_and_adhoc_year_week', (q) =>
-      q.eq('userId', userId).eq('adhoc.year', period.year).eq('adhoc.weekNumber', period.weekNumber)
+      q.eq('userId', userId).eq('year', period.year).eq('adhoc.weekNumber', period.weekNumber)
     )
     .filter((q) => q.eq(q.field('isComplete'), false))
     .collect();

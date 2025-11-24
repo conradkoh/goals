@@ -63,7 +63,7 @@ export default defineSchema({
     adhoc: v.optional(
       v.object({
         domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
-        year: v.number(), // ISO week year for proper partitioning
+        year: v.optional(v.number()), // DEPRECATED: Use goal.year instead - will be removed in future version
         weekNumber: v.number(), // ISO week number (1-53)
         dayOfWeek: v.optional(
           v.union(
@@ -82,7 +82,7 @@ export default defineSchema({
   })
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
     .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
-    .index('by_user_and_adhoc_year_week', ['userId', 'adhoc.year', 'adhoc.weekNumber'])
+    .index('by_user_and_adhoc_year_week', ['userId', 'year', 'adhoc.weekNumber'])
     .index('by_user_and_domain', ['userId', 'domainId']),
 
   // timeseries data for snapshotting

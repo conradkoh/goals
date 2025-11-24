@@ -839,7 +839,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
       ctx.db
         .query('goals')
         .withIndex('by_user_and_adhoc_year_week', (q) =>
-          q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+          q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
         )
         .filter((q) => q.eq(q.field('isComplete'), false))
         .collect()

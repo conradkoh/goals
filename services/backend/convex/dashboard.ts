@@ -973,7 +973,7 @@ export const getQuarterSummary = query({
         ctx.db
           .query('goals')
           .withIndex('by_user_and_adhoc_year_week', (q) =>
-            q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNum)
+            q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNum)
           )
           .collect()
       );

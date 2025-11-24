@@ -109,7 +109,6 @@ export const createAdhocGoal = mutation({
       domainId: domainId || undefined, // Store domain at goal level
       adhoc: {
         domainId: domainId || undefined, // Keep for backward compatibility
-        year: adhocYear, // Store year in adhoc object for querying
         weekNumber,
         dayOfWeek,
         dueDate,
@@ -372,7 +371,7 @@ export const getAdhocGoalsForWeek = query({
     const adhocGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
 
@@ -432,7 +431,7 @@ export const getAdhocGoalsForDay = query({
     const weekGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
 
@@ -565,7 +564,7 @@ export const moveAdhocGoalsFromWeek = mutation({
     const incompleteGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+        q.eq('userId', userId).eq('year', from.year).eq('adhoc.weekNumber', from.weekNumber)
       )
       .filter((q) => q.eq(q.field('isComplete'), false))
       .collect();
@@ -701,7 +700,7 @@ export const moveAdhocGoalsFromDay = mutation({
     const weekGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+        q.eq('userId', userId).eq('year', from.year).eq('adhoc.weekNumber', from.weekNumber)
       )
       .filter((q) => q.eq(q.field('isComplete'), false))
       .collect();
