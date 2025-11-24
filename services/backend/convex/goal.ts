@@ -710,7 +710,7 @@ export const moveGoalsFromQuarter = action({
       try {
         const adhocResult = await ctx.runMutation(internal.goal.moveAdhocGoalsToQuarter, {
           userId,
-          adhocGoals: adhocGoals.map((g) => g.id),
+          adhocGoals: adhocGoals.map((g: { id: Id<'goals'> }) => g.id),
           to,
         });
         adhocGoalsMoved = adhocResult.goalsMoved;
@@ -817,33 +817,30 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
   handler: async (ctx, args) => {
     const { userId, year, quarter } = args;
 
-    // Get the final weeks of the source quarter
-    const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(year, quarter);
+    // Get all weeks in the source quarter
+    const quarterWeeksInfo = getQuarterWeeks(year, quarter);
+    const weekNumbers = quarterWeeksInfo.weeks;
 
-    // Get all week numbers for this quarter
-    const weekNumbers = finalWeeksOfSourceQuarter.map((w) => w.weekNumber);
+    // Query adhoc goals for each week in the quarter
+    // We need to do this because adhoc goals are indexed by week, not quarter
+    const adhocGoalPromises = weekNumbers.map((weekNumber: number) =>
+      ctx.db
+        .query('goals')
+        .withIndex('by_user_and_adhoc_year_week', (q) =>
+          q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+        )
+        .filter((q) => q.eq(q.field('isComplete'), false))
+        .collect()
+    );
 
-    // Query all adhoc goals for this user in any of the quarter's weeks
-    const allAdhocGoals = await ctx.db
-      .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) =>
-        q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
-      )
-      .filter((q) => q.neq(q.field('adhoc'), undefined))
-      .collect();
-
-    // Filter to only incomplete adhoc goals that are in this quarter's weeks
-    const incompleteAdhocGoals = allAdhocGoals.filter((goal) => {
-      if (goal.isComplete) return false;
-      if (!goal.adhoc) return false;
-      return weekNumbers.includes(goal.adhoc.weekNumber);
-    });
+    const adhocGoalArrays = await Promise.all(adhocGoalPromises);
+    const incompleteAdhocGoals = adhocGoalArrays.flat();
 
     // Get domain information for these goals
     const domainIds = [
       ...new Set(
         incompleteAdhocGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
+          .map((goal: Doc<'goals'>) => goal.domainId || goal.adhoc?.domainId)
           .filter(Boolean) as Id<'domains'>[]
       ),
     ];
@@ -853,7 +850,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
     );
 
     // Format response data
-    return incompleteAdhocGoals.map((goal) => {
+    return incompleteAdhocGoals.map((goal: Doc<'goals'>) => {
       const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
       return {
         id: goal._id,
