@@ -218,6 +218,53 @@ export const removeAdhocDayOfWeekField = internalMutation({
 });
 
 /**
+ * Migration: Remove dayOfWeek from ALL adhocGoalStates
+ *
+ * This is a comprehensive migration that processes all adhocGoalStates,
+ * not just those linked to current adhoc goals (in case there are orphaned states).
+ *
+ * Run this migration to ensure all adhocGoalStates are clean:
+ * ```
+ * npx convex run migration:removeAllAdhocGoalStatesDayOfWeek
+ * ```
+ */
+export const removeAllAdhocGoalStatesDayOfWeek = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Query ALL adhocGoalStates
+    const allStates = await ctx.db.query('adhocGoalStates').collect();
+
+    console.log(`Found ${allStates.length} adhoc goal states to check`);
+
+    let statesUpdated = 0;
+    let statesSkipped = 0;
+
+    for (const state of allStates) {
+      if ('dayOfWeek' in state) {
+        // Remove dayOfWeek from state
+        const { dayOfWeek: _removedDayOfWeek, ...stateWithoutDayOfWeek } = state;
+
+        await ctx.db.patch(state._id, stateWithoutDayOfWeek);
+
+        statesUpdated++;
+      } else {
+        statesSkipped++;
+      }
+    }
+
+    console.log('Migration complete:');
+    console.log(`  - Updated: ${statesUpdated} states`);
+    console.log(`  - Skipped (no dayOfWeek): ${statesSkipped} states`);
+
+    return {
+      totalStates: allStates.length,
+      statesUpdated,
+      statesSkipped,
+    };
+  },
+});
+
+/**
  * Migration: Remove deprecated adhoc.domainId field from all adhoc goals
  *
  * This migration removes the deprecated domainId field from adhoc goals.
