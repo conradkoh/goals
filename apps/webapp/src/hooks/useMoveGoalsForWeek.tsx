@@ -116,7 +116,8 @@ export const useMoveGoalsForWeek = ({
       });
 
       // Type guard to check if we have preview data
-      if ('canPull' in previewData && previewData.canPull) {
+      // Show dialog even if canPull is false - user should see "no tasks to move" message
+      if ('canPull' in previewData) {
         // Map the daily goals to the DailyGoalToCopy format
         setPreview({
           tasks: previewData.dailyGoalsToMove.map((dailyGoal) => {
