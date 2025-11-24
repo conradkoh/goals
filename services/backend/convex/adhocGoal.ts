@@ -116,9 +116,7 @@ export const createAdhocGoal = mutation({
       details: details?.trim(),
       domainId: domainId || undefined, // Store domain at goal level
       adhoc: {
-        // domainId removed - use goal.domainId instead
         weekNumber,
-        // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate,
       },
       inPath: '/', // Adhoc goals don't use hierarchical paths
@@ -132,7 +130,6 @@ export const createAdhocGoal = mutation({
       goalId,
       year: adhocYear,
       weekNumber,
-      // dayOfWeek: removed - adhoc tasks are week-level only
       isComplete: false,
     });
 
@@ -378,7 +375,7 @@ export const getAdhocGoalsForWeek = query({
       .collect();
 
     // Get domain information for goals that have domains
-    // Read from goal.domainId with fallback to goal.adhoc.domainId
+    // Read from goal.domainId (stored at root level)
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
@@ -435,7 +432,7 @@ export const getAdhocGoalsForDay = query({
       .collect();
 
     // Get domain information for goals that have domains
-    // Read from goal.domainId with fallback to goal.adhoc.domainId
+    // Read from goal.domainId (stored at root level)
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
@@ -482,7 +479,62 @@ export const getAllAdhocGoals = query({
     const adhocGoals = allGoals.filter((goal) => goal.adhoc !== undefined);
 
     // Get domain information for goals that have domains
-    // Read from goal.domainId with fallback to goal.adhoc.domainId
+    // Read from goal.domainId (stored at root level)
+    const domainIds = [
+      ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
+    ];
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
+
+    // Combine goals with domain information
+    return adhocGoals.map((goal) => {
+      const effectiveDomainId = goal.domainId;
+      return {
+        ...goal,
+        domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+      };
+    });
+  },
+});
+
+/**
+ * Retrieves adhoc goals filtered by domain.
+ *
+ * @param ctx - Convex query context
+ * @param args - Query arguments containing session and domain ID (null for uncategorized)
+ * @returns Promise resolving to array of adhoc goals with domain information
+ */
+export const getAdhocGoalsByDomain = query({
+  args: {
+    sessionId: v.id('sessions'),
+    domainId: v.union(v.id('domains'), v.null()),
+  },
+  handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
+    const { sessionId, domainId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get all goals for user and filter for adhoc goals
+    const allGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter', (q) => q.eq('userId', userId))
+      .collect();
+
+    // Filter for adhoc goals matching the domain
+    const adhocGoals = allGoals.filter((goal) => {
+      if (!goal.adhoc) return false;
+      const effectiveDomainId = goal.domainId;
+      if (domainId === null) {
+        // Return uncategorized goals (no domain)
+        return !effectiveDomainId;
+      }
+      // Return goals matching the specified domain
+      return effectiveDomainId === domainId;
+    });
+
+    // Get domain information for goals that have domains
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
