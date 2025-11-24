@@ -70,6 +70,14 @@ export const useMoveGoalsForWeek = ({
       isStarred?: boolean;
       isPinned?: boolean;
     }[];
+    adhocGoals: {
+      id: string;
+      title: string;
+      domainId?: string;
+      domainName?: string;
+      dayOfWeek?: DayOfWeek;
+      dueDate?: number;
+    }[];
   } | null>(null);
   const [targetDayOfWeek, setTargetDayOfWeek] = useState<DayOfWeek | undefined>(undefined);
 
@@ -124,6 +132,14 @@ export const useMoveGoalsForWeek = ({
             title: q.title,
             isStarred: q.isStarred,
             isPinned: q.isPinned,
+          })),
+          adhocGoals: (previewData.adhocGoalsToMove || []).map((adhoc) => ({
+            id: adhoc.id,
+            title: adhoc.title,
+            domainId: adhoc.domainId,
+            domainName: adhoc.domainName,
+            dayOfWeek: adhoc.dayOfWeek,
+            dueDate: adhoc.dueDate,
           })),
         });
         setShowConfirmDialog(true);
