@@ -101,18 +101,19 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   const adhocGoalsToMove = await getAdhocGoalsForWeek(ctx, userId, from);
   result.adhocGoalsToMove = adhocGoalsToMove;
 
+  // Pre-fetch goals for the target week (needed for both dry run and actual move)
+  const targetWeekGoals = await getGoalsForWeek(ctx, userId, to);
+
   // If this is a dry run, return the preview data
   if (dryRun) {
     return (await generateDryRunPreview(
       result.weekStatesToCopy,
       result.dailyGoalsToMove,
       result.quarterlyGoalsToUpdate,
-      result.adhocGoalsToMove
+      result.adhocGoalsToMove,
+      targetWeekGoals
     )) as MoveGoalsFromWeekResult<T>;
   }
-
-  // Pre-fetch goals for the target week to avoid repeated queries
-  const targetWeekGoals = await getGoalsForWeek(ctx, userId, to);
 
   // Perform the actual updates
   const copiedWeekStates = await copyWeeklyGoals(
@@ -143,7 +144,8 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     result.weekStatesToCopy,
     result.dailyGoalsToMove,
     result.quarterlyGoalsToUpdate,
-    result.adhocGoalsToMove
+    result.adhocGoalsToMove,
+    targetWeekGoals
   );
 
   return {
@@ -228,7 +230,14 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
         dryRun: true as const,
       });
 
-      if (preview.canPull) {
+      // A week is considered "non-empty" if:
+      // 1. There are goals that can be pulled (canPull = true), OR
+      // 2. There are goals that would be skipped (already moved)
+      // This prevents scanning past weeks that have been partially processed
+      const hasContent =
+        preview.canPull || (preview.skippedGoals && preview.skippedGoals.length > 0);
+
+      if (hasContent) {
         if (dryRun) return preview as DryRunResult;
         return await moveGoalsFromWeekUsecase(ctx, {
           userId,
@@ -237,7 +246,7 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
           dryRun: false as const,
         });
       }
-      // If the week has states but none are movable, keep scanning backwards.
+      // If the week has states but none are movable and none are skipped, keep scanning backwards.
     }
 
     candidate = { ...candidate, weekNumber: candidate.weekNumber - 1 };
@@ -251,7 +260,7 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
     adhocGoalsToMove: [],
   };
   if (dryRun) {
-    return { ...emptyBase, isDryRun: true, canPull: false } as DryRunResult;
+    return { ...emptyBase, isDryRun: true, canPull: false, skippedGoals: [] } as DryRunResult;
   }
   return {
     weekStatesToCopy: [],
@@ -553,14 +562,40 @@ export async function generateDryRunPreview(
   weekStatesToCopy: WeekStateToCopy[],
   dailyGoalsToMove: DailyGoalToMove[],
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[],
-  adhocGoalsToMove: AdhocGoalToMove[]
+  adhocGoalsToMove: AdhocGoalToMove[],
+  targetWeekGoals: Doc<'goalStateByWeek'>[]
 ): Promise<DryRunResult> {
+  // Identify skipped goals - goals that would be skipped because they already exist in target week
+  const skippedGoals = weekStatesToCopy
+    .filter((item) => {
+      const rootGoalId = item.carryOver.fromGoal.rootGoalId;
+      return targetWeekGoals.some(
+        (existingState) => existingState.carryOver?.fromGoal.rootGoalId === rootGoalId
+      );
+    })
+    .map((item) => ({
+      id: item.originalGoal._id,
+      title: item.originalGoal.title,
+      reason: 'already_moved' as const,
+      carryOver: item.carryOver,
+      dailyGoalsCount: item.dailyGoalsToMove.length,
+      quarterlyGoalId: item.quarterlyGoalId,
+    }));
+
+  // Filter out skipped goals from weekStatesToCopy
+  const goalsToActuallyMove = weekStatesToCopy.filter((item) => {
+    const rootGoalId = item.carryOver.fromGoal.rootGoalId;
+    return !targetWeekGoals.some(
+      (existingState) => existingState.carryOver?.fromGoal.rootGoalId === rootGoalId
+    );
+  });
+
   return {
     isDryRun: true,
     // Only allow pull if there's at least one weekly state to copy, daily goal to move, or adhoc goal to move
     canPull:
-      weekStatesToCopy.length > 0 || dailyGoalsToMove.length > 0 || adhocGoalsToMove.length > 0,
-    weekStatesToCopy: weekStatesToCopy.map((item) => ({
+      goalsToActuallyMove.length > 0 || dailyGoalsToMove.length > 0 || adhocGoalsToMove.length > 0,
+    weekStatesToCopy: goalsToActuallyMove.map((item) => ({
       title: item.originalGoal.title,
       carryOver: item.carryOver,
       dailyGoalsCount: item.dailyGoalsToMove.length,
@@ -588,6 +623,7 @@ export async function generateDryRunPreview(
       dayOfWeek: item.goal.adhoc?.dayOfWeek,
       dueDate: item.goal.adhoc?.dueDate,
     })),
+    skippedGoals,
   };
 }
 
@@ -680,8 +716,10 @@ export async function copyWeeklyGoals(
       const { _id, _creationTime, ...goalFieldsToCopy } = goal;
 
       // Check if this goal was already cloned in the target week
+      // We need to check if there's already a goal with the same rootGoalId
+      const rootGoalId = carryOver.fromGoal.rootGoalId;
       const existingGoalState = targetWeek.existingGoals.find(
-        (existingState) => existingState.carryOver?.fromGoal.rootGoalId === goal._id
+        (existingState) => existingState.carryOver?.fromGoal.rootGoalId === rootGoalId
       );
 
       if (existingGoalState) {

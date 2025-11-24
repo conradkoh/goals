@@ -1,6 +1,6 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { type DayOfWeek, getDayName } from '@services/backend/src/constants';
-import { ArrowRightLeft, Calendar, History, Pin, Star } from 'lucide-react';
+import { AlertCircle, ArrowRightLeft, Calendar, History, Pin, Star } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 interface DailyGoalToCopy {
@@ -53,6 +54,22 @@ interface AdhocGoalToCopy {
   dueDate?: number;
 }
 
+interface SkippedGoal {
+  id: string;
+  title: string;
+  reason: 'already_moved';
+  carryOver: {
+    type: 'week';
+    numWeeks: number;
+    fromGoal: {
+      previousGoalId: Id<'goals'>;
+      rootGoalId: Id<'goals'>;
+    };
+  };
+  dailyGoalsCount: number;
+  quarterlyGoalId?: Id<'goals'>;
+}
+
 interface WeekCardPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,6 +83,7 @@ interface WeekCardPreviewDialogProps {
       isPinned?: boolean;
     }[];
     adhocGoals?: AdhocGoalToCopy[];
+    skippedGoals?: SkippedGoal[];
   } | null;
   onMoveTasks: () => void;
 }
@@ -89,18 +107,190 @@ interface TasksByGoalId {
   };
 }
 
+// Extracted component for rendering goal lists to avoid duplication
+const GoalListSection = ({
+  quarterlyGoals,
+  weeklyGoals,
+  tasksByGoalId,
+  adhocGoals,
+  weeklyGoalsData,
+}: {
+  quarterlyGoals: Map<string, IndexedGoal>;
+  weeklyGoals: Map<string, IndexedGoal>;
+  tasksByGoalId: TasksByGoalId;
+  adhocGoals?: AdhocGoalToCopy[];
+  weeklyGoalsData?: WeekStateToCopy[];
+}) => {
+  return (
+    <div className="space-y-4">
+      {/* Quarterly Goals Section */}
+      {quarterlyGoals.size > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm text-foreground">Quarterly Goals</h4>
+          <div className="space-y-2">
+            {Array.from(quarterlyGoals.values()).map((goal) => (
+              <div
+                key={`quarterly-${goal.id}`}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted dark:bg-muted/50"
+              >
+                {goal.isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
+                {goal.isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
+                <div className="font-medium text-sm text-foreground break-words">{goal.title}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Goals Section */}
+      {weeklyGoals.size > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm text-foreground">Weekly Goals</h4>
+          <div className="space-y-2">
+            {Array.from(weeklyGoals.values()).map((goal) => {
+              const weeklyGoalToCopy = (weeklyGoalsData ?? []).find(
+                (wg) => wg.carryOver.fromGoal.previousGoalId === goal.id
+              );
+
+              return (
+                <div
+                  key={`weekly-${goal.id}`}
+                  className="px-2 py-1 rounded-md bg-muted dark:bg-muted/50"
+                >
+                  <div className="font-medium text-sm text-foreground break-words">
+                    {goal.title}
+                    {weeklyGoalToCopy && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        (Week {weeklyGoalToCopy.carryOver.numWeeks})
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Daily Goals Section */}
+      {Object.keys(tasksByGoalId).length > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm text-foreground">Daily Goals</h4>
+          <div className="space-y-4">
+            {Object.entries(tasksByGoalId).map(([quarterlyId, quarterlyGroup]) => {
+              if (!quarterlyGroup?.goal) return null;
+
+              return (
+                <div key={`quarterly-preview-${quarterlyId}`} className="space-y-2">
+                  <h5 className="font-semibold text-sm flex items-center gap-1.5">
+                    {quarterlyGroup.goal.isStarred && (
+                      <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    )}
+                    {quarterlyGroup.goal.isPinned && (
+                      <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                    )}
+                    <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
+                      {quarterlyGroup.goal.title}
+                    </div>
+                  </h5>
+                  <div
+                    className={cn(
+                      'rounded-md overflow-hidden border',
+                      quarterlyGroup.goal.isStarred
+                        ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800'
+                        : quarterlyGroup.goal.isPinned
+                          ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
+                          : 'bg-muted dark:bg-muted/50 border-border'
+                    )}
+                  >
+                    {Object.entries(quarterlyGroup.weeklyGoals).map(([weeklyId, weeklyGroup]) => {
+                      if (!weeklyGroup?.goal) return null;
+
+                      const weeklyGoalToCopy = (weeklyGoalsData ?? []).find(
+                        (wg) => wg.carryOver.fromGoal.previousGoalId === weeklyId
+                      );
+
+                      return (
+                        <div key={`weekly-preview-${weeklyId}`} className="pl-4 space-y-1 py-2">
+                          <h6 className="text-sm text-muted-foreground">
+                            <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
+                              {weeklyGroup.goal.title}
+                              {weeklyGoalToCopy && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  (Week {weeklyGoalToCopy.carryOver.numWeeks})
+                                </span>
+                              )}
+                            </div>
+                          </h6>
+                          <ul className="space-y-1">
+                            {weeklyGroup.tasks.map((task, index) => (
+                              <li
+                                key={`daily-preview-${task.id}-${index}`}
+                                className="flex items-center gap-2 pl-4"
+                              >
+                                <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
+                                <div className="text-sm text-foreground break-words">
+                                  {task.title}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Adhoc Goals Section */}
+      {(adhocGoals?.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm text-foreground">Adhoc Tasks</h4>
+          <div className="space-y-2">
+            {(adhocGoals ?? []).map((adhocGoal) => (
+              <div
+                key={`adhoc-${adhocGoal.id}`}
+                className="px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400" />
+                  <div className="font-medium text-sm text-foreground break-words flex-1">
+                    {adhocGoal.title}
+                  </div>
+                  {adhocGoal.domainName && (
+                    <span className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded">
+                      {adhocGoal.domainName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const WeekCardPreviewDialog = ({
   open,
   onOpenChange,
   preview,
   onMoveTasks,
 }: WeekCardPreviewDialogProps) => {
-  if (
-    !preview?.tasks.length &&
-    !preview?.weeklyGoals.length &&
-    !preview?.quarterlyGoals?.length &&
-    !preview?.adhocGoals?.length
-  ) {
+  const hasItemsToMove =
+    (preview?.tasks.length ?? 0) > 0 ||
+    (preview?.weeklyGoals.length ?? 0) > 0 ||
+    (preview?.quarterlyGoals?.length ?? 0) > 0 ||
+    (preview?.adhocGoals?.length ?? 0) > 0;
+
+  const hasSkippedGoals = (preview?.skippedGoals?.length ?? 0) > 0;
+
+  if (!hasItemsToMove && !hasSkippedGoals) {
     return (
       <AlertDialog open={open} onOpenChange={onOpenChange}>
         <AlertDialogContent>
@@ -128,50 +318,81 @@ export const WeekCardPreviewDialog = ({
     );
   }
 
-  // Index quarterly and weekly goals
-  const quarterlyGoals = new Map<string, IndexedGoal>();
-  const weeklyGoals = new Map<string, IndexedGoal>();
+  // Build data for "To Move" tab
+  const toMoveQuarterlyGoals = new Map<string, IndexedGoal>();
+  const toMoveWeeklyGoals = new Map<string, IndexedGoal>();
 
-  // Seed from explicit quarterly goals in preview (quarterly-only updates)
-  (preview?.quarterlyGoals ?? []).forEach((q) => {
-    quarterlyGoals.set(q.id, {
-      id: q.id,
-      title: q.title || 'Unknown Quarterly Goal',
-      isStarred: q.isStarred || false,
-      isPinned: q.isPinned || false,
-    });
-  });
-
-  // First pass: build indices from tasks
+  // Only include quarterly goals that have items being moved (not just status updates)
+  // Build from tasks first
   preview?.tasks.forEach((task) => {
-    if (task.quarterlyGoal?.id && !quarterlyGoals.has(task.quarterlyGoal.id)) {
-      quarterlyGoals.set(task.quarterlyGoal.id, {
+    if (task.quarterlyGoal?.id && !toMoveQuarterlyGoals.has(task.quarterlyGoal.id)) {
+      toMoveQuarterlyGoals.set(task.quarterlyGoal.id, {
         id: task.quarterlyGoal.id,
         title: task.quarterlyGoal.title || 'Unknown Quarterly Goal',
         isStarred: task.quarterlyGoal.isStarred || false,
         isPinned: task.quarterlyGoal.isPinned || false,
       });
     }
-    if (task.weeklyGoal?.id && !weeklyGoals.has(task.weeklyGoal.id)) {
-      weeklyGoals.set(task.weeklyGoal.id, {
+    if (task.weeklyGoal?.id && !toMoveWeeklyGoals.has(task.weeklyGoal.id)) {
+      toMoveWeeklyGoals.set(task.weeklyGoal.id, {
         id: task.weeklyGoal.id,
         title: task.weeklyGoal.title || 'Unknown Weekly Goal',
       });
     }
   });
 
-  // Add weekly goals from weekStates
+  // Add weekly goals from weekStates (goals being moved)
   (preview?.weeklyGoals ?? []).forEach((weeklyGoal) => {
     const id = weeklyGoal.carryOver.fromGoal.previousGoalId;
-    if (!weeklyGoals.has(id)) {
-      weeklyGoals.set(id, {
+    if (!toMoveWeeklyGoals.has(id)) {
+      toMoveWeeklyGoals.set(id, {
         id,
         title: weeklyGoal.title,
       });
     }
+    // Add quarterly goal if it has a weekly goal being moved
+    if (weeklyGoal.quarterlyGoalId && !toMoveQuarterlyGoals.has(weeklyGoal.quarterlyGoalId)) {
+      const quarterlyGoalInfo = (preview?.quarterlyGoals ?? []).find(
+        (q) => q.id === weeklyGoal.quarterlyGoalId
+      );
+      if (quarterlyGoalInfo) {
+        toMoveQuarterlyGoals.set(weeklyGoal.quarterlyGoalId, {
+          id: quarterlyGoalInfo.id,
+          title: quarterlyGoalInfo.title,
+          isStarred: quarterlyGoalInfo.isStarred || false,
+          isPinned: quarterlyGoalInfo.isPinned || false,
+        });
+      }
+    }
   });
 
-  // Second pass: group tasks by quarterly and weekly goals
+  // Build data for "Skipped" tab
+  const skippedQuarterlyGoals = new Map<string, IndexedGoal>();
+  const skippedWeeklyGoals = new Map<string, IndexedGoal>();
+
+  (preview?.skippedGoals ?? []).forEach((skippedGoal) => {
+    const id = skippedGoal.carryOver.fromGoal.previousGoalId;
+    skippedWeeklyGoals.set(id, {
+      id,
+      title: skippedGoal.title,
+    });
+    // Add quarterly goal for skipped weekly goals
+    if (skippedGoal.quarterlyGoalId && !skippedQuarterlyGoals.has(skippedGoal.quarterlyGoalId)) {
+      const quarterlyGoalInfo = (preview?.quarterlyGoals ?? []).find(
+        (q) => q.id === skippedGoal.quarterlyGoalId
+      );
+      if (quarterlyGoalInfo) {
+        skippedQuarterlyGoals.set(skippedGoal.quarterlyGoalId, {
+          id: quarterlyGoalInfo.id,
+          title: quarterlyGoalInfo.title,
+          isStarred: quarterlyGoalInfo.isStarred || false,
+          isPinned: quarterlyGoalInfo.isPinned || false,
+        });
+      }
+    }
+  });
+
+  // Group tasks by quarterly and weekly goals for "To Move" tab
   const tasksByGoalId = (preview?.tasks ?? []).reduce<TasksByGoalId>((acc, task) => {
     const quarterlyId = task.quarterlyGoal?.id;
     const weeklyId = task.weeklyGoal?.id;
@@ -180,13 +401,13 @@ export const WeekCardPreviewDialog = ({
     if (!quarterlyId || !weeklyId) return acc;
 
     // Get goals from indices with fallbacks
-    const quarterlyGoal = quarterlyGoals.get(quarterlyId) || {
+    const quarterlyGoal = toMoveQuarterlyGoals.get(quarterlyId) || {
       id: quarterlyId,
       title: 'Unknown Quarterly Goal',
       isStarred: false,
       isPinned: false,
     };
-    const weeklyGoal = weeklyGoals.get(weeklyId) || {
+    const weeklyGoal = toMoveWeeklyGoals.get(weeklyId) || {
       id: weeklyId,
       title: 'Unknown Weekly Goal',
     };
@@ -215,243 +436,116 @@ export const WeekCardPreviewDialog = ({
   );
 
   const consolidationDay =
-    isConsolidating && preview?.tasks.length > 0
+    isConsolidating && preview?.tasks && preview.tasks.length > 0
       ? preview.tasks[0].weeklyGoal.consolidateToDayOfWeek
       : undefined;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-3xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Move Tasks from Last Non-Empty Week</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-6 max-h-[50vh] overflow-y-auto">
+            <div className="space-y-4">
               {/* Explanation section */}
               <div className="space-y-2">
-                <h3 className="font-semibold text-sm">What will happen:</h3>
-                <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-foreground">What will happen:</h3>
+                <div className="space-y-2 text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
                     {isConsolidating ? (
                       <>
-                        <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p className="text-sm">
+                        <Calendar className="h-4 w-4 mt-0.5" />
+                        <p>
                           Daily goals will be consolidated to{' '}
-                          <span className="font-medium">
+                          <span className="font-medium text-foreground">
                             {consolidationDay ? getDayName(consolidationDay) : 'the selected day'}
                           </span>
                         </p>
                       </>
                     ) : (
                       <>
-                        <ArrowRightLeft className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                        <p className="text-sm">
-                          Daily goals will preserve their original day of the week
-                        </p>
+                        <ArrowRightLeft className="h-4 w-4 mt-0.5" />
+                        <p>Daily goals will preserve their original day of the week</p>
                       </>
                     )}
                   </div>
-                  <div className="flex items-start gap-2">
-                    <div className="h-5 w-5 flex-shrink-0 mt-0.5">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Quarterly Goals</span> will remain
-                      unaffected, but their pinned and starred status will be copied to this week
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="h-5 w-5 flex-shrink-0 mt-0.5">
-                      <History className="h-4 w-4 text-blue-500" />
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Weekly Goals</span> that are
-                      incomplete will be copied to this week with a new instance
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <div className="h-5 w-5 flex-shrink-0 mt-0.5">
-                      <Calendar className="h-4 w-4 text-green-500" />
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Daily Goals</span> that are
-                      incomplete will be moved to this week
-                    </p>
-                  </div>
-                  {(preview?.adhocGoals?.length ?? 0) > 0 && (
+                  {hasSkippedGoals && (
                     <div className="flex items-start gap-2">
-                      <div className="h-5 w-5 flex-shrink-0 mt-0.5">
-                        <Calendar className="h-4 w-4 text-purple-500" />
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium text-gray-900">Adhoc Tasks</span> that are
-                        incomplete will be moved to this week
+                      <AlertCircle className="h-4 w-4 mt-0.5 text-orange-500" />
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Some goals will be skipped
+                        </span>{' '}
+                        because they were already moved to this week
                       </p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="font-semibold text-sm">The following items will be affected:</h3>
+              {/* Tabs for To Move vs Skipped */}
+              <Tabs defaultValue="to-move" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="to-move">
+                    To Move (
+                    {(preview?.weeklyGoals.length ?? 0) +
+                      (preview?.tasks.length ?? 0) +
+                      (preview?.adhocGoals?.length ?? 0)}
+                    )
+                  </TabsTrigger>
+                  <TabsTrigger value="skipped" disabled={!hasSkippedGoals}>
+                    Skipped ({preview?.skippedGoals?.length ?? 0})
+                  </TabsTrigger>
+                </TabsList>
 
-                {/* Quarterly Goals Section */}
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Quarterly Goals</h4>
-                  <div className="space-y-2">
-                    {Array.from(quarterlyGoals.values()).map((goal) => (
-                      <div
-                        key={`quarterly-${goal.id}`}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-gray-50"
-                      >
-                        {goal.isStarred && (
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        )}
-                        {goal.isPinned && (
-                          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-                        )}
-                        <div className="font-medium text-sm text-gray-800 break-words">
-                          {goal.title}
-                        </div>
+                <TabsContent value="to-move" className="max-h-[50vh] overflow-y-auto mt-4">
+                  <GoalListSection
+                    quarterlyGoals={toMoveQuarterlyGoals}
+                    weeklyGoals={toMoveWeeklyGoals}
+                    tasksByGoalId={tasksByGoalId}
+                    adhocGoals={preview?.adhocGoals}
+                    weeklyGoalsData={preview?.weeklyGoals}
+                  />
+                </TabsContent>
+
+                <TabsContent value="skipped" className="max-h-[50vh] overflow-y-auto mt-4">
+                  {hasSkippedGoals ? (
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-2 p-3 rounded-md bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800">
+                        <AlertCircle className="h-4 w-4 mt-0.5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                        <p className="text-sm text-orange-900 dark:text-orange-100">
+                          These goals already exist in this week and will not be moved again.
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Weekly Goals Section */}
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Weekly Goals</h4>
-                  <div className="space-y-2">
-                    {Array.from(weeklyGoals.values()).map((goal) => {
-                      // Find the corresponding weekly goal in weekStates
-                      const weeklyGoalToCopy = (preview?.weeklyGoals ?? []).find(
-                        (wg) => wg.carryOver.fromGoal.previousGoalId === goal.id
-                      );
-
-                      return (
-                        <div key={`weekly-${goal.id}`} className="px-2 py-1 rounded-md bg-gray-50">
-                          <div className="font-medium text-sm text-gray-800 break-words">
-                            {goal.title}
-                            {weeklyGoalToCopy && (
-                              <span className="text-xs text-gray-500 ml-2">
-                                (Week {weeklyGoalToCopy.carryOver.numWeeks})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Daily Goals Section (Nested under Quarterly and Weekly) */}
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">Daily Goals</h4>
-                  <div className="space-y-4">
-                    {Object.entries(tasksByGoalId).map(([quarterlyId, quarterlyGroup]) => {
-                      if (!quarterlyGroup?.goal) return null;
-
-                      return (
-                        <div key={`quarterly-preview-${quarterlyId}`} className="space-y-2">
-                          <h5 className="font-semibold text-sm flex items-center gap-1.5">
-                            {quarterlyGroup.goal.isStarred && (
-                              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                            )}
-                            {quarterlyGroup.goal.isPinned && (
-                              <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-                            )}
-                            <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                              {quarterlyGroup.goal.title}
-                            </div>
-                          </h5>
-                          <div
-                            className={cn(
-                              'rounded-md overflow-hidden',
-                              quarterlyGroup.goal.isStarred
-                                ? 'bg-yellow-50 border border-yellow-200'
-                                : quarterlyGroup.goal.isPinned
-                                  ? 'bg-blue-50 border border-blue-200'
-                                  : 'bg-gray-50 border border-gray-200'
-                            )}
-                          >
-                            {Object.entries(quarterlyGroup.weeklyGoals).map(
-                              ([weeklyId, weeklyGroup]) => {
-                                if (!weeklyGroup?.goal) return null;
-
-                                // Find the corresponding weekly goal in weekStates
-                                const weeklyGoalToCopy = (preview?.weeklyGoals ?? []).find(
-                                  (wg) => wg.carryOver.fromGoal.previousGoalId === weeklyId
-                                );
-
-                                return (
-                                  <div
-                                    key={`weekly-preview-${weeklyId}`}
-                                    className="pl-4 space-y-1 py-2"
-                                  >
-                                    <h6 className="text-sm text-muted-foreground">
-                                      <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
-                                        {weeklyGroup.goal.title}
-                                        {weeklyGoalToCopy && (
-                                          <span className="text-xs text-gray-500 ml-2">
-                                            (Week {weeklyGoalToCopy.carryOver.numWeeks})
-                                          </span>
-                                        )}
-                                      </div>
-                                    </h6>
-                                    <ul className="space-y-1">
-                                      {weeklyGroup.tasks.map((task, index) => (
-                                        <li
-                                          key={`daily-preview-${task.id}-${index}`}
-                                          className="flex items-center gap-2 pl-4"
-                                        >
-                                          <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                          <div className="text-sm break-words">{task.title}</div>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                );
-                              }
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Adhoc Goals Section */}
-                {(preview?.adhocGoals?.length ?? 0) > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">Adhoc Tasks</h4>
-                    <div className="space-y-2">
-                      {(preview?.adhocGoals ?? []).map((adhocGoal) => (
-                        <div
-                          key={`adhoc-${adhocGoal.id}`}
-                          className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-purple-500" />
-                            <div className="font-medium text-sm text-gray-800 break-words flex-1">
-                              {adhocGoal.title}
-                            </div>
-                            {adhocGoal.domainName && (
-                              <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
-                                {adhocGoal.domainName}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                      <GoalListSection
+                        quarterlyGoals={skippedQuarterlyGoals}
+                        weeklyGoals={skippedWeeklyGoals}
+                        tasksByGoalId={{}}
+                        adhocGoals={[]}
+                        weeklyGoalsData={preview?.skippedGoals?.map((sg) => ({
+                          title: sg.title,
+                          carryOver: sg.carryOver,
+                          dailyGoalsCount: sg.dailyGoalsCount,
+                          quarterlyGoalId: sg.quarterlyGoalId,
+                        }))}
+                      />
                     </div>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No goals will be skipped</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Close</AlertDialogCancel>
-          <AlertDialogAction onClick={onMoveTasks}>Move Tasks</AlertDialogAction>
+          <AlertDialogAction onClick={onMoveTasks} disabled={!hasItemsToMove}>
+            Move Tasks
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
