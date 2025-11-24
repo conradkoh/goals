@@ -63,6 +63,7 @@ export default defineSchema({
     adhoc: v.optional(
       v.object({
         domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
+        year: v.optional(v.number()), // DEPRECATED: Use goal.year instead - will be removed in future version
         weekNumber: v.number(), // ISO week number (1-53)
         dayOfWeek: v.optional(
           v.union(
