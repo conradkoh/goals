@@ -182,12 +182,7 @@ const FocusModeDailyViewInner = ({
           isFocusModeEnabled={isFocusModeEnabled}
         />
 
-        <AdhocGoalsSection
-          weekNumber={weekNumber}
-          dayOfWeek={selectedDayOfWeek}
-          variant="card"
-          showHeader={true}
-        />
+        <AdhocGoalsSection weekNumber={weekNumber} variant="card" showHeader={true} />
 
         <PendingGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}

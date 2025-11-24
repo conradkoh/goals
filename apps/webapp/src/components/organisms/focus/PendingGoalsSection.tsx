@@ -170,10 +170,10 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
     return adhocGoals.filter((goal) => {
       if (!pendingGoalIds.has(goal._id.toString())) return false;
       if (goal.adhoc?.weekNumber !== weekNumber) return false;
-      if (goal.adhoc?.dayOfWeek && goal.adhoc.dayOfWeek !== selectedDayOfWeek) return false;
+      // dayOfWeek removed - adhoc tasks are week-level only, no day filtering needed
       return true;
     });
-  }, [pendingGoals, adhocGoals, weekNumber, selectedDayOfWeek]);
+  }, [pendingGoals, adhocGoals, weekNumber]);
 
   const handleUpdateGoal = useCallback(
     async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {

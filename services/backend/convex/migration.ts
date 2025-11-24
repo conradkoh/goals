@@ -138,3 +138,81 @@ export const fixAdhocGoalYears = internalMutation({
     };
   },
 });
+
+/**
+ * Migration: Remove deprecated adhoc.dayOfWeek field from all adhoc goals
+ *
+ * This migration removes the deprecated dayOfWeek field from adhoc goals.
+ * Adhoc tasks are now week-level only, not day-level.
+ *
+ * Run this migration to clean up existing data:
+ * ```
+ * npx convex run migration:removeAdhocDayOfWeekField
+ * ```
+ */
+export const removeAdhocDayOfWeekField = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Query all goals with adhoc object
+    const adhocGoals = await ctx.db
+      .query('goals')
+      .filter((q) => q.neq(q.field('adhoc'), undefined))
+      .collect();
+
+    console.log(`Found ${adhocGoals.length} adhoc goals to check`);
+
+    let goalsUpdated = 0;
+    let goalsSkipped = 0;
+    let statesUpdated = 0;
+    let statesSkipped = 0;
+
+    // Update each adhoc goal to remove the dayOfWeek field
+    for (const goal of adhocGoals) {
+      if (goal.adhoc && 'dayOfWeek' in goal.adhoc) {
+        // Remove the dayOfWeek field from adhoc object
+        const { dayOfWeek: _removedDayOfWeek, ...adhocWithoutDayOfWeek } = goal.adhoc;
+
+        await ctx.db.patch(goal._id, {
+          adhoc: adhocWithoutDayOfWeek,
+        });
+
+        goalsUpdated++;
+      } else {
+        goalsSkipped++;
+      }
+
+      // Also update adhocGoalStates to remove dayOfWeek
+      const state = await ctx.db
+        .query('adhocGoalStates')
+        .withIndex('by_user_and_goal', (q) => q.eq('userId', goal.userId).eq('goalId', goal._id))
+        .first();
+
+      if (state && 'dayOfWeek' in state) {
+        // Remove dayOfWeek from state
+        const { dayOfWeek: _removedDayOfWeek, ...stateWithoutDayOfWeek } = state;
+
+        await ctx.db.patch(state._id, stateWithoutDayOfWeek);
+
+        statesUpdated++;
+      } else if (state) {
+        statesSkipped++;
+      }
+    }
+
+    console.log('Migration complete:');
+    console.log('Goals:');
+    console.log(`  - Updated: ${goalsUpdated} goals`);
+    console.log(`  - Skipped (no dayOfWeek): ${goalsSkipped} goals`);
+    console.log('States:');
+    console.log(`  - Updated: ${statesUpdated} states`);
+    console.log(`  - Skipped (no dayOfWeek): ${statesSkipped} states`);
+
+    return {
+      totalGoals: adhocGoals.length,
+      goalsUpdated,
+      goalsSkipped,
+      statesUpdated,
+      statesSkipped,
+    };
+  },
+});

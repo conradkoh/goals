@@ -884,7 +884,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
         details: goal.details,
         domainId: effectiveDomainId,
         domainName: effectiveDomainId ? domainMap.get(effectiveDomainId)?.name : undefined,
-        dayOfWeek: goal.adhoc?.dayOfWeek,
+        // dayOfWeek removed - adhoc tasks are week-level only
         dueDate: goal.adhoc?.dueDate,
       };
     });

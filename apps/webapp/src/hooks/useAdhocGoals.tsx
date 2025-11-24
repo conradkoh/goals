@@ -12,6 +12,10 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
 
   const adhocGoals = useQuery(api.adhocGoal.getAllAdhocGoals, { sessionId }) || [];
 
+  // Separate incomplete and completed goals
+  const incompleteAdhocGoals = adhocGoals.filter((goal) => !goal.isComplete);
+  const completedAdhocGoals = adhocGoals.filter((goal) => goal.isComplete);
+
   const createAdhocGoalMutation = useMutation(api.adhocGoal.createAdhocGoal);
   const updateAdhocGoalMutation = useMutation(api.adhocGoal.updateAdhocGoal);
   const deleteAdhocGoalMutation = useMutation(api.adhocGoal.deleteAdhocGoal);
@@ -127,6 +131,8 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
 
   return {
     adhocGoals,
+    incompleteAdhocGoals, // NEW: Filtered incomplete goals
+    completedAdhocGoals, // NEW: Filtered completed goals
     createAdhocGoal,
     updateAdhocGoal,
     deleteAdhocGoal,

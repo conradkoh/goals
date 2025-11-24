@@ -620,7 +620,7 @@ export async function generateDryRunPreview(
       title: item.goal.title,
       domainId: item.goal.domainId || item.goal.adhoc?.domainId,
       domainName: item.domain?.name,
-      dayOfWeek: item.goal.adhoc?.dayOfWeek,
+      // dayOfWeek removed - adhoc tasks are week-level only
       dueDate: item.goal.adhoc?.dueDate,
     })),
     skippedGoals,

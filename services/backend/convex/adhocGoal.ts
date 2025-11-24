@@ -46,7 +46,15 @@ export const createAdhocGoal = mutation({
     dueDate: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<Id<'goals'>> => {
-    const { sessionId, title, details, domainId, weekNumber, dayOfWeek, dueDate } = args;
+    const {
+      sessionId,
+      title,
+      details,
+      domainId,
+      weekNumber,
+      dayOfWeek: _dayOfWeek,
+      dueDate,
+    } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -110,7 +118,7 @@ export const createAdhocGoal = mutation({
       adhoc: {
         domainId: domainId || undefined, // Keep for backward compatibility
         weekNumber,
-        dayOfWeek,
+        // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate,
       },
       inPath: '/', // Adhoc goals don't use hierarchical paths
@@ -124,7 +132,7 @@ export const createAdhocGoal = mutation({
       goalId,
       year: adhocYear,
       weekNumber,
-      dayOfWeek,
+      // dayOfWeek: removed - adhoc tasks are week-level only
       isComplete: false,
     });
 
@@ -169,7 +177,7 @@ export const updateAdhocGoal = mutation({
       details,
       domainId,
       weekNumber,
-      dayOfWeek,
+      dayOfWeek: _dayOfWeek,
       dueDate,
       isComplete,
     } = args;
@@ -239,7 +247,7 @@ export const updateAdhocGoal = mutation({
     if (
       domainId !== undefined ||
       weekNumber !== undefined ||
-      dayOfWeek !== undefined ||
+      // dayOfWeek removed - ignored parameter
       dueDate !== undefined
     ) {
       const currentAdhoc = goal.adhoc || {};
@@ -251,7 +259,7 @@ export const updateAdhocGoal = mutation({
               : domainId
             : currentAdhoc.domainId, // Keep for backward compatibility
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
-        dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
+        // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
       };
       goalUpdates.adhoc = adhocUpdates;
@@ -285,8 +293,8 @@ export const updateAdhocGoal = mutation({
       }
     }
 
-    // Update week/day in adhoc goal state if changed
-    if (weekNumber !== undefined || dayOfWeek !== undefined) {
+    // Update week in adhoc goal state if changed
+    if (weekNumber !== undefined) {
       const existingState = await ctx.db
         .query('adhocGoalStates')
         .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
@@ -295,7 +303,7 @@ export const updateAdhocGoal = mutation({
       if (existingState) {
         const stateUpdates: Partial<Doc<'adhocGoalStates'>> = {};
         if (weekNumber !== undefined) stateUpdates.weekNumber = weekNumber;
-        if (dayOfWeek !== undefined) stateUpdates.dayOfWeek = dayOfWeek;
+        // dayOfWeek removed - adhoc tasks are week-level only
 
         await ctx.db.patch(existingState._id, stateUpdates);
       }
@@ -422,22 +430,18 @@ export const getAdhocGoalsForDay = query({
     ),
   },
   handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
-    const { sessionId, year, weekNumber, dayOfWeek } = args;
+    const { sessionId, year, weekNumber } = args;
+    // dayOfWeek parameter is kept for backward compatibility but ignored
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    // Query goals for the week, then filter for specific day or no day
-    const weekGoals = await ctx.db
+    // Query all adhoc goals for the week (no day filtering - adhoc tasks are week-level only)
+    const adhocGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
         q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
-
-    // Filter for goals assigned to this day OR goals with no specific day
-    const adhocGoals = weekGoals.filter(
-      (goal) => goal.adhoc?.dayOfWeek === dayOfWeek || !goal.adhoc?.dayOfWeek
-    );
 
     // Get domain information for goals that have domains
     // Read from goal.domainId with fallback to goal.adhoc.domainId
@@ -704,8 +708,9 @@ export const moveAdhocGoalsFromDay = mutation({
       .filter((q) => q.eq(q.field('isComplete'), false))
       .collect();
 
-    // Filter for goals that have the specific dayOfWeek set (not week-level goals)
-    const incompleteGoals = weekGoals.filter((goal) => goal.adhoc?.dayOfWeek === from.dayOfWeek);
+    // Since adhoc tasks are week-level only, just use all incomplete goals for the week
+    // dayOfWeek parameter is kept for backward compatibility but ignored
+    const incompleteGoals = weekGoals;
 
     // Get domain information for preview
     // Read from goal.domainId with fallback to goal.adhoc.domainId
@@ -747,7 +752,7 @@ export const moveAdhocGoalsFromDay = mutation({
           adhoc: {
             ...goal.adhoc,
             weekNumber: to.weekNumber,
-            dayOfWeek: to.dayOfWeek,
+            // dayOfWeek removed - adhoc tasks are week-level only
           },
         });
 
@@ -761,7 +766,7 @@ export const moveAdhocGoalsFromDay = mutation({
           await ctx.db.patch(state._id, {
             year: to.year,
             weekNumber: to.weekNumber,
-            dayOfWeek: to.dayOfWeek,
+            // dayOfWeek removed - adhoc tasks are week-level only
           });
         }
       })

@@ -163,10 +163,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     return adhocGoals.filter((goal) => {
       if (!fireGoals.has(goal._id.toString())) return false;
       if (goal.adhoc?.weekNumber !== weekNumber) return false;
-      if (goal.adhoc?.dayOfWeek && goal.adhoc.dayOfWeek !== selectedDayOfWeek) return false;
+      // dayOfWeek removed - adhoc tasks are week-level only, no day filtering needed
       return true;
     });
-  }, [fireGoals, adhocGoals, weekNumber, selectedDayOfWeek]);
+  }, [fireGoals, adhocGoals, weekNumber]);
 
   const onFireAdhocGoalsByDomain = useMemo(() => {
     if (onFireAdhocGoals.length === 0) return [];
