@@ -34,6 +34,16 @@ export type DailyGoalToCopy = {
   quarterlyGoalTitle: string;
 };
 
+export type AdhocGoalToCopy = {
+  id: Id<'goals'>;
+  title: string;
+  details?: string;
+  domainId?: Id<'domains'>;
+  domainName?: string;
+  dayOfWeek?: number;
+  dueDate?: number;
+};
+
 interface UseMoveGoalsForQuarterProps {
   year: number;
   quarter: number;
@@ -66,6 +76,7 @@ export const useMoveGoalsForQuarter = ({
     quarterlyGoals: QuarterlyGoalToCopy[];
     weeklyGoals: WeeklyGoalToCopy[];
     dailyGoals: DailyGoalToCopy[];
+    adhocGoals: AdhocGoalToCopy[];
   } | null>(null);
 
   // Use the Convex action to move goals
@@ -113,6 +124,7 @@ export const useMoveGoalsForQuarter = ({
         // provide empty arrays for weekly and daily goals
         weeklyGoals: [],
         dailyGoals: [],
+        adhocGoals: previewData.adhocGoalsToCopy || [],
       });
       setShowConfirmDialog(true);
     } catch (error) {
