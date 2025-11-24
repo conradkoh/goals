@@ -1,3 +1,4 @@
+import type { Id } from './_generated/dataModel';
 import { internalMutation } from './_generated/server';
 
 /**
@@ -293,15 +294,20 @@ export const removeAdhocDomainIdField = internalMutation({
     for (const goal of adhocGoals) {
       if (goal.adhoc && 'domainId' in goal.adhoc) {
         // If adhoc.domainId exists but root domainId doesn't, copy it over first
-        if (goal.adhoc.domainId && !goal.domainId) {
+        const adhocWithDomainId = goal.adhoc as {
+          domainId?: Id<'domains'>;
+          weekNumber: number;
+          dueDate?: number;
+        };
+        if (adhocWithDomainId.domainId && !goal.domainId) {
           await ctx.db.patch(goal._id, {
-            domainId: goal.adhoc.domainId,
+            domainId: adhocWithDomainId.domainId,
           });
           console.log(`Copied adhoc.domainId to root domainId for goal ${goal._id}`);
         }
 
         // Remove the domainId field from adhoc object
-        const { domainId: _removedDomainId, ...adhocWithoutDomainId } = goal.adhoc;
+        const { domainId: _removedDomainId, ...adhocWithoutDomainId } = adhocWithDomainId;
 
         await ctx.db.patch(goal._id, {
           adhoc: adhocWithoutDomainId,

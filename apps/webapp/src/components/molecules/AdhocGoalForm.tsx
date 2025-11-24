@@ -59,9 +59,7 @@ export function AdhocGoalForm({
 }: AdhocGoalFormProps) {
   const [title, setTitle] = useState(initialGoal?.title || '');
   const [details, setDetails] = useState(initialGoal?.details || '');
-  const [domainId, setDomainId] = useState<Id<'domains'> | null>(
-    initialGoal?.adhoc?.domainId || null
-  );
+  const [domainId, setDomainId] = useState<Id<'domains'> | null>(initialGoal?.domainId || null);
   const [weekNumber, setWeekNumber] = useState<number | undefined>(initialGoal?.adhoc?.weekNumber);
   // dayOfWeek removed - adhoc tasks are week-level only
   const [dueDate, setDueDate] = useState<Date | undefined>(

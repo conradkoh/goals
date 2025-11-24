@@ -116,7 +116,7 @@ export const createAdhocGoal = mutation({
       details: details?.trim(),
       domainId: domainId || undefined, // Store domain at goal level
       adhoc: {
-        domainId: domainId || undefined, // Keep for backward compatibility
+        // domainId removed - use goal.domainId instead
         weekNumber,
         // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate,
@@ -252,12 +252,7 @@ export const updateAdhocGoal = mutation({
     ) {
       const currentAdhoc = goal.adhoc || {};
       const adhocUpdates = {
-        domainId:
-          domainId !== undefined
-            ? domainId === null
-              ? undefined
-              : domainId
-            : currentAdhoc.domainId, // Keep for backward compatibility
+        // domainId removed - use goal.domainId instead
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
         // dayOfWeek: removed - adhoc tasks are week-level only
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
@@ -385,11 +380,7 @@ export const getAdhocGoalsForWeek = query({
     // Get domain information for goals that have domains
     // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(
-        adhocGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
-          .filter(Boolean) as Id<'domains'>[]
-      ),
+      ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -398,7 +389,7 @@ export const getAdhocGoalsForWeek = query({
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => {
-      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      const effectiveDomainId = goal.domainId;
       return {
         ...goal,
         domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
@@ -446,11 +437,7 @@ export const getAdhocGoalsForDay = query({
     // Get domain information for goals that have domains
     // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(
-        adhocGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
-          .filter(Boolean) as Id<'domains'>[]
-      ),
+      ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -459,7 +446,7 @@ export const getAdhocGoalsForDay = query({
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => {
-      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      const effectiveDomainId = goal.domainId;
       return {
         ...goal,
         domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
@@ -497,11 +484,7 @@ export const getAllAdhocGoals = query({
     // Get domain information for goals that have domains
     // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(
-        adhocGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
-          .filter(Boolean) as Id<'domains'>[]
-      ),
+      ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -510,7 +493,7 @@ export const getAllAdhocGoals = query({
 
     // Combine goals with domain information
     return adhocGoals.map((goal) => {
-      const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+      const effectiveDomainId = goal.domainId;
       return {
         ...goal,
         domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
@@ -575,11 +558,7 @@ export const moveAdhocGoalsFromWeek = mutation({
     // Get domain information for preview
     // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(
-        incompleteGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
-          .filter(Boolean) as Id<'domains'>[]
-      ),
+      ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -593,7 +572,7 @@ export const moveAdhocGoalsFromWeek = mutation({
         from: { year: from.year, weekNumber: from.weekNumber },
         to: { year: to.year, weekNumber: to.weekNumber },
         goals: incompleteGoals.map((goal) => {
-          const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+          const effectiveDomainId = goal.domainId;
           return {
             ...goal,
             domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
@@ -715,11 +694,7 @@ export const moveAdhocGoalsFromDay = mutation({
     // Get domain information for preview
     // Read from goal.domainId with fallback to goal.adhoc.domainId
     const domainIds = [
-      ...new Set(
-        incompleteGoals
-          .map((goal) => goal.domainId || goal.adhoc?.domainId)
-          .filter(Boolean) as Id<'domains'>[]
-      ),
+      ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
     const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
     const domainMap = new Map(
@@ -733,7 +708,7 @@ export const moveAdhocGoalsFromDay = mutation({
         from: { year: from.year, weekNumber: from.weekNumber, dayOfWeek: from.dayOfWeek },
         to: { year: to.year, weekNumber: to.weekNumber, dayOfWeek: to.dayOfWeek },
         goals: incompleteGoals.map((goal) => {
-          const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+          const effectiveDomainId = goal.domainId;
           return {
             ...goal,
             domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,

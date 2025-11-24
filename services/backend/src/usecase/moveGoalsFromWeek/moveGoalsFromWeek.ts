@@ -618,7 +618,7 @@ export async function generateDryRunPreview(
     adhocGoalsToMove: adhocGoalsToMove.map((item) => ({
       id: item.goal._id,
       title: item.goal.title,
-      domainId: item.goal.domainId || item.goal.adhoc?.domainId,
+      domainId: item.goal.domainId,
       domainName: item.domain?.name,
       // dayOfWeek removed - adhoc tasks are week-level only
       dueDate: item.goal.adhoc?.dueDate,
@@ -910,11 +910,7 @@ async function getAdhocGoalsForWeek(
 
   // Get domain information
   const domainIds = [
-    ...new Set(
-      incompleteGoals
-        .map((goal) => goal.domainId || goal.adhoc?.domainId)
-        .filter(Boolean) as Id<'domains'>[]
-    ),
+    ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
   ];
   const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
   const domainMap = new Map(
@@ -923,7 +919,7 @@ async function getAdhocGoalsForWeek(
 
   // Combine goals with domain information
   return incompleteGoals.map((goal) => {
-    const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+    const effectiveDomainId = goal.domainId;
     return {
       goal,
       domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,

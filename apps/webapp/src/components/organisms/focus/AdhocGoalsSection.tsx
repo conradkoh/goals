@@ -73,12 +73,13 @@ export function AdhocGoalsSection({
       inPath: '/',
       depth: -1,
       isComplete: false,
+      domainId: selectedDomainId || undefined, // Store at root goal level
       isOptimistic: true,
       adhoc: {
         // year removed - use root goal.year instead
         weekNumber,
         // No dayOfWeek - adhoc tasks are week-level only
-        domainId: selectedDomainId || undefined,
+        // domainId removed - use root goal.domainId instead
       },
       domain: selectedDomainId ? domains.find((d) => d._id === selectedDomainId) : undefined,
     };

@@ -62,7 +62,7 @@ export default defineSchema({
     // Adhoc goal fields - grouped into optional object
     adhoc: v.optional(
       v.object({
-        domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead (kept for backward compatibility)
+        domainId: v.optional(v.id('domains')), // DEPRECATED: Use goal.domainId instead - no longer written, only kept for reading old data
         weekNumber: v.number(), // ISO week number (1-53)
         dueDate: v.optional(v.number()), // Optional specific due date (Unix timestamp)
       })
