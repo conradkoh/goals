@@ -230,7 +230,14 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
         dryRun: true as const,
       });
 
-      if (preview.canPull) {
+      // A week is considered "non-empty" if:
+      // 1. There are goals that can be pulled (canPull = true), OR
+      // 2. There are goals that would be skipped (already moved)
+      // This prevents scanning past weeks that have been partially processed
+      const hasContent =
+        preview.canPull || (preview.skippedGoals && preview.skippedGoals.length > 0);
+
+      if (hasContent) {
         if (dryRun) return preview as DryRunResult;
         return await moveGoalsFromWeekUsecase(ctx, {
           userId,
@@ -239,7 +246,7 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
           dryRun: false as const,
         });
       }
-      // If the week has states but none are movable, keep scanning backwards.
+      // If the week has states but none are movable and none are skipped, keep scanning backwards.
     }
 
     candidate = { ...candidate, weekNumber: candidate.weekNumber - 1 };
