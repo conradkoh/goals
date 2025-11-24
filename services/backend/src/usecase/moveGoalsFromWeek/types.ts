@@ -62,11 +62,17 @@ export type QuarterlyGoalToUpdate = {
   isPinned: boolean;
 };
 
+export type AdhocGoalToMove = {
+  goal: Doc<'goals'>;
+  domain?: Doc<'domains'>;
+};
+
 // Result types
 export type ProcessGoalResult = {
   weekStatesToCopy: WeekStateToCopy[];
   dailyGoalsToMove: DailyGoalToMove[];
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[];
+  adhocGoalsToMove: AdhocGoalToMove[];
 };
 
 export type WeekStateToCopy = {
@@ -106,10 +112,20 @@ export type QuarterlyGoalSummary = {
   isPinned: boolean;
 };
 
+export type AdhocGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  domainId?: Id<'domains'>;
+  domainName?: string;
+  dayOfWeek?: DayOfWeek;
+  dueDate?: number;
+};
+
 export type BaseGoalMoveResult = {
   weekStatesToCopy: WeekStateSummary[];
   dailyGoalsToMove: DailyGoalSummary[];
   quarterlyGoalsToUpdate: QuarterlyGoalSummary[];
+  adhocGoalsToMove: AdhocGoalSummary[];
 };
 
 export type DryRunResult = BaseGoalMoveResult & {
@@ -122,6 +138,7 @@ export type UpdateResult = BaseGoalMoveResult & {
   weekStatesCopied: number;
   dailyGoalsMoved: number;
   quarterlyGoalsUpdated: number;
+  adhocGoalsMoved: number;
 };
 
 export type MoveGoalsFromWeekResult<T extends MoveGoalsFromWeekArgs> = T['dryRun'] extends true

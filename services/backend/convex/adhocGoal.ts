@@ -78,13 +78,26 @@ export const createAdhocGoal = mutation({
     }
 
     // Calculate the ISO week year for the given week number
-    // Note: We use current date's year as approximation, but this could span year boundaries
+    // We need to determine which year this week number belongs to
     const now = new Date();
     const currentYear = getISOWeekYear(now);
+    const currentWeekNumber =
+      Math.floor(
+        (now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)
+      ) + 1;
 
-    // For adhoc goals, we use the year associated with the week number
-    // Week 1 of year N contains the first Thursday of year N
-    const adhocYear = currentYear; // This is a simplification; proper logic would check if weekNumber is valid for currentYear
+    // If the week number is much higher than current week and we're early in the year,
+    // it's likely from the previous year (e.g., week 52 in January)
+    // If the week number is much lower than current week and we're late in the year,
+    // it's likely from the next year (e.g., week 1 in December)
+    let adhocYear = currentYear;
+    if (weekNumber > 50 && currentWeekNumber < 10) {
+      // Week 51-53 when we're in weeks 1-9 means it's from previous year
+      adhocYear = currentYear - 1;
+    } else if (weekNumber < 10 && currentWeekNumber > 50) {
+      // Week 1-9 when we're in weeks 51-53 means it's from next year
+      adhocYear = currentYear + 1;
+    }
 
     // Create the adhoc goal
     const goalId = await ctx.db.insert('goals', {
@@ -96,7 +109,6 @@ export const createAdhocGoal = mutation({
       domainId: domainId || undefined, // Store domain at goal level
       adhoc: {
         domainId: domainId || undefined, // Keep for backward compatibility
-        year: adhocYear, // Store year in adhoc object for querying
         weekNumber,
         dayOfWeek,
         dueDate,
@@ -238,7 +250,6 @@ export const updateAdhocGoal = mutation({
               ? undefined
               : domainId
             : currentAdhoc.domainId, // Keep for backward compatibility
-        year: currentAdhoc.year || getISOWeekYear(new Date()), // Preserve existing year or calculate
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
         dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
@@ -359,7 +370,7 @@ export const getAdhocGoalsForWeek = query({
     const adhocGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
 
@@ -419,7 +430,7 @@ export const getAdhocGoalsForDay = query({
     const weekGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNumber)
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
       )
       .collect();
 
@@ -552,7 +563,7 @@ export const moveAdhocGoalsFromWeek = mutation({
     const incompleteGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+        q.eq('userId', userId).eq('year', from.year).eq('adhoc.weekNumber', from.weekNumber)
       )
       .filter((q) => q.eq(q.field('isComplete'), false))
       .collect();
@@ -593,9 +604,9 @@ export const moveAdhocGoalsFromWeek = mutation({
         if (!goal.adhoc) return;
 
         await ctx.db.patch(goal._id, {
+          year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
-            year: to.year,
             weekNumber: to.weekNumber,
           },
         });
@@ -688,7 +699,7 @@ export const moveAdhocGoalsFromDay = mutation({
     const weekGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_adhoc_year_week', (q) =>
-        q.eq('userId', userId).eq('adhoc.year', from.year).eq('adhoc.weekNumber', from.weekNumber)
+        q.eq('userId', userId).eq('year', from.year).eq('adhoc.weekNumber', from.weekNumber)
       )
       .filter((q) => q.eq(q.field('isComplete'), false))
       .collect();
@@ -732,9 +743,9 @@ export const moveAdhocGoalsFromDay = mutation({
         if (!goal.adhoc) return;
 
         await ctx.db.patch(goal._id, {
+          year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
-            year: to.year,
             weekNumber: to.weekNumber,
             dayOfWeek: to.dayOfWeek,
           },

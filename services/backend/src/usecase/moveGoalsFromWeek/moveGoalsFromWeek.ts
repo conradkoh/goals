@@ -1,6 +1,7 @@
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../../convex/_generated/server';
 import {
+  type AdhocGoalToMove,
   type CarryOver,
   type DailyGoalToMove,
   type DryRunResult,
@@ -72,6 +73,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     quarterlyGoalsToUpdate: [],
     dailyGoalsToMove: [],
     weekStatesToCopy: [],
+    adhocGoalsToMove: [],
   };
 
   // Process each goal from the previous week in parallel
@@ -95,12 +97,17 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     })
   );
 
+  // Fetch and process adhoc goals from the previous week
+  const adhocGoalsToMove = await getAdhocGoalsForWeek(ctx, userId, from);
+  result.adhocGoalsToMove = adhocGoalsToMove;
+
   // If this is a dry run, return the preview data
   if (dryRun) {
     return (await generateDryRunPreview(
       result.weekStatesToCopy,
       result.dailyGoalsToMove,
-      result.quarterlyGoalsToUpdate
+      result.quarterlyGoalsToUpdate,
+      result.adhocGoalsToMove
     )) as MoveGoalsFromWeekResult<T>;
   }
 
@@ -128,20 +135,26 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   // Update quarterly goals with their starred/pinned states
   await updateQuarterlyGoals(ctx, userId, result.quarterlyGoalsToUpdate, to);
 
+  // Move adhoc goals to the target week
+  const adhocGoalsMoved = await moveAdhocGoals(ctx, userId, result.adhocGoalsToMove, to);
+
   // Generate the preview data for the commit case
   const previewData = await generateDryRunPreview(
     result.weekStatesToCopy,
     result.dailyGoalsToMove,
-    result.quarterlyGoalsToUpdate
+    result.quarterlyGoalsToUpdate,
+    result.adhocGoalsToMove
   );
 
   return {
     weekStatesToCopy: previewData.weekStatesToCopy,
     dailyGoalsToMove: previewData.dailyGoalsToMove,
     quarterlyGoalsToUpdate: previewData.quarterlyGoalsToUpdate,
+    adhocGoalsToMove: previewData.adhocGoalsToMove,
     weekStatesCopied: copiedWeekStates.length,
     dailyGoalsMoved: result.dailyGoalsToMove.length,
     quarterlyGoalsUpdated: result.quarterlyGoalsToUpdate.length,
+    adhocGoalsMoved,
   } as MoveGoalsFromWeekResult<T>;
 }
 
@@ -180,19 +193,31 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
       candidate = { year: prevYear, quarter: prevQuarter, weekNumber: 13 };
     }
 
-    // Cheap existence probe: fetch the FIRST goal state record only.
-    const probe = await ctx.db
-      .query('goalStateByWeek')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', candidate.year)
-          .eq('quarter', candidate.quarter)
-          .eq('weekNumber', candidate.weekNumber)
-      )
-      .first();
+    // Cheap existence probe: check for both regular goals and adhoc goals
+    const [regularGoalProbe, adhocGoalProbe] = await Promise.all([
+      ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('year', candidate.year)
+            .eq('quarter', candidate.quarter)
+            .eq('weekNumber', candidate.weekNumber)
+        )
+        .first(),
+      ctx.db
+        .query('goals')
+        .withIndex('by_user_and_adhoc_year_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('year', candidate.year)
+            .eq('adhoc.weekNumber', candidate.weekNumber)
+        )
+        .filter((q) => q.eq(q.field('isComplete'), false))
+        .first(),
+    ]);
 
-    if (probe) {
+    if (regularGoalProbe || adhocGoalProbe) {
       // Now run the dry run for this specific week to determine if there is
       // actually movable content (canPull logic encapsulated there). This keeps
       // correctness identical while avoiding heavy processing for empty weeks.
@@ -223,6 +248,7 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
     weekStatesToCopy: [],
     dailyGoalsToMove: [],
     quarterlyGoalsToUpdate: [],
+    adhocGoalsToMove: [],
   };
   if (dryRun) {
     return { ...emptyBase, isDryRun: true, canPull: false } as DryRunResult;
@@ -231,9 +257,11 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
     weekStatesToCopy: [],
     dailyGoalsToMove: [],
     quarterlyGoalsToUpdate: [],
+    adhocGoalsToMove: [],
     weekStatesCopied: 0,
     dailyGoalsMoved: 0,
     quarterlyGoalsUpdated: 0,
+    adhocGoalsMoved: 0,
   };
 }
 
@@ -384,6 +412,7 @@ export async function processGoal(
     quarterlyGoalsToUpdate: [],
     dailyGoalsToMove: [],
     weekStatesToCopy: [],
+    adhocGoalsToMove: [],
   };
 
   switch (goal.depth) {
@@ -523,12 +552,14 @@ function createWeeklyGoalCarryOver(
 export async function generateDryRunPreview(
   weekStatesToCopy: WeekStateToCopy[],
   dailyGoalsToMove: DailyGoalToMove[],
-  quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[]
+  quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[],
+  adhocGoalsToMove: AdhocGoalToMove[]
 ): Promise<DryRunResult> {
   return {
     isDryRun: true,
-    // Only allow pull if there's at least one weekly state to copy or daily goal to move
-    canPull: weekStatesToCopy.length > 0 || dailyGoalsToMove.length > 0,
+    // Only allow pull if there's at least one weekly state to copy, daily goal to move, or adhoc goal to move
+    canPull:
+      weekStatesToCopy.length > 0 || dailyGoalsToMove.length > 0 || adhocGoalsToMove.length > 0,
     weekStatesToCopy: weekStatesToCopy.map((item) => ({
       title: item.originalGoal.title,
       carryOver: item.carryOver,
@@ -548,6 +579,14 @@ export async function generateDryRunPreview(
       title: item.title,
       isStarred: item.isStarred,
       isPinned: item.isPinned,
+    })),
+    adhocGoalsToMove: adhocGoalsToMove.map((item) => ({
+      id: item.goal._id,
+      title: item.goal.title,
+      domainId: item.goal.domainId || item.goal.adhoc?.domainId,
+      domainName: item.domain?.name,
+      dayOfWeek: item.goal.adhoc?.dayOfWeek,
+      dueDate: item.goal.adhoc?.dueDate,
     })),
   };
 }
@@ -808,4 +847,94 @@ export async function migrateDailyGoals(
       }
     })
   );
+}
+
+/**
+ * Get incomplete adhoc goals for a given week
+ * @param ctx - The database context
+ * @param userId - The user ID
+ * @param period - The time period (year, week number)
+ * @returns An array of incomplete adhoc goals with domain information
+ */
+async function getAdhocGoalsForWeek(
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  period: TimePeriod
+): Promise<AdhocGoalToMove[]> {
+  // Get incomplete adhoc goals from the source week
+  const incompleteGoals = await ctx.db
+    .query('goals')
+    .withIndex('by_user_and_adhoc_year_week', (q) =>
+      q.eq('userId', userId).eq('year', period.year).eq('adhoc.weekNumber', period.weekNumber)
+    )
+    .filter((q) => q.eq(q.field('isComplete'), false))
+    .collect();
+
+  // Get domain information
+  const domainIds = [
+    ...new Set(
+      incompleteGoals
+        .map((goal) => goal.domainId || goal.adhoc?.domainId)
+        .filter(Boolean) as Id<'domains'>[]
+    ),
+  ];
+  const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+  const domainMap = new Map(
+    domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+  );
+
+  // Combine goals with domain information
+  return incompleteGoals.map((goal) => {
+    const effectiveDomainId = goal.domainId || goal.adhoc?.domainId;
+    return {
+      goal,
+      domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+    };
+  });
+}
+
+/**
+ * Move adhoc goals to the target week
+ * @param ctx - The database context
+ * @param userId - The user ID
+ * @param adhocGoals - The adhoc goals to move
+ * @param to - The target time period
+ * @returns The number of adhoc goals moved
+ */
+async function moveAdhocGoals(
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  adhocGoals: AdhocGoalToMove[],
+  to: TimePeriod
+): Promise<number> {
+  // Update each adhoc goal to the target week
+  await Promise.all(
+    adhocGoals.map(async (item) => {
+      const { goal } = item;
+      if (!goal.adhoc) return;
+
+      await ctx.db.patch(goal._id, {
+        year: to.year, // Update root year field
+        adhoc: {
+          ...goal.adhoc,
+          weekNumber: to.weekNumber,
+        },
+      });
+
+      // Update adhoc goal state
+      const state = await ctx.db
+        .query('adhocGoalStates')
+        .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goal._id))
+        .first();
+
+      if (state) {
+        await ctx.db.patch(state._id, {
+          year: to.year,
+          weekNumber: to.weekNumber,
+        });
+      }
+    })
+  );
+
+  return adhocGoals.length;
 }

@@ -19,6 +19,7 @@ import type * as dashboard from "../dashboard.js";
 import type * as domain from "../domain.js";
 import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
+import type * as migration from "../migration.js";
 import type * as pendingGoals from "../pendingGoals.js";
 import type * as sync from "../sync.js";
 
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   domain: typeof domain;
   fireGoal: typeof fireGoal;
   goal: typeof goal;
+  migration: typeof migration;
   pendingGoals: typeof pendingGoals;
   sync: typeof sync;
 }>;

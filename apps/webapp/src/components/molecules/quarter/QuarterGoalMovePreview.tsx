@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import type {
+  AdhocGoalToCopy,
   DailyGoalToCopy,
   QuarterlyGoalToCopy,
   WeeklyGoalToCopy,
@@ -23,6 +24,7 @@ interface QuarterGoalMovePreviewProps {
     quarterlyGoals: QuarterlyGoalToCopy[];
     weeklyGoals: WeeklyGoalToCopy[];
     dailyGoals: DailyGoalToCopy[];
+    adhocGoals?: AdhocGoalToCopy[];
   } | null;
   onConfirm: () => void;
   isConfirming?: boolean;
@@ -47,7 +49,8 @@ export const QuarterGoalMovePreview = ({
   const hasQuarterlyGoals = preview?.quarterlyGoals && preview.quarterlyGoals.length > 0;
   const hasWeeklyGoals = preview?.weeklyGoals && preview.weeklyGoals.length > 0;
   const hasDailyGoals = preview?.dailyGoals && preview.dailyGoals.length > 0;
-  const hasContent = hasQuarterlyGoals || hasWeeklyGoals || hasDailyGoals;
+  const hasAdhocGoals = preview?.adhocGoals && preview.adhocGoals.length > 0;
+  const hasContent = hasQuarterlyGoals || hasWeeklyGoals || hasDailyGoals || hasAdhocGoals;
 
   // No content to show
   if (!hasContent) {
@@ -182,6 +185,17 @@ export const QuarterGoalMovePreview = ({
                       be copied with their day assignments
                     </p>
                   </div>
+                  {hasAdhocGoals && (
+                    <div className="flex items-start gap-2">
+                      <div className="h-5 w-5 flex-shrink-0 mt-0.5">
+                        <Calendar className="h-4 w-4 text-purple-500" />
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium text-gray-900">Adhoc Tasks</span> that are
+                        incomplete will be moved to the first week of this quarter
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -242,6 +256,33 @@ export const QuarterGoalMovePreview = ({
                     </div>
                   </div>
                 ))}
+
+                {/* Adhoc Goals Section */}
+                {hasAdhocGoals && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Adhoc Tasks</h4>
+                    <div className="space-y-2">
+                      {(preview?.adhocGoals ?? []).map((adhocGoal) => (
+                        <div
+                          key={adhocGoal.id}
+                          className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-purple-500" />
+                            <div className="font-medium text-sm text-gray-800 break-words flex-1">
+                              {adhocGoal.title}
+                            </div>
+                            {adhocGoal.domainName && (
+                              <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                                {adhocGoal.domainName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </AlertDialogDescription>
