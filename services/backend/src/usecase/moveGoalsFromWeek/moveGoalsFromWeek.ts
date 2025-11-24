@@ -193,19 +193,31 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
       candidate = { year: prevYear, quarter: prevQuarter, weekNumber: 13 };
     }
 
-    // Cheap existence probe: fetch the FIRST goal state record only.
-    const probe = await ctx.db
-      .query('goalStateByWeek')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', candidate.year)
-          .eq('quarter', candidate.quarter)
-          .eq('weekNumber', candidate.weekNumber)
-      )
-      .first();
+    // Cheap existence probe: check for both regular goals and adhoc goals
+    const [regularGoalProbe, adhocGoalProbe] = await Promise.all([
+      ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('year', candidate.year)
+            .eq('quarter', candidate.quarter)
+            .eq('weekNumber', candidate.weekNumber)
+        )
+        .first(),
+      ctx.db
+        .query('goals')
+        .withIndex('by_user_and_adhoc_year_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('adhoc.year', candidate.year)
+            .eq('adhoc.weekNumber', candidate.weekNumber)
+        )
+        .filter((q) => q.eq(q.field('isComplete'), false))
+        .first(),
+    ]);
 
-    if (probe) {
+    if (regularGoalProbe || adhocGoalProbe) {
       // Now run the dry run for this specific week to determine if there is
       // actually movable content (canPull logic encapsulated there). This keeps
       // correctness identical while avoiding heavy processing for empty weeks.
