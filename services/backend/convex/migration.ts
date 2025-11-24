@@ -216,3 +216,65 @@ export const removeAdhocDayOfWeekField = internalMutation({
     };
   },
 });
+
+/**
+ * Migration: Remove deprecated adhoc.domainId field from all adhoc goals
+ *
+ * This migration removes the deprecated domainId field from adhoc goals.
+ * The domainId should be stored at the root goal.domainId level, not in the adhoc object.
+ *
+ * Run this migration to clean up existing data:
+ * ```
+ * npx convex run migration:removeAdhocDomainIdField
+ * ```
+ */
+export const removeAdhocDomainIdField = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    // Query all goals with adhoc object
+    const adhocGoals = await ctx.db
+      .query('goals')
+      .filter((q) => q.neq(q.field('adhoc'), undefined))
+      .collect();
+
+    console.log(`Found ${adhocGoals.length} adhoc goals to check`);
+
+    let goalsUpdated = 0;
+    let goalsSkipped = 0;
+
+    // Update each adhoc goal to remove the domainId field
+    for (const goal of adhocGoals) {
+      if (goal.adhoc && 'domainId' in goal.adhoc) {
+        // If adhoc.domainId exists but root domainId doesn't, copy it over first
+        if (goal.adhoc.domainId && !goal.domainId) {
+          await ctx.db.patch(goal._id, {
+            domainId: goal.adhoc.domainId,
+          });
+          console.log(`Copied adhoc.domainId to root domainId for goal ${goal._id}`);
+        }
+
+        // Remove the domainId field from adhoc object
+        const { domainId: _removedDomainId, ...adhocWithoutDomainId } = goal.adhoc;
+
+        await ctx.db.patch(goal._id, {
+          adhoc: adhocWithoutDomainId,
+        });
+
+        goalsUpdated++;
+      } else {
+        goalsSkipped++;
+      }
+    }
+
+    console.log('Migration complete:');
+    console.log('Goals:');
+    console.log(`  - Updated: ${goalsUpdated} goals`);
+    console.log(`  - Skipped (no domainId): ${goalsSkipped} goals`);
+
+    return {
+      totalGoals: adhocGoals.length,
+      goalsUpdated,
+      goalsSkipped,
+    };
+  },
+});
