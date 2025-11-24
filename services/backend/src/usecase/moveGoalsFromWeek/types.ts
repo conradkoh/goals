@@ -121,6 +121,15 @@ export type AdhocGoalSummary = {
   dueDate?: number;
 };
 
+export type SkippedGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  reason: 'already_moved';
+  carryOver: CarryOver;
+  dailyGoalsCount: number;
+  quarterlyGoalId?: Id<'goals'>;
+};
+
 export type BaseGoalMoveResult = {
   weekStatesToCopy: WeekStateSummary[];
   dailyGoalsToMove: DailyGoalSummary[];
@@ -132,6 +141,8 @@ export type DryRunResult = BaseGoalMoveResult & {
   isDryRun: true;
   // true when there is something to pull; false when no prior non-empty week
   canPull: boolean;
+  // Goals that will be skipped because they already exist in target week
+  skippedGoals: SkippedGoalSummary[];
 };
 
 export type UpdateResult = BaseGoalMoveResult & {
