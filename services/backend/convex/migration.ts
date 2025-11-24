@@ -188,10 +188,10 @@ export const removeAdhocDayOfWeekField = internalMutation({
         .first();
 
       if (state && 'dayOfWeek' in state) {
-        // Remove dayOfWeek from state
-        const { dayOfWeek: _removedDayOfWeek, ...stateWithoutDayOfWeek } = state;
-
-        await ctx.db.patch(state._id, stateWithoutDayOfWeek);
+        // Remove dayOfWeek from state by explicitly setting it to undefined
+        await ctx.db.patch(state._id, {
+          dayOfWeek: undefined,
+        });
 
         statesUpdated++;
       } else if (state) {
@@ -241,10 +241,10 @@ export const removeAllAdhocGoalStatesDayOfWeek = internalMutation({
 
     for (const state of allStates) {
       if ('dayOfWeek' in state) {
-        // Remove dayOfWeek from state
-        const { dayOfWeek: _removedDayOfWeek, ...stateWithoutDayOfWeek } = state;
-
-        await ctx.db.patch(state._id, stateWithoutDayOfWeek);
+        // Remove dayOfWeek from state by explicitly setting it to undefined
+        await ctx.db.patch(state._id, {
+          dayOfWeek: undefined,
+        });
 
         statesUpdated++;
       } else {
