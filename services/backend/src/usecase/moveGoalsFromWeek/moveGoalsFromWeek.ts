@@ -914,9 +914,9 @@ async function moveAdhocGoals(
       if (!goal.adhoc) return;
 
       await ctx.db.patch(goal._id, {
+        year: to.year, // Update root year field
         adhoc: {
           ...goal.adhoc,
-          year: to.year,
           weekNumber: to.weekNumber,
         },
       });

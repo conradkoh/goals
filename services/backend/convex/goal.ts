@@ -914,11 +914,10 @@ export const moveAdhocGoalsToQuarter = internalMutation({
         if (!goal || goal.userId !== userId || !goal.adhoc) return;
 
         await ctx.db.patch(goalId, {
-          year: to.year,
+          year: firstWeekInfo.year, // Use the ISO week year for the first week
           quarter: to.quarter,
           adhoc: {
             ...goal.adhoc,
-            year: firstWeekInfo.year,
             weekNumber: firstWeekInfo.weekNumber,
           },
         });

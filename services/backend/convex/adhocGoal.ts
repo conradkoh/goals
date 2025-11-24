@@ -250,7 +250,6 @@ export const updateAdhocGoal = mutation({
               ? undefined
               : domainId
             : currentAdhoc.domainId, // Keep for backward compatibility
-        year: currentAdhoc.year || getISOWeekYear(new Date()), // Preserve existing year or calculate
         weekNumber: weekNumber !== undefined ? weekNumber : currentAdhoc.weekNumber,
         dayOfWeek: dayOfWeek !== undefined ? dayOfWeek : currentAdhoc.dayOfWeek,
         dueDate: dueDate !== undefined ? dueDate : currentAdhoc.dueDate,
@@ -605,9 +604,9 @@ export const moveAdhocGoalsFromWeek = mutation({
         if (!goal.adhoc) return;
 
         await ctx.db.patch(goal._id, {
+          year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
-            year: to.year,
             weekNumber: to.weekNumber,
           },
         });
@@ -744,9 +743,9 @@ export const moveAdhocGoalsFromDay = mutation({
         if (!goal.adhoc) return;
 
         await ctx.db.patch(goal._id, {
+          year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
-            year: to.year,
             weekNumber: to.weekNumber,
             dayOfWeek: to.dayOfWeek,
           },
