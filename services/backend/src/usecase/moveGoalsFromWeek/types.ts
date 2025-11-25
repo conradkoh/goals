@@ -62,11 +62,17 @@ export type QuarterlyGoalToUpdate = {
   isPinned: boolean;
 };
 
+export type AdhocGoalToMove = {
+  goal: Doc<'goals'>;
+  domain?: Doc<'domains'>;
+};
+
 // Result types
 export type ProcessGoalResult = {
   weekStatesToCopy: WeekStateToCopy[];
   dailyGoalsToMove: DailyGoalToMove[];
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[];
+  adhocGoalsToMove: AdhocGoalToMove[];
 };
 
 export type WeekStateToCopy = {
@@ -106,22 +112,44 @@ export type QuarterlyGoalSummary = {
   isPinned: boolean;
 };
 
+export type AdhocGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  domainId?: Id<'domains'>;
+  domainName?: string;
+  dayOfWeek?: DayOfWeek;
+  dueDate?: number;
+};
+
+export type SkippedGoalSummary = {
+  id: Id<'goals'>;
+  title: string;
+  reason: 'already_moved';
+  carryOver: CarryOver;
+  dailyGoalsCount: number;
+  quarterlyGoalId?: Id<'goals'>;
+};
+
 export type BaseGoalMoveResult = {
   weekStatesToCopy: WeekStateSummary[];
   dailyGoalsToMove: DailyGoalSummary[];
   quarterlyGoalsToUpdate: QuarterlyGoalSummary[];
+  adhocGoalsToMove: AdhocGoalSummary[];
 };
 
 export type DryRunResult = BaseGoalMoveResult & {
   isDryRun: true;
   // true when there is something to pull; false when no prior non-empty week
   canPull: boolean;
+  // Goals that will be skipped because they already exist in target week
+  skippedGoals: SkippedGoalSummary[];
 };
 
 export type UpdateResult = BaseGoalMoveResult & {
   weekStatesCopied: number;
   dailyGoalsMoved: number;
   quarterlyGoalsUpdated: number;
+  adhocGoalsMoved: number;
 };
 
 export type MoveGoalsFromWeekResult<T extends MoveGoalsFromWeekArgs> = T['dryRun'] extends true

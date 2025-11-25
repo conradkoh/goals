@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
+import { DomainPopover } from '@/components/molecules/DomainPopover';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
 import type { DayOfWeek } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -121,16 +121,8 @@ export function AdhocGoalsSection({
     useAdhocGoals(sessionId);
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
-  // Filter adhoc goals based on week and optionally day
-  const filteredAdhocGoals = dayOfWeek
-    ? adhocGoals.filter((goal) => {
-        // For daily view: show goals for this specific day OR goals for this week with no specific day
-        return (
-          goal.adhoc?.weekNumber === weekNumber &&
-          (goal.adhoc?.dayOfWeek === dayOfWeek || !goal.adhoc?.dayOfWeek)
-        );
-      })
-    : adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
+  // Filter adhoc goals based on week (adhoc tasks are week-level only, not day-level)
+  const filteredAdhocGoals = adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
 
   // Combine real and optimistic goals
   const allGoals = [...optimisticGoals, ...filteredAdhocGoals];
@@ -138,7 +130,7 @@ export function AdhocGoalsSection({
   // Group goals by domain
   const groupedGoals = allGoals.reduce(
     (acc, goal) => {
-      const domainId = goal.adhoc?.domainId || 'uncategorized';
+      const domainId = goal.domainId || 'uncategorized';
       if (!acc[domainId]) {
         acc[domainId] = {
           domain: goal.domain,
@@ -150,13 +142,6 @@ export function AdhocGoalsSection({
     },
     {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
   );
-
-  // Sort groups: domains first (alphabetically), then uncategorized
-  const sortedGroups = Object.entries(groupedGoals).sort(([keyA, groupA], [keyB, groupB]) => {
-    if (keyA === 'uncategorized') return 1;
-    if (keyB === 'uncategorized') return -1;
-    return (groupA.domain?.name || '').localeCompare(groupB.domain?.name || '');
-  });
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -177,14 +162,20 @@ export function AdhocGoalsSection({
       depth: -1,
       isComplete: false,
       isOptimistic: true,
+      domainId: selectedDomainId || undefined, // Store domain at goal level
       adhoc: {
-        year: currentYear,
         weekNumber,
-        dayOfWeek,
-        domainId: selectedDomainId || undefined,
+        // dayOfWeek not stored - week-level only
+        // dueDate could be added here if needed
       },
       domain: selectedDomainId ? domains.find((d) => d._id === selectedDomainId) : undefined,
     };
+
+    console.log('[AdhocGoalsSection.handleSubmit] Optimistic goal created', {
+      optimisticGoalId: optimisticGoal._id,
+      domainId: optimisticGoal.domainId,
+      domainName: optimisticGoal.domain?.name,
+    });
 
     // Add optimistic goal immediately
     setOptimisticGoals((prev) => [optimisticGoal, ...prev]);
@@ -272,29 +263,57 @@ export function AdhocGoalsSection({
     }
   };
 
+  // Filter to show only incomplete goals in main view
+  const incompleteGroupedGoals = Object.entries(groupedGoals).reduce(
+    (acc, [domainId, { domain, goals }]) => {
+      const incompleteGoals = goals.filter((goal) => !goal.isComplete);
+      if (incompleteGoals.length > 0) {
+        acc[domainId] = { domain, goals: incompleteGoals };
+      }
+      return acc;
+    },
+    {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
+  );
+
+  // Sort groups: domains first (alphabetically), then uncategorized
+  const incompleteGroups = Object.entries(incompleteGroupedGoals).sort(
+    ([keyA, groupA], [keyB, groupB]) => {
+      if (keyA === 'uncategorized') return 1;
+      if (keyB === 'uncategorized') return -1;
+      return (groupA.domain?.name || '').localeCompare(groupB.domain?.name || '');
+    }
+  );
+
   const content = (
     <>
-      {/* Grouped Goals */}
-      {sortedGroups.length > 0 && (
+      {/* Grouped Goals - Only Incomplete */}
+      {incompleteGroups.length > 0 && (
         <div className="space-y-3">
-          {sortedGroups.map(([domainId, { domain, goals }]) => {
+          {incompleteGroups.map(([domainId, { domain, goals }]) => {
             const colors = _getDomainPillColors(domain?.color);
+            const domainPill = (
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity"
+                style={{
+                  color: colors.foreground,
+                  backgroundColor: colors.background,
+                  borderColor: colors.border,
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: colors.dotColor }}
+                />
+                {domain ? domain.name : 'Uncategorized'} ({goals.length})
+              </div>
+            );
             return (
               <div key={domainId} className="space-y-1">
-                <div
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
-                  style={{
-                    color: colors.foreground,
-                    backgroundColor: colors.background,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: colors.dotColor }}
-                  />
-                  {domain ? domain.name : 'Uncategorized'} ({goals.length})
-                </div>
+                <DomainPopover
+                  domain={domain || null}
+                  trigger={domainPill}
+                  weekNumber={weekNumber}
+                />
                 <div className="space-y-0.5">
                   {goals.map((goal) => (
                     <AdhocGoalItem

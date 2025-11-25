@@ -70,6 +70,29 @@ export const useMoveGoalsForWeek = ({
       isStarred?: boolean;
       isPinned?: boolean;
     }[];
+    adhocGoals: {
+      id: string;
+      title: string;
+      domainId?: string;
+      domainName?: string;
+      dayOfWeek?: DayOfWeek;
+      dueDate?: number;
+    }[];
+    skippedGoals: {
+      id: string;
+      title: string;
+      reason: 'already_moved';
+      carryOver: {
+        type: 'week';
+        numWeeks: number;
+        fromGoal: {
+          previousGoalId: Id<'goals'>;
+          rootGoalId: Id<'goals'>;
+        };
+      };
+      dailyGoalsCount: number;
+      quarterlyGoalId?: Id<'goals'>;
+    }[];
   } | null>(null);
   const [targetDayOfWeek, setTargetDayOfWeek] = useState<DayOfWeek | undefined>(undefined);
 
@@ -93,7 +116,8 @@ export const useMoveGoalsForWeek = ({
       });
 
       // Type guard to check if we have preview data
-      if ('canPull' in previewData && previewData.canPull) {
+      // Show dialog even if canPull is false - user should see "no tasks to move" message
+      if ('canPull' in previewData) {
         // Map the daily goals to the DailyGoalToCopy format
         setPreview({
           tasks: previewData.dailyGoalsToMove.map((dailyGoal) => {
@@ -124,6 +148,22 @@ export const useMoveGoalsForWeek = ({
             title: q.title,
             isStarred: q.isStarred,
             isPinned: q.isPinned,
+          })),
+          adhocGoals: (previewData.adhocGoalsToMove || []).map((adhoc) => ({
+            id: adhoc.id,
+            title: adhoc.title,
+            domainId: adhoc.domainId,
+            domainName: adhoc.domainName,
+            dayOfWeek: adhoc.dayOfWeek,
+            dueDate: adhoc.dueDate,
+          })),
+          skippedGoals: (previewData.skippedGoals || []).map((skipped) => ({
+            id: skipped.id,
+            title: skipped.title,
+            reason: skipped.reason,
+            carryOver: skipped.carryOver,
+            dailyGoalsCount: skipped.dailyGoalsCount,
+            quarterlyGoalId: skipped.quarterlyGoalId,
           })),
         });
         setShowConfirmDialog(true);

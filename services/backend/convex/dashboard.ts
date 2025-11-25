@@ -973,7 +973,7 @@ export const getQuarterSummary = query({
         ctx.db
           .query('goals')
           .withIndex('by_user_and_adhoc_year_week', (q) =>
-            q.eq('userId', userId).eq('adhoc.year', year).eq('adhoc.weekNumber', weekNum)
+            q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNum)
           )
           .collect()
       );
@@ -985,8 +985,8 @@ export const getQuarterSummary = query({
           // Check if UNCATEGORIZED is in the selection
           const includeUncategorized = adhocDomainIds.some((id) => id === 'UNCATEGORIZED');
 
-          // Get effective domain ID (goal.domainId with fallback to goal.adhoc.domainId)
-          const effectiveDomainId = goal.domainId || goal.adhoc.domainId;
+          // Get effective domain ID from root goal.domainId
+          const effectiveDomainId = goal.domainId;
 
           // If goal has no domain
           if (!effectiveDomainId) {

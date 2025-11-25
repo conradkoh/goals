@@ -1,6 +1,6 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { format } from 'date-fns';
-import { Calendar, Clock, Edit2, Trash2 } from 'lucide-react';
+import { Calendar, Edit2, Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
 import { DomainBadge } from '@/components/atoms/DomainBadge';
 import { FireIcon } from '@/components/atoms/FireIcon';
@@ -83,7 +83,7 @@ export function AdhocGoalItem({
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);
 
-  const effectiveDomainId = goal.domainId || goal.adhoc?.domainId || null;
+  const effectiveDomainId = goal.domainId || null;
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
 
   const additionalContent = (
@@ -94,12 +94,7 @@ export function AdhocGoalItem({
           {_formatDueDate(goal.adhoc.dueDate)}
         </div>
       )}
-      {goal.adhoc?.dayOfWeek && (
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {_formatDayOfWeek(goal.adhoc.dayOfWeek)}
-        </div>
-      )}
+      {/* dayOfWeek removed - adhoc tasks are week-level only */}
       {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
     </div>
   );
@@ -154,12 +149,7 @@ export function AdhocGoalItem({
                   </div>
                 )}
 
-                {goal.adhoc?.dayOfWeek && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {_formatDayOfWeek(goal.adhoc.dayOfWeek)}
-                  </div>
-                )}
+                {/* dayOfWeek removed - adhoc tasks are week-level only */}
               </div>
             </div>
           )}

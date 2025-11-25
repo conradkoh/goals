@@ -85,9 +85,9 @@ export function AdhocGoalList({
     // Domain filter
     if (selectedDomainId !== 'all') {
       if (selectedDomainId === 'uncategorized') {
-        if (goal.adhoc?.domainId) return false;
+        if (goal.domainId) return false;
       } else {
-        if (goal.adhoc?.domainId !== selectedDomainId) return false;
+        if (goal.domainId !== selectedDomainId) return false;
       }
     }
 
