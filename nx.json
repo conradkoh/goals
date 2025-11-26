@@ -20,6 +20,6 @@
     "defaultBase": "main"
   },
   "tui": {
-    "enabled": false
+    "enabled": true
   }
 }
