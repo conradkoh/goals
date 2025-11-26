@@ -6,6 +6,7 @@ import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { DomainPopover } from '@/components/molecules/DomainPopover';
 import { Spinner } from '@/components/ui/spinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
@@ -127,21 +128,31 @@ export function AdhocGoalsSection({
   // Combine real and optimistic goals
   const allGoals = [...optimisticGoals, ...filteredAdhocGoals];
 
-  // Group goals by domain
-  const groupedGoals = allGoals.reduce(
-    (acc, goal) => {
-      const domainId = goal.domainId || 'uncategorized';
-      if (!acc[domainId]) {
-        acc[domainId] = {
-          domain: goal.domain,
-          goals: [],
-        };
-      }
-      acc[domainId].goals.push(goal);
-      return acc;
-    },
-    {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
-  );
+  // Separate incomplete and completed goals for this week
+  const incompleteGoals = allGoals.filter((goal) => !goal.isComplete);
+  const completedGoals = allGoals.filter((goal) => goal.isComplete);
+
+  // Helper function to group goals by domain
+  const groupGoalsByDomain = (goals: OptimisticAdhocGoal[]) => {
+    return goals.reduce(
+      (acc, goal) => {
+        const domainId = goal.domainId || 'uncategorized';
+        if (!acc[domainId]) {
+          acc[domainId] = {
+            domain: goal.domain,
+            goals: [],
+          };
+        }
+        acc[domainId].goals.push(goal);
+        return acc;
+      },
+      {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
+    );
+  };
+
+  // Group goals by domain for tabs
+  const incompleteGroupedGoals = groupGoalsByDomain(incompleteGoals);
+  const completedGroupedGoals = groupGoalsByDomain(completedGoals);
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -263,110 +274,129 @@ export function AdhocGoalsSection({
     }
   };
 
-  // Filter to show only incomplete goals in main view
-  const incompleteGroupedGoals = Object.entries(groupedGoals).reduce(
-    (acc, [domainId, { domain, goals }]) => {
-      const incompleteGoals = goals.filter((goal) => !goal.isComplete);
-      if (incompleteGoals.length > 0) {
-        acc[domainId] = { domain, goals: incompleteGoals };
-      }
-      return acc;
-    },
-    {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
-  );
-
   // Sort groups: domains first (alphabetically), then uncategorized
-  const incompleteGroups = Object.entries(incompleteGroupedGoals).sort(
-    ([keyA, groupA], [keyB, groupB]) => {
+  const sortGroups = (
+    groups: Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
+  ) => {
+    return Object.entries(groups).sort(([keyA, groupA], [keyB, groupB]) => {
       if (keyA === 'uncategorized') return 1;
       if (keyB === 'uncategorized') return -1;
       return (groupA.domain?.name || '').localeCompare(groupB.domain?.name || '');
+    });
+  };
+
+  const incompleteGroups = sortGroups(incompleteGroupedGoals);
+  const completedGroups = sortGroups(completedGroupedGoals);
+
+  // Render a list of grouped goals
+  const renderGoalsList = (
+    groups: [string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }][],
+    emptyMessage: string
+  ) => {
+    if (groups.length === 0) {
+      return <div className="text-center py-4 text-muted-foreground text-sm">{emptyMessage}</div>;
     }
+
+    return (
+      <div className="space-y-3">
+        {groups.map(([domainId, { domain, goals }]) => {
+          const colors = _getDomainPillColors(domain?.color);
+          const domainPill = (
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity"
+              style={{
+                color: colors.foreground,
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: colors.dotColor }}
+              />
+              {domain ? domain.name : 'Uncategorized'} ({goals.length})
+            </div>
+          );
+          return (
+            <div key={domainId} className="space-y-1">
+              <DomainPopover domain={domain || null} trigger={domainPill} weekNumber={weekNumber} />
+              <div className="space-y-0.5">
+                {goals.map((goal) => (
+                  <AdhocGoalItem
+                    key={goal._id}
+                    goal={goal}
+                    onCompleteChange={handleCompleteChange}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                    showDueDate={!dayOfWeek} // Only show due date in weekly view
+                    showDomain={false}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Create input component
+  const createInput = (
+    <div className="relative">
+      <CreateGoalInput
+        placeholder="Add an adhoc task..."
+        value={newGoalTitle}
+        onChange={setNewGoalTitle}
+        onSubmit={handleSubmit}
+        onEscape={handleEscape}
+      >
+        <div className="flex gap-2 items-center">
+          <div className="flex-1">
+            <DomainSelector
+              domains={domains}
+              selectedDomainId={selectedDomainId}
+              onDomainChange={(value) => setSelectedDomainId(value as Id<'domains'> | null)}
+              onDomainCreate={handleDomainCreate}
+              onDomainUpdate={async (domainId, name, description, color) => {
+                await updateDomain(domainId, { name, description, color });
+              }}
+              onDomainDelete={async (domainId) => {
+                await deleteDomain(domainId);
+              }}
+              placeholder="Select domain (optional)"
+            />
+          </div>
+          {isCreating && (
+            <div className="flex items-center">
+              <Spinner className="h-4 w-4" />
+            </div>
+          )}
+        </div>
+      </CreateGoalInput>
+    </div>
   );
 
-  const content = (
-    <>
-      {/* Grouped Goals - Only Incomplete */}
-      {incompleteGroups.length > 0 && (
-        <div className="space-y-3">
-          {incompleteGroups.map(([domainId, { domain, goals }]) => {
-            const colors = _getDomainPillColors(domain?.color);
-            const domainPill = (
-              <div
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer hover:opacity-80 transition-opacity"
-                style={{
-                  color: colors.foreground,
-                  backgroundColor: colors.background,
-                  borderColor: colors.border,
-                }}
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: colors.dotColor }}
-                />
-                {domain ? domain.name : 'Uncategorized'} ({goals.length})
-              </div>
-            );
-            return (
-              <div key={domainId} className="space-y-1">
-                <DomainPopover
-                  domain={domain || null}
-                  trigger={domainPill}
-                  weekNumber={weekNumber}
-                />
-                <div className="space-y-0.5">
-                  {goals.map((goal) => (
-                    <AdhocGoalItem
-                      key={goal._id}
-                      goal={goal}
-                      onCompleteChange={handleCompleteChange}
-                      onUpdate={handleUpdate}
-                      onDelete={handleDelete}
-                      showDueDate={!dayOfWeek} // Only show due date in weekly view
-                      showDomain={false}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+  // Tabs content with Active and Completed sections
+  const tabsContent = (
+    <Tabs defaultValue="active" className="w-full">
+      <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
+        <TabsTrigger value="active" className="rounded-none">
+          Active ({incompleteGoals.length})
+        </TabsTrigger>
+        <TabsTrigger value="completed" className="rounded-none">
+          Completed ({completedGoals.length})
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Inline Create Input */}
-      <div className="relative">
-        <CreateGoalInput
-          placeholder="Add an adhoc task..."
-          value={newGoalTitle}
-          onChange={setNewGoalTitle}
-          onSubmit={handleSubmit}
-          onEscape={handleEscape}
-        >
-          <div className="flex gap-2 items-center">
-            <div className="flex-1">
-              <DomainSelector
-                domains={domains}
-                selectedDomainId={selectedDomainId}
-                onDomainChange={(value) => setSelectedDomainId(value as Id<'domains'> | null)}
-                onDomainCreate={handleDomainCreate}
-                onDomainUpdate={async (domainId, name, description, color) => {
-                  await updateDomain(domainId, { name, description, color });
-                }}
-                onDomainDelete={async (domainId) => {
-                  await deleteDomain(domainId);
-                }}
-                placeholder="Select domain (optional)"
-              />
-            </div>
-            {isCreating && (
-              <div className="flex items-center">
-                <Spinner className="h-4 w-4" />
-              </div>
-            )}
-          </div>
-        </CreateGoalInput>
-      </div>
-    </>
+      <TabsContent value="active" className="mt-3 space-y-3">
+        {renderGoalsList(incompleteGroups, 'No active tasks')}
+        {createInput}
+      </TabsContent>
+
+      <TabsContent value="completed" className="mt-3">
+        {renderGoalsList(completedGroups, 'No completed tasks')}
+      </TabsContent>
+    </Tabs>
   );
 
   // Render with or without header based on showHeader and variant
@@ -394,12 +424,12 @@ export function AdhocGoalsSection({
             </div>
           </div>
         )}
-        <div className="space-y-2">{content}</div>
+        {tabsContent}
       </div>
     );
   }
 
-  // Default variant - no card, optional header
+  // Default/inline variant - no card, optional header
   return (
     <div className={getWrapperClassName()}>
       {showHeader && (
@@ -408,7 +438,7 @@ export function AdhocGoalsSection({
           <h3 className="font-semibold text-foreground">Adhoc Tasks</h3>
         </div>
       )}
-      {content}
+      {tabsContent}
     </div>
   );
 }
