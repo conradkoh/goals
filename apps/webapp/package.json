@@ -36,7 +36,7 @@
     "@types/luxon": "^3.4.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "convex": "^1.27.0",
+    "convex": "^1.29.3",
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.4",
     "lucide-react": "^0.475.0",
