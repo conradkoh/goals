@@ -53,6 +53,7 @@
   },
   "parallel": 3,
   "tui": {
-    "enabled": false
+    "enabled": false,
+    "autoExit": 0
   }
 }
