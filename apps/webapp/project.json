@@ -1,9 +1,18 @@
 {
   "name": "@apps/webapp",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/webapp",
   "projectType": "application",
+  "sourceRoot": "apps/webapp",
   "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm build",
+        "cwd": "apps/webapp"
+      },
+      "outputs": ["{projectRoot}/.next"],
+      "dependsOn": ["^build"]
+    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {
@@ -18,13 +27,6 @@
         }
       ]
     },
-    "build": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm build",
-        "cwd": "apps/webapp"
-      }
-    },
     "start": {
       "executor": "nx:run-commands",
       "options": {
@@ -38,6 +40,31 @@
         "command": "pnpm lint",
         "cwd": "apps/webapp"
       }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm typecheck",
+        "cwd": "apps/webapp"
+      },
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test",
+        "cwd": "apps/webapp"
+      },
+      "outputs": ["{projectRoot}/coverage"]
+    },
+    "test:watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm test:watch",
+        "cwd": "apps/webapp"
+      },
+      "continuous": true
     }
-  }
+  },
+  "tags": []
 }
