@@ -1,7 +1,8 @@
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useScreenSize } from '@/hooks/useScreenSize';
 import { cn } from '@/lib/utils';
 
 export interface GoalDetailsPopoverViewProps {
@@ -21,13 +22,16 @@ export interface GoalDetailsPopoverViewProps {
   open?: boolean;
   /** Callback when open state changes (required for fullScreen mode) */
   onOpenChange?: (open: boolean) => void;
+  /** Whether to use fullscreen mode on mobile devices (default: true) */
+  mobileFullScreen?: boolean;
 }
 
 /**
  * Base view component for goal details.
  * Can render as either a popover (default) or a full-screen dialog.
+ * Automatically uses fullscreen on mobile devices for better UX (after hydration).
  *
- * ## Popover Mode (default)
+ * ## Popover Mode (default on desktop)
  * ```tsx
  * <GoalDetailsPopoverView
  *   popoverKey={goal._id}
@@ -37,7 +41,7 @@ export interface GoalDetailsPopoverViewProps {
  * </GoalDetailsPopoverView>
  * ```
  *
- * ## Full-Screen Dialog Mode
+ * ## Full-Screen Dialog Mode (explicit or on mobile)
  * ```tsx
  * <GoalDetailsPopoverView
  *   popoverKey={goal._id}
@@ -59,18 +63,35 @@ export function GoalDetailsPopoverView({
   fullScreen = false,
   open,
   onOpenChange,
+  mobileFullScreen = true,
 }: GoalDetailsPopoverViewProps) {
-  if (fullScreen) {
+  const { isMobile, isHydrated } = useScreenSize();
+  const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
+
+  // Determine if we should use fullscreen mode
+  // Only use mobile fullscreen AFTER hydration to avoid SSR mismatch
+  const shouldUseFullScreen = fullScreen || (isHydrated && isMobile && mobileFullScreen);
+
+  // For explicit fullScreen mode, use controlled state from props
+  // For mobile fullScreen, use internal state
+  const dialogOpen = fullScreen ? open : mobileDialogOpen;
+  const handleDialogOpenChange = fullScreen ? onOpenChange : setMobileDialogOpen;
+
+  if (shouldUseFullScreen) {
     return (
       <>
         {/* Trigger for fullscreen mode - clicking it opens the dialog */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
         {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
-        <span onClick={() => onOpenChange?.(true)}>{trigger}</span>
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <span onClick={() => handleDialogOpenChange?.(true)}>{trigger}</span>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent
             className={cn(
-              'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6',
+              // On mobile, use nearly full screen with proper safe areas
+              isMobile
+                ? 'w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none'
+                : 'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
+              'overflow-hidden flex flex-col p-4 sm:p-6',
               contentClassName
             )}
           >
