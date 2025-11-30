@@ -5,12 +5,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useToast } from '@/components/ui/use-toast';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import { useScreenSize } from '@/hooks/useScreenSize';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -38,6 +40,7 @@ export function GoalEditPopover({
   initialDomainId,
   showDomainSelector = false,
 }: GoalEditPopoverProps) {
+  const { isMobile } = useScreenSize();
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
   const [details, setDetails] = useState(initialDetails ?? '');
@@ -157,104 +160,134 @@ export function GoalEditPopover({
     []
   );
 
+  // Shared form content for both Popover and Dialog
+  const formContent = (
+    // biome-ignore lint/a11y/noStaticElementInteractions: Form handles keyboard shortcuts
+    <div className="space-y-4" onKeyDown={handleFormShortcut}>
+      <div className="space-y-2">
+        <label htmlFor="title" className="text-sm font-medium text-muted-foreground">
+          Title
+        </label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="w-full text-sm"
+          placeholder="Enter title..."
+        />
+      </div>
+      <div className="space-y-2">
+        <label htmlFor="details" className="text-sm font-medium text-muted-foreground">
+          Details
+        </label>
+        <RichTextEditor
+          value={details}
+          onChange={setDetails}
+          placeholder="Add details..."
+          className="min-h-[150px] p-3 rounded-md border"
+        />
+      </div>
+      <div className="space-y-2">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
+        <label className="text-sm font-medium text-muted-foreground">Due Date</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                'w-full justify-start text-left font-normal',
+                !dueDate && 'text-muted-foreground'
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dueDate ? DateTime.fromJSDate(dueDate).toFormat('LLL dd, yyyy') : 'Set due date...'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
+            {dueDate && (
+              <div className="p-3 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setDueDate(undefined)}
+                >
+                  Clear due date
+                </Button>
+              </div>
+            )}
+          </PopoverContent>
+        </Popover>
+      </div>
+      {showDomainSelector && (
+        <div className="space-y-2">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with DomainSelector below */}
+          <label className="text-sm font-medium text-muted-foreground">Domain</label>
+          <DomainSelector
+            domains={domains}
+            selectedDomainId={domainId === null ? null : domainId}
+            onDomainChange={(newDomainId) => setDomainId(newDomainId as Id<'domains'> | null)}
+            onDomainCreate={async (name, description, color) => {
+              const newDomainId = await createDomain(name, description, color);
+              setDomainId(newDomainId);
+              return newDomainId;
+            }}
+            onDomainUpdate={async (domainIdToUpdate, name, description, color) => {
+              await updateDomain(domainIdToUpdate, { name, description, color });
+            }}
+            onDomainDelete={deleteDomain}
+            allowCreate={true}
+            allowEdit={true}
+            placeholder="Select a domain..."
+            className="w-full"
+          />
+        </div>
+      )}
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} disabled={isSubmitting || !title.trim()}>
+          Save
+        </Button>
+      </div>
+    </div>
+  );
+
+  // On mobile, use fullscreen Dialog for better UX
+  if (isMobile) {
+    return (
+      <>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger handles keyboard events */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+        >
+          {trigger || defaultTrigger}
+        </span>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+          <DialogContent className="w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none overflow-hidden flex flex-col p-4">
+            <DialogHeader>
+              <DialogTitle>Edit Goal</DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto flex-1">{formContent}</div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  // On desktop, use Popover
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
-      <PopoverContent
-        className="w-[400px] max-w-[calc(100vw-32px)] p-4 space-y-4"
-        onKeyDown={handleFormShortcut}
-      >
-        <div className="space-y-2">
-          <label htmlFor="title" className="text-sm font-medium text-muted-foreground">
-            Title
-          </label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full text-sm"
-            placeholder="Enter title..."
-          />
-        </div>
-        <div className="space-y-2">
-          <label htmlFor="details" className="text-sm font-medium text-muted-foreground">
-            Details
-          </label>
-          <RichTextEditor
-            value={details}
-            onChange={setDetails}
-            placeholder="Add details..."
-            className="min-h-[150px] p-3 rounded-md border"
-          />
-        </div>
-        <div className="space-y-2">
-          {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
-          <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !dueDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate
-                  ? DateTime.fromJSDate(dueDate).toFormat('LLL dd, yyyy')
-                  : 'Set due date...'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
-              {dueDate && (
-                <div className="p-3 border-t">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setDueDate(undefined)}
-                  >
-                    Clear due date
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
-        {showDomainSelector && (
-          <div className="space-y-2">
-            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with DomainSelector below */}
-            <label className="text-sm font-medium text-muted-foreground">Domain</label>
-            <DomainSelector
-              domains={domains}
-              selectedDomainId={domainId === null ? null : domainId}
-              onDomainChange={(newDomainId) => setDomainId(newDomainId as Id<'domains'> | null)}
-              onDomainCreate={async (name, description, color) => {
-                const newDomainId = await createDomain(name, description, color);
-                setDomainId(newDomainId);
-                return newDomainId;
-              }}
-              onDomainUpdate={async (domainIdToUpdate, name, description, color) => {
-                await updateDomain(domainIdToUpdate, { name, description, color });
-              }}
-              onDomainDelete={deleteDomain}
-              allowCreate={true}
-              allowEdit={true}
-              placeholder="Select a domain..."
-              className="w-full"
-            />
-          </div>
-        )}
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSubmitting || !title.trim()}>
-            Save
-          </Button>
-        </div>
+      <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-4">
+        {formContent}
       </PopoverContent>
     </Popover>
   );

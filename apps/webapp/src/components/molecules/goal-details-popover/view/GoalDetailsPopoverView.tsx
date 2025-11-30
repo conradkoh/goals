@@ -81,9 +81,21 @@ export function GoalDetailsPopoverView({
     return (
       <>
         {/* Trigger for fullscreen mode - clicking it opens the dialog */}
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
         {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
-        <span onClick={() => handleDialogOpenChange?.(true)}>{trigger}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDialogOpenChange?.(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleDialogOpenChange?.(true);
+            }
+          }}
+        >
+          {trigger}
+        </span>
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent
             className={cn(
