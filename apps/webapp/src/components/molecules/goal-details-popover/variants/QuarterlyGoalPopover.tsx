@@ -1,4 +1,3 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
@@ -7,6 +6,7 @@ import {
   GoalEditProvider,
   useGoalEditContext,
 } from '@/components/molecules/goal-details/GoalEditContext';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
@@ -25,8 +25,6 @@ import { GoalActionMenuNew } from '../view/components/GoalActionMenuNew';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 export interface QuarterlyGoalPopoverProps {
-  /** The quarterly goal to display */
-  goal: GoalWithDetailsAndChildren;
   /** Callback when goal is saved */
   onSave: GoalSaveHandler;
   /** Callback when completion is toggled */
@@ -41,14 +39,16 @@ export interface QuarterlyGoalPopoverProps {
  * Quarterly goal popover variant.
  * Shows star/pin controls, weekly goals children, and ability to create weekly goals.
  * Supports both popover and fullscreen display modes.
+ *
+ * Must be used within a GoalProvider context.
  */
 export function QuarterlyGoalPopover({
-  goal,
   onSave,
   onToggleComplete,
   triggerClassName,
   titleClassName,
 }: QuarterlyGoalPopoverProps) {
+  const { goal } = useGoalContext();
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, updateQuarterlyGoalStatus } =
     useWeek();
   const [newWeeklyGoalTitle, setNewWeeklyGoalTitle] = useState('');
@@ -96,7 +96,6 @@ export function QuarterlyGoalPopover({
     <GoalEditProvider>
       <GoalDisplayProvider>
         <QuarterlyGoalPopoverContent
-          goal={goal}
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -127,7 +126,6 @@ interface QuarterlyGoalPopoverContentProps extends QuarterlyGoalPopoverProps {
 }
 
 function QuarterlyGoalPopoverContent({
-  goal,
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -141,6 +139,7 @@ function QuarterlyGoalPopoverContent({
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
 }: QuarterlyGoalPopoverContentProps) {
+  const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
 

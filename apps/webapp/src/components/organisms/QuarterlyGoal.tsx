@@ -1,7 +1,7 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import { useCallback } from 'react';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
@@ -52,8 +52,8 @@ export function QuarterlyGoal({ onToggleStatus, onUpdateGoal }: QuarterlyGoalPro
   );
 
   const handleSaveGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number, domainId?: Id<'domains'> | null) => {
-      await onUpdateGoal(goal._id, title, details, dueDate, domainId);
+    async (title: string, details?: string, dueDate?: number, _domainId?: Id<'domains'> | null) => {
+      await onUpdateGoal(goal._id, title, details, dueDate);
     },
     [goal._id, onUpdateGoal]
   );
@@ -81,8 +81,8 @@ export function QuarterlyGoal({ onToggleStatus, onUpdateGoal }: QuarterlyGoalPro
           />
         </GoalStarPinContainer>
 
-        {/* View Mode - GoalDetailsPopover gets goal from context */}
-        <GoalDetailsPopover
+        {/* View Mode - QuarterlyGoalPopover gets goal from context */}
+        <QuarterlyGoalPopover
           onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           titleClassName={cn(
