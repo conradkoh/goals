@@ -1,7 +1,7 @@
 import { Edit2 } from 'lucide-react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { DailyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -84,8 +84,8 @@ export const DailyGoalTaskItem = ({
           className="flex-shrink-0"
         />
 
-        {/* View Mode - GoalDetailsPopover gets goal from context */}
-        <GoalDetailsPopover
+        {/* View Mode - DailyGoalPopover gets goal from context */}
+        <DailyGoalPopover
           onSave={async (newTitle: string, newDetails?: string, dueDate?: number) => {
             await onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
           }}
