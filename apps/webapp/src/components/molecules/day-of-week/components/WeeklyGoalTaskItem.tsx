@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
@@ -77,8 +77,8 @@ export const WeeklyGoalTaskItem = () => {
             className="flex-shrink-0"
           />
 
-          {/* GoalDetailsPopover gets goal from context */}
-          <GoalDetailsPopover
+          {/* WeeklyGoalPopover gets goal from context */}
+          <WeeklyGoalPopover
             onSave={_handleUpdateGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             titleClassName={cn(

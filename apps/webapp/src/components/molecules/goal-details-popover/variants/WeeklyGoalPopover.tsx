@@ -1,8 +1,6 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { GoalActionMenu } from '@/components/molecules/goal-details/GoalActionMenu';
 import { GoalDetailsChildrenList } from '@/components/molecules/goal-details/GoalDetailsChildrenList';
 import {
   GoalEditProvider,
@@ -15,23 +13,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 import {
+  GoalActionMenuNew,
   GoalChildrenSection,
   GoalCompletionDate,
   GoalDetailsSection,
+  GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
   GoalHeader,
+  useGoalDisplayContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 export interface WeeklyGoalPopoverProps {
-  /** The weekly goal to display */
-  goal: GoalWithDetailsAndChildren;
   /** Callback when goal is saved */
   onSave: GoalSaveHandler;
   /** Callback when completion is toggled */
@@ -45,14 +45,17 @@ export interface WeeklyGoalPopoverProps {
 /**
  * Weekly goal popover variant.
  * Shows daily goals children and ability to create daily goals with day selection.
+ * Supports both popover and fullscreen display modes.
+ *
+ * Must be used within a GoalProvider context.
  */
 export function WeeklyGoalPopover({
-  goal,
   onSave,
   onToggleComplete,
   triggerClassName,
   titleClassName,
 }: WeeklyGoalPopoverProps) {
+  const { goal } = useGoalContext();
   const { weekNumber, year, createDailyGoalOptimistic } = useWeek();
 
   // Memoize the current weekday to avoid re-renders from minute timer updates
@@ -89,19 +92,20 @@ export function WeeklyGoalPopover({
 
   return (
     <GoalEditProvider>
-      <WeeklyGoalPopoverContent
-        goal={goal}
-        onSave={onSave}
-        onToggleComplete={onToggleComplete}
-        triggerClassName={triggerClassName}
-        titleClassName={titleClassName}
-        isComplete={isComplete}
-        newDailyGoalTitle={newDailyGoalTitle}
-        setNewDailyGoalTitle={setNewDailyGoalTitle}
-        selectedDayOfWeek={selectedDayOfWeek}
-        setSelectedDayOfWeek={setSelectedDayOfWeek}
-        handleCreateDailyGoal={handleCreateDailyGoal}
-      />
+      <GoalDisplayProvider>
+        <WeeklyGoalPopoverContent
+          onSave={onSave}
+          onToggleComplete={onToggleComplete}
+          triggerClassName={triggerClassName}
+          titleClassName={titleClassName}
+          isComplete={isComplete}
+          newDailyGoalTitle={newDailyGoalTitle}
+          setNewDailyGoalTitle={setNewDailyGoalTitle}
+          selectedDayOfWeek={selectedDayOfWeek}
+          setSelectedDayOfWeek={setSelectedDayOfWeek}
+          handleCreateDailyGoal={handleCreateDailyGoal}
+        />
+      </GoalDisplayProvider>
     </GoalEditProvider>
   );
 }
@@ -116,7 +120,6 @@ interface WeeklyGoalPopoverContentProps extends WeeklyGoalPopoverProps {
 }
 
 function WeeklyGoalPopoverContent({
-  goal,
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -128,12 +131,69 @@ function WeeklyGoalPopoverContent({
   setSelectedDayOfWeek,
   handleCreateDailyGoal,
 }: WeeklyGoalPopoverContentProps) {
+  const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
+  // Shared content for both popover and fullscreen modes
+  const goalContent = (
+    <FireGoalsProvider>
+      <GoalHeader
+        title={goal.title}
+        isComplete={isComplete}
+        onToggleComplete={onToggleComplete}
+        actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+      />
+
+      {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
+
+      {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+      {goal.details && <GoalDetailsSection title={goal.title} details={goal.details} />}
+
+      <GoalChildrenSection
+        title="Daily Goals"
+        childrenList={
+          hasChildren ? (
+            <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
+          ) : undefined
+        }
+        createInput={
+          <CreateGoalInput
+            placeholder="Add a new daily goal..."
+            value={newDailyGoalTitle}
+            onChange={setNewDailyGoalTitle}
+            onSubmit={handleCreateDailyGoal}
+            onEscape={() => setNewDailyGoalTitle('')}
+          >
+            <div className="mt-2">
+              <Select
+                value={selectedDayOfWeek.toString()}
+                onValueChange={(value) => setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(DayOfWeek).map((value) => (
+                    <SelectItem key={value} value={value.toString()}>
+                      {getDayName(value)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CreateGoalInput>
+        }
+      />
+    </FireGoalsProvider>
+  );
+
   return (
     <>
+      {/* Popover mode */}
       <GoalDetailsPopoverView
         popoverKey={goal._id.toString()}
         trigger={
@@ -144,58 +204,18 @@ function WeeklyGoalPopoverContent({
           />
         }
       >
-        <FireGoalsProvider>
-          <GoalHeader
-            title={goal.title}
-            isComplete={isComplete}
-            onToggleComplete={onToggleComplete}
-            actionMenu={<GoalActionMenu onSave={onSave} isQuarterlyGoal={false} />}
-          />
+        {goalContent}
+      </GoalDetailsPopoverView>
 
-          {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
-
-          {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
-
-          {goal.details && <GoalDetailsSection title={goal.title} details={goal.details} />}
-
-          <GoalChildrenSection
-            title="Daily Goals"
-            childrenList={
-              hasChildren ? (
-                <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
-              ) : undefined
-            }
-            createInput={
-              <CreateGoalInput
-                placeholder="Add a new daily goal..."
-                value={newDailyGoalTitle}
-                onChange={setNewDailyGoalTitle}
-                onSubmit={handleCreateDailyGoal}
-                onEscape={() => setNewDailyGoalTitle('')}
-              >
-                <div className="mt-2">
-                  <Select
-                    value={selectedDayOfWeek.toString()}
-                    onValueChange={(value) =>
-                      setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
-                    }
-                  >
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(DayOfWeek).map((value) => (
-                        <SelectItem key={value} value={value.toString()}>
-                          {getDayName(value)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CreateGoalInput>
-            }
-          />
-        </FireGoalsProvider>
+      {/* Fullscreen mode */}
+      <GoalDetailsPopoverView
+        popoverKey={`${goal._id.toString()}-fullscreen`}
+        trigger={<span />}
+        fullScreen
+        open={isFullScreenOpen}
+        onOpenChange={(open) => !open && closeFullScreen()}
+      >
+        {goalContent}
       </GoalDetailsPopoverView>
 
       <GoalEditModal isOpen={isEditing} goal={editingGoal} onSave={onSave} onClose={stopEditing} />
