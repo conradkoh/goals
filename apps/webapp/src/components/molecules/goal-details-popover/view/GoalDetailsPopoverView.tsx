@@ -81,9 +81,12 @@ export function GoalDetailsPopoverView({
     return (
       <>
         {/* Trigger for fullscreen mode - clicking it opens the dialog */}
+        {/* Using display:contents so the span doesn't affect layout - trigger keeps its flex/width */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
         {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
-        <span onClick={() => handleDialogOpenChange?.(true)}>{trigger}</span>
+        <span className="contents" onClick={() => handleDialogOpenChange?.(true)}>
+          {trigger}
+        </span>
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent
             className={cn(
