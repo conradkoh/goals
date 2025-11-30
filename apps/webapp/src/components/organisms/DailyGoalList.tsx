@@ -2,7 +2,10 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Check, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import {
+  QuarterlyGoalPopover,
+  WeeklyGoalPopover,
+} from '@/components/molecules/goal-details-popover';
 import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
@@ -167,8 +170,8 @@ export const DailyGoalGroupHeader = ({
     <div>
       <div className="flex items-center justify-between">
         <GoalProvider goal={weeklyGoal}>
-          {/* GoalDetailsPopover gets goal from context */}
-          <GoalDetailsPopover
+          {/* WeeklyGoalPopover gets goal from context */}
+          <WeeklyGoalPopover
             onSave={handleSaveWeeklyGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             onToggleComplete={async (newState) => {
@@ -187,8 +190,8 @@ export const DailyGoalGroupHeader = ({
         {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
         <GoalProvider goal={quarterlyGoal}>
-          {/* GoalDetailsPopover gets goal from context */}
-          <GoalDetailsPopover
+          {/* QuarterlyGoalPopover gets goal from context */}
+          <QuarterlyGoalPopover
             onSave={handleSaveQuarterlyGoal}
             triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
             onToggleComplete={handleToggleCompletion}

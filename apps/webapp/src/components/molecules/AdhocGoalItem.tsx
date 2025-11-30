@@ -6,7 +6,7 @@ import { DomainBadge } from '@/components/atoms/DomainBadge';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { DailyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
@@ -123,12 +123,13 @@ export function AdhocGoalItem({
 
         <div className="flex-1 min-w-0 flex items-center justify-between group/title">
           {onUpdate ? (
-            <GoalDetailsPopover
+            <DailyGoalPopover
               onSave={handleUpdate}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               titleClassName={cn(goal.isComplete && 'line-through text-muted-foreground')}
               onToggleComplete={handleToggleComplete}
               additionalContent={additionalContent}
+              domain={goal.domain}
             />
           ) : (
             <div className="flex-1 min-w-0">

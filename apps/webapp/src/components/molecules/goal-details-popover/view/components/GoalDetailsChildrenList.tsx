@@ -7,11 +7,29 @@ import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 
-interface GoalDetailsChildrenListProps {
+/**
+ * Props for the GoalDetailsChildrenList component.
+ */
+export interface GoalDetailsChildrenListProps {
+  /** The parent goal containing children to display */
   parentGoal: GoalWithDetailsAndChildren;
+  /** Section title shown above the children list */
   title: string;
 }
 
+/**
+ * Displays a hierarchical list of child goals within a goal details view.
+ * Renders weekly goals for quarterly parents, and daily goals for weekly parents.
+ * Supports nested grandchildren (daily goals under weekly goals within quarterly).
+ *
+ * @example
+ * ```tsx
+ * <GoalDetailsChildrenList
+ *   parentGoal={quarterlyGoal}
+ *   title="Weekly Goals"
+ * />
+ * ```
+ */
 export function GoalDetailsChildrenList({ parentGoal, title }: GoalDetailsChildrenListProps) {
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
 

@@ -12,11 +12,28 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 
-interface PendingStatusDialogProps {
+/**
+ * Props for the PendingStatusDialog component.
+ */
+export interface PendingStatusDialogProps {
+  /** Unique identifier of the goal to manage pending status for */
   goalId: Id<'goals'>;
+  /** Trigger element that opens the dialog when clicked */
   children: React.ReactNode;
 }
 
+/**
+ * Dialog component for managing a goal's pending status.
+ * Allows users to set, update, or clear the pending status with an optional description.
+ * Supports Cmd+Enter keyboard shortcut to save.
+ *
+ * @example
+ * ```tsx
+ * <PendingStatusDialog goalId={goal._id}>
+ *   <button>Mark as Pending</button>
+ * </PendingStatusDialog>
+ * ```
+ */
 export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId, children }) => {
   const { isPending, pendingDescription, setPendingStatus, clearPendingStatus } =
     usePendingGoalStatus(goalId);
@@ -31,25 +48,27 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
     }
   }, [isOpen, pendingDescription]);
 
+  /** Saves the pending status with the current description */
   const handleSave = useCallback(async () => {
-    // Make reason optional; allow empty string
     setPendingStatus(description.trim());
     setIsOpen(false);
   }, [description, setPendingStatus]);
 
-  const handleClear = async () => {
+  /** Clears the pending status and closes the dialog */
+  const handleClear = useCallback(async () => {
     await clearPendingStatus();
     setDescription('');
     setIsOpen(false);
-  };
+  }, [clearPendingStatus]);
 
-  const handleOpenChange = (open: boolean) => {
+  /** Handles dialog open/close state changes */
+  const handleOpenChange = useCallback((open: boolean) => {
     setIsOpen(open);
-  };
+  }, []);
 
-  // Handle keyboard shortcuts
+  // Handle keyboard shortcuts (Cmd+Enter to save)
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const _handleKeyDown = (event: KeyboardEvent) => {
       if (isOpen && event.metaKey && event.key === 'Enter') {
         event.preventDefault();
         handleSave();
@@ -57,11 +76,11 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
     };
 
     if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keydown', _handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', _handleKeyDown);
     };
   }, [isOpen, handleSave]);
 

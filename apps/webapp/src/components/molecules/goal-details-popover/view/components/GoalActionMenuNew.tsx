@@ -13,23 +13,14 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { GoalDetailsFullScreenModal } from './GoalDetailsFullScreenModal';
+import { useGoalDisplayContext } from './GoalDisplayContext';
 import { useGoalEditContext } from './GoalEditContext';
 import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
+
 /**
- * Props for the GoalActionMenu component providing action options for goals.
- *
- * @example
- * ```typescript
- * <GoalActionMenu
- *   goal={weeklyGoal}
- *   onSave={handleSave}
- *   isQuarterlyGoal={false}
- *   className="ml-2"
- * />
- * ```
+ * Props for the GoalActionMenuNew component.
  */
-export interface GoalActionMenuProps {
+export interface GoalActionMenuNewProps {
   /** Callback fired when goal is saved after editing */
   onSave: (
     title: string,
@@ -42,30 +33,23 @@ export interface GoalActionMenuProps {
   className?: string;
 }
 
-interface _DropdownState {
-  isOpen: boolean;
-}
-
-interface _ModalState {
-  isFullScreenOpen: boolean;
-}
 /**
- * Action menu component providing contextual actions for goals.
- * Displays a dropdown with options like edit, move, view details, and summary.
- * Actions vary based on goal type (quarterly vs weekly) and depth.
+ * New action menu component that uses the GoalDisplayContext for fullscreen mode.
+ * This replaces the old GoalActionMenu and removes the need for a separate fullscreen modal.
  */
-export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
-  onSave,
+export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
+  onSave: _onSave,
   isQuarterlyGoal = false,
   className,
 }) => {
   const { goal } = useGoalContext();
   const { startEditing } = useGoalEditContext();
+  const { requestFullScreen } = useGoalDisplayContext();
   const router = useRouter();
   const { year, quarter, weekNumber } = useWeek();
-  const [dropdownState, setDropdownState] = useState<_DropdownState>({ isOpen: false });
-  const [modalState, setModalState] = useState<_ModalState>({ isFullScreenOpen: false });
+  const [isOpen, setIsOpen] = useState(false);
 
+  // Move to week functionality for weekly goals
   const {
     openMoveModal,
     closeMoveModal,
@@ -84,7 +68,7 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
    */
   const handleEditClick = useCallback(() => {
     startEditing(goal);
-    setDropdownState({ isOpen: false });
+    setIsOpen(false);
   }, [startEditing, goal]);
 
   /**
@@ -93,22 +77,22 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
   const handleSummaryClick = useCallback(() => {
     const summaryUrl = `/app/goal/${goal._id}/quarterly-summary?year=${year}&quarter=${quarter}`;
     router.push(summaryUrl);
-    setDropdownState({ isOpen: false });
+    setIsOpen(false);
   }, [goal._id, year, quarter, router]);
 
   /**
-   * Handles full screen modal open action, closing dropdown.
+   * Handles full screen view action, opening fullscreen mode via context.
    */
   const handleFullScreenClick = useCallback(() => {
-    setModalState({ isFullScreenOpen: true });
-    setDropdownState({ isOpen: false });
-  }, []);
+    requestFullScreen();
+    setIsOpen(false);
+  }, [requestFullScreen]);
 
   /**
    * Handles move to week action for weekly goals, opening move modal.
    */
   const handleMoveToWeekClick = useCallback(() => {
-    setDropdownState({ isOpen: false });
+    setIsOpen(false);
     openMoveModal(goal);
   }, [openMoveModal, goal]);
 
@@ -123,19 +107,9 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
     [moveGoalToWeek, moveModalState.goal]
   );
 
-  /**
-   * Handles full screen modal close action.
-   */
-  const handleFullScreenClose = useCallback(() => {
-    setModalState({ isFullScreenOpen: false });
-  }, []);
-
   return (
     <>
-      <DropdownMenu
-        open={dropdownState.isOpen}
-        onOpenChange={(isOpen) => setDropdownState({ isOpen })}
-      >
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -195,13 +169,6 @@ export const GoalActionMenu: React.FC<GoalActionMenuProps> = ({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* GoalDetailsFullScreenModal gets goal from context */}
-      <GoalDetailsFullScreenModal
-        onSave={onSave}
-        isOpen={modalState.isFullScreenOpen}
-        onClose={handleFullScreenClose}
-      />
 
       <MoveGoalToWeekModal
         goal={moveModalState.goal}

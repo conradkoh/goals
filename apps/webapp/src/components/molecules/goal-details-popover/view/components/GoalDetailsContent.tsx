@@ -1,17 +1,37 @@
 import { Maximize2 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { cn } from '@/lib/utils';
 
-interface GoalDetailsContentProps {
+/**
+ * Props for the GoalDetailsContent component.
+ */
+export interface GoalDetailsContentProps {
+  /** The goal title (displayed in full view dialog header) */
   title: string;
+  /** HTML content to display as goal details */
   details: string;
+  /** Additional CSS classes for the content container */
   className?: string;
+  /** Whether to show the title above the content */
   showTitle?: boolean;
 }
 
+/**
+ * Displays goal details content with an expandable full view dialog.
+ * Shows HTML content in a scrollable container with an expand button on hover.
+ *
+ * @example
+ * ```tsx
+ * <GoalDetailsContent
+ *   title="My Goal"
+ *   details="<p>Some <strong>HTML</strong> content</p>"
+ *   showTitle={false}
+ * />
+ * ```
+ */
 export function GoalDetailsContent({
   title,
   details,
@@ -39,7 +59,7 @@ export function GoalDetailsContent({
 
           {/* Absolutely positioned expand button */}
           <div className="absolute top-0 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
-            <ExpandButton onClick={() => setIsFullViewOpen(true)} />
+            <_ExpandButton onClick={() => setIsFullViewOpen(true)} />
           </div>
         </div>
       </div>
@@ -59,8 +79,10 @@ export function GoalDetailsContent({
   );
 }
 
-// Extract the expand button to a reusable component
-function ExpandButton({ onClick }: { onClick: () => void }) {
+/**
+ * Internal expand button component for triggering full view dialog.
+ */
+function _ExpandButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant="ghost"

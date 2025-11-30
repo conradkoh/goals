@@ -4,7 +4,7 @@ import { Clock, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
@@ -247,7 +247,7 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
                     <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                   )}
                   <GoalProvider goal={quarterlyGoal}>
-                    <GoalDetailsPopover
+                    <QuarterlyGoalPopover
                       onSave={(title, details, dueDate) =>
                         handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
                       }

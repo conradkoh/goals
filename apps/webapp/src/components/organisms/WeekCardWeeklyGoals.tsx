@@ -3,7 +3,10 @@ import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/g
 import { Edit2 } from 'lucide-react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import {
+  QuarterlyGoalPopover,
+  WeeklyGoalPopover,
+} from '@/components/molecules/goal-details-popover';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,8 +136,8 @@ const WeeklyGoal = ({
               className="flex-shrink-0"
             />
 
-            {/* View Mode - GoalDetailsPopover gets goal from context */}
-            <GoalDetailsPopover
+            {/* View Mode - WeeklyGoalPopover gets goal from context */}
+            <WeeklyGoalPopover
               onSave={async (title, details, dueDate) => {
                 await onUpdateGoal(goal._id, title, details, dueDate);
               }}
@@ -404,7 +407,7 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                     )}
                   >
                     <GoalProvider goal={goal}>
-                      <GoalDetailsPopover
+                      <QuarterlyGoalPopover
                         onSave={async (title, details, dueDate) => {
                           await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
                         }}
