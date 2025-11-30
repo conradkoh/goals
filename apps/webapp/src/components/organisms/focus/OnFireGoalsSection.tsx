@@ -2,6 +2,7 @@ import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Eye, Flame, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
+import { DomainPill } from '@/components/atoms/DomainPill';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { GoalDetailsPopover } from '@/components/molecules/goal-details';
@@ -33,16 +34,6 @@ interface OnFireGoalsSectionProps {
   weekNumber: number;
   /** Whether focus mode is currently enabled */
   isFocusModeEnabled?: boolean;
-}
-
-/**
- * Internal type for domain pill color configuration.
- */
-interface _DomainPillColors {
-  foreground: string;
-  background: string;
-  border: string;
-  dotColor: string;
 }
 
 /**
@@ -359,23 +350,9 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
             </div>
             <div className="space-y-3 ml-4">
               {onFireAdhocGoalsByDomain.map(([domainId, { domain, goals }]) => {
-                const colors = _getDomainPillColors(domain?.color);
                 return (
                   <div key={domainId} className="space-y-1">
-                    <div
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
-                      style={{
-                        color: colors.foreground,
-                        backgroundColor: colors.background,
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: colors.dotColor }}
-                      />
-                      {domain ? domain.name : 'Uncategorized'} ({goals.length})
-                    </div>
+                    <DomainPill domain={domain} count={goals.length} weekNumber={weekNumber} />
                     <div className="space-y-0.5">
                       {goals.map((goal) => (
                         <AdhocGoalItem
@@ -399,85 +376,3 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     </div>
   );
 };
-
-/**
- * Converts hex color string to RGB values.
- * @param hex - Hex color string (with or without # prefix)
- * @returns RGB values or null if invalid format
- */
-function _hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: Number.parseInt(result[1], 16),
-        g: Number.parseInt(result[2], 16),
-        b: Number.parseInt(result[3], 16),
-      }
-    : null;
-}
-
-/**
- * Calculates the relative luminance of an RGB color.
- * Uses the WCAG formula for determining perceived brightness.
- * @param r - Red value (0-255)
- * @param g - Green value (0-255)
- * @param b - Blue value (0-255)
- * @returns Relative luminance value (0-1)
- */
-function _getLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map((c) => {
-    const sRGB = c / 255;
-    return sRGB <= 0.03928 ? sRGB / 12.92 : ((sRGB + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-/**
- * Darkens an RGB color by reducing component values.
- * @param r - Red value (0-255)
- * @param g - Green value (0-255)
- * @param b - Blue value (0-255)
- * @param factor - Multiplier for darkening (default 0.6 = 60% darker)
- * @returns RGB color string
- */
-function _darkenColor(r: number, g: number, b: number, factor = 0.6): string {
-  return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
-}
-
-/**
- * Generates color variations for domain pill styling.
- * Creates accessible foreground/background combinations based on the base color's luminance.
- * @param domainColor - Hex color string for the domain
- * @returns Color configuration for pill styling
- */
-function _getDomainPillColors(domainColor?: string): _DomainPillColors {
-  if (!domainColor) {
-    return {
-      foreground: 'rgb(55, 65, 81)',
-      background: 'rgb(243, 244, 246)',
-      border: 'rgb(229, 231, 235)',
-      dotColor: 'rgb(107, 114, 128)',
-    };
-  }
-
-  const rgb = _hexToRgb(domainColor);
-  if (!rgb) {
-    return {
-      foreground: '#000000',
-      background: domainColor,
-      border: domainColor,
-      dotColor: '#000000',
-    };
-  }
-
-  const luminance = _getLuminance(rgb.r, rgb.g, rgb.b);
-  const textColor =
-    luminance > 0.5 ? _darkenColor(rgb.r, rgb.g, rgb.b, 0.4) : `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-
-  return {
-    foreground: textColor,
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25)`,
-    border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`,
-    dotColor: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
-  };
-}
