@@ -1,8 +1,4 @@
 import type { ReactNode } from 'react';
-import {
-  GoalEditProvider,
-  useGoalEditContext,
-} from '@/components/molecules/goal-details/GoalEditContext';
 import { Separator } from '@/components/ui/separator';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
@@ -14,8 +10,10 @@ import {
   GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
+  GoalEditProvider,
   GoalHeader,
   useGoalDisplayContext,
+  useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 

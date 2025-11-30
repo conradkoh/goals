@@ -1,11 +1,6 @@
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { GoalDetailsChildrenList } from '@/components/molecules/goal-details/GoalDetailsChildrenList';
-import {
-  GoalEditProvider,
-  useGoalEditContext,
-} from '@/components/molecules/goal-details/GoalEditContext';
 import {
   Select,
   SelectContent,
@@ -22,12 +17,15 @@ import {
   GoalActionMenuNew,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
+  GoalEditProvider,
   GoalHeader,
   useGoalDisplayContext,
+  useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 

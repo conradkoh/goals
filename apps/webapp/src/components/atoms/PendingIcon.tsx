@@ -1,7 +1,7 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { Clock } from 'lucide-react';
 import type React from 'react';
-import { PendingStatusDialog } from '@/components/molecules/goal-details/PendingStatusDialog';
+import { PendingStatusDialog } from '@/components/atoms/PendingStatusDialog';
 import { usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 import { cn } from '@/lib/utils';
 

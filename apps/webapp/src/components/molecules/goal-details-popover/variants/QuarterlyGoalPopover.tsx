@@ -1,27 +1,25 @@
 import { useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
-import { GoalDetailsChildrenList } from '@/components/molecules/goal-details/GoalDetailsChildrenList';
-import {
-  GoalEditProvider,
-  useGoalEditContext,
-} from '@/components/molecules/goal-details/GoalEditContext';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 import {
+  GoalActionMenuNew,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
+  GoalEditProvider,
   GoalHeader,
   GoalStatusIndicators,
   useGoalDisplayContext,
+  useGoalEditContext,
 } from '../view/components';
-import { GoalActionMenuNew } from '../view/components/GoalActionMenuNew';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 export interface QuarterlyGoalPopoverProps {
