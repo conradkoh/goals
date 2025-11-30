@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { DomainPill } from '@/components/atoms/DomainPill';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -299,7 +299,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                     <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />
                   )}
                   <GoalProvider goal={quarterlyGoal}>
-                    <GoalDetailsPopover
+                    <QuarterlyGoalPopover
                       onSave={(title, details, dueDate) =>
                         _handleUpdateGoal(quarterlyGoal._id, title, details, dueDate)
                       }

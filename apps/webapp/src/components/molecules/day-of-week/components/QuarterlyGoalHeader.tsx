@@ -2,7 +2,7 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { Check, Pin, Star } from 'lucide-react';
 import { useCallback } from 'react';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 
@@ -49,8 +49,8 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateGoal }: QuarterlyGoalHeaderP
         )}
         {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400 flex-shrink-0" />}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
-        {/* GoalDetailsPopover gets goal from context */}
-        <GoalDetailsPopover
+        {/* QuarterlyGoalPopover gets goal from context */}
+        <QuarterlyGoalPopover
           onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-semibold justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           titleClassName=""

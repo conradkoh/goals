@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
-import { GoalDetailsPopover } from '@/components/molecules/goal-details';
+import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalProvider } from '@/contexts/GoalContext';
 import type { DayOfWeek } from '@/lib/constants';
@@ -112,8 +112,8 @@ const WeeklyGoalSection = ({
   return (
     <GoalProvider goal={weeklyGoal}>
       <div>
-        {/* GoalDetailsPopover gets goal from context */}
-        <GoalDetailsPopover
+        {/* WeeklyGoalPopover gets goal from context */}
+        <WeeklyGoalPopover
           onSave={handleSave}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
         />
