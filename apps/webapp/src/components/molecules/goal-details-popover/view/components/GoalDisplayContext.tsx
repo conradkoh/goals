@@ -1,10 +1,18 @@
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
-type DisplayMode = 'popover' | 'fullscreen';
+/**
+ * Display mode for goal details view.
+ * - popover: Standard popover overlay
+ * - fullscreen: Full screen dialog modal
+ */
+type _DisplayMode = 'popover' | 'fullscreen';
 
-interface GoalDisplayContextType {
-  /** Current display mode */
-  displayMode: DisplayMode;
+/**
+ * Context value type for goal display state management.
+ */
+interface _GoalDisplayContextType {
+  /** Current display mode (popover or fullscreen) */
+  displayMode: _DisplayMode;
   /** Request to show fullscreen view */
   requestFullScreen: () => void;
   /** Request to close fullscreen view (returns to popover) */
@@ -13,14 +21,21 @@ interface GoalDisplayContextType {
   isFullScreenOpen: boolean;
 }
 
-const GoalDisplayContext = createContext<GoalDisplayContextType | undefined>(undefined);
+const _GoalDisplayContext = createContext<_GoalDisplayContextType | undefined>(undefined);
 
 /**
  * Hook to access the goal display context.
  * Use this in GoalActionMenu to trigger fullscreen mode.
+ *
+ * @throws Error if used outside of GoalDisplayProvider
+ *
+ * @example
+ * ```tsx
+ * const { requestFullScreen, isFullScreenOpen } = useGoalDisplayContext();
+ * ```
  */
-export function useGoalDisplayContext() {
-  const context = useContext(GoalDisplayContext);
+export function useGoalDisplayContext(): _GoalDisplayContextType {
+  const context = useContext(_GoalDisplayContext);
   if (context === undefined) {
     throw new Error('useGoalDisplayContext must be used within a GoalDisplayProvider');
   }
@@ -30,39 +45,63 @@ export function useGoalDisplayContext() {
 /**
  * Optional hook that returns undefined if not in context.
  * Use this when the component might be used outside of GoalDisplayProvider.
+ *
+ * @example
+ * ```tsx
+ * const displayContext = useGoalDisplayContextOptional();
+ * if (displayContext?.isFullScreenOpen) {
+ *   // Handle fullscreen state
+ * }
+ * ```
  */
-export function useGoalDisplayContextOptional() {
-  return useContext(GoalDisplayContext);
+export function useGoalDisplayContextOptional(): _GoalDisplayContextType | undefined {
+  return useContext(_GoalDisplayContext);
 }
 
-interface GoalDisplayProviderProps {
+/**
+ * Props for the GoalDisplayProvider component.
+ */
+interface _GoalDisplayProviderProps {
+  /** Child components that need access to display context */
   children: ReactNode;
 }
 
 /**
  * Provider for managing goal display mode (popover vs fullscreen).
  * Wraps goal popover variants to enable action menu to trigger fullscreen.
+ *
+ * @example
+ * ```tsx
+ * <GoalDisplayProvider>
+ *   <GoalPopover />
+ * </GoalDisplayProvider>
+ * ```
  */
-export function GoalDisplayProvider({ children }: GoalDisplayProviderProps) {
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('popover');
+export function GoalDisplayProvider({ children }: _GoalDisplayProviderProps) {
+  const [displayMode, setDisplayMode] = useState<_DisplayMode>('popover');
   const [isFullScreenOpen, setIsFullScreenOpen] = useState(false);
 
-  const requestFullScreen = () => {
+  /** Opens fullscreen view */
+  const requestFullScreen = useCallback(() => {
     setDisplayMode('fullscreen');
     setIsFullScreenOpen(true);
-  };
+  }, []);
 
-  const closeFullScreen = () => {
+  /** Closes fullscreen view and returns to popover mode */
+  const closeFullScreen = useCallback(() => {
     setIsFullScreenOpen(false);
     setDisplayMode('popover');
-  };
+  }, []);
 
-  const value = {
-    displayMode,
-    requestFullScreen,
-    closeFullScreen,
-    isFullScreenOpen,
-  };
+  const value = useMemo(
+    () => ({
+      displayMode,
+      requestFullScreen,
+      closeFullScreen,
+      isFullScreenOpen,
+    }),
+    [displayMode, requestFullScreen, closeFullScreen, isFullScreenOpen]
+  );
 
-  return <GoalDisplayContext.Provider value={value}>{children}</GoalDisplayContext.Provider>;
+  return <_GoalDisplayContext.Provider value={value}>{children}</_GoalDisplayContext.Provider>;
 }

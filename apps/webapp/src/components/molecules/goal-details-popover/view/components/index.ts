@@ -2,9 +2,11 @@
 export { GoalActionMenuNew, type GoalActionMenuNewProps } from './GoalActionMenuNew';
 export { GoalChildrenSection, type GoalChildrenSectionProps } from './GoalChildrenSection';
 export { GoalCompletionDate, type GoalCompletionDateProps } from './GoalCompletionDate';
-export { GoalDetailsChildrenList } from './GoalDetailsChildrenList';
-// Moved from goal-details/
-export { GoalDetailsContent } from './GoalDetailsContent';
+export {
+  GoalDetailsChildrenList,
+  type GoalDetailsChildrenListProps,
+} from './GoalDetailsChildrenList';
+export { GoalDetailsContent, type GoalDetailsContentProps } from './GoalDetailsContent';
 export { GoalDetailsSection, type GoalDetailsSectionProps } from './GoalDetailsSection';
 export {
   GoalDisplayProvider,

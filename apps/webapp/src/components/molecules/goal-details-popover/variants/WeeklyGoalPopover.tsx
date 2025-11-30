@@ -91,7 +91,7 @@ export function WeeklyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <WeeklyGoalPopoverContent
+        <_WeeklyGoalPopoverContent
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -108,16 +108,29 @@ export function WeeklyGoalPopover({
   );
 }
 
-interface WeeklyGoalPopoverContentProps extends WeeklyGoalPopoverProps {
+/**
+ * Internal props for the weekly goal content component.
+ */
+interface _WeeklyGoalPopoverContentProps extends WeeklyGoalPopoverProps {
+  /** Whether the goal is marked as complete */
   isComplete: boolean;
+  /** Current value of the new daily goal input */
   newDailyGoalTitle: string;
+  /** Setter for the new daily goal input value */
   setNewDailyGoalTitle: (title: string) => void;
+  /** Currently selected day of week for new goal */
   selectedDayOfWeek: DayOfWeek;
+  /** Setter for the selected day of week */
   setSelectedDayOfWeek: (day: DayOfWeek) => void;
+  /** Handler for creating a new daily goal */
   handleCreateDailyGoal: () => Promise<void>;
 }
 
-function WeeklyGoalPopoverContent({
+/**
+ * Internal content component for weekly goal popover.
+ * Separated to access contexts provided by parent.
+ */
+function _WeeklyGoalPopoverContent({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -128,7 +141,7 @@ function WeeklyGoalPopoverContent({
   selectedDayOfWeek,
   setSelectedDayOfWeek,
   handleCreateDailyGoal,
-}: WeeklyGoalPopoverContentProps) {
+}: _WeeklyGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

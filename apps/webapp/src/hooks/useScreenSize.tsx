@@ -2,27 +2,53 @@
 
 import { useEffect, useState } from 'react';
 
+/**
+ * Screen size breakpoint values.
+ * - mobile: viewport width < 768px
+ * - tablet: viewport width >= 768px and < 1024px
+ * - desktop: viewport width >= 1024px
+ */
 export type ScreenSize = 'mobile' | 'tablet' | 'desktop';
 
 /**
- * SSR-safe hook for detecting screen size.
- * Always returns 'desktop' during SSR/initial render to avoid hydration mismatches.
- * Updates to actual screen size after mount.
+ * Return type for the useScreenSize hook.
  */
-export const useScreenSize = (): {
+interface _UseScreenSizeReturn {
+  /** Current screen size category */
   screenSize: ScreenSize;
+  /** True when viewport width is less than 768px */
   isMobile: boolean;
+  /** True when viewport width is 768px or greater */
   isDesktop: boolean;
-  /** Whether the hook has hydrated and is showing real values */
+  /** True after client-side hydration (when values reflect actual screen size) */
   isHydrated: boolean;
-} => {
+}
+
+/**
+ * SSR-safe hook for detecting responsive breakpoints.
+ * Returns 'desktop' during SSR/initial render to avoid hydration mismatches,
+ * then updates to actual screen size after mount.
+ *
+ * @returns Object containing screen size, convenience booleans, and hydration state
+ *
+ * @example
+ * ```tsx
+ * const { isMobile, isHydrated } = useScreenSize();
+ *
+ * // Wait for hydration before using mobile-specific UI
+ * if (isHydrated && isMobile) {
+ *   return <MobileLayout />;
+ * }
+ * ```
+ */
+export const useScreenSize = (): _UseScreenSizeReturn => {
   // Always start with 'desktop' to match server render and avoid hydration mismatch
   const [screenSize, setScreenSize] = useState<ScreenSize>('desktop');
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    // Now we're on the client, get the actual screen size
-    const getScreenSize = (): ScreenSize => {
+    /** Determines screen size category based on viewport width */
+    const _getScreenSize = (): ScreenSize => {
       const width = window.innerWidth;
       if (width < 768) {
         return 'mobile';
@@ -33,19 +59,20 @@ export const useScreenSize = (): {
       return 'desktop';
     };
 
-    const updateScreenSize = () => {
-      setScreenSize(getScreenSize());
+    /** Updates screen size state based on current viewport */
+    const _updateScreenSize = () => {
+      setScreenSize(_getScreenSize());
     };
 
     // Set initial screen size on mount
-    updateScreenSize();
+    _updateScreenSize();
     setIsHydrated(true);
 
     // Add event listener for window resize
-    window.addEventListener('resize', updateScreenSize);
+    window.addEventListener('resize', _updateScreenSize);
 
     // Cleanup
-    return () => window.removeEventListener('resize', updateScreenSize);
+    return () => window.removeEventListener('resize', _updateScreenSize);
   }, []);
 
   return {

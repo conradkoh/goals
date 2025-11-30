@@ -56,7 +56,7 @@ export function DailyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <DailyGoalPopoverContent
+        <_DailyGoalPopoverContent
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -70,11 +70,19 @@ export function DailyGoalPopover({
   );
 }
 
-interface DailyGoalPopoverContentProps extends DailyGoalPopoverProps {
+/**
+ * Internal props for the content component, extending the public props.
+ */
+interface _DailyGoalPopoverContentProps extends DailyGoalPopoverProps {
+  /** Whether the goal is currently marked as complete */
   isComplete: boolean;
 }
 
-function DailyGoalPopoverContent({
+/**
+ * Internal content component that renders the actual popover/dialog content.
+ * Separated to access contexts that are provided by the parent component.
+ */
+function _DailyGoalPopoverContent({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -82,7 +90,7 @@ function DailyGoalPopoverContent({
   isComplete,
   additionalContent,
   domain,
-}: DailyGoalPopoverContentProps) {
+}: _DailyGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

@@ -93,7 +93,7 @@ export function QuarterlyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <QuarterlyGoalPopoverContent
+        <_QuarterlyGoalPopoverContent
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -112,18 +112,33 @@ export function QuarterlyGoalPopover({
   );
 }
 
-interface QuarterlyGoalPopoverContentProps extends QuarterlyGoalPopoverProps {
+/**
+ * Internal props for the quarterly goal content component.
+ */
+interface _QuarterlyGoalPopoverContentProps extends QuarterlyGoalPopoverProps {
+  /** Whether the goal is marked as complete */
   isComplete: boolean;
+  /** Whether the goal is starred for this week */
   isStarred: boolean;
+  /** Whether the goal is pinned for this week */
   isPinned: boolean;
+  /** Handler for toggling starred status */
   onToggleStar: () => Promise<void>;
+  /** Handler for toggling pinned status */
   onTogglePin: () => Promise<void>;
+  /** Current value of the new weekly goal input */
   newWeeklyGoalTitle: string;
+  /** Setter for the new weekly goal input value */
   setNewWeeklyGoalTitle: (title: string) => void;
+  /** Handler for creating a new weekly goal */
   handleCreateWeeklyGoal: () => Promise<void>;
 }
 
-function QuarterlyGoalPopoverContent({
+/**
+ * Internal content component for quarterly goal popover.
+ * Separated to access contexts provided by parent.
+ */
+function _QuarterlyGoalPopoverContent({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -136,7 +151,7 @@ function QuarterlyGoalPopoverContent({
   newWeeklyGoalTitle,
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
-}: QuarterlyGoalPopoverContentProps) {
+}: _QuarterlyGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

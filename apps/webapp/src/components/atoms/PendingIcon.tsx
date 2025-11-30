@@ -6,15 +6,23 @@ import { usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 import { cn } from '@/lib/utils';
 
 /**
- * Props for the pending icon component.
+ * Props for the PendingIcon component.
  */
 export interface PendingIconProps {
+  /** Unique identifier of the goal to display pending status for */
   goalId: Id<'goals'>;
+  /** Additional CSS classes to apply to the button */
   className?: string;
 }
 
 /**
  * Displays a clickable pending icon that opens a dialog to manage the pending status of a goal.
+ * Shows an orange clock icon when the goal is pending, otherwise shows a muted icon on hover.
+ *
+ * @example
+ * ```tsx
+ * <PendingIcon goalId={goal._id} className="ml-2" />
+ * ```
  */
 export const PendingIcon: React.FC<PendingIconProps> = ({ goalId, className }) => {
   const { isPending } = usePendingGoalStatus(goalId);
