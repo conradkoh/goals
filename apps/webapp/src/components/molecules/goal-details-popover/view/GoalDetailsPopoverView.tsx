@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -97,13 +97,12 @@ export function GoalDetailsPopoverView({
   );
 }
 
-export interface GoalPopoverTriggerProps {
+export interface GoalPopoverTriggerProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> {
   /** Goal title to display */
   title: string;
   /** Button variant */
   variant?: 'default' | 'ghost' | 'outline';
-  /** Additional class names for the trigger button */
-  className?: string;
   /** Additional class names for the title text */
   titleClassName?: string;
 }
@@ -111,16 +110,27 @@ export interface GoalPopoverTriggerProps {
 /**
  * Standard trigger button for goal details popover.
  * Renders the goal title as a clickable button.
+ * Must forward ref and props for PopoverTrigger asChild to work.
  */
-export function GoalPopoverTrigger({
-  title,
-  variant = 'ghost',
-  className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
-  titleClassName = 'text-gray-600',
-}: GoalPopoverTriggerProps) {
-  return (
-    <Button variant={variant} className={className}>
-      <span className={cn('break-words w-full whitespace-pre-wrap', titleClassName)}>{title}</span>
-    </Button>
-  );
-}
+export const GoalPopoverTrigger = forwardRef<HTMLButtonElement, GoalPopoverTriggerProps>(
+  (
+    {
+      title,
+      variant = 'ghost',
+      className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
+      titleClassName = 'text-gray-600',
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <Button ref={ref} variant={variant} className={className} {...props}>
+        <span className={cn('break-words w-full whitespace-pre-wrap', titleClassName)}>
+          {title}
+        </span>
+      </Button>
+    );
+  }
+);
+
+GoalPopoverTrigger.displayName = 'GoalPopoverTrigger';
