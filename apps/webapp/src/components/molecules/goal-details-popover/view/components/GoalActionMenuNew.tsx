@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
-import { useScreenSize } from '@/hooks/useScreenSize';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 import { useGoalDisplayContext } from './GoalDisplayContext';
@@ -46,7 +45,6 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
   const { goal } = useGoalContext();
   const { startEditing } = useGoalEditContext();
   const { requestFullScreen } = useGoalDisplayContext();
-  const { isMobile } = useScreenSize();
   const router = useRouter();
   const { year, quarter, weekNumber } = useWeek();
   const [isOpen, setIsOpen] = useState(false);
@@ -125,19 +123,16 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          {/* Hide "View Full Details" on mobile since we're already in fullscreen */}
-          {!isMobile && (
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                handleFullScreenClick();
-              }}
-              className="flex items-center cursor-pointer"
-            >
-              <Maximize2 className="mr-2 h-4 w-4" />
-              <span>View Full Details</span>
-            </DropdownMenuItem>
-          )}
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault();
+              handleFullScreenClick();
+            }}
+            className="flex items-center cursor-pointer"
+          >
+            <Maximize2 className="mr-2 h-4 w-4" />
+            <span>View Full Details</span>
+          </DropdownMenuItem>
           {isQuarterlyGoal && (
             <DropdownMenuItem
               onSelect={(e) => {

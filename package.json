@@ -42,8 +42,5 @@
       "sharp",
       "unrs-resolver"
     ]
-  },
-  "overrides": {
-    "@radix-ui/react-dismissable-layer": "1.1.5"
   }
 }
