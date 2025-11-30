@@ -101,7 +101,8 @@ export function GoalDetailsPopoverView({
             <DialogHeader>
               <DialogTitle className="sr-only">Goal Details</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3 overflow-y-auto flex-1">{children}</div>
+            {/* Extra right padding to avoid overlap with close button */}
+            <div className="space-y-3 overflow-y-auto flex-1 pr-6">{children}</div>
           </DialogContent>
         </Dialog>
       </>

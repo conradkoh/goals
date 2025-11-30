@@ -129,6 +129,7 @@ export function AdhocGoalItem({
               titleClassName={cn(goal.isComplete && 'line-through text-muted-foreground')}
               onToggleComplete={handleToggleComplete}
               additionalContent={additionalContent}
+              domain={goal.domain}
             />
           ) : (
             <div className="flex-1 min-w-0">

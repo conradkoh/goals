@@ -1,3 +1,4 @@
+import type { Doc } from '@services/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { useGoalContext } from '@/contexts/GoalContext';
@@ -8,6 +9,7 @@ import {
   GoalCompletionDate,
   GoalDetailsSection,
   GoalDisplayProvider,
+  GoalDomainDisplay,
   GoalDueDateDisplay,
   GoalEditModal,
   GoalEditProvider,
@@ -28,6 +30,8 @@ export interface DailyGoalPopoverProps {
   titleClassName?: string;
   /** Additional content to render (e.g., day selector) */
   additionalContent?: ReactNode;
+  /** Optional domain to display */
+  domain?: Doc<'domains'> | null;
 }
 
 /**
@@ -44,6 +48,7 @@ export function DailyGoalPopover({
   triggerClassName,
   titleClassName,
   additionalContent,
+  domain,
 }: DailyGoalPopoverProps) {
   const { goal } = useGoalContext();
   const isComplete = goal.isComplete;
@@ -58,6 +63,7 @@ export function DailyGoalPopover({
           titleClassName={titleClassName}
           isComplete={isComplete}
           additionalContent={additionalContent}
+          domain={domain}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -75,6 +81,7 @@ function DailyGoalPopoverContent({
   titleClassName,
   isComplete,
   additionalContent,
+  domain,
 }: DailyGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -89,6 +96,8 @@ function DailyGoalPopoverContent({
         onToggleComplete={onToggleComplete}
         actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
       />
+
+      {domain && <GoalDomainDisplay domain={domain} />}
 
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
