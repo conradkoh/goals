@@ -35,13 +35,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const {
-    selectedYear,
-    selectedQuarter,
-    handleWeekNavigation,
-    handleDayNavigation,
-    isFocusModeEnabled,
-  } = useDashboard();
+  const { selectedYear, selectedQuarter, handleDayNavigation, isFocusModeEnabled } = useDashboard();
   useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
 
   // Use the hook for the "Pull from previous quarter" functionality
@@ -87,18 +81,12 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     [selectedYear, selectedQuarter, selectedWeekNumber, selectedDayOfWeek, forceRender]
   );
 
-  const handleJumpToCurrentDay = useCallback(
+  // Unified callback for jumping to today - updates both week and day across all views
+  const handleJumpToToday = useCallback(
     (weekNumber: number, dayOfWeek: DayOfWeek) => {
       handleDayNavigation(weekNumber, dayOfWeek);
     },
     [handleDayNavigation]
-  );
-
-  const handleJumpToCurrentWeek = useCallback(
-    (weekNumber: number) => {
-      handleWeekNavigation(weekNumber);
-    },
-    [handleWeekNavigation]
   );
 
   return (
@@ -138,7 +126,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
                 year={selectedYear}
                 quarter={selectedQuarter}
                 weekData={weekData}
-                onJumpToCurrent={handleJumpToCurrentWeek}
+                onJumpToToday={handleJumpToToday}
               />
             </div>
           )}
@@ -151,7 +139,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
                 quarter={selectedQuarter}
                 weekData={weekData}
                 selectedDayOfWeek={selectedDayOfWeek}
-                onJumpToCurrent={handleJumpToCurrentDay}
+                onJumpToCurrent={handleJumpToToday}
                 isFocusModeEnabled={isFocusModeEnabled}
               />
             </div>

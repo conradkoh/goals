@@ -157,12 +157,11 @@ const FocusModeDailyViewInner = ({
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-end mb-2 gap-2">
           <JumpToCurrentButton
-            viewMode="daily"
             year={year}
             quarter={quarter}
             selectedWeek={weekNumber}
             selectedDay={selectedDayOfWeek}
-            onJumpToCurrentDay={onJumpToCurrent}
+            onJumpToToday={onJumpToCurrent}
           />
         </div>
 
@@ -172,6 +171,8 @@ const FocusModeDailyViewInner = ({
             dayOfWeek={selectedDayOfWeek}
             weekNumber={weekNumber}
             dateTimestamp={currentDay.dateTimestamp}
+            year={year}
+            quarter={quarter}
           />
         )}
 

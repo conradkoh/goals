@@ -6,11 +6,6 @@ import type { DayOfWeek } from '@/lib/constants';
 
 export interface JumpToCurrentButtonProps {
   /**
-   * The current view mode (daily or weekly)
-   */
-  viewMode: 'daily' | 'weekly';
-
-  /**
    * The year for the current view
    */
   year: number;
@@ -26,19 +21,15 @@ export interface JumpToCurrentButtonProps {
   selectedWeek: number;
 
   /**
-   * The currently selected day (only relevant for daily view)
+   * The currently selected day
    */
   selectedDay: DayOfWeek;
 
   /**
-   * Callback function for daily view - will be called with current week and day
+   * Unified callback function - will be called with current week and day
+   * This updates all views to the current day in the current week
    */
-  onJumpToCurrentDay?: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
-
-  /**
-   * Callback function for weekly view - will be called with current week
-   */
-  onJumpToCurrentWeek?: (weekNumber: number) => void;
+  onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 
   /**
    * Optional CSS class name for additional styling
@@ -47,17 +38,16 @@ export interface JumpToCurrentButtonProps {
 }
 
 /**
- * A button that allows users to jump to the current day or week
- * Only appears when the user is not already viewing the current day/week
+ * A unified button that allows users to jump to today
+ * Sets both the current week and current day across all views
+ * Only appears when the user is not already viewing today
  */
 export const JumpToCurrentButton = ({
-  viewMode,
   year,
   quarter,
   selectedWeek,
   selectedDay,
-  onJumpToCurrentDay,
-  onJumpToCurrentWeek,
+  onJumpToToday,
   className = '',
 }: JumpToCurrentButtonProps) => {
   // Get current date information
@@ -67,43 +57,27 @@ export const JumpToCurrentButton = ({
     quarter as 1 | 2 | 3 | 4
   );
 
-  // Calculate if we're on the current view
-  const isCurrentView =
-    viewMode === 'daily'
-      ? selectedWeek === quarterCurrentWeekNumber && selectedDay === currentDay
-      : selectedWeek === quarterCurrentWeekNumber;
+  // Check if we're already viewing today (both current week AND current day)
+  const isViewingToday = selectedWeek === quarterCurrentWeekNumber && selectedDay === currentDay;
 
-  // Don't show the button if we're already on the current view
-  if (isCurrentView) {
+  // Don't show the button if we're already viewing today
+  if (isViewingToday) {
     return null;
   }
 
-  // Determine which callback to use based on view mode
-  const handleJumpToCurrent = () => {
-    if (viewMode === 'daily' && onJumpToCurrentDay) {
-      onJumpToCurrentDay(quarterCurrentWeekNumber, currentDay);
-    } else if (viewMode === 'weekly' && onJumpToCurrentWeek) {
-      onJumpToCurrentWeek(quarterCurrentWeekNumber);
-    }
+  const handleJumpToToday = () => {
+    onJumpToToday(quarterCurrentWeekNumber, currentDay);
   };
-
-  // Don't render if the appropriate callback isn't provided
-  if (
-    (viewMode === 'daily' && !onJumpToCurrentDay) ||
-    (viewMode === 'weekly' && !onJumpToCurrentWeek)
-  ) {
-    return null;
-  }
 
   return (
     <Button
       variant="outline"
       size="sm"
-      onClick={handleJumpToCurrent}
+      onClick={handleJumpToToday}
       className={`text-muted-foreground hover:text-foreground ${className}`}
     >
       <CalendarClock className="h-4 w-4 mr-2" />
-      {viewMode === 'daily' ? 'Jump to Today' : 'Jump to Current Week'}
+      Jump to Today
     </Button>
   );
 };

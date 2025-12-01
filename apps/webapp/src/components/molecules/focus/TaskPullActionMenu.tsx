@@ -1,5 +1,13 @@
+import { DayOfWeek as BackendDayOfWeek } from '@services/backend/src/constants';
 import { getISOWeekYear } from '@services/backend/src/util/isoWeek';
-import { CalendarDays, History, MoreVertical } from 'lucide-react';
+import {
+  ArrowDownToLine,
+  ArrowRightLeft,
+  CalendarDays,
+  History,
+  MoreVertical,
+  MoveHorizontal,
+} from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
 import {
@@ -19,6 +27,8 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
+import { useMoveGoalsForWeek } from '@/hooks/useMoveGoalsForWeek';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -27,12 +37,16 @@ interface TaskPullActionMenuProps {
   dayOfWeek: DayOfWeek;
   weekNumber: number;
   dateTimestamp: number;
+  year: number;
+  quarter: number;
 }
 
 export const TaskPullActionMenu = ({
   dayOfWeek,
   weekNumber,
   dateTimestamp,
+  year,
+  quarter,
 }: TaskPullActionMenuProps) => {
   const { sessionId } = useSession();
   const { moveGoalsFromDay } = useWeek();
@@ -42,9 +56,19 @@ export const TaskPullActionMenu = ({
   const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
   const [isPullingFromAllPastDays, setIsPullingFromAllPastDays] = useState(false);
 
+  // Hook for pulling from last non-empty week
+  const {
+    isFirstWeek,
+    isMovingTasks: isMovingWeekTasks,
+    handlePreviewTasks: handlePreviewWeekTasks,
+    dialog: weekMoveDialog,
+  } = useMoveGoalsForWeek({ weekNumber, year, quarter });
+
+  // Get current day info for "To today" option
+  const { weekday, weekdayLong } = useCurrentDateInfo();
+
   // Memoize computed values that depend on props
   const isMonday = useMemo(() => dayOfWeek === DayOfWeek.MONDAY, [dayOfWeek]);
-  const isDisabled = useMemo(() => isMovingTasks || isMonday, [isMovingTasks, isMonday]);
 
   // Memoize date calculations
   const dateCalculations = useMemo(() => {
@@ -455,17 +479,6 @@ export const TaskPullActionMenu = ({
     previousDayOfWeek,
   ]);
 
-  // Memoize tooltip content to avoid recalculation
-  const tooltipContent = useMemo(() => {
-    if (isMonday) {
-      return 'Cannot pull tasks to Monday as it is the first day of the week';
-    }
-    if (isMovingTasks) {
-      return 'Moving tasks...';
-    }
-    return 'Pull incomplete tasks from previous days';
-  }, [isMonday, isMovingTasks]);
-
   // Memoize click handlers to prevent unnecessary re-renders
   const handlePreviewFromPreviousDay = useCallback(() => {
     if (!isMovingTasks) {
@@ -479,6 +492,9 @@ export const TaskPullActionMenu = ({
     }
   }, [isMovingTasks, handlePreviewTasks]);
 
+  // Determine if all actions are disabled
+  const allActionsDisabled = isMovingTasks && isMovingWeekTasks;
+
   return (
     <>
       <div className="flex justify-end mb-2">
@@ -487,36 +503,41 @@ export const TaskPullActionMenu = ({
             <Button
               variant="ghost"
               size="sm"
-              disabled={isDisabled}
+              disabled={allActionsDisabled}
               className="text-muted-foreground hover:text-foreground"
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" sideOffset={5} className="z-50">
-            {isDisabled ? (
+          <DropdownMenuContent
+            align="end"
+            sideOffset={5}
+            className="z-50 max-h-[70vh] overflow-y-auto"
+          >
+            {/* Pull from Previous Day(s) Section */}
+            <DropdownMenuLabel className="font-semibold px-3 py-2">
+              Pull from Previous Day
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {isMonday ? (
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="w-full cursor-not-allowed">
                       <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
                         <History className="mr-2 h-4 w-4" />
-                        <span className="text-sm">Pull Incomplete Tasks</span>
+                        <span className="text-sm">From previous day</span>
                       </DropdownMenuItem>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{tooltipContent}</p>
+                    <p>Cannot pull tasks to Monday as it is the first day of the week</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             ) : (
               <>
-                <DropdownMenuLabel className="font-semibold px-3 py-2">
-                  Pull Incomplete Tasks
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
                 <DropdownMenuItem
                   disabled={isMovingTasks}
                   onClick={handlePreviewFromPreviousDay}
@@ -536,6 +557,72 @@ export const TaskPullActionMenu = ({
                 </DropdownMenuItem>
               </>
             )}
+
+            {/* Pull from Last Non-Empty Week Section */}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="font-semibold px-3 py-2">
+              Pull from Last Non-Empty Week
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {isFirstWeek ? (
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-full cursor-not-allowed">
+                      <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
+                        <History className="mr-2 h-4 w-4" />
+                        <span className="text-sm">Pull from previous week</span>
+                      </DropdownMenuItem>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Cannot pull from previous week - this is the first week</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <>
+                <DropdownMenuItem
+                  disabled={isMovingWeekTasks}
+                  onClick={() => {
+                    if (!isMovingWeekTasks) {
+                      handlePreviewWeekTasks(BackendDayOfWeek.MONDAY);
+                    }
+                  }}
+                  className="flex items-center"
+                >
+                  <MoveHorizontal className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">To first day of the week (Monday)</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  disabled={isMovingWeekTasks}
+                  onClick={() => {
+                    if (!isMovingWeekTasks) {
+                      handlePreviewWeekTasks(undefined);
+                    }
+                  }}
+                  className="flex items-center"
+                >
+                  <ArrowRightLeft className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Preserve day of week</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  disabled={isMovingWeekTasks}
+                  onClick={() => {
+                    if (!isMovingWeekTasks) {
+                      handlePreviewWeekTasks(weekday as BackendDayOfWeek);
+                    }
+                  }}
+                  className="flex items-center"
+                >
+                  <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">To today ({weekdayLong})</span>
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -546,6 +633,9 @@ export const TaskPullActionMenu = ({
         preview={preview}
         onConfirm={handleMoveTasksFromPreviousDay}
       />
+
+      {/* Dialog for pulling from last non-empty week */}
+      {weekMoveDialog}
     </>
   );
 };

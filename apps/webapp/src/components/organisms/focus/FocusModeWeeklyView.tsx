@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
+import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import {
   MoveGoalsForWeekProvider,
   useMoveGoalsForWeekContext,
@@ -17,7 +18,7 @@ interface FocusModeWeeklyViewProps {
   year: number;
   quarter: number;
   weekData: WeekData;
-  onJumpToCurrent: (weekNumber: number) => void;
+  onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
 // Inner component that uses the context
@@ -26,10 +27,11 @@ const FocusModeWeeklyViewInner = ({
   year,
   quarter,
   weekData,
-  onJumpToCurrent,
+  onJumpToToday,
 }: FocusModeWeeklyViewProps) => {
   const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
     useMoveGoalsForWeekContext();
+  const { weekday: currentDay } = useCurrentWeekInfo();
 
   // Memoize the WeekActionMenu props
   const weekActionMenuProps = useMemo(
@@ -73,12 +75,11 @@ const FocusModeWeeklyViewInner = ({
           <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
           <div className="flex items-center gap-2">
             <JumpToCurrentButton
-              viewMode="weekly"
               year={year}
               quarter={quarter}
               selectedWeek={weekNumber}
-              selectedDay={1 as DayOfWeek} // Not used for weekly view
-              onJumpToCurrentWeek={onJumpToCurrent}
+              selectedDay={currentDay}
+              onJumpToToday={onJumpToToday}
             />
             {weekActionMenu}
           </div>
@@ -116,7 +117,7 @@ const FocusModeWeeklyViewInner = ({
 
 // Outer component that provides the context
 export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
-  const { weekNumber, year, quarter, weekData, onJumpToCurrent } = props;
+  const { weekNumber, year, quarter, weekData, onJumpToToday } = props;
 
   return (
     <MoveGoalsForWeekProvider weekNumber={weekNumber} year={year} quarter={quarter}>
@@ -125,7 +126,7 @@ export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
         year={year}
         quarter={quarter}
         weekData={weekData}
-        onJumpToCurrent={onJumpToCurrent}
+        onJumpToToday={onJumpToToday}
       />
     </MoveGoalsForWeekProvider>
   );
