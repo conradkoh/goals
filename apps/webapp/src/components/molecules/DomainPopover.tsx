@@ -235,7 +235,7 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
     </div>
   );
 
-  // Use fullscreen dialog on touch devices with limited height
+  // Use fullscreen dialog on touch devices
   if (isHydrated && preferFullscreenDialogs) {
     return (
       <>
@@ -246,8 +246,14 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
         </span>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent
+            fullscreenSafe
             className={cn(
-              'w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none',
+              // Width: full width minus small margin
+              'w-[calc(100vw-16px)] max-w-none',
+              // Height: use dvh for iOS Safari dynamic viewport
+              'h-[calc(100dvh-32px)] max-h-none',
+              // Safe area padding for notch and home indicator
+              'pb-[env(safe-area-inset-bottom,0px)]',
               'overflow-hidden flex flex-col p-0'
             )}
           >
@@ -256,7 +262,8 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
               <DialogTitle className="font-semibold text-sm">{domainName}</DialogTitle>
               <span className="text-xs text-muted-foreground">({allGoals.length})</span>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto w-full">{content}</div>
+            {/* pb-4 ensures content can scroll past keyboard on iOS */}
+            <div className="flex-1 overflow-y-auto w-full pb-4 overscroll-contain">{content}</div>
           </DialogContent>
         </Dialog>
       </>

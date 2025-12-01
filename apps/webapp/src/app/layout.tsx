@@ -18,6 +18,9 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: '#ffffff',
+  // Enable safe-area-inset environment variables for iOS Safari
+  // Required for proper handling of notch, home indicator, and dynamic toolbar
+  viewportFit: 'cover',
 };
 
 export const metadata: Metadata = {

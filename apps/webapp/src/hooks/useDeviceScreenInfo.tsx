@@ -104,12 +104,10 @@ export const useDeviceScreenInfo = (): _UseDeviceScreenInfoReturn => {
 
   const isMobile = screenSize === 'mobile';
 
-  // Prefer fullscreen dialogs when:
-  // Touch device with limited vertical height (the main UX problem)
-  // Note: We don't include isMobile here because slim-but-tall screens
-  // can position popovers fine vertically - it's only when height is
-  // constrained that popovers become problematic on touch devices.
-  const preferFullscreenDialogs = isTouchDevice && hasLimitedHeight;
+  // Prefer fullscreen dialogs on touch devices.
+  // Popovers require precise positioning and can be difficult to interact
+  // with on touch screens. Fullscreen dialogs provide a better UX.
+  const preferFullscreenDialogs = isTouchDevice;
 
   return {
     screenSize,

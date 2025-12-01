@@ -91,10 +91,23 @@ export function GoalDetailsPopoverView({
         </span>
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent
+            fullscreenSafe={preferFullscreenDialogs}
             className={cn(
-              // When fullscreen is preferred (mobile OR touch + limited height), use nearly full screen
+              // When fullscreen is preferred (touch devices), use safe fullscreen sizing
+              // Uses dvh for iOS Safari dynamic viewport, with vh fallback
+              // Includes safe-area-inset for notch/home indicator
               preferFullscreenDialogs
-                ? 'w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none'
+                ? [
+                    // Width: full width minus small margin, respecting safe areas
+                    'w-[calc(100vw-16px)]',
+                    'max-w-none',
+                    // Height: use dvh (dynamic viewport height) for iOS Safari
+                    // Falls back gracefully in browsers that don't support dvh
+                    'h-[calc(100dvh-32px)]',
+                    'max-h-none',
+                    // Safe area padding for notch and home indicator
+                    'pb-[env(safe-area-inset-bottom,0px)]',
+                  ]
                 : 'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
               'overflow-hidden flex flex-col p-4 sm:p-6',
               contentClassName
@@ -103,9 +116,12 @@ export function GoalDetailsPopoverView({
             <DialogHeader>
               <DialogTitle className="sr-only">Goal Details</DialogTitle>
             </DialogHeader>
-            {/* Padding on all sides to prevent focus rings/highlights from being clipped */}
+            {/* Scrollable content area */}
             {/* Extra right padding (pr-8) to avoid overlap with close button */}
-            <div className="space-y-3 overflow-y-auto flex-1 px-1 py-1 pr-8">{children}</div>
+            {/* pb-4 ensures content can scroll past keyboard on iOS */}
+            <div className="space-y-3 overflow-y-auto flex-1 px-1 py-1 pr-8 pb-4 overscroll-contain">
+              {children}
+            </div>
           </DialogContent>
         </Dialog>
       </>
