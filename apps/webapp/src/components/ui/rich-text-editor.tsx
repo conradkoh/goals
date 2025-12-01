@@ -109,7 +109,7 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border',
+          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border break-words [word-break:break-word]',
           className
         ),
       },
