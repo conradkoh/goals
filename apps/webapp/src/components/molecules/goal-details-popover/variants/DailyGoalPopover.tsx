@@ -32,6 +32,8 @@ export interface DailyGoalPopoverProps {
   additionalContent?: ReactNode;
   /** Optional domain to display */
   domain?: Doc<'domains'> | null;
+  /** Week number for the domain popover context. When provided, clicking domain shows popover. */
+  weekNumber?: number;
 }
 
 /**
@@ -49,6 +51,7 @@ export function DailyGoalPopover({
   titleClassName,
   additionalContent,
   domain,
+  weekNumber,
 }: DailyGoalPopoverProps) {
   const { goal } = useGoalContext();
   const isComplete = goal.isComplete;
@@ -64,6 +67,7 @@ export function DailyGoalPopover({
           isComplete={isComplete}
           additionalContent={additionalContent}
           domain={domain}
+          weekNumber={weekNumber}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -90,6 +94,7 @@ function _DailyGoalPopoverContent({
   isComplete,
   additionalContent,
   domain,
+  weekNumber,
 }: _DailyGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -105,7 +110,7 @@ function _DailyGoalPopoverContent({
         actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
       />
 
-      {domain && <GoalDomainDisplay domain={domain} />}
+      {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
 
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 

@@ -1,9 +1,27 @@
+/**
+ * @fileoverview Domain Pill Components
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║  IMPORTANT: Best Practice                                                 ║
+ * ║                                                                           ║
+ * ║  Prefer importing `DomainPill` (this file) over `DomainPillView`.         ║
+ * ║                                                                           ║
+ * ║  - `DomainPill` includes integrated popover functionality for viewing     ║
+ * ║    and managing tasks by domain. This is the recommended component.       ║
+ * ║                                                                           ║
+ * ║  - `DomainPillView` is the pure UI component without any behaviors.       ║
+ * ║    Only use it for special cases like custom trigger compositions or      ║
+ * ║    when you explicitly need a non-interactive display.                    ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ */
+
 import type { Doc } from '@services/backend/convex/_generated/dataModel';
 import { DomainPopover } from '@/components/molecules/DomainPopover';
 import { DomainPillView } from './view/DomainPillView';
 
 export type { DomainPillColors } from './lib/colors';
 // Re-export utilities and view component for direct access
+// NOTE: Prefer using `DomainPill` over `DomainPillView` - see file header for details
 export { getDomainPillColors } from './lib/colors';
 export type { DomainPillViewProps } from './view/DomainPillView';
 export { DomainPillView } from './view/DomainPillView';

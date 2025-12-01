@@ -130,6 +130,7 @@ export function AdhocGoalItem({
               onToggleComplete={handleToggleComplete}
               additionalContent={additionalContent}
               domain={goal.domain}
+              weekNumber={goal.adhoc?.weekNumber}
             />
           ) : (
             <div className="flex-1 min-w-0">

@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Pure UI component for domain pills
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║  NOTE: Consider using `DomainPill` instead                                ║
+ * ║                                                                           ║
+ * ║  This is the pure UI component without popover functionality.             ║
+ * ║  For most use cases, import `DomainPill` from the parent directory        ║
+ * ║  which includes integrated popover for viewing/managing domain tasks.     ║
+ * ║                                                                           ║
+ * ║  Only use `DomainPillView` directly when:                                 ║
+ * ║  - You need a custom trigger composition (e.g., wrapping with Radix)      ║
+ * ║  - You explicitly need a non-interactive, display-only pill               ║
+ * ║  - You're building a custom popover/dialog wrapper                        ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ */
+
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { getDomainPillColors } from '../lib/colors';
@@ -16,7 +33,11 @@ export interface DomainPillViewProps extends React.HTMLAttributes<HTMLDivElement
 /**
  * Pure UI layer for the domain pill.
  * Renders a colored pill with optional count indicator.
- * Use this component directly when you need just the visual without popover functionality.
+ *
+ * @see DomainPill - The recommended component with integrated popover functionality.
+ *
+ * Use this component directly only when you need just the visual without
+ * popover functionality, or when composing with custom triggers.
  *
  * Supports all standard div attributes (onClick, aria-*, data-*, etc.) for
  * compatibility with Radix UI triggers and other composition patterns.
