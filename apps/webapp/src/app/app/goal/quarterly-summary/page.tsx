@@ -1,17 +1,9 @@
 'use client';
 
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import { useQuery } from 'convex/react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Home } from 'lucide-react';
-import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
-import {
-  AdhocDomainSelector,
-  MultiQuarterlySummaryMarkdownView,
-  QuarterlyGoalSelector,
-} from '@/components/molecules/quarterly-summary';
+import { MultiQuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -21,113 +13,41 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useDomains } from '@/hooks/useDomains';
-import { useQuarterSummary } from '@/hooks/useQuarterSummary';
-import { useSession } from '@/modules/auth/useSession';
+import { QuarterlySummaryProvider, useQuarterlySummaryContext } from './QuarterlySummaryContext';
+import { AdhocDomainSelectorPanel, QuarterlyGoalSelectorPanel } from './SelectorPanels';
 
 /**
- * Renders the multi-goal quarterly summary page.
- * This page displays a combined view of multiple quarterly goals, including their associated weekly and daily goals,
- * and provides navigation options and goal selection.
- *
- * @returns {JSX.Element} The rendered multi-goal quarterly summary page.
+ * Inner component that uses the context.
  */
-export default function MultiGoalQuarterlySummaryPage() {
+function QuarterlySummaryContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = React.useState<'select' | 'preview'>('select');
-
-  // Get initial year and quarter from URL params, fallback to current date
-  const initialYearQuarter = React.useMemo(() => {
-    const now = DateTime.now();
-    const yearParam = searchParams.get('year');
-    const quarterParam = searchParams.get('quarter');
-
-    const year = yearParam ? Number.parseInt(yearParam) : now.year;
-    const quarter = quarterParam
-      ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
-      : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
-    return { year, quarter };
-  }, [searchParams]);
-
-  // State for year and quarter (allows navigation)
-  const [year, setYear] = React.useState(initialYearQuarter.year);
-  const [quarter, setQuarter] = React.useState<1 | 2 | 3 | 4>(initialYearQuarter.quarter);
-
-  // Get selected goal IDs from URL params
-  const [selectedGoalIds, setSelectedGoalIds] = React.useState<Id<'goals'>[]>(() => {
-    const goalsParam = searchParams.get('goals');
-    if (goalsParam) {
-      return goalsParam.split(',') as Id<'goals'>[];
-    }
-    return [];
-  });
-
-  const { sessionId } = useSession();
-  const { domains } = useDomains(sessionId);
-
-  // Get selected adhoc domain IDs from URL params (can include 'UNCATEGORIZED')
-  const [selectedAdhocDomainIds, setSelectedAdhocDomainIds] = React.useState<
-    (Id<'domains'> | 'UNCATEGORIZED')[]
-  >(() => {
-    const domainsParam = searchParams.get('adhocDomains');
-    if (domainsParam) {
-      return domainsParam.split(',') as (Id<'domains'> | 'UNCATEGORIZED')[];
-    }
-    return [];
-  });
-
-  // Fetch adhoc goal counts per domain for the current quarter
-  const adhocGoalCounts = useQuery(
-    api.dashboard.getAdhocGoalCountsByDomainForQuarter,
-    sessionId ? { sessionId, year, quarter } : 'skip'
-  );
-
-  // Derived state: include adhoc goals if any domains are selected
-  const includeAdhocGoals = selectedAdhocDomainIds.length > 0;
-
-  // Get the multi-goal summary data
-  const { summaryData } = useQuarterSummary({
-    quarterlyGoalIds: selectedGoalIds,
+  const {
     year,
     quarter,
-    includeAdhocGoals,
-    adhocDomainIds: selectedAdhocDomainIds,
-  });
+    setYear,
+    setQuarter,
+    handlePreviousQuarter,
+    handleNextQuarter,
+    yearOptions,
+    hasSelection,
+    summaryData,
+  } = useQuarterlySummaryContext();
 
-  // Reset selections when year/quarter changes
-  const previousYearQuarterRef = React.useRef({ year, quarter });
-  React.useEffect(() => {
-    const prev = previousYearQuarterRef.current;
-    if (prev.year !== year || prev.quarter !== quarter) {
-      // Reset selections when navigating to a different quarter
-      setSelectedGoalIds([]);
-      setSelectedAdhocDomainIds([]);
-      previousYearQuarterRef.current = { year, quarter };
-    }
-  }, [year, quarter]);
+  const [activeTab, setActiveTab] = React.useState<'select' | 'preview'>('select');
 
-  // Update URL when selection changes
+  // Update URL when period changes
   React.useEffect(() => {
     const params = new URLSearchParams();
     params.set('year', year.toString());
     params.set('quarter', quarter.toString());
-    if (selectedGoalIds.length > 0) {
-      params.set('goals', selectedGoalIds.join(','));
-    }
-    if (selectedAdhocDomainIds.length > 0) {
-      params.set('adhocDomains', selectedAdhocDomainIds.join(','));
-    }
-
     const newUrl = `/app/goal/quarterly-summary?${params.toString()}`;
     window.history.replaceState({}, '', newUrl);
-  }, [selectedGoalIds, selectedAdhocDomainIds, year, quarter]);
+  }, [year, quarter]);
 
   // Set page title
   React.useEffect(() => {
     const originalTitle = document.title;
-    document.title = `Q${quarter} ${year} Multi-Goal Summary`;
-
+    document.title = `Q${quarter} ${year} Quarterly Summary`;
     return () => {
       document.title = originalTitle;
     };
@@ -145,48 +65,19 @@ export default function MultiGoalQuarterlySummaryPage() {
     router.push('/app/dashboard');
   }, [router]);
 
-  const handleSelectionChange = React.useCallback((goalIds: Id<'goals'>[]) => {
-    setSelectedGoalIds(goalIds);
-  }, []);
+  const handleYearChange = React.useCallback(
+    (newYear: string) => {
+      setYear(Number.parseInt(newYear));
+    },
+    [setYear]
+  );
 
-  // Year/Quarter navigation handlers
-  const handlePreviousQuarter = React.useCallback(() => {
-    if (quarter === 1) {
-      setYear(year - 1);
-      setQuarter(4);
-    } else {
-      setQuarter((quarter - 1) as 1 | 2 | 3 | 4);
-    }
-  }, [year, quarter]);
-
-  const handleNextQuarter = React.useCallback(() => {
-    if (quarter === 4) {
-      setYear(year + 1);
-      setQuarter(1);
-    } else {
-      setQuarter((quarter + 1) as 1 | 2 | 3 | 4);
-    }
-  }, [year, quarter]);
-
-  const handleYearChange = React.useCallback((newYear: string) => {
-    setYear(Number.parseInt(newYear));
-  }, []);
-
-  const handleQuarterChange = React.useCallback((newQuarter: string) => {
-    setQuarter(Number.parseInt(newQuarter) as 1 | 2 | 3 | 4);
-  }, []);
-
-  // Generate year options (current year ± 5 years)
-  const currentYear = DateTime.now().year;
-  const yearOptions = React.useMemo(() => {
-    const years: number[] = [];
-    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
-      years.push(y);
-    }
-    return years;
-  }, [currentYear]);
-
-  const hasSelection = selectedGoalIds.length > 0 || includeAdhocGoals;
+  const handleQuarterChange = React.useCallback(
+    (newQuarter: string) => {
+      setQuarter(Number.parseInt(newQuarter) as 1 | 2 | 3 | 4);
+    },
+    [setQuarter]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -320,54 +211,8 @@ export default function MultiGoalQuarterlySummaryPage() {
             </TabsList>
 
             <TabsContent value="select" className="space-y-6 mt-6">
-              {/* Quarterly Goals Section */}
-              <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-                <div className="p-6 border-b bg-muted/30">
-                  <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Strategic high-level goals for the quarter
-                  </p>
-                </div>
-                <div className="p-6">
-                  <QuarterlyGoalSelector
-                    key={`quarterly-${year}-${quarter}`}
-                    year={year}
-                    quarter={quarter}
-                    selectedGoalIds={selectedGoalIds}
-                    onSelectionChange={handleSelectionChange}
-                    showGenerateButton={false}
-                    className="border-none shadow-none p-0"
-                  />
-                </div>
-              </div>
-
-              {/* Adhoc Goals Section */}
-              <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-                <div className="p-6 border-b bg-muted/30">
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">Adhoc Goals</h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Tactical tasks and smaller wins - select domains to include
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  {domains && domains.length > 0 ? (
-                    <AdhocDomainSelector
-                      key={`adhoc-${year}-${quarter}`}
-                      domains={domains}
-                      selectedDomainIds={selectedAdhocDomainIds}
-                      onSelectionChange={setSelectedAdhocDomainIds}
-                      goalCounts={adhocGoalCounts ?? undefined}
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No domains available. Adhoc goals are organized by domains.
-                    </p>
-                  )}
-                </div>
-              </div>
+              <QuarterlyGoalSelectorPanel />
+              <AdhocDomainSelectorPanel />
             </TabsContent>
 
             <TabsContent value="preview" className="mt-6">
@@ -388,5 +233,26 @@ export default function MultiGoalQuarterlySummaryPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Renders the multi-goal quarterly summary page.
+ */
+export default function MultiGoalQuarterlySummaryPage() {
+  const searchParams = useSearchParams();
+
+  // Get initial year and quarter from URL params
+  const initialYear = searchParams.get('year')
+    ? Number.parseInt(searchParams.get('year')!)
+    : undefined;
+  const initialQuarter = searchParams.get('quarter')
+    ? (Number.parseInt(searchParams.get('quarter')!) as 1 | 2 | 3 | 4)
+    : undefined;
+
+  return (
+    <QuarterlySummaryProvider initialYear={initialYear} initialQuarter={initialQuarter}>
+      <QuarterlySummaryContent />
+    </QuarterlySummaryProvider>
   );
 }
