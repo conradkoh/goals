@@ -330,6 +330,7 @@ export default function MultiGoalQuarterlySummaryPage() {
                 </div>
                 <div className="p-6">
                   <QuarterlyGoalSelector
+                    key={`quarterly-${year}-${quarter}`}
                     year={year}
                     quarter={quarter}
                     selectedGoalIds={selectedGoalIds}
@@ -354,6 +355,7 @@ export default function MultiGoalQuarterlySummaryPage() {
                 <div className="p-6">
                   {domains && domains.length > 0 ? (
                     <AdhocDomainSelector
+                      key={`adhoc-${year}-${quarter}`}
                       domains={domains}
                       selectedDomainIds={selectedAdhocDomainIds}
                       onSelectionChange={setSelectedAdhocDomainIds}
