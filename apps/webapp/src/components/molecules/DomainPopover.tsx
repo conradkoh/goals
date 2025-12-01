@@ -5,10 +5,13 @@ import { ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
+import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 function getCurrentISOWeekNumber(): number {
@@ -36,6 +39,7 @@ type OptimisticAdhocGoal = Doc<'goals'> & {
  */
 export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProps) {
   const { sessionId } = useSession();
+  const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [isOpen, setIsOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -152,92 +156,124 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
       (a, b) => (b.completedAt || b._creationTime || 0) - (a.completedAt || a._creationTime || 0)
     );
 
+  // Shared content for both popover and dialog
+  const content = (
+    <div className="flex flex-col h-full w-full">
+      {/* Tabs */}
+      <Tabs defaultValue="active" className="flex-1 flex flex-col w-full">
+        <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
+          <TabsTrigger value="active" className="rounded-none">
+            Active ({incompleteGoals.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="rounded-none">
+            Completed ({completedGoals.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="flex-1 mt-0 p-4 space-y-3">
+          {/* Goals List */}
+          <div className="space-y-1 max-h-[300px] overflow-y-auto">
+            {incompleteGoals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No active tasks. Create one below!
+              </div>
+            ) : (
+              incompleteGoals.map((goal) => (
+                <AdhocGoalItem
+                  key={goal._id}
+                  goal={goal}
+                  onCompleteChange={handleCompleteChange}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                  showDueDate={true}
+                  showDomain={false}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Create Input */}
+          <div className="border-t pt-3">
+            <CreateGoalInput
+              placeholder={`Add a task to ${domainName.toLowerCase()}...`}
+              value={newGoalTitle}
+              onChange={setNewGoalTitle}
+              onSubmit={handleSubmit}
+              onEscape={handleEscape}
+            >
+              {isCreating && (
+                <div className="flex items-center justify-center pt-2">
+                  <Spinner className="h-4 w-4" />
+                </div>
+              )}
+            </CreateGoalInput>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="completed" className="flex-1 mt-0 p-4">
+          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+            {completedGoals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No completed tasks yet.
+              </div>
+            ) : (
+              completedGoals.map((goal) => (
+                <AdhocGoalItem
+                  key={goal._id}
+                  goal={goal}
+                  onCompleteChange={handleCompleteChange}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                  showDueDate={true}
+                  showDomain={false}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  // Use fullscreen dialog on touch devices with limited height
+  if (isHydrated && preferFullscreenDialogs) {
+    return (
+      <>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
+        <span className="contents" onClick={() => setIsOpen(true)}>
+          {trigger}
+        </span>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent
+            className={cn(
+              'w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none',
+              'overflow-hidden flex flex-col p-0'
+            )}
+          >
+            <DialogHeader className="flex-row items-center gap-2 px-4 pt-4 pb-3 border-b space-y-0">
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              <DialogTitle className="font-semibold text-sm">{domainName}</DialogTitle>
+              <span className="text-xs text-muted-foreground">({allGoals.length})</span>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto w-full">{content}</div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-0" align="start">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            <h3 className="font-semibold text-sm">{domainName}</h3>
-            <span className="text-xs text-muted-foreground">({allGoals.length})</span>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="active" className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
-              <TabsTrigger value="active" className="rounded-none">
-                Active ({incompleteGoals.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed" className="rounded-none">
-                Completed ({completedGoals.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="active" className="flex-1 mt-0 p-4 space-y-3">
-              {/* Goals List */}
-              <div className="space-y-1 max-h-[300px] overflow-y-auto">
-                {incompleteGoals.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No active tasks. Create one below!
-                  </div>
-                ) : (
-                  incompleteGoals.map((goal) => (
-                    <AdhocGoalItem
-                      key={goal._id}
-                      goal={goal}
-                      onCompleteChange={handleCompleteChange}
-                      onUpdate={handleUpdate}
-                      onDelete={handleDelete}
-                      showDueDate={true}
-                      showDomain={false}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Create Input */}
-              <div className="border-t pt-3">
-                <CreateGoalInput
-                  placeholder={`Add a task to ${domainName.toLowerCase()}...`}
-                  value={newGoalTitle}
-                  onChange={setNewGoalTitle}
-                  onSubmit={handleSubmit}
-                  onEscape={handleEscape}
-                >
-                  {isCreating && (
-                    <div className="flex items-center justify-center pt-2">
-                      <Spinner className="h-4 w-4" />
-                    </div>
-                  )}
-                </CreateGoalInput>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="completed" className="flex-1 mt-0 p-4">
-              <div className="space-y-1 max-h-[400px] overflow-y-auto">
-                {completedGoals.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No completed tasks yet.
-                  </div>
-                ) : (
-                  completedGoals.map((goal) => (
-                    <AdhocGoalItem
-                      key={goal._id}
-                      goal={goal}
-                      onCompleteChange={handleCompleteChange}
-                      onUpdate={handleUpdate}
-                      onDelete={handleDelete}
-                      showDueDate={true}
-                      showDomain={false}
-                    />
-                  ))
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+        {/* Header for popover mode */}
+        <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b">
+          <ClipboardList className="h-4 w-4 text-muted-foreground" />
+          <h3 className="font-semibold text-sm">{domainName}</h3>
+          <span className="text-xs text-muted-foreground">({allGoals.length})</span>
         </div>
+        {content}
       </PopoverContent>
     </Popover>
   );
