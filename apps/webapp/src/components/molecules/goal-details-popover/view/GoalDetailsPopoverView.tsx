@@ -2,7 +2,7 @@ import { forwardRef, type ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useScreenSize } from '@/hooks/useScreenSize';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 
 export interface GoalDetailsPopoverViewProps {
@@ -65,12 +65,14 @@ export function GoalDetailsPopoverView({
   onOpenChange,
   mobileFullScreen = true,
 }: GoalDetailsPopoverViewProps) {
-  const { isMobile, isHydrated } = useScreenSize();
+  const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
 
   // Determine if we should use fullscreen mode
-  // Only use mobile fullscreen AFTER hydration to avoid SSR mismatch
-  const shouldUseFullScreen = fullScreen || (isHydrated && isMobile && mobileFullScreen);
+  // Only use mobile/responsive fullscreen AFTER hydration to avoid SSR mismatch
+  // preferFullscreenDialogs considers: mobile width OR (touch device + limited height)
+  const shouldUseFullScreen =
+    fullScreen || (isHydrated && preferFullscreenDialogs && mobileFullScreen);
 
   // For explicit fullScreen mode, use controlled state from props
   // For mobile fullScreen, use internal state
@@ -90,8 +92,8 @@ export function GoalDetailsPopoverView({
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogContent
             className={cn(
-              // On mobile, use nearly full screen with proper safe areas
-              isMobile
+              // When fullscreen is preferred (mobile OR touch + limited height), use nearly full screen
+              preferFullscreenDialogs
                 ? 'w-[calc(100vw-16px)] max-w-none h-[calc(100vh-32px)] max-h-none'
                 : 'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
               'overflow-hidden flex flex-col p-4 sm:p-6',
@@ -101,8 +103,9 @@ export function GoalDetailsPopoverView({
             <DialogHeader>
               <DialogTitle className="sr-only">Goal Details</DialogTitle>
             </DialogHeader>
-            {/* Extra right padding to avoid overlap with close button */}
-            <div className="space-y-3 overflow-y-auto flex-1 pr-6">{children}</div>
+            {/* Padding on all sides to prevent focus rings/highlights from being clipped */}
+            {/* Extra right padding (pr-8) to avoid overlap with close button */}
+            <div className="space-y-3 overflow-y-auto flex-1 px-1 py-1 pr-8">{children}</div>
           </DialogContent>
         </Dialog>
       </>

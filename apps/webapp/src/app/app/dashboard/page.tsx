@@ -2,12 +2,12 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useScreenSize } from '@/hooks/useScreenSize';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { DashboardFocusView } from '../../../components/organisms/DashboardFocusView';
 
 const QuarterOverviewPage = () => {
   const searchParams = useSearchParams();
-  const { isMobile } = useScreenSize();
+  const { isMobile } = useDeviceScreenInfo();
   const {
     currentWeekNumber,
     selectedWeek,

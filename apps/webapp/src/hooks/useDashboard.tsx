@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import type React from 'react';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
-import { useScreenSize } from '@/hooks/useScreenSize';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { DayOfWeek } from '@/lib/constants';
 import { useCurrentDateInfo } from './useCurrentDateTime';
 import { useQuarterWeekInfo } from './useQuarterWeekInfo';
@@ -74,7 +74,7 @@ const DashboardContext = createContext<DashboardContextValue | 'not-found'>('not
 export const DashboardProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isMobile } = useScreenSize();
+  const { isMobile } = useDeviceScreenInfo();
 
   // Use reactive current date - already optimized to update daily
   const currentDate = useCurrentDateInfo();
