@@ -841,12 +841,33 @@ export const getAllQuarterlyGoalsForQuarter = query({
       .filter((q) => q.eq(q.field('depth'), 0))
       .collect();
 
-    return quarterlyGoals.map((goal) => ({
-      _id: goal._id,
-      title: goal.title,
-      isComplete: goal.isComplete,
-      selected: true, // Default to selected
-    }));
+    // Get weekly goal counts for each quarterly goal
+    const goalsWithCounts = await Promise.all(
+      quarterlyGoals.map(async (goal) => {
+        // Count weekly goals (depth 1) that are children of this quarterly goal
+        const weeklyGoals = await ctx.db
+          .query('goals')
+          .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+            q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goal._id)
+          )
+          .filter((q) => q.eq(q.field('depth'), 1))
+          .collect();
+
+        const totalWeeklyGoals = weeklyGoals.length;
+        const completedWeeklyGoals = weeklyGoals.filter((wg) => wg.isComplete).length;
+
+        return {
+          _id: goal._id,
+          title: goal.title,
+          isComplete: goal.isComplete,
+          completedAt: goal.completedAt,
+          weeklyGoalCount: totalWeeklyGoals,
+          completedWeeklyGoalCount: completedWeeklyGoals,
+        };
+      })
+    );
+
+    return goalsWithCounts;
   },
 });
 
@@ -1030,4 +1051,49 @@ const mapWeeklyGoal = (weeklyGoal: WeeklyGoalTreeNode, weekNumber: number, year:
     .startOf('week')
     .toMillis(),
   weekEndTimestamp: DateTime.fromObject({ weekNumber, weekYear: year }).endOf('week').toMillis(),
+});
+
+// Get adhoc goal counts per domain for a specific quarter (for selection UI)
+export const getAdhocGoalCountsByDomainForQuarter = query({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    quarter: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, year, quarter } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get all weeks in the quarter
+    const { weeks } = getQuarterWeeks(year, quarter);
+
+    // Query adhoc goals for all weeks in the quarter
+    const adhocPromises = weeks.map((weekNum) =>
+      ctx.db
+        .query('goals')
+        .withIndex('by_user_and_adhoc_year_week', (q) =>
+          q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNum)
+        )
+        .collect()
+    );
+    const results = await Promise.all(adhocPromises);
+    const allAdhocGoals = results.flat().filter((goal) => goal.adhoc);
+
+    // Count goals per domain
+    const countsByDomain: Record<string, { total: number; completed: number }> = {};
+
+    for (const goal of allAdhocGoals) {
+      const domainKey = goal.domainId || 'UNCATEGORIZED';
+      if (!countsByDomain[domainKey]) {
+        countsByDomain[domainKey] = { total: 0, completed: 0 };
+      }
+      countsByDomain[domainKey].total++;
+      if (goal.isComplete) {
+        countsByDomain[domainKey].completed++;
+      }
+    }
+
+    return countsByDomain;
+  },
 });

@@ -1,7 +1,9 @@
 'use client';
 
+import { api } from '@services/backend/convex/_generated/api';
 import type { Id } from '@services/backend/convex/_generated/dataModel';
-import { ArrowLeft, Eye, FileText, Home, Settings } from 'lucide-react';
+import { useQuery } from 'convex/react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye, FileText, Home, Settings } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
@@ -12,6 +14,13 @@ import {
   QuarterSummaryResults,
 } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useDomains } from '@/hooks/useDomains';
 import { useQuarterSummary } from '@/hooks/useQuarterSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
@@ -29,8 +38,8 @@ export default function MultiGoalQuarterlySummaryPage() {
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = React.useState<'summary' | 'markdown' | 'selection'>('selection');
 
-  // Get year and quarter from URL params, fallback to current date
-  const { year, quarter } = React.useMemo(() => {
+  // Get initial year and quarter from URL params, fallback to current date
+  const initialYearQuarter = React.useMemo(() => {
     const now = DateTime.now();
     const yearParam = searchParams.get('year');
     const quarterParam = searchParams.get('quarter');
@@ -41,6 +50,10 @@ export default function MultiGoalQuarterlySummaryPage() {
       : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
     return { year, quarter };
   }, [searchParams]);
+
+  // State for year and quarter (allows navigation)
+  const [year, setYear] = React.useState(initialYearQuarter.year);
+  const [quarter, setQuarter] = React.useState<1 | 2 | 3 | 4>(initialYearQuarter.quarter);
 
   // Get selected goal IDs from URL params
   const [selectedGoalIds, setSelectedGoalIds] = React.useState<Id<'goals'>[]>(() => {
@@ -67,6 +80,12 @@ export default function MultiGoalQuarterlySummaryPage() {
 
   const goalActions = useSummaryGoalActions();
 
+  // Fetch adhoc goal counts per domain for the current quarter
+  const adhocGoalCounts = useQuery(
+    api.dashboard.getAdhocGoalCountsByDomainForQuarter,
+    sessionId ? { sessionId, year, quarter } : 'skip'
+  );
+
   // Derived state: include adhoc goals if any domains are selected
   const includeAdhocGoals = selectedAdhocDomainIds.length > 0;
 
@@ -78,6 +97,18 @@ export default function MultiGoalQuarterlySummaryPage() {
     includeAdhocGoals,
     adhocDomainIds: selectedAdhocDomainIds,
   });
+
+  // Reset selections when year/quarter changes
+  const previousYearQuarterRef = React.useRef({ year, quarter });
+  React.useEffect(() => {
+    const prev = previousYearQuarterRef.current;
+    if (prev.year !== year || prev.quarter !== quarter) {
+      // Reset selections when navigating to a different quarter
+      setSelectedGoalIds([]);
+      setSelectedAdhocDomainIds([]);
+      previousYearQuarterRef.current = { year, quarter };
+    }
+  }, [year, quarter]);
 
   // Update URL when selection changes
   React.useEffect(() => {
@@ -127,11 +158,48 @@ export default function MultiGoalQuarterlySummaryPage() {
     }
   }, [selectedGoalIds, includeAdhocGoals]);
 
+  // Year/Quarter navigation handlers
+  const handlePreviousQuarter = React.useCallback(() => {
+    if (quarter === 1) {
+      setYear(year - 1);
+      setQuarter(4);
+    } else {
+      setQuarter((quarter - 1) as 1 | 2 | 3 | 4);
+    }
+  }, [year, quarter]);
+
+  const handleNextQuarter = React.useCallback(() => {
+    if (quarter === 4) {
+      setYear(year + 1);
+      setQuarter(1);
+    } else {
+      setQuarter((quarter + 1) as 1 | 2 | 3 | 4);
+    }
+  }, [year, quarter]);
+
+  const handleYearChange = React.useCallback((newYear: string) => {
+    setYear(Number.parseInt(newYear));
+  }, []);
+
+  const handleQuarterChange = React.useCallback((newQuarter: string) => {
+    setQuarter(Number.parseInt(newQuarter) as 1 | 2 | 3 | 4);
+  }, []);
+
+  // Generate year options (current year ± 5 years)
+  const currentYear = DateTime.now().year;
+  const yearOptions = React.useMemo(() => {
+    const years: number[] = [];
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+      years.push(y);
+    }
+    return years;
+  }, [currentYear]);
+
   const canShowSummary = selectedGoalIds.length > 0 || includeAdhocGoals;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
+    <div className="min-h-screen bg-background">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Breadcrumb Navigation */}
@@ -168,7 +236,7 @@ export default function MultiGoalQuarterlySummaryPage() {
             {/* View Toggle and Quarter Badge */}
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-muted rounded-lg p-1">
                 <Button
                   variant={viewMode === 'selection' ? 'default' : 'ghost'}
                   size="sm"
@@ -199,11 +267,6 @@ export default function MultiGoalQuarterlySummaryPage() {
                   Markdown
                 </Button>
               </div>
-
-              {/* Quarter Badge */}
-              <span className="text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
-                Q{quarter} {year}
-              </span>
             </div>
           </div>
         </div>
@@ -214,15 +277,84 @@ export default function MultiGoalQuarterlySummaryPage() {
         {viewMode === 'selection' && (
           <div className="max-w-3xl mx-auto space-y-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Create Report</h1>
+              <h1 className="text-3xl font-bold text-foreground">Create Report</h1>
               <p className="text-lg text-muted-foreground mt-2">
                 Select the goals you want to include in your quarterly summary.
               </p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="p-6 border-b bg-gray-50/50">
-                <h2 className="text-lg font-semibold text-gray-900">Quarterly Goals</h2>
+            {/* Year and Quarter Selector */}
+            <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-muted/30">
+                <h2 className="text-lg font-semibold text-foreground">Select Period</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Choose the year and quarter for your report
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-center gap-4">
+                  {/* Previous Quarter Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousQuarter}
+                    className="h-10 w-10"
+                    title="Previous Quarter"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+
+                  {/* Year Selector */}
+                  <Select value={year.toString()} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map((y) => (
+                        <SelectItem key={y} value={y.toString()}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Quarter Selector */}
+                  <Select value={quarter.toString()} onValueChange={handleQuarterChange}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue placeholder="Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Q1</SelectItem>
+                      <SelectItem value="2">Q2</SelectItem>
+                      <SelectItem value="3">Q3</SelectItem>
+                      <SelectItem value="4">Q4</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Next Quarter Button */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextQuarter}
+                    className="h-10 w-10"
+                    title="Next Quarter"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                {/* Current Selection Badge */}
+                <div className="flex justify-center mt-4">
+                  <span className="text-sm font-medium text-primary bg-primary/10 px-4 py-1.5 rounded-full">
+                    Q{quarter} {year}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-muted/30">
+                <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   Strategic high-level goals for the quarter
                 </p>
@@ -240,10 +372,10 @@ export default function MultiGoalQuarterlySummaryPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="p-6 border-b bg-gray-50/50">
+            <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-muted/30">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Adhoc Goals</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Adhoc Goals</h2>
                   <p className="text-sm text-muted-foreground mt-1">
                     Tactical tasks and smaller wins - select domains to include
                   </p>
@@ -256,6 +388,7 @@ export default function MultiGoalQuarterlySummaryPage() {
                     domains={domains}
                     selectedDomainIds={selectedAdhocDomainIds}
                     onSelectionChange={setSelectedAdhocDomainIds}
+                    goalCounts={adhocGoalCounts ?? undefined}
                   />
                 ) : (
                   <p className="text-sm text-muted-foreground">
@@ -286,7 +419,7 @@ export default function MultiGoalQuarterlySummaryPage() {
             includeAdhocGoals={includeAdhocGoals}
             adhocDomainIds={selectedAdhocDomainIds}
             goalActions={goalActions}
-            className="bg-white rounded-lg shadow-sm border p-6"
+            className="bg-card rounded-lg shadow-sm border p-6"
           />
         )}
 
@@ -298,7 +431,7 @@ export default function MultiGoalQuarterlySummaryPage() {
         )}
 
         {!canShowSummary && viewMode !== 'selection' && (
-          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
+          <div className="bg-card rounded-lg shadow-sm border p-6 text-center">
             <p className="text-muted-foreground mb-4">
               No goals selected. Please select goals to view the summary.
             </p>

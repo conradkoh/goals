@@ -1,9 +1,11 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
-import { AlertCircle, CheckSquare, Square } from 'lucide-react';
+import type { QuarterlyGoalOption } from '@services/backend/src/usecase/getWeekDetails';
+import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } from 'lucide-react';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuarterlyGoalsList } from '@/hooks/useQuarterlyGoalsList';
 import { cn } from '@/lib/utils';
@@ -36,6 +38,66 @@ function QuarterlyGoalSelectorSkeleton() {
   );
 }
 
+interface GoalItemProps {
+  goal: QuarterlyGoalOption;
+  isSelected: boolean;
+  onToggle: (goalId: Id<'goals'>, checked: boolean) => void;
+}
+
+function GoalItem({ goal, isSelected, onToggle }: GoalItemProps) {
+  const hasWeeklyGoals = goal.weeklyGoalCount > 0;
+  const allWeeklyComplete =
+    hasWeeklyGoals && goal.completedWeeklyGoalCount === goal.weeklyGoalCount;
+
+  return (
+    <div
+      className={cn(
+        'flex items-start space-x-3 p-3 rounded-lg transition-colors',
+        'hover:bg-accent/50 dark:hover:bg-accent/30',
+        isSelected && 'bg-accent/30 dark:bg-accent/20'
+      )}
+    >
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={(checked) => onToggle(goal._id, checked === true)}
+        className="mt-0.5 flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={cn(
+              'font-medium text-foreground',
+              goal.isComplete && 'line-through text-muted-foreground'
+            )}
+          >
+            {goal.title}
+          </span>
+          {/* Weekly goal count badge */}
+          <span
+            className={cn(
+              'text-xs px-2 py-0.5 rounded-full',
+              hasWeeklyGoals
+                ? allWeeklyComplete
+                  ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400'
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {goal.completedWeeklyGoalCount}/{goal.weeklyGoalCount} weekly goals
+          </span>
+          {/* Quarterly goal completion status */}
+          {goal.isComplete && (
+            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-950/50 px-2 py-0.5 rounded-full">
+              <Check className="h-3 w-3" />
+              Completed
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function QuarterlyGoalSelector({
   year,
   quarter,
@@ -46,6 +108,29 @@ export function QuarterlyGoalSelector({
   showGenerateButton,
 }: QuarterlyGoalSelectorProps) {
   const { goals, isLoading, error } = useQuarterlyGoalsList({ year, quarter });
+  const [isEmptyGoalsOpen, setIsEmptyGoalsOpen] = React.useState(false);
+  const hasInitializedSelection = React.useRef(false);
+
+  // Separate goals into those with weekly goals and those without
+  const { goalsWithWeekly, emptyGoals } = React.useMemo(() => {
+    if (!goals) return { goalsWithWeekly: [], emptyGoals: [] };
+    return {
+      goalsWithWeekly: goals.filter((g) => g.weeklyGoalCount > 0),
+      emptyGoals: goals.filter((g) => g.weeklyGoalCount === 0),
+    };
+  }, [goals]);
+
+  // Auto-select non-empty goals on initial load
+  React.useEffect(() => {
+    if (goals && !hasInitializedSelection.current && selectedGoalIds.length === 0) {
+      hasInitializedSelection.current = true;
+      // Select all goals that have at least one weekly goal
+      const nonEmptyGoalIds = goals.filter((g) => g.weeklyGoalCount > 0).map((g) => g._id);
+      if (nonEmptyGoalIds.length > 0) {
+        onSelectionChange(nonEmptyGoalIds);
+      }
+    }
+  }, [goals, selectedGoalIds.length, onSelectionChange]);
 
   const handleGoalToggle = React.useCallback(
     (goalId: Id<'goals'>, checked: boolean) => {
@@ -60,7 +145,9 @@ export function QuarterlyGoalSelector({
 
   const handleSelectAll = React.useCallback(() => {
     if (goals) {
-      onSelectionChange(goals.map((goal) => goal._id));
+      // Select all non-empty goals only
+      const nonEmptyGoalIds = goals.filter((g) => g.weeklyGoalCount > 0).map((g) => g._id);
+      onSelectionChange(nonEmptyGoalIds);
     }
   }, [goals, onSelectionChange]);
 
@@ -68,9 +155,12 @@ export function QuarterlyGoalSelector({
     onSelectionChange([]);
   }, [onSelectionChange]);
 
-  const isAllSelected = React.useMemo(() => {
-    return goals && goals.length > 0 && goals.every((goal) => selectedGoalIds.includes(goal._id));
-  }, [goals, selectedGoalIds]);
+  const isAllNonEmptySelected = React.useMemo(() => {
+    return (
+      goalsWithWeekly.length > 0 &&
+      goalsWithWeekly.every((goal) => selectedGoalIds.includes(goal._id))
+    );
+  }, [goalsWithWeekly, selectedGoalIds]);
 
   const isNoneSelected = React.useMemo(() => {
     return selectedGoalIds.length === 0;
@@ -112,7 +202,7 @@ export function QuarterlyGoalSelector({
     <div className={cn('space-y-4', className)}>
       {/* Header with select all/none buttons */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-foreground">
           Select Goals ({selectedGoalIds.length} of {goals.length} selected)
         </h3>
         <div className="flex items-center gap-2">
@@ -120,7 +210,7 @@ export function QuarterlyGoalSelector({
             variant="outline"
             size="sm"
             onClick={handleSelectAll}
-            disabled={isAllSelected}
+            disabled={isAllNonEmptySelected}
             className="flex items-center gap-1"
           >
             <CheckSquare className="h-4 w-4" />
@@ -139,41 +229,54 @@ export function QuarterlyGoalSelector({
         </div>
       </div>
 
-      {/* Goal selection list */}
-      <div className="space-y-3 max-h-96 overflow-y-auto border rounded-lg p-4">
-        {goals.map((goal) => {
-          const isSelected = selectedGoalIds.includes(goal._id);
-          return (
-            <div
+      {/* Goals with weekly goals */}
+      {goalsWithWeekly.length > 0 && (
+        <div className="space-y-2 max-h-72 overflow-y-auto border rounded-lg p-3 bg-card">
+          {goalsWithWeekly.map((goal) => (
+            <GoalItem
               key={goal._id}
-              className="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50"
+              goal={goal}
+              isSelected={selectedGoalIds.includes(goal._id)}
+              onToggle={handleGoalToggle}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Empty goals in collapsed section */}
+      {emptyGoals.length > 0 && (
+        <Collapsible open={isEmptyGoalsOpen} onOpenChange={setIsEmptyGoalsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-between text-muted-foreground hover:text-foreground"
             >
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(checked) => handleGoalToggle(goal._id, checked === true)}
-                className="mt-0.5 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'font-medium',
-                      goal.isComplete && 'line-through text-muted-foreground'
-                    )}
-                  >
-                    {goal.title}
-                  </span>
-                  {goal.isComplete && (
-                    <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                      Completed
-                    </span>
-                  )}
-                </div>
-              </div>
+              <span className="flex items-center gap-2">
+                {isEmptyGoalsOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                Empty Goals ({emptyGoals.length})
+              </span>
+              <span className="text-xs">No weekly goals assigned</span>
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted/30">
+              {emptyGoals.map((goal) => (
+                <GoalItem
+                  key={goal._id}
+                  goal={goal}
+                  isSelected={selectedGoalIds.includes(goal._id)}
+                  onToggle={handleGoalToggle}
+                />
+              ))}
             </div>
-          );
-        })}
-      </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* Selection summary and generate button */}
       {selectedGoalIds.length > 0 && (

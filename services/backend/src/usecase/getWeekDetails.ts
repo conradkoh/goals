@@ -73,7 +73,9 @@ export type QuarterlyGoalOption = {
   _id: Id<'goals'>;
   title: string;
   isComplete: boolean;
-  selected: boolean;
+  completedAt?: number;
+  weeklyGoalCount: number;
+  completedWeeklyGoalCount: number;
 };
 
 /**
