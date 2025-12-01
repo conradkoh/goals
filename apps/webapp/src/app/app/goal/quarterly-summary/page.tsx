@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Home, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 import { MultiQuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
@@ -31,6 +31,7 @@ function QuarterlySummaryContent() {
     yearOptions,
     hasSelection,
     summaryData,
+    isLoadingSummary,
   } = useQuarterlySummaryContext();
 
   const [activeTab, setActiveTab] = React.useState<'select' | 'preview'>('select');
@@ -216,7 +217,12 @@ function QuarterlySummaryContent() {
             </TabsContent>
 
             <TabsContent value="preview" className="mt-6">
-              {hasSelection && summaryData ? (
+              {isLoadingSummary ? (
+                <div className="bg-card rounded-lg shadow-sm border p-12 text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground mt-4">Loading summary...</p>
+                </div>
+              ) : hasSelection && summaryData ? (
                 <MultiQuarterlySummaryMarkdownView
                   summaryData={summaryData}
                   className="shadow-sm border"

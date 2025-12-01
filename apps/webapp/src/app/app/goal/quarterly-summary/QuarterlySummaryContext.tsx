@@ -34,6 +34,7 @@ interface QuarterlySummaryContextValue {
 
   // Summary data
   summaryData: ReturnType<typeof useQuarterSummary>['summaryData'];
+  isLoadingSummary: boolean;
   hasSelection: boolean;
 
   // Year options for selector
@@ -146,7 +147,7 @@ export function QuarterlySummaryProvider({
 
   // Summary data
   const includeAdhocGoals = selectedAdhocDomainIds.length > 0;
-  const { summaryData } = useQuarterSummary({
+  const { summaryData, isLoading: isLoadingSummary } = useQuarterSummary({
     quarterlyGoalIds: selectedGoalIds,
     year,
     quarter,
@@ -201,6 +202,7 @@ export function QuarterlySummaryProvider({
     setSelectedAdhocDomainIds,
     adhocGoalCounts: adhocGoalCounts ?? undefined,
     summaryData,
+    isLoadingSummary,
     hasSelection,
     yearOptions,
   };
