@@ -53,7 +53,7 @@ Consolidate optimistic goal creation to use a single source of truth and fix ord
 ## Architecture After Fix
 
 ```
-WeekProviderWithoutDashboard (single source of truth)
+WeekProvider (single source of truth)
     ├── quarterlyGoals (with optimistic)
     ├── weeklyGoals (with optimistic, children updated)
     └── dailyGoals (with optimistic)
@@ -88,13 +88,19 @@ WeekProviderWithoutDashboard (single source of truth)
 
 ### Issue 1: FocusModeWeeklyView - Multiple Providers
 - **Status**: ✅ Complete
-- **Problem**: 4 separate `WeekProviderWithoutDashboard` instances
+- **Problem**: 4 separate `WeekProvider` instances
 - **Fix**: Moved single provider to outer component, inner uses context
 
 ### Issue 2: MultiWeekLayout/WeekCard - Double Nested Providers
 - **Status**: ✅ Complete
 - **Problem**: WeekCard and WeekCardContent both wrap in providers
 - **Fix**: Removed nested provider in WeekCardContent, WeekCard provides single context
+
+### Issue 3: Confusing naming
+- **Status**: ✅ Complete
+- **Renames**:
+  - `WeekProviderWithoutDashboard` → `WeekProvider`
+  - `useWeekWithoutDashboard` → `useWeekData`
 
 ---
 

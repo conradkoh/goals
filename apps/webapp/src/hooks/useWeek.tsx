@@ -53,15 +53,17 @@ interface WeekContextValue {
   deleteGoalOptimistic: (goalId: Id<'goals'>) => Promise<void>;
 }
 
-interface WeekProviderWithoutDashboardProps {
+interface WeekProviderProps {
   weekData: WeekData;
   children: React.ReactNode;
 }
 
-export const WeekProviderWithoutDashboard = ({
-  weekData,
-  children,
-}: WeekProviderWithoutDashboardProps) => {
+/**
+ * Provides week goal data context with optimistic update support.
+ * Wraps children with access to quarterlyGoals, weeklyGoals, dailyGoals,
+ * and optimistic CRUD operations.
+ */
+export const WeekProvider = ({ weekData, children }: WeekProviderProps) => {
   const { createWeeklyGoal, deleteGoal, createDailyGoal } = useGoalActions();
   const allGoals = weekData.tree.allGoals;
 
@@ -435,17 +437,17 @@ export interface WeekData {
   tree: WeekGoalsTree;
 }
 
-interface Week2Params {
+interface UseWeekDataParams {
   year: number;
   quarter: number;
   week: number;
 }
 
-export const useWeekWithoutDashboard = ({
-  year,
-  quarter,
-  week,
-}: Week2Params): WeekData | undefined => {
+/**
+ * Hook to fetch week data from the backend.
+ * Returns WeekData containing goals tree, days, and metadata.
+ */
+export const useWeekData = ({ year, quarter, week }: UseWeekDataParams): WeekData | undefined => {
   const { sessionId } = useSession();
   const weekDetails = useQuery(api.dashboard.getWeek, {
     sessionId,

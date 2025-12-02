@@ -7,7 +7,7 @@ import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
-import { useWeekWithoutDashboard, type WeekData } from '@/hooks/useWeek';
+import { useWeekData, type WeekData } from '@/hooks/useWeek';
 import { WeekCard } from '../week/WeekCard';
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
@@ -26,7 +26,7 @@ const WeekCardContent = ({
   isCurrentWeek: boolean;
 }) => {
   // Fetch the actual week data from the backend
-  const weekDataFromBackend = useWeekWithoutDashboard({
+  const weekDataFromBackend = useWeekData({
     year: week.year,
     quarter: week.quarter,
     week: week.weekNumber,

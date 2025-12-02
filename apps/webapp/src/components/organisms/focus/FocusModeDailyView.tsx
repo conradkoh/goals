@@ -12,7 +12,7 @@ import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { usePullGoals } from '@/hooks/usePullGoals';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
-import { useWeek, type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { useWeek, type WeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
 interface FocusModeDailyViewProps {
@@ -223,8 +223,8 @@ const FocusModeDailyViewInner = ({
 // This is the outer component that provides the week context
 export const FocusModeDailyView = ({ weekData, ...innerProps }: FocusModeDailyViewProps) => {
   return (
-    <WeekProviderWithoutDashboard weekData={weekData}>
+    <WeekProvider weekData={weekData}>
       <FocusModeDailyViewInner {...innerProps} />
-    </WeekProviderWithoutDashboard>
+    </WeekProvider>
   );
 };

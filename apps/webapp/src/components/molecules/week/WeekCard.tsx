@@ -1,6 +1,6 @@
 import { PullGoalsButton } from '@/components/molecules/PullGoalsButton';
 import { usePullGoals } from '@/hooks/usePullGoals';
-import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { type WeekData, WeekProvider } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
 
 interface WeekCardProps {
@@ -36,7 +36,7 @@ export const WeekCard = ({
   });
 
   return (
-    <WeekProviderWithoutDashboard weekData={weekData}>
+    <WeekProvider weekData={weekData}>
       <div
         className={cn(
           'h-full flex flex-col border rounded-lg shadow bg-white',
@@ -65,7 +65,7 @@ export const WeekCard = ({
           {children}
         </div>
       </div>
-    </WeekProviderWithoutDashboard>
+    </WeekProvider>
   );
 };
 

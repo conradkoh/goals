@@ -9,7 +9,7 @@ import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
-import { useWeekWithoutDashboard } from '@/hooks/useWeek';
+import { useWeekData } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
 interface DashboardFocusViewProps {
@@ -53,7 +53,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   const [forceRender, setForceRender] = React.useState(0);
 
   // Fetch week data for the selected week
-  const weekData = useWeekWithoutDashboard({
+  const weekData = useWeekData({
     year: selectedYear,
     quarter: selectedQuarter,
     week: selectedWeekNumber,

@@ -6,7 +6,7 @@ import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSectio
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { usePullGoals } from '@/hooks/usePullGoals';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
-import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
+import { type WeekData, WeekProvider } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
@@ -109,8 +109,8 @@ const FocusModeWeeklyViewInner = ({
 // Outer component that provides the SINGLE week context for all sections
 export const FocusModeWeeklyView = ({ weekData, ...innerProps }: FocusModeWeeklyViewProps) => {
   return (
-    <WeekProviderWithoutDashboard weekData={weekData}>
+    <WeekProvider weekData={weekData}>
       <FocusModeWeeklyViewInner {...innerProps} />
-    </WeekProviderWithoutDashboard>
+    </WeekProvider>
   );
 };

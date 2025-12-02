@@ -188,7 +188,7 @@ describe('useWeek', () => {
         },
       ];
 
-      // Test the sorting logic directly, similar to what happens in WeekProviderWithoutDashboard
+      // Test the sorting logic directly, similar to what happens in WeekProvider
 
       // First, get all the quarterly goals (depth 0)
       const baseQuarterlyGoals = goalsList.filter((goal) => goal.depth === 0);
