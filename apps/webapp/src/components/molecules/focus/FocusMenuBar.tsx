@@ -1,5 +1,7 @@
 import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import type { ReactElement } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
+import { DailyWeeklyActionMenu } from '@/components/molecules/focus/DailyWeeklyActionMenu';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +30,11 @@ export type FocusMenuBarProps = {
   isFirstQuarter?: boolean;
   isMovingGoals?: boolean;
   handlePreviewGoals?: () => void;
+  // Props for DailyWeeklyActionMenu (pull goals for daily/weekly views)
+  isPullingGoals?: boolean;
+  showPullGoals?: boolean;
+  onPullGoals?: () => Promise<void>;
+  pullGoalsDialog?: ReactElement;
 };
 
 /**
@@ -50,6 +57,11 @@ export const FocusMenuBar = ({
   isFirstQuarter,
   isMovingGoals,
   handlePreviewGoals,
+  // DailyWeeklyActionMenu props
+  isPullingGoals,
+  showPullGoals,
+  onPullGoals,
+  pullGoalsDialog,
 }: FocusMenuBarProps) => {
   // Generate years (current year - 1 to current year + 2)
   const years = selectedYear ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i) : [];
@@ -65,6 +77,10 @@ export const FocusMenuBar = ({
 
   // Only show the QuarterActionMenu in quarterly view
   const showQuarterActionMenu = viewMode === 'quarterly' && handlePreviewGoals;
+
+  // Show the DailyWeeklyActionMenu in daily and weekly views
+  const showDailyWeeklyActionMenu =
+    (viewMode === 'daily' || viewMode === 'weekly') && onPullGoals && pullGoalsDialog;
 
   // Determine if the quarter action button should be disabled
   const isActionMenuDisabled = isFirstQuarter || isMovingGoals;
@@ -187,6 +203,20 @@ export const FocusMenuBar = ({
                 menuIcon={<MoreVertical className="h-4 w-4" />}
                 year={selectedYear}
                 quarter={selectedQuarter}
+              />
+            )}
+
+            {/* Daily/Weekly Action Menu - with vertical dots icon */}
+            {showDailyWeeklyActionMenu && (
+              <DailyWeeklyActionMenu
+                isPulling={isPullingGoals}
+                showPullGoals={showPullGoals}
+                onPullGoals={onPullGoals}
+                pullGoalsDialog={pullGoalsDialog}
+                tooltipContent="Navigate to current day/week to pull goals"
+                buttonSize="icon"
+                buttonVariant="ghost"
+                menuIcon={<MoreVertical className="h-4 w-4" />}
               />
             )}
           </div>

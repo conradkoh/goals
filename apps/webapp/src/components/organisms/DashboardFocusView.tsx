@@ -6,8 +6,10 @@ import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyV
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
 import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
+import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
+import { usePullGoals } from '@/hooks/usePullGoals';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useWeekData } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -36,7 +38,8 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onYearQuarterChange,
 }) => {
   const { selectedYear, selectedQuarter, handleDayNavigation, isFocusModeEnabled } = useDashboard();
-  useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
+  const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
+  const { weekday: currentDay } = useCurrentWeekInfo();
 
   // Use the hook for the "Pull from previous quarter" functionality
   const {
@@ -48,6 +51,30 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     year: selectedYear,
     quarter: selectedQuarter as 1 | 2 | 3 | 4,
   });
+
+  // Use the hook for "Pull goals" functionality for daily/weekly views
+  const {
+    isPulling: isPullingGoals,
+    handlePullGoals,
+    dialog: pullGoalsDialog,
+  } = usePullGoals({
+    weekNumber: selectedWeekNumber,
+    year: selectedYear,
+    quarter: selectedQuarter,
+  });
+
+  // Determine if pull goals should be shown based on current view
+  // For daily view: only show when viewing today
+  // For weekly view: only show when viewing current week
+  const showPullGoals = useMemo(() => {
+    if (viewMode === 'daily') {
+      return selectedWeekNumber === currentWeekNumber && selectedDayOfWeek === currentDay;
+    }
+    if (viewMode === 'weekly') {
+      return selectedWeekNumber === currentWeekNumber;
+    }
+    return false;
+  }, [viewMode, selectedWeekNumber, currentWeekNumber, selectedDayOfWeek, currentDay]);
 
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
@@ -110,6 +137,11 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             isFirstQuarter={isFirstQuarter}
             isMovingGoals={isMovingGoals}
             handlePreviewGoals={handlePreviewGoals}
+            // Pass props for DailyWeeklyActionMenu
+            isPullingGoals={isPullingGoals}
+            showPullGoals={showPullGoals}
+            onPullGoals={handlePullGoals}
+            pullGoalsDialog={pullGoalsDialog}
           />
         </div>
         <div className="w-full h-full">

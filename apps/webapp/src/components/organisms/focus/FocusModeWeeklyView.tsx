@@ -1,11 +1,8 @@
 import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
-import { PullGoalsButton } from '@/components/molecules/PullGoalsButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
-import { usePullGoals } from '@/hooks/usePullGoals';
-import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { type WeekData, WeekProvider } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
@@ -31,21 +28,6 @@ const FocusModeWeeklyViewInner = ({
   onJumpToToday,
 }: FocusModeWeeklyViewInnerProps) => {
   const { weekday: currentDay } = useCurrentWeekInfo();
-  const { currentWeekNumber } = useQuarterWeekInfo(year, quarter as 1 | 2 | 3 | 4);
-
-  // Only show pull goals button when viewing the current week
-  const isCurrentWeek = weekNumber === currentWeekNumber;
-
-  // Pull goals hook
-  const {
-    isPulling,
-    handlePullGoals,
-    dialog: pullGoalsDialog,
-  } = usePullGoals({
-    weekNumber,
-    year,
-    quarter,
-  });
 
   // Memoize the components to prevent unnecessary re-renders
   const quarterlyGoalsComponent = useMemo(
@@ -68,22 +50,13 @@ const FocusModeWeeklyViewInner = ({
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
-          <div className="flex items-center gap-2">
-            {isCurrentWeek && (
-              <PullGoalsButton
-                isPulling={isPulling}
-                onPullGoals={handlePullGoals}
-                dialog={pullGoalsDialog}
-              />
-            )}
-            <JumpToCurrentButton
-              year={year}
-              quarter={quarter}
-              selectedWeek={weekNumber}
-              selectedDay={currentDay}
-              onJumpToToday={onJumpToToday}
-            />
-          </div>
+          <JumpToCurrentButton
+            year={year}
+            quarter={quarter}
+            selectedWeek={weekNumber}
+            selectedDay={currentDay}
+            onJumpToToday={onJumpToToday}
+          />
         </div>
         {quarterlyGoalsComponent}
       </div>
