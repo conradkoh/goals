@@ -25,16 +25,19 @@ interface FocusModeDailyViewProps {
   isFocusModeEnabled?: boolean;
 }
 
+/** Props for the inner component - excludes weekData since it uses context */
+type FocusModeDailyViewInnerProps = Omit<FocusModeDailyViewProps, 'weekData'>;
+
 // This is the inner component that uses the FireGoals context
+// It gets goal data from useWeek() context which includes optimistic updates
 const FocusModeDailyViewInner = ({
   year,
   quarter,
   weekNumber,
-  weekData: _weekData, // Keep for backwards compatibility, but use context data
   selectedDayOfWeek,
   onJumpToCurrent,
   isFocusModeEnabled = false,
-}: FocusModeDailyViewProps) => {
+}: FocusModeDailyViewInnerProps) => {
   const { fireGoals } = useGoalStatus();
   // Use quarterlyGoals from context - this includes optimistic updates
   const { quarterlyGoals, updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
@@ -218,10 +221,10 @@ const FocusModeDailyViewInner = ({
 };
 
 // This is the outer component that provides the week context
-export const FocusModeDailyView = (props: FocusModeDailyViewProps) => {
+export const FocusModeDailyView = ({ weekData, ...innerProps }: FocusModeDailyViewProps) => {
   return (
-    <WeekProviderWithoutDashboard weekData={props.weekData}>
-      <FocusModeDailyViewInner {...props} />
+    <WeekProviderWithoutDashboard weekData={weekData}>
+      <FocusModeDailyViewInner {...innerProps} />
     </WeekProviderWithoutDashboard>
   );
 };
