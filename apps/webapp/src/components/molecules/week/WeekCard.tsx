@@ -55,6 +55,7 @@ export const WeekCard = ({
                   isPulling={isPulling}
                   onPullGoals={handlePullGoals}
                   dialog={pullGoalsDialog}
+                  iconOnly
                 />
               </div>
             )}
