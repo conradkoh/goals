@@ -7,6 +7,11 @@ interface PullGoalsButtonProps {
   onPullGoals: () => Promise<void>;
   dialog: ReactElement;
   className?: string;
+  /**
+   * When true, renders only the icon without text label.
+   * Useful for compact views like the quarterly view.
+   */
+  iconOnly?: boolean;
 }
 
 /**
@@ -15,18 +20,25 @@ interface PullGoalsButtonProps {
  * Styled to match JumpToCurrentButton for consistency.
  */
 export const PullGoalsButton = memo(
-  ({ isPulling, onPullGoals, dialog, className = '' }: PullGoalsButtonProps) => {
+  ({ isPulling, onPullGoals, dialog, className = '', iconOnly = false }: PullGoalsButtonProps) => {
     return (
       <>
         <Button
           variant="outline"
-          size="sm"
+          size={iconOnly ? 'icon' : 'sm'}
           disabled={isPulling}
           onClick={onPullGoals}
           className={`text-muted-foreground hover:text-foreground ${className}`}
+          title="Pull incomplete goals forward"
         >
-          <ArrowDownToLine className="h-4 w-4 mr-2" />
-          {isPulling ? 'Pulling...' : 'Pull Goals'}
+          {iconOnly ? (
+            <ArrowDownToLine className="h-4 w-4" />
+          ) : (
+            <>
+              <ArrowDownToLine className="h-4 w-4 mr-2" />
+              {isPulling ? 'Pulling...' : 'Pull Goals'}
+            </>
+          )}
         </Button>
 
         {dialog}
