@@ -19,14 +19,17 @@ interface FocusModeWeeklyViewProps {
   onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
-// Inner component that uses the pull goals hook
+/** Props for the inner component - excludes weekData since it uses context */
+type FocusModeWeeklyViewInnerProps = Omit<FocusModeWeeklyViewProps, 'weekData'>;
+
+// Inner component that uses the week context
+// Gets goal data from useWeek() context which includes optimistic updates
 const FocusModeWeeklyViewInner = ({
   weekNumber,
   year,
   quarter,
-  weekData,
   onJumpToToday,
-}: FocusModeWeeklyViewProps) => {
+}: FocusModeWeeklyViewInnerProps) => {
   const { weekday: currentDay } = useCurrentWeekInfo();
   const { currentWeekNumber } = useQuarterWeekInfo(year, quarter as 1 | 2 | 3 | 4);
 
@@ -82,36 +85,32 @@ const FocusModeWeeklyViewInner = ({
             />
           </div>
         </div>
-        <WeekProviderWithoutDashboard weekData={weekData}>
-          {quarterlyGoalsComponent}
-        </WeekProviderWithoutDashboard>
+        {quarterlyGoalsComponent}
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">🚀 Weekly Goals</div>
-        <WeekProviderWithoutDashboard weekData={weekData}>
-          {weeklyGoalsComponent}
-        </WeekProviderWithoutDashboard>
+        {weeklyGoalsComponent}
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">📋 Adhoc Tasks</div>
-        <WeekProviderWithoutDashboard weekData={weekData}>
-          <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
-        </WeekProviderWithoutDashboard>
+        <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">🔍 Daily Goals</div>
-        <WeekProviderWithoutDashboard weekData={weekData}>
-          {dailyGoalsComponent}
-        </WeekProviderWithoutDashboard>
+        {dailyGoalsComponent}
       </div>
     </div>
   );
 };
 
-// Outer component - simplified, no longer needs context provider
-export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
-  return <FocusModeWeeklyViewInner {...props} />;
+// Outer component that provides the SINGLE week context for all sections
+export const FocusModeWeeklyView = ({ weekData, ...innerProps }: FocusModeWeeklyViewProps) => {
+  return (
+    <WeekProviderWithoutDashboard weekData={weekData}>
+      <FocusModeWeeklyViewInner {...innerProps} />
+    </WeekProviderWithoutDashboard>
+  );
 };
