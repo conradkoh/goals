@@ -44,8 +44,8 @@ export function AdhocGoalsSection({
   // Filter adhoc goals based on week (adhoc tasks are week-level only, not day-level)
   const filteredAdhocGoals = adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
 
-  // Combine real and optimistic goals
-  const allGoals = [...optimisticGoals, ...filteredAdhocGoals];
+  // Combine real and optimistic goals (optimistic at end for correct ordering)
+  const allGoals = [...filteredAdhocGoals, ...optimisticGoals];
 
   // Separate incomplete and completed goals for this week
   const incompleteGoals = allGoals.filter((goal) => !goal.isComplete);
@@ -107,8 +107,8 @@ export function AdhocGoalsSection({
       domainName: optimisticGoal.domain?.name,
     });
 
-    // Add optimistic goal immediately
-    setOptimisticGoals((prev) => [optimisticGoal, ...prev]);
+    // Add optimistic goal immediately (append to end for correct ordering)
+    setOptimisticGoals((prev) => [...prev, optimisticGoal]);
     setNewGoalTitle('');
     setIsCreating(true);
 

@@ -30,13 +30,14 @@ const FocusModeDailyViewInner = ({
   year,
   quarter,
   weekNumber,
-  weekData,
+  weekData: _weekData, // Keep for backwards compatibility, but use context data
   selectedDayOfWeek,
   onJumpToCurrent,
   isFocusModeEnabled = false,
 }: FocusModeDailyViewProps) => {
   const { fireGoals } = useGoalStatus();
-  const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
+  // Use quarterlyGoals from context - this includes optimistic updates
+  const { quarterlyGoals, updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
 
   // Get current date info to determine if we're viewing today
   const { weekday: currentDay } = useCurrentWeekInfo();
@@ -57,10 +58,10 @@ const FocusModeDailyViewInner = ({
   });
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
+  // Uses quarterlyGoals from context which includes optimistic updates
   const preparedWeeklyGoalsForDay = useCallback(() => {
-    if (!weekData.tree) return [];
+    if (!quarterlyGoals || quarterlyGoals.length === 0) return [];
 
-    const quarterlyGoals = weekData.tree.quarterlyGoals || [];
     // We need to extract weekly goals from the quarterly goals' children
     const weeklyGoals: GoalWithDetailsAndChildren[] = [];
 
@@ -98,7 +99,7 @@ const FocusModeDailyViewInner = ({
           quarterlyGoal: GoalWithDetailsAndChildren;
         } => item !== null
       );
-  }, [weekData]);
+  }, [quarterlyGoals]);
 
   // Memoize the prepared weekly goals to avoid recalculation on every render
   const weeklyGoalsWithQuarterly = useMemo(() => {

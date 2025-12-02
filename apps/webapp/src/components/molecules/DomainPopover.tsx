@@ -54,8 +54,8 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
 
   const { createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
 
-  // Combine real and optimistic goals
-  const allGoals = [...optimisticGoals, ...domainGoals];
+  // Combine real and optimistic goals (optimistic at end for correct ordering)
+  const allGoals = [...domainGoals, ...optimisticGoals];
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -83,8 +83,8 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
       domain: domain || undefined,
     };
 
-    // Add optimistic goal immediately
-    setOptimisticGoals((prev) => [optimisticGoal, ...prev]);
+    // Add optimistic goal immediately (append to end for correct ordering)
+    setOptimisticGoals((prev) => [...prev, optimisticGoal]);
     setNewGoalTitle('');
     setIsCreating(true);
 
