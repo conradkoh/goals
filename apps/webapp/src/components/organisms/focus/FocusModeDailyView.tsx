@@ -2,13 +2,16 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useCallback, useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
-import { TaskPullActionMenu } from '@/components/molecules/focus/TaskPullActionMenu';
+import { PullGoalsButton } from '@/components/molecules/PullGoalsButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
+import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
+import { usePullGoals } from '@/hooks/usePullGoals';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useWeek, type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
@@ -34,6 +37,24 @@ const FocusModeDailyViewInner = ({
 }: FocusModeDailyViewProps) => {
   const { fireGoals } = useGoalStatus();
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
+
+  // Get current date info to determine if we're viewing today
+  const { weekday: currentDay } = useCurrentWeekInfo();
+  const { currentWeekNumber } = useQuarterWeekInfo(year, quarter as 1 | 2 | 3 | 4);
+
+  // Only show pull goals button when viewing today
+  const isViewingToday = weekNumber === currentWeekNumber && selectedDayOfWeek === currentDay;
+
+  // Pull goals hook
+  const {
+    isPulling,
+    handlePullGoals,
+    dialog: pullGoalsDialog,
+  } = usePullGoals({
+    weekNumber,
+    year,
+    quarter,
+  });
 
   // Extract the weeklyGoalsWithQuarterly data for the OnFireGoalsSection
   const preparedWeeklyGoalsForDay = useCallback(() => {
@@ -146,16 +167,17 @@ const FocusModeDailyViewInner = ({
     return hasVisibleFireGoalsForCurrentDay && isFocusModeEnabled;
   }, [hasVisibleFireGoalsForCurrentDay, isFocusModeEnabled]);
 
-  // Get current day data for the action menu
-  const currentDay = useMemo(() => {
-    const currentDayData = weekData.days?.find((day) => day.dayOfWeek === selectedDayOfWeek);
-    return currentDayData;
-  }, [weekData.days, selectedDayOfWeek]);
-
   return (
     <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={handleDeleteGoal}>
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex justify-end mb-2 gap-2">
+          {isViewingToday && (
+            <PullGoalsButton
+              isPulling={isPulling}
+              onPullGoals={handlePullGoals}
+              dialog={pullGoalsDialog}
+            />
+          )}
           <JumpToCurrentButton
             year={year}
             quarter={quarter}
@@ -164,17 +186,6 @@ const FocusModeDailyViewInner = ({
             onJumpToToday={onJumpToCurrent}
           />
         </div>
-
-        {/* Task Pull Action Menu - above urgent items section */}
-        {currentDay && (
-          <TaskPullActionMenu
-            dayOfWeek={selectedDayOfWeek}
-            weekNumber={weekNumber}
-            dateTimestamp={currentDay.dateTimestamp}
-            year={year}
-            quarter={quarter}
-          />
-        )}
 
         <OnFireGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}

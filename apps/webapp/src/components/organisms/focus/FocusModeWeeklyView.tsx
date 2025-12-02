@@ -1,13 +1,11 @@
 import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
-import { WeekActionMenu } from '@/components/molecules/week/WeekActionMenu';
+import { PullGoalsButton } from '@/components/molecules/PullGoalsButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
-import {
-  MoveGoalsForWeekProvider,
-  useMoveGoalsForWeekContext,
-} from '@/hooks/useMoveGoalsForWeekContext';
+import { usePullGoals } from '@/hooks/usePullGoals';
+import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
@@ -21,7 +19,7 @@ interface FocusModeWeeklyViewProps {
   onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
-// Inner component that uses the context
+// Inner component that uses the pull goals hook
 const FocusModeWeeklyViewInner = ({
   weekNumber,
   year,
@@ -29,28 +27,22 @@ const FocusModeWeeklyViewInner = ({
   weekData,
   onJumpToToday,
 }: FocusModeWeeklyViewProps) => {
-  const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
-    useMoveGoalsForWeekContext();
   const { weekday: currentDay } = useCurrentWeekInfo();
+  const { currentWeekNumber } = useQuarterWeekInfo(year, quarter as 1 | 2 | 3 | 4);
 
-  // Memoize the WeekActionMenu props
-  const weekActionMenuProps = useMemo(
-    () => ({
-      isDisabled,
-      isFirstWeek,
-      isMovingTasks,
-      handlePreviewTasks,
-      buttonSize: 'icon' as const,
-      showLabel: false,
-    }),
-    [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks]
-  );
+  // Only show pull goals button when viewing the current week
+  const isCurrentWeek = weekNumber === currentWeekNumber;
 
-  // Memoize the conditional rendering of WeekActionMenu
-  const weekActionMenu = useMemo(
-    () => !isFirstWeek && <WeekActionMenu {...weekActionMenuProps} />,
-    [isFirstWeek, weekActionMenuProps]
-  );
+  // Pull goals hook
+  const {
+    isPulling,
+    handlePullGoals,
+    dialog: pullGoalsDialog,
+  } = usePullGoals({
+    weekNumber,
+    year,
+    quarter,
+  });
 
   // Memoize the components to prevent unnecessary re-renders
   const quarterlyGoalsComponent = useMemo(
@@ -74,6 +66,13 @@ const FocusModeWeeklyViewInner = ({
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
           <div className="flex items-center gap-2">
+            {isCurrentWeek && (
+              <PullGoalsButton
+                isPulling={isPulling}
+                onPullGoals={handlePullGoals}
+                dialog={pullGoalsDialog}
+              />
+            )}
             <JumpToCurrentButton
               year={year}
               quarter={quarter}
@@ -81,7 +80,6 @@ const FocusModeWeeklyViewInner = ({
               selectedDay={currentDay}
               onJumpToToday={onJumpToToday}
             />
-            {weekActionMenu}
           </div>
         </div>
         <WeekProviderWithoutDashboard weekData={weekData}>
@@ -109,25 +107,11 @@ const FocusModeWeeklyViewInner = ({
           {dailyGoalsComponent}
         </WeekProviderWithoutDashboard>
       </div>
-
-      {dialog}
     </div>
   );
 };
 
-// Outer component that provides the context
+// Outer component - simplified, no longer needs context provider
 export const FocusModeWeeklyView = (props: FocusModeWeeklyViewProps) => {
-  const { weekNumber, year, quarter, weekData, onJumpToToday } = props;
-
-  return (
-    <MoveGoalsForWeekProvider weekNumber={weekNumber} year={year} quarter={quarter}>
-      <FocusModeWeeklyViewInner
-        weekNumber={weekNumber}
-        year={year}
-        quarter={quarter}
-        weekData={weekData}
-        onJumpToToday={onJumpToToday}
-      />
-    </MoveGoalsForWeekProvider>
-  );
+  return <FocusModeWeeklyViewInner {...props} />;
 };

@@ -1,11 +1,7 @@
-import { useMemo } from 'react';
-import {
-  MoveGoalsForWeekProvider,
-  useMoveGoalsForWeekContext,
-} from '@/hooks/useMoveGoalsForWeekContext';
+import { PullGoalsButton } from '@/components/molecules/PullGoalsButton';
+import { usePullGoals } from '@/hooks/usePullGoals';
 import { type WeekData, WeekProviderWithoutDashboard } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { WeekActionMenu } from './WeekActionMenu';
 
 interface WeekCardProps {
   weekLabel: string;
@@ -18,38 +14,26 @@ interface WeekCardProps {
   quarter: number;
 }
 
-// Inner component that uses the context
-const WeekCardInner = ({
+export const WeekCard = ({
   weekLabel,
   mondayDate,
-  // biome-ignore lint/correctness/noUnusedFunctionParameters: part of public API shared with parent component
   weekNumber,
-  isCurrentWeek,
+  isCurrentWeek = false,
   children,
   weekData,
-}: Omit<WeekCardProps, 'year' | 'quarter'>) => {
-  const { isFirstWeek, isDisabled, isMovingTasks, handlePreviewTasks, dialog } =
-    useMoveGoalsForWeekContext();
-
-  const tooltipContent = isFirstWeek
-    ? 'Cannot pull goals from last non-empty week as this is the first week of the quarter'
-    : isMovingTasks
-      ? 'Moving tasks...'
-      : "Can't pull from last non-empty week";
-
-  // Memoize the WeekActionMenu props to prevent unnecessary re-renders
-  const weekActionMenuProps = useMemo(
-    () => ({
-      isDisabled,
-      isFirstWeek,
-      isMovingTasks,
-      handlePreviewTasks,
-      tooltipContent,
-      buttonSize: 'icon' as const,
-      showLabel: false,
-    }),
-    [isDisabled, isFirstWeek, isMovingTasks, handlePreviewTasks, tooltipContent]
-  );
+  year,
+  quarter,
+}: WeekCardProps) => {
+  // Pull goals hook - only used when viewing current week
+  const {
+    isPulling,
+    handlePullGoals,
+    dialog: pullGoalsDialog,
+  } = usePullGoals({
+    weekNumber,
+    year,
+    quarter,
+  });
 
   return (
     <WeekProviderWithoutDashboard weekData={weekData}>
@@ -65,29 +49,22 @@ const WeekCardInner = ({
               <h3 className="font-semibold">{weekLabel}</h3>
               <span className="text-xs md:text-sm text-gray-500">{mondayDate}</span>
             </div>
-            <div className="flex items-center gap-1 md:gap-2">
-              <WeekActionMenu {...weekActionMenuProps} />
-            </div>
+            {isCurrentWeek && (
+              <div className="flex items-center gap-1 md:gap-2">
+                <PullGoalsButton
+                  isPulling={isPulling}
+                  onPullGoals={handlePullGoals}
+                  dialog={pullGoalsDialog}
+                />
+              </div>
+            )}
           </div>
         </div>
         <div className="flex-1 p-2 md:p-3 space-y-3 md:space-y-4 min-h-0 overflow-y-auto">
           {children}
         </div>
       </div>
-
-      {dialog}
     </WeekProviderWithoutDashboard>
-  );
-};
-
-// Outer component that provides the context
-export const WeekCard = (props: WeekCardProps) => {
-  const { weekNumber, year, quarter, ...rest } = props;
-
-  return (
-    <MoveGoalsForWeekProvider weekNumber={weekNumber} year={year} quarter={quarter}>
-      <WeekCardInner weekNumber={weekNumber} {...rest} />
-    </MoveGoalsForWeekProvider>
   );
 };
 

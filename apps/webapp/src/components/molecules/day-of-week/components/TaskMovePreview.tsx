@@ -93,18 +93,18 @@ export const TaskMovePreview = ({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Move Tasks from Previous Day</AlertDialogTitle>
+          <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-4">
               <p>
                 {!preview?.tasks.length
-                  ? `There are no incomplete tasks from ${preview?.previousDay} to move to ${preview?.targetDay}.`
-                  : `The following incomplete tasks from ${preview?.previousDay} will be moved to ${preview?.targetDay}. Note that tasks will be moved, not copied.`}
+                  ? `There are no incomplete goals to pull forward to ${preview?.targetDay}.`
+                  : `The following incomplete goals from ${preview?.previousDay} will be moved to ${preview?.targetDay}. Note that goals will be moved, not copied.`}
               </p>
               {!preview?.tasks.length ? (
                 <div className="text-center py-8 text-gray-500">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>All tasks from the previous day are complete!</p>
+                  <p>All previous goals are complete!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -157,9 +157,9 @@ export const TaskMovePreview = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Close</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           {preview && preview.tasks.length > 0 && (
-            <AlertDialogAction onClick={onConfirm}>Move Tasks</AlertDialogAction>
+            <AlertDialogAction onClick={onConfirm}>Pull Goals</AlertDialogAction>
           )}
         </AlertDialogFooter>
       </AlertDialogContent>
