@@ -76,8 +76,26 @@ WeekProviderWithoutDashboard (single source of truth)
 
 ## Progress Log
 
-- Started: [timestamp]
-- Phase 1 Complete: [timestamp]
-- Phase 2 Complete: [timestamp]
-- Phase 3 Complete: [timestamp]
-- All Done: [timestamp]
+- Started: 2025-12-02
+- Phase 1 Complete: ✅ Fixed adhoc ordering
+- Phase 2 Complete: ✅ Fixed OnFire/Pending sections
+- Phase 3 Complete: ✅ Verified goal-details-popover integration
+- All Done: ✅ 2025-12-02
+
+## Summary of Changes
+
+### Files Modified:
+1. `apps/webapp/src/components/organisms/focus/AdhocGoalsSection.tsx`
+   - Changed optimistic goal insertion from prepend to append
+   - Fixed array combination order to put optimistic goals at end
+
+2. `apps/webapp/src/components/molecules/DomainPopover.tsx`
+   - Same fix as AdhocGoalsSection for consistency
+
+3. `apps/webapp/src/components/organisms/focus/FocusModeDailyView.tsx`
+   - Changed `preparedWeeklyGoalsForDay` to use `quarterlyGoals` from `useWeek()` context
+   - This ensures OnFireGoalsSection and PendingGoalsSection see optimistic updates
+
+### Root Causes Fixed:
+1. **Ordering**: Arrays were using `[newItem, ...prev]` (prepend) instead of `[...prev, newItem]` (append)
+2. **Missing Updates**: Components were reading from static props instead of context with optimistic state
