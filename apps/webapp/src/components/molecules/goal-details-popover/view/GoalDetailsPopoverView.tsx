@@ -117,9 +117,9 @@ export function GoalDetailsPopoverView({
               <DialogTitle className="sr-only">Goal Details</DialogTitle>
             </DialogHeader>
             {/* Scrollable content area */}
-            {/* Extra right padding (pr-8) to avoid overlap with close button */}
+            {/* px-8 gives equal padding on both sides - right padding avoids overlap with close button */}
             {/* pb-4 ensures content can scroll past keyboard on iOS */}
-            <div className="space-y-3 overflow-y-auto flex-1 px-1 py-1 pr-8 pb-4 overscroll-contain">
+            <div className="space-y-3 overflow-y-auto flex-1 px-8 py-1 pb-4 overscroll-contain">
               {children}
             </div>
           </DialogContent>
