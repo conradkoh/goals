@@ -86,6 +86,21 @@ export const FocusModeDailyViewDailyGoals = ({
   }, [days, selectedDayOfWeek]);
 
   /**
+   * Gets starred and pinned quarterly goals that should always be displayed.
+   * These goals will show in the daily view even if they have no weekly or daily tasks.
+   */
+  const starredAndPinnedQuarterlyGoals = useMemo(() => {
+    return quarterlyGoals.filter((goal) => {
+      // Only include starred or pinned quarterly goals
+      const isStarred = goal.state?.isStarred ?? false;
+      const isPinned = goal.state?.isPinned ?? false;
+      // Exclude completed goals
+      if (goal.isComplete) return false;
+      return isStarred || isPinned;
+    });
+  }, [quarterlyGoals]);
+
+  /**
    * Sorts daily goals by completion status, quarterly goal priority, and title.
    * Incomplete goals appear first, then sorted by quarterly goal starred/pinned status,
    * quarterly goal title, weekly goal title, and finally daily goal title.
@@ -332,6 +347,7 @@ export const FocusModeDailyViewDailyGoals = ({
         weekNumber={weekNumber}
         dateTimestamp={currentDay.dateTimestamp}
         weeklyGoalsWithQuarterly={preparedWeeklyGoalsForDay}
+        alwaysShowQuarterlyGoals={starredAndPinnedQuarterlyGoals}
         onUpdateGoal={handleUpdateGoalTitle}
         onDeleteGoal={handleDeleteGoal}
         onCreateDailyGoal={handleCreateDailyGoal}

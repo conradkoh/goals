@@ -260,17 +260,17 @@ const QuarterlyGoalSection = ({
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : '',
-          isPinned ? 'bg-blue-50' : '',
-          isStarred && !isPinned ? 'bg-yellow-50' : '',
-          !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
+          isSoftComplete ? 'bg-green-50 dark:bg-green-950/20' : '',
+          isPinned ? 'bg-blue-50 dark:bg-blue-950/20' : '',
+          isStarred && !isPinned ? 'bg-yellow-50 dark:bg-yellow-950/20' : '',
+          !isStarred && !isPinned && !isSoftComplete ? 'bg-card' : ''
         )}
       >
         <QuarterlyGoalHeader goal={quarterlyGoal} onUpdateGoal={onUpdateGoal} />
         <ConditionalRender condition={mode === 'focus'}>
           {/* this adhoc checklist always renders in the focus mode */}
-          <div className="ml-1 space-y-1 border-b border-gray-100">
-            <div className="text-xs text-gray-500 mb-1">Weekly Tasks</div>
+          <div className="ml-1 space-y-1 border-b border-border">
+            <div className="text-xs text-muted-foreground mb-1">Weekly Tasks</div>
             {weeklyGoalsForChecklist.map((weeklyGoal) => (
               <GoalProvider key={weeklyGoal._id.toString()} goal={weeklyGoal}>
                 {/* WeeklyGoalTaskItem gets goal from context */}
@@ -314,6 +314,11 @@ export interface DayContainerProps {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
   }>;
+  /**
+   * Quarterly goals that should always be displayed, even if they have no weekly tasks.
+   * Typically used for starred and pinned quarterly goals to ensure they're always visible.
+   */
+  alwaysShowQuarterlyGoals?: GoalWithDetailsAndChildren[];
   onUpdateGoal: (
     goalId: Id<'goals'>,
     title: string,
@@ -337,6 +342,7 @@ export const DayContainer = ({
   weekNumber,
   dateTimestamp,
   weeklyGoalsWithQuarterly,
+  alwaysShowQuarterlyGoals = [],
   onUpdateGoal,
   onDeleteGoal,
   onCreateDailyGoal,
@@ -385,7 +391,19 @@ export const DayContainer = ({
       }
     >();
 
-    // Group by quarterly goals first
+    // Initialize with always-show quarterly goals (starred/pinned) first
+    // This ensures they appear even if they have no weekly goals
+    alwaysShowQuarterlyGoals.forEach((quarterlyGoal) => {
+      const quarterlyId = quarterlyGoal._id.toString();
+      if (!map.has(quarterlyId)) {
+        map.set(quarterlyId, {
+          quarterlyGoal,
+          weeklyGoals: [],
+        });
+      }
+    });
+
+    // Group by quarterly goals and add weekly goals
     weeklyGoalsWithQuarterly.forEach(({ weeklyGoal, quarterlyGoal }) => {
       const quarterlyId = quarterlyGoal._id.toString();
       if (!map.has(quarterlyId)) {
@@ -398,7 +416,7 @@ export const DayContainer = ({
     });
 
     return map;
-  }, [weeklyGoalsWithQuarterly]);
+  }, [weeklyGoalsWithQuarterly, alwaysShowQuarterlyGoals]);
 
   // Sort the quarterly goals: starred first, then pinned, then the rest
   const sortedQuarterlyEntries = useMemo(
@@ -420,7 +438,7 @@ export const DayContainer = ({
   );
 
   return (
-    <div className="space-y-2 mb-1 border-b border-gray-100 last:border-b-0">
+    <div className="space-y-2 mb-1 border-b border-border last:border-b-0">
       <DayHeader dayOfWeek={dayOfWeek} weekNumber={weekNumber} dateTimestamp={dateTimestamp} />
       <div className="space-y-2">
         {sortedQuarterlyEntries.map(([quarterlyId, { quarterlyGoal, weeklyGoals }]) => (
