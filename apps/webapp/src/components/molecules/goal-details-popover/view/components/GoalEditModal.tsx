@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { toast } from '@/components/ui/use-toast';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { cn } from '@/lib/utils';
@@ -83,7 +84,11 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
 
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
-      console.error('Goal title cannot be empty');
+      toast({
+        title: 'Error',
+        description: 'Goal title cannot be empty',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -101,6 +106,11 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
       setHasInitialized(false);
     } catch (error) {
       console.error('[GoalEditModal] Failed to save goal:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save goal. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

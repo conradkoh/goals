@@ -9,6 +9,7 @@ import {
   TaskMovePreview,
   type TaskMovePreviewData,
 } from '@/components/molecules/day-of-week/components/TaskMovePreview';
+import { toast } from '@/components/ui/use-toast';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
@@ -319,6 +320,11 @@ export const usePullGoals = ({
       setShowConfirmDialog(false);
     } catch (error) {
       console.error('Failed to pull goals:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to pull goals.',
+        variant: 'destructive',
+      });
     } finally {
       setIsPulling(false);
     }
@@ -374,6 +380,11 @@ export const usePullGoals = ({
       setShowConfirmDialog(true);
     } catch (error) {
       console.error('Failed to preview goals:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to preview goals to pull.',
+        variant: 'destructive',
+      });
     } finally {
       setIsPulling(false);
     }

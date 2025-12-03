@@ -1,6 +1,7 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
+import { toast } from '@/components/ui/use-toast';
 import { useGoalActions } from './useGoalActions';
 
 export interface SummaryGoalActions {
@@ -40,6 +41,11 @@ export function useSummaryGoalActions({
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to toggle goal completion:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to update goal',
+          description: 'There was an error updating the goal completion status.',
+        });
       }
     },
     [toggleGoalCompletion, onDataRefresh]
@@ -61,6 +67,11 @@ export function useSummaryGoalActions({
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to edit goal:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Failed to update goal',
+          description: 'There was an error updating the goal.',
+        });
       }
     },
     [updateQuarterlyGoalTitle, onDataRefresh]

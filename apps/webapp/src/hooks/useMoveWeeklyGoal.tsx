@@ -3,6 +3,7 @@ import type { Doc } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useMutation, useQuery } from 'convex/react';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 /**
  * Represents a week option available for goal movement within a quarter.
@@ -189,6 +190,11 @@ export function useMoveWeeklyGoal(
         closeMoveModal();
       } catch (error) {
         console.error('Failed to move goal:', error);
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Failed to move goal',
+          variant: 'destructive',
+        });
       } finally {
         setIsSubmitting(false);
       }

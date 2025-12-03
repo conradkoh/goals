@@ -4,6 +4,7 @@ import { errorTitles } from '@services/backend/errors';
 import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
+import { toast } from '@/components/ui/use-toast';
 import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -211,7 +212,11 @@ export const useGoalActions = () => {
         } catch (error) {
           console.error('Failed to delete goal:', error);
           const errorData = parseConvexError(error);
-          console.error(`Delete goal error [${errorTitles[errorData.code]}]: ${errorData.message}`);
+          toast({
+            variant: 'destructive',
+            title: errorTitles[errorData.code],
+            description: errorData.message,
+          });
         }
       },
 

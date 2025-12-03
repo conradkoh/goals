@@ -4,6 +4,7 @@ import { useAction } from 'convex/react';
 import type React from 'react';
 import { useCallback, useState } from 'react';
 import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
+import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 
 // Types for the return values from the preview call
@@ -128,6 +129,11 @@ export const useMoveGoalsForQuarter = ({
       setShowConfirmDialog(true);
     } catch (error) {
       console.error('Failed to preview goals from previous quarter:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to preview goals from previous quarter.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -158,6 +164,11 @@ export const useMoveGoalsForQuarter = ({
       setShowConfirmDialog(false);
     } catch (error) {
       console.error('Failed to move goals from previous quarter:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to move goals from previous quarter.',
+        variant: 'destructive',
+      });
     } finally {
       setIsMovingGoals(false);
     }

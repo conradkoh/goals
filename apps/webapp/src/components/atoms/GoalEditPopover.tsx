@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { toast } from '@/components/ui/use-toast';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
@@ -98,6 +99,11 @@ export function GoalEditPopover({
       await onSave(title.trim(), details, dueDate?.getTime(), domainId);
     } catch (error) {
       console.error('Failed to save goal:', error);
+      toast({
+        title: 'Failed to save goal',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }

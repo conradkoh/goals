@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { parseConvexError } from '@/lib/error';
+import { toast } from '@/components/ui/use-toast';
+import { errorTitles, parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
 
 export function SyncPassphrase() {
@@ -102,7 +103,11 @@ export function SyncPassphrase() {
       }
     } catch (error) {
       const errorData = parseConvexError(error);
-      console.error(`Sync failed: ${errorData.message}`);
+      toast({
+        variant: 'destructive',
+        title: errorTitles[errorData.code] || 'Sync Failed',
+        description: errorData.message,
+      });
     }
     setShowConfirmDialog(false);
   };

@@ -8,6 +8,7 @@ import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Toaster } from '@/components/ui/toaster';
 import { DashboardProvider } from '@/hooks/useDashboard';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -18,6 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Header />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+      <Toaster />
     </DashboardProvider>
   );
 }

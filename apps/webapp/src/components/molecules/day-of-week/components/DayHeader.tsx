@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
@@ -148,6 +149,11 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
       }
     } catch (error) {
       console.error('Failed to preview tasks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to preview tasks to move.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -218,6 +224,11 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
       }
     } catch (error) {
       console.error('Failed to move tasks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to move tasks.',
+        variant: 'destructive',
+      });
     } finally {
       setIsMovingTasks(false);
     }
