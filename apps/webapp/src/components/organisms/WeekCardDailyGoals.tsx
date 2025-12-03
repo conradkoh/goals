@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/use-toast';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
@@ -272,11 +271,6 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
       } catch (error) {
         console.error('Failed to create daily goal:', error);
         setNewGoalTitle(titleToCreate);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to create goal',
-          description: 'There was an error creating your goal. Please try again.',
-        });
       } finally {
         setIsCreating(false);
       }
@@ -420,11 +414,6 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
           await createWeeklyGoalOptimistic(quarterlyGoalId, title);
         } catch (error) {
           console.error('Failed to create weekly goal:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Failed to create weekly goal',
-            description: 'There was an error creating your weekly goal. Please try again.',
-          });
         }
       },
       [createWeeklyGoalOptimistic]

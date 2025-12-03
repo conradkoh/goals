@@ -1,16 +1,14 @@
 import { useCallback, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
 
 /**
- * Custom hook for clipboard operations with toast notifications.
- * Provides a simple interface to copy text to clipboard with user feedback.
+ * Custom hook for clipboard operations.
+ * Provides a simple interface to copy text to clipboard.
  */
 export function useClipboard() {
   const [isCopying, setIsCopying] = useState(false);
-  const { toast } = useToast();
 
   const copyToClipboard = useCallback(
-    async (text: string, successMessage?: string) => {
+    async (text: string, _successMessage?: string) => {
       if (isCopying) return false;
 
       setIsCopying(true);
@@ -38,26 +36,15 @@ export function useClipboard() {
           }
         }
 
-        toast({
-          title: 'Copied to clipboard',
-          description: successMessage || 'Content has been copied to your clipboard.',
-        });
-
         return true;
       } catch (error) {
         console.error('Failed to copy to clipboard:', error);
-        toast({
-          title: 'Copy failed',
-          description: 'Failed to copy content to clipboard. Please try again.',
-          variant: 'destructive',
-        });
-
         return false;
       } finally {
         setIsCopying(false);
       }
     },
-    [isCopying, toast]
+    [isCopying]
   );
 
   return {

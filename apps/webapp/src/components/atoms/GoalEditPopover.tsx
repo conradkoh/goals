@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useToast } from '@/components/ui/use-toast';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
@@ -48,7 +47,6 @@ export function GoalEditPopover({
   );
   const [domainId, setDomainId] = useState<Id<'domains'> | null | undefined>(initialDomainId);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
@@ -100,31 +98,10 @@ export function GoalEditPopover({
       await onSave(title.trim(), details, dueDate?.getTime(), domainId);
     } catch (error) {
       console.error('Failed to save goal:', error);
-
-      // Show error toast with retry option
-      toast({
-        title: 'Failed to save goal',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive',
-        action: (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // Try again with the same data
-              onSave(title.trim(), details, dueDate?.getTime(), domainId).catch((e) =>
-                console.error('Retry failed:', e)
-              );
-            }}
-          >
-            Retry
-          </Button>
-        ),
-      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, details, dueDate, domainId, onSave, toast]);
+  }, [title, details, dueDate, domainId, onSave]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {

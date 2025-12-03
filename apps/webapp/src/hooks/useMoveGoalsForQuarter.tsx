@@ -5,7 +5,6 @@ import type React from 'react';
 import { useCallback, useState } from 'react';
 import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
 import { useSession } from '@/modules/auth/useSession';
-import { toast } from '../components/ui/use-toast';
 
 // Types for the return values from the preview call
 export type QuarterlyGoalToCopy = {
@@ -129,11 +128,6 @@ export const useMoveGoalsForQuarter = ({
       setShowConfirmDialog(true);
     } catch (error) {
       console.error('Failed to preview goals from previous quarter:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to preview goals from previous quarter.',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -162,18 +156,8 @@ export const useMoveGoalsForQuarter = ({
       });
 
       setShowConfirmDialog(false);
-      toast({
-        title: 'Goals moved',
-        description: `Moved incomplete goals from the final week of Q${prevQuarter.quarter} ${prevQuarter.year} to Q${quarter} ${year}.`,
-        variant: 'default',
-      });
     } catch (error) {
       console.error('Failed to move goals from previous quarter:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to move goals from previous quarter.',
-        variant: 'destructive',
-      });
     } finally {
       setIsMovingGoals(false);
     }

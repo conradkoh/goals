@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useToast } from '@/components/ui/use-toast';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { cn } from '@/lib/utils';
@@ -50,7 +49,6 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
   const [editDomainId, setEditDomainId] = useState<Id<'domains'> | null | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const { toast } = useToast();
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
@@ -85,11 +83,7 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
 
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
-      toast({
-        title: 'Error',
-        description: 'Goal title cannot be empty',
-        variant: 'destructive',
-      });
+      console.error('Goal title cannot be empty');
       return;
     }
 
@@ -105,17 +99,8 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
       setEditDueDate(undefined);
       setEditDomainId(undefined);
       setHasInitialized(false);
-      toast({
-        title: 'Success',
-        description: 'Goal updated successfully',
-      });
     } catch (error) {
       console.error('[GoalEditModal] Failed to save goal:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save goal. Please try again.',
-        variant: 'destructive',
-      });
     } finally {
       setIsSubmitting(false);
     }

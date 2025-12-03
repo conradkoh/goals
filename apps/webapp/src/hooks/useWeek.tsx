@@ -7,7 +7,6 @@ import type {
 } from '@services/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { createContext, useContext, useMemo, useRef } from 'react';
-import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 import { useGoalActions } from './useGoalActions';
 import { isOptimisticId, useOptimisticArray } from './useOptimistic';
@@ -323,10 +322,7 @@ export const WeekProvider = ({ weekData, children }: WeekProviderProps) => {
         const goal = allGoals.find((g) => g._id === goalId);
 
         if (!goal) {
-          toast({
-            title: `Failed to delete goal with id: ${goalId}`,
-            variant: 'destructive',
-          });
+          console.error(`Failed to delete goal with id: ${goalId}`);
           return;
         }
 

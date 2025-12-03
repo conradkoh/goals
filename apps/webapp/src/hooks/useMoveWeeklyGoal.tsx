@@ -3,7 +3,6 @@ import type { Doc } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useMutation, useQuery } from 'convex/react';
 import { useCallback, useMemo, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 /**
  * Represents a week option available for goal movement within a quarter.
@@ -91,7 +90,6 @@ export function useMoveWeeklyGoal(
   currentWeekNumber: number
 ): UseMoveWeeklyGoalReturn {
   const { sessionId } = useSession();
-  const { toast } = useToast();
   const moveWeeklyGoalMutation = useMutation(api.goal.moveWeeklyGoalToWeek);
   const [modalState, setModalState] = useState<_MoveGoalToWeekState>({ isOpen: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,27 +159,19 @@ export function useMoveWeeklyGoal(
   const moveGoalToWeek = useCallback(
     async (goal: GoalWithDetailsAndChildren, destinationWeek?: WeekOption | null) => {
       if (!sessionId) {
-        toast({
-          title: 'Not authenticated',
-          description: 'Please log in to move goals',
-          variant: 'destructive',
-        });
+        console.error('Not authenticated: Please log in to move goals');
         return;
       }
 
       const target = destinationWeek ?? defaultDestinationWeek;
       if (!target) {
-        toast({
-          title: 'No weeks available',
-          description: 'There are no destination weeks available to move this goal.',
-          variant: 'destructive',
-        });
+        console.error('No destination weeks available to move this goal');
         return;
       }
 
       try {
         setIsSubmitting(true);
-        const result = await moveWeeklyGoalMutation({
+        await moveWeeklyGoalMutation({
           sessionId,
           goalId: goal._id,
           currentWeek: {
@@ -196,24 +186,9 @@ export function useMoveWeeklyGoal(
           },
         });
 
-        toast({
-          title: 'Goal moved',
-          description: `Goal moved to week ${result.targetWeek.weekNumber}`,
-        });
         closeMoveModal();
       } catch (error) {
         console.error('Failed to move goal:', error);
-
-        let errorMessage = 'Failed to move goal';
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        }
-
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        });
       } finally {
         setIsSubmitting(false);
       }
@@ -224,7 +199,6 @@ export function useMoveWeeklyGoal(
       year,
       quarter,
       currentWeekNumber,
-      toast,
       defaultDestinationWeek,
       closeMoveModal,
     ]

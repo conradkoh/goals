@@ -16,13 +16,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
-import { errorTitles, parseConvexError } from '@/lib/error';
+import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
 
 export function SyncPassphrase() {
   const { sessionId } = useSession();
-  const { toast } = useToast();
   const [syncCode, setSyncCode] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingSyncCode, setPendingSyncCode] = useState('');
@@ -98,21 +96,13 @@ export function SyncPassphrase() {
         passphrase: pendingSyncCode,
       });
       if (newSession) {
-        toast({
-          title: 'Sync Successful',
-          description: 'Your session has been synced with the other device.',
-        });
         // Store the new session ID and reload
         localStorage.setItem('goals-session-id', newSession);
         window.location.reload();
       }
     } catch (error) {
       const errorData = parseConvexError(error);
-      toast({
-        variant: 'destructive',
-        title: errorTitles[errorData.code] || 'Sync Failed',
-        description: errorData.message,
-      });
+      console.error(`Sync failed: ${errorData.message}`);
     }
     setShowConfirmDialog(false);
   };
@@ -123,16 +113,8 @@ export function SyncPassphrase() {
     try {
       await navigator.clipboard.writeText(currentSyncSession.passphrase);
       setHasCopied(true);
-      toast({
-        title: 'Copied!',
-        description: 'Sync code copied to clipboard',
-      });
     } catch (_err) {
-      toast({
-        variant: 'destructive',
-        title: 'Failed to copy',
-        description: 'Please try copying manually',
-      });
+      console.error('Failed to copy to clipboard');
     }
   };
 
@@ -140,10 +122,6 @@ export function SyncPassphrase() {
     if (!sessionId) return;
     createSyncSession({
       sessionId,
-    });
-    toast({
-      title: 'New Code Generated',
-      description: 'A new sync code has been generated.',
     });
   };
 

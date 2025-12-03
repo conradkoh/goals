@@ -20,7 +20,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { useToast } from '@/components/ui/use-toast';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
@@ -231,7 +230,6 @@ const WeeklyGoalGroup = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
   const { createWeeklyGoalOptimistic } = useWeek();
-  const { toast } = useToast();
 
   const handleSubmit = async () => {
     const trimmedTitle = newGoalTitle.trim();
@@ -248,12 +246,6 @@ const WeeklyGoalGroup = ({
     } catch (error) {
       // Restore the previous title
       setNewGoalTitle(previousTitle);
-      // Show error toast
-      toast({
-        variant: 'destructive',
-        title: 'Failed to create goal',
-        description: 'There was an error creating your goal. Please try again.',
-      });
       console.error('Failed to create weekly goal:', error);
     }
   };

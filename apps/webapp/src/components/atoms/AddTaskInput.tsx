@@ -1,7 +1,6 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import { useCallback, useRef, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { useToast } from '@/components/ui/use-toast';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +24,6 @@ export const AddTaskInput = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   // Handle successful task creation
   const handleSubmit = async () => {
@@ -54,13 +52,6 @@ export const AddTaskInput = ({
           inputRef.current?.focus();
         }, 10);
       } catch (error) {
-        // Show error toast
-        toast({
-          title: 'Failed to create task',
-          description: error instanceof Error ? error.message : 'An unexpected error occurred',
-          variant: 'destructive',
-        });
-
         console.error('Failed to create goal:', error);
       }
     }

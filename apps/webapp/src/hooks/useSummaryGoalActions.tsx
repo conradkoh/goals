@@ -1,7 +1,6 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
-import { toast } from '@/components/ui/use-toast';
 import { useGoalActions } from './useGoalActions';
 
 export interface SummaryGoalActions {
@@ -37,21 +36,10 @@ export function useSummaryGoalActions({
           updateChildren: true, // Update child goals as well
         });
 
-        // Show success feedback
-        toast({
-          title: newCompletionStatus ? 'Goal completed!' : 'Goal reopened',
-          description: `"${goal.title}" has been ${newCompletionStatus ? 'completed' : 'reopened'}.`,
-        });
-
         // Refresh data
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to toggle goal completion:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to update goal',
-          description: 'There was an error updating the goal completion status.',
-        });
       }
     },
     [toggleGoalCompletion, onDataRefresh]
@@ -69,20 +57,10 @@ export function useSummaryGoalActions({
           dueDate,
         });
 
-        toast({
-          title: 'Goal updated!',
-          description: 'The goal has been successfully updated.',
-        });
-
         // Refresh data
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to edit goal:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to update goal',
-          description: 'There was an error updating the goal.',
-        });
       }
     },
     [updateQuarterlyGoalTitle, onDataRefresh]
@@ -92,11 +70,6 @@ export function useSummaryGoalActions({
     async (goalId: Id<'goals'>) => {
       try {
         await deleteGoal({ goalId });
-
-        toast({
-          title: 'Goal deleted!',
-          description: 'The goal has been successfully deleted.',
-        });
 
         // Refresh data
         onDataRefresh?.();

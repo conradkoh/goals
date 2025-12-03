@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
@@ -115,12 +114,6 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
             tasks: allTasks,
           });
           setShowConfirmDialog(true);
-        } else {
-          toast({
-            title: 'Cannot move tasks',
-            description: 'No incomplete tasks to move from previous days',
-            variant: 'default',
-          });
         }
       } else {
         // Original functionality for single previous day
@@ -151,21 +144,10 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
             tasks: previewData.tasks,
           });
           setShowConfirmDialog(true);
-        } else if (!('canMove' in previewData) || !previewData.canMove) {
-          toast({
-            title: 'Cannot move tasks',
-            description: 'No incomplete tasks to move',
-            variant: 'default',
-          });
         }
       }
     } catch (error) {
       console.error('Failed to preview tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to preview tasks to move.',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -211,13 +193,6 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
         }
 
         setShowConfirmDialog(false);
-        toast({
-          title: 'Tasks moved',
-          description: `Moved ${totalTasksMoved} incomplete tasks from all previous days to ${getDayName(
-            dayOfWeek
-          )}.`,
-          variant: 'default',
-        });
       } else {
         // Original functionality for single previous day
         const previousDayOfWeek = getPreviousDayOfWeek(dayOfWeek);
@@ -240,21 +215,9 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
         });
 
         setShowConfirmDialog(false);
-        toast({
-          title: 'Tasks moved',
-          description: `Moved incomplete tasks from ${getDayName(
-            previousDayOfWeek
-          )} to ${getDayName(dayOfWeek)}.`,
-          variant: 'default',
-        });
       }
     } catch (error) {
       console.error('Failed to move tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to move tasks.',
-        variant: 'destructive',
-      });
     } finally {
       setIsMovingTasks(false);
     }
