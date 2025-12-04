@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
-import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useAdhocGoals, useAdhocGoalsForWeek } from '@/hooks/useAdhocGoals';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
@@ -54,7 +54,9 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   const { weeklyGoals } = useWeek();
   const { fireGoals } = useFireGoals();
   const { sessionId } = useSession();
-  const { adhocGoals, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
+  // Use hierarchical data so children are available for sub-tasks display
+  const { adhocGoals: hierarchicalAdhocGoals } = useAdhocGoalsForWeek(sessionId, year, weekNumber);
+  const { updateAdhocGoal, deleteAdhocGoal, createAdhocGoal } = useAdhocGoals(sessionId);
 
   const onFireGoalsByQuarterly = useMemo(() => {
     if (fireGoals.size === 0) return null;
@@ -152,15 +154,13 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
   const onFireAdhocGoals = useMemo(() => {
-    if (fireGoals.size === 0 || !adhocGoals) return [];
+    if (fireGoals.size === 0 || !hierarchicalAdhocGoals) return [];
 
-    return adhocGoals.filter((goal) => {
-      if (!fireGoals.has(goal._id.toString())) return false;
-      if (goal.adhoc?.weekNumber !== weekNumber) return false;
-      // dayOfWeek removed - adhoc tasks are week-level only, no day filtering needed
-      return true;
+    // hierarchicalAdhocGoals already filtered by week, just filter by fire status
+    return hierarchicalAdhocGoals.filter((goal) => {
+      return fireGoals.has(goal._id.toString());
     });
-  }, [fireGoals, adhocGoals, weekNumber]);
+  }, [fireGoals, hierarchicalAdhocGoals]);
 
   const onFireAdhocGoalsByDomain = useMemo(() => {
     if (onFireAdhocGoals.length === 0) return [];
@@ -221,6 +221,22 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       await deleteAdhocGoal(goalId);
     },
     [deleteAdhocGoal]
+  );
+
+  const _handleCreateAdhocChild = useCallback(
+    async (parentId: Id<'goals'>, title: string) => {
+      await createAdhocGoal(
+        title,
+        undefined, // details
+        undefined, // domainId - will inherit from parent
+        year,
+        weekNumber,
+        undefined, // dayOfWeek
+        undefined, // dueDate
+        parentId // parent goal ID
+      );
+    },
+    [createAdhocGoal, year, weekNumber]
   );
 
   if (!hasAnyFireGoals) {
@@ -369,6 +385,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                           onCompleteChange={_handleAdhocCompleteChange}
                           onUpdate={_handleUpdateAdhocGoal}
                           onDelete={_handleDeleteAdhocGoal}
+                          onCreateChild={_handleCreateAdhocChild}
                           showDueDate={false}
                           showDomain={false}
                         />

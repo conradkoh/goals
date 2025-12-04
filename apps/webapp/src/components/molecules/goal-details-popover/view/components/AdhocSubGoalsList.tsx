@@ -125,12 +125,15 @@ export function AdhocSubGoalsList({
     [onCompleteChange]
   );
 
-  // Don't render if:
-  // - no sub-goals to display
-  // - can't create new ones
-  // - not at max depth (would show depth message otherwise)
-  // - onCreateChild wasn't even provided (so this feature isn't enabled at all)
-  if (subGoals.length === 0 && !canAddSubGoal && !isAtMaxDepth && !onCreateChild) {
+  // Only hide if there are no sub-goals AND no way to create new ones
+  // Show the section if:
+  // - There are existing sub-goals to display, OR
+  // - onCreateChild is provided (can create new ones), OR
+  // - At max depth with onCreateChild (to show the depth message)
+  const hasSubGoalsToDisplay = subGoals.length > 0;
+  const canCreateSubGoals = !!onCreateChild;
+
+  if (!hasSubGoalsToDisplay && !canCreateSubGoals) {
     return null;
   }
 
