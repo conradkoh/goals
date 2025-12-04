@@ -60,6 +60,7 @@ export function AdhocSubGoalsList({
   const [optimisticSubGoals, setOptimisticSubGoals] = useState<_OptimisticSubGoal[]>([]);
 
   const canAddSubGoal = currentDepth < MAX_ADHOC_GOAL_DEPTH && onCreateChild;
+  const isAtMaxDepth = currentDepth >= MAX_ADHOC_GOAL_DEPTH;
 
   // Combine real and optimistic sub-goals
   const allSubGoals: _OptimisticSubGoal[] = [...subGoals, ...optimisticSubGoals];
@@ -124,8 +125,12 @@ export function AdhocSubGoalsList({
     [onCompleteChange]
   );
 
-  // Don't render if no sub-goals and can't create
-  if (subGoals.length === 0 && !canAddSubGoal) {
+  // Don't render if:
+  // - no sub-goals to display
+  // - can't create new ones
+  // - not at max depth (would show depth message otherwise)
+  // - onCreateChild wasn't even provided (so this feature isn't enabled at all)
+  if (subGoals.length === 0 && !canAddSubGoal && !isAtMaxDepth && !onCreateChild) {
     return null;
   }
 
@@ -167,8 +172,8 @@ export function AdhocSubGoalsList({
           </div>
         )}
 
-        {/* Depth limit message */}
-        {!canAddSubGoal && currentDepth >= MAX_ADHOC_GOAL_DEPTH && (
+        {/* Depth limit message - shown when at max depth and can't add more */}
+        {isAtMaxDepth && onCreateChild && (
           <p className="text-xs text-muted-foreground/50 italic">
             Maximum nesting depth ({MAX_ADHOC_GOAL_DEPTH} levels) reached
           </p>
