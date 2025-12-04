@@ -12,30 +12,58 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
-interface AdhocGoalFormProps {
+/**
+ * Data structure for submitting an adhoc goal form.
+ */
+export interface AdhocGoalFormData {
+  /** Goal title */
+  title: string;
+  /** Optional description */
+  details?: string;
+  /** Optional domain association */
+  domainId?: Id<'domains'> | null;
+  /** ISO week year */
+  year: number;
+  /** ISO week number */
+  weekNumber: number;
+  /** Optional day assignment (deprecated - adhoc tasks are week-level) */
+  dayOfWeek?: DayOfWeek;
+  /** Optional due date timestamp */
+  dueDate?: number;
+}
+
+/**
+ * Props for the AdhocGoalForm component.
+ */
+export interface AdhocGoalFormProps {
+  /** Available domains for selection */
   domains: Doc<'domains'>[];
+  /** Initial goal data for editing */
   initialGoal?: Partial<Doc<'goals'> & { domain?: Doc<'domains'> }>;
-  onSubmit: (data: {
-    title: string;
-    details?: string;
-    domainId?: Id<'domains'> | null;
-    weekNumber?: number;
-    dayOfWeek?: DayOfWeek;
-    dueDate?: number;
-  }) => Promise<void>;
+  /** Callback when form is submitted */
+  onSubmit: (data: AdhocGoalFormData) => Promise<void>;
+  /** Callback when form is cancelled */
   onCancel?: () => void;
+  /** Callback to create a new domain */
   onDomainCreate?: (name: string, description?: string, color?: string) => Promise<Id<'domains'>>;
+  /** Callback to update an existing domain */
   onDomainUpdate?: (
     domainId: Id<'domains'>,
     name: string,
     description?: string,
     color?: string
   ) => Promise<void>;
+  /** Callback to delete a domain */
   onDomainDelete?: (domainId: Id<'domains'>) => Promise<void>;
+  /** Label for submit button */
   submitLabel?: string;
+  /** Additional CSS class names */
   className?: string;
 }
 
+/**
+ * Day options for week day selection (currently unused - adhoc tasks are week-level).
+ */
 const _DAY_OPTIONS = [
   { value: DayOfWeek.MONDAY, label: 'Monday' },
   { value: DayOfWeek.TUESDAY, label: 'Tuesday' },
@@ -46,6 +74,10 @@ const _DAY_OPTIONS = [
   { value: DayOfWeek.SUNDAY, label: 'Sunday' },
 ];
 
+/**
+ * Form component for creating and editing adhoc goals.
+ * Supports title, description, domain selection, week number, and due date.
+ */
 export function AdhocGoalForm({
   domains,
   initialGoal,
@@ -61,12 +93,14 @@ export function AdhocGoalForm({
   const [details, setDetails] = useState(initialGoal?.details || '');
   const [domainId, setDomainId] = useState<Id<'domains'> | null>(initialGoal?.domainId || null);
   const [weekNumber, setWeekNumber] = useState<number | undefined>(initialGoal?.adhoc?.weekNumber);
-  // dayOfWeek removed - adhoc tasks are week-level only
   const [dueDate, setDueDate] = useState<Date | undefined>(
     initialGoal?.adhoc?.dueDate ? new Date(initialGoal.adhoc.dueDate) : undefined
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * Handles form submission.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -74,12 +108,13 @@ export function AdhocGoalForm({
 
     setIsSubmitting(true);
     try {
+      const { year, weekNumber: currentWeekNumber } = _getCurrentISOYearAndWeek();
       await onSubmit({
         title: title.trim(),
         details: details.trim() || undefined,
         domainId: domainId || undefined,
-        weekNumber: weekNumber || getCurrentISOWeekNumber(),
-        // dayOfWeek removed - adhoc tasks are week-level only
+        year: initialGoal?.year ?? year,
+        weekNumber: weekNumber ?? currentWeekNumber,
         dueDate: dueDate?.getTime(),
       });
     } finally {
@@ -87,6 +122,9 @@ export function AdhocGoalForm({
     }
   };
 
+  /**
+   * Handles creating a new domain from within the selector.
+   */
   const handleDomainCreate = async (name: string, description?: string, color?: string) => {
     if (onDomainCreate) {
       const newDomainId = await onDomainCreate(name, description, color);
@@ -145,7 +183,7 @@ export function AdhocGoalForm({
             onChange={(e) =>
               setWeekNumber(e.target.value ? Number.parseInt(e.target.value) : undefined)
             }
-            placeholder={getCurrentISOWeekNumber().toString()}
+            placeholder={_getCurrentISOYearAndWeek().weekNumber.toString()}
           />
         </div>
 
@@ -192,11 +230,18 @@ export function AdhocGoalForm({
   );
 }
 
-// Helper function to get current ISO week number
-function getCurrentISOWeekNumber(): number {
+/**
+ * Gets the current ISO year and week number.
+ *
+ * @returns Object containing year and weekNumber
+ */
+function _getCurrentISOYearAndWeek(): { year: number; weekNumber: number } {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
   const diff = now.getTime() - start.getTime();
   const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  return Math.ceil(diff / oneWeek);
+  const weekNumber = Math.ceil(diff / oneWeek);
+  const year = now.getFullYear();
+
+  return { year, weekNumber };
 }

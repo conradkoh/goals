@@ -11,35 +11,86 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 
+/**
+ * Represents a task to be previewed in the move dialog.
+ */
 export interface PreviewTask {
+  /** Unique task identifier */
   id: string;
+  /** Task title */
   title: string;
+  /** Optional task details */
   details?: string;
+  /** Parent quarterly goal information */
   quarterlyGoal: {
     id: string;
     title: string;
     isStarred?: boolean;
     isPinned?: boolean;
   };
+  /** Parent weekly goal information */
   weeklyGoal: {
     id: string;
     title: string;
   };
+  /** Nested sub-tasks (for adhoc goals hierarchy) */
+  children?: PreviewTask[];
+  /** Depth level for indentation (0 = root) */
+  depth?: number;
 }
 
+/**
+ * Data structure for the task move preview dialog.
+ */
 export interface TaskMovePreviewData {
+  /** Description of source day/week */
   previousDay: string;
+  /** Description of target day/week */
   targetDay: string;
+  /** Tasks to be moved */
   tasks: PreviewTask[];
 }
 
+/**
+ * Props for the TaskMovePreview dialog component.
+ */
 interface TaskMovePreviewProps {
+  /** Whether the dialog is open */
   open: boolean;
+  /** Callback when open state changes */
   onOpenChange: (open: boolean) => void;
+  /** Preview data to display */
   preview: TaskMovePreviewData | null;
+  /** Callback when user confirms the move */
   onConfirm: () => void;
 }
 
+/**
+ * Recursive component for rendering a task and its nested children.
+ * Displays indentation based on depth level.
+ */
+function _TaskPreviewItem({ task, depth = 0 }: { task: PreviewTask; depth?: number }) {
+  return (
+    <>
+      <li className="flex items-center gap-2" style={{ paddingLeft: `${(depth + 1) * 16}px` }}>
+        <span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+        <div className="text-sm break-words">{task.title}</div>
+      </li>
+      {task.children && task.children.length > 0 && (
+        <>
+          {task.children.map((child) => (
+            <_TaskPreviewItem key={child.id} task={child} depth={depth + 1} />
+          ))}
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * Dialog component for previewing and confirming task moves.
+ * Displays tasks grouped by quarterly and weekly goals with visual hierarchy.
+ */
 export const TaskMovePreview = ({
   open,
   onOpenChange,
@@ -140,10 +191,7 @@ export const TaskMovePreview = ({
                             </h5>
                             <ul className="space-y-1">
                               {weeklyGroup.tasks.map((task) => (
-                                <li key={task.id} className="flex items-center gap-2 pl-4">
-                                  <span className="h-2 w-2 rounded-full bg-blue-500" />
-                                  <div className="text-sm break-words">{task.title}</div>
-                                </li>
+                                <_TaskPreviewItem key={task.id} task={task} />
                               ))}
                             </ul>
                           </div>

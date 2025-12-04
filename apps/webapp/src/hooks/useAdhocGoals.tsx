@@ -1,9 +1,26 @@
+/**
+ * @fileoverview Hooks for managing adhoc goals.
+ * Provides CRUD operations and queries for adhoc goals with session-based authentication.
+ */
+
 import { api } from '@services/backend/convex/_generated/api';
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { DayOfWeek } from '@services/backend/src/constants';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 
+/**
+ * Hook for managing adhoc goals with CRUD operations.
+ *
+ * @param sessionId - The current user's session ID
+ * @returns Object containing adhoc goals data and mutation functions
+ *
+ * @example
+ * ```tsx
+ * const { adhocGoals, createAdhocGoal, updateAdhocGoal } = useAdhocGoals(sessionId);
+ * await createAdhocGoal("New task", undefined, undefined, 2024, 48);
+ * ```
+ */
 export function useAdhocGoals(sessionId: Id<'sessions'>) {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -22,13 +39,18 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
   const moveAdhocGoalsFromWeekMutation = useMutation(api.adhocGoal.moveAdhocGoalsFromWeek);
   const moveAdhocGoalsFromDayMutation = useMutation(api.adhocGoal.moveAdhocGoalsFromDay);
 
+  /**
+   * Creates a new adhoc goal.
+   */
   const createAdhocGoal = async (
     title: string,
-    details?: string,
-    domainId?: Id<'domains'>,
-    weekNumber?: number,
+    details: string | undefined,
+    domainId: Id<'domains'> | undefined,
+    year: number,
+    weekNumber: number,
     dayOfWeek?: DayOfWeek,
-    dueDate?: number
+    dueDate?: number,
+    parentId?: Id<'goals'>
   ): Promise<Id<'goals'>> => {
     setIsCreating(true);
     try {
@@ -37,9 +59,11 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
         title,
         details,
         domainId,
-        weekNumber: weekNumber || getCurrentISOWeekNumber(),
+        year,
+        weekNumber,
         dayOfWeek,
         dueDate,
+        parentId,
       });
       return goalId;
     } finally {
@@ -47,6 +71,9 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     }
   };
 
+  /**
+   * Updates an existing adhoc goal.
+   */
   const updateAdhocGoal = async (
     goalId: Id<'goals'>,
     updates: {
@@ -71,6 +98,9 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     }
   };
 
+  /**
+   * Deletes an adhoc goal.
+   */
   const deleteAdhocGoal = async (goalId: Id<'goals'>): Promise<void> => {
     setIsDeleting(true);
     try {
@@ -83,6 +113,9 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     }
   };
 
+  /**
+   * Moves incomplete adhoc goals from one week to another.
+   */
   const moveAdhocGoalsFromWeek = async (
     from: { year: number; weekNumber: number },
     to: { year: number; weekNumber: number },
@@ -106,6 +139,9 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
     }
   };
 
+  /**
+   * Moves incomplete adhoc goals from one day to another (legacy - adhoc goals are week-level).
+   */
   const moveAdhocGoalsFromDay = async (
     from: { year: number; weekNumber: number; dayOfWeek: DayOfWeek },
     to: { year: number; weekNumber: number; dayOfWeek: DayOfWeek },
@@ -131,8 +167,8 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
 
   return {
     adhocGoals,
-    incompleteAdhocGoals, // NEW: Filtered incomplete goals
-    completedAdhocGoals, // NEW: Filtered completed goals
+    incompleteAdhocGoals,
+    completedAdhocGoals,
     createAdhocGoal,
     updateAdhocGoal,
     deleteAdhocGoal,
@@ -145,6 +181,14 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
   };
 }
 
+/**
+ * Hook for fetching adhoc goals for a specific week with hierarchical structure.
+ *
+ * @param sessionId - The current user's session ID
+ * @param year - ISO week year
+ * @param weekNumber - ISO week number
+ * @returns Object containing hierarchical adhoc goals and loading state
+ */
 export function useAdhocGoalsForWeek(sessionId: Id<'sessions'>, year: number, weekNumber: number) {
   const adhocGoals =
     useQuery(api.adhocGoal.getAdhocGoalsForWeek, {
@@ -159,6 +203,15 @@ export function useAdhocGoalsForWeek(sessionId: Id<'sessions'>, year: number, we
   };
 }
 
+/**
+ * Hook for fetching adhoc goals for a specific day (legacy - returns week goals).
+ *
+ * @param sessionId - The current user's session ID
+ * @param year - ISO week year
+ * @param weekNumber - ISO week number
+ * @param dayOfWeek - Day of week (kept for compatibility but ignored)
+ * @returns Object containing adhoc goals and loading state
+ */
 export function useAdhocGoalsForDay(
   sessionId: Id<'sessions'>,
   year: number,
@@ -177,12 +230,4 @@ export function useAdhocGoalsForDay(
     adhocGoals,
     isLoading: adhocGoals === undefined,
   };
-}
-
-function getCurrentISOWeekNumber(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now.getTime() - start.getTime();
-  const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  return Math.ceil(diff / oneWeek);
 }

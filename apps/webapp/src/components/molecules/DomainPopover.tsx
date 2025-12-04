@@ -14,21 +14,24 @@ import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
-function getCurrentISOWeekNumber(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  const diff = now.getTime() - start.getTime();
-  const oneWeek = 1000 * 60 * 60 * 24 * 7;
-  return Math.ceil(diff / oneWeek);
-}
-
-interface DomainPopoverProps {
-  domain: Doc<'domains'> | null; // null for uncategorized
+/**
+ * Props for the DomainPopover component.
+ */
+export interface DomainPopoverProps {
+  /** The domain to display (null for uncategorized) */
+  domain: Doc<'domains'> | null;
+  /** React node to use as the popover trigger */
   trigger: React.ReactNode;
-  weekNumber?: number; // Optional week number for creating new tasks
+  /** ISO week year for creating new tasks */
+  year: number;
+  /** ISO week number for creating new tasks */
+  weekNumber: number;
 }
 
-type OptimisticAdhocGoal = Doc<'goals'> & {
+/**
+ * Adhoc goal with optimistic update tracking.
+ */
+type _OptimisticAdhocGoal = Doc<'goals'> & {
   domain?: Doc<'domains'>;
   isOptimistic?: boolean;
 };
@@ -37,13 +40,13 @@ type OptimisticAdhocGoal = Doc<'goals'> & {
  * Popover component that displays all adhoc tasks for a specific domain
  * and allows creating new tasks with the domain pre-set.
  */
-export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProps) {
+export function DomainPopover({ domain, trigger, year, weekNumber }: DomainPopoverProps) {
   const { sessionId } = useSession();
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [isOpen, setIsOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [optimisticGoals, setOptimisticGoals] = useState<OptimisticAdhocGoal[]>([]);
+  const [optimisticGoals, setOptimisticGoals] = useState<_OptimisticAdhocGoal[]>([]);
 
   // Query adhoc goals for this domain
   const domainGoals =
@@ -64,12 +67,11 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
     const tempId = `temp-${Date.now()}` as Id<'goals'>;
 
     // Create optimistic goal
-    const currentYear = new Date().getFullYear();
-    const optimisticGoal: OptimisticAdhocGoal = {
+    const optimisticGoal: _OptimisticAdhocGoal = {
       _id: tempId,
       _creationTime: Date.now(),
       userId: '' as Id<'users'>, // Placeholder for optimistic update
-      year: currentYear,
+      year,
       quarter: Math.ceil((new Date().getMonth() + 1) / 3),
       title,
       inPath: '/',
@@ -78,7 +80,7 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
       isOptimistic: true,
       domainId: domain?._id || undefined, // Store domain at goal level
       adhoc: {
-        weekNumber: weekNumber || getCurrentISOWeekNumber(),
+        weekNumber,
       },
       domain: domain || undefined,
     };
@@ -93,7 +95,8 @@ export function DomainPopover({ domain, trigger, weekNumber }: DomainPopoverProp
         title,
         undefined, // details
         domain?._id, // domainId (undefined if uncategorized)
-        weekNumber || getCurrentISOWeekNumber(), // weekNumber
+        year, // year
+        weekNumber, // weekNumber
         undefined, // dayOfWeek
         undefined // dueDate
       );

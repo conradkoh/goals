@@ -1,9 +1,85 @@
 import { ConvexError, v } from 'convex/values';
 import { DayOfWeek } from '../src/constants';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { getISOWeekYear } from '../src/util/isoWeek';
 import type { Doc, Id } from './_generated/dataModel';
-import { mutation, query } from './_generated/server';
+import { type MutationCtx, mutation, type QueryCtx, query } from './_generated/server';
+
+/**
+ * Maximum nesting depth for adhoc goals.
+ * While the database supports infinite nesting, we soft-limit creation to 3 levels
+ * to prevent overly complex hierarchies.
+ */
+const MAX_ADHOC_GOAL_DEPTH = 3;
+
+/**
+ * Calculates the nesting depth of an adhoc goal by traversing up the parent chain.
+ *
+ * @param ctx - Convex query or mutation context
+ * @param goalId - The goal ID to calculate depth for
+ * @returns Promise resolving to the depth (0 = root level, 1 = first child level, etc.)
+ */
+async function getAdhocGoalDepth(
+  ctx: QueryCtx | MutationCtx,
+  goalId: Id<'goals'>
+): Promise<number> {
+  let depth = 0;
+  let currentGoal = await ctx.db.get(goalId);
+
+  while (currentGoal?.parentId) {
+    depth++;
+    currentGoal = await ctx.db.get(currentGoal.parentId);
+    // Safety check to prevent infinite loops in case of data corruption
+    if (depth > 10) break;
+  }
+
+  return depth;
+}
+
+/**
+ * Type for hierarchical adhoc goals with nested children.
+ */
+export type AdhocGoalWithChildren = Doc<'goals'> & {
+  domain?: Doc<'domains'>;
+  children: AdhocGoalWithChildren[];
+};
+
+/**
+ * Builds a hierarchical structure from a flat list of adhoc goals.
+ * Goals with parentId pointing to another goal in the list become children of that goal.
+ *
+ * @param goals - Flat list of adhoc goals with domain information
+ * @returns Hierarchical array of root-level goals with nested children
+ */
+function buildAdhocGoalHierarchy(
+  goals: (Doc<'goals'> & { domain?: Doc<'domains'> })[]
+): AdhocGoalWithChildren[] {
+  const goalMap = new Map<string, AdhocGoalWithChildren>();
+  const rootGoals: AdhocGoalWithChildren[] = [];
+
+  // First pass: create all nodes with empty children
+  for (const goal of goals) {
+    goalMap.set(goal._id, { ...goal, children: [] });
+  }
+
+  // Second pass: build parent-child relationships
+  for (const goal of goals) {
+    const node = goalMap.get(goal._id);
+    if (!node) continue; // Should never happen, but type guard for safety
+
+    if (goal.parentId && goalMap.has(goal.parentId)) {
+      // Has a parent in this week's goals - add as child
+      const parentNode = goalMap.get(goal.parentId);
+      if (parentNode) {
+        parentNode.children.push(node);
+      }
+    } else {
+      // Root level goal (no parent or parent not in this week's data)
+      rootGoals.push(node);
+    }
+  }
+
+  return rootGoals;
+}
 
 /**
  * Creates a new adhoc goal.
@@ -31,6 +107,7 @@ export const createAdhocGoal = mutation({
     title: v.string(),
     details: v.optional(v.string()),
     domainId: v.optional(v.id('domains')),
+    year: v.number(), // ISO week year
     weekNumber: v.number(),
     dayOfWeek: v.optional(
       v.union(
@@ -44,6 +121,7 @@ export const createAdhocGoal = mutation({
       )
     ),
     dueDate: v.optional(v.number()),
+    parentId: v.optional(v.id('goals')), // Parent adhoc goal for nesting
   },
   handler: async (ctx, args): Promise<Id<'goals'>> => {
     const {
@@ -51,10 +129,12 @@ export const createAdhocGoal = mutation({
       title,
       details,
       domainId,
-      weekNumber,
+      year: adhocYear,
       dayOfWeek: _dayOfWeek,
       dueDate,
+      parentId,
     } = args;
+    let { weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -66,6 +146,35 @@ export const createAdhocGoal = mutation({
       });
     }
 
+    // Validate parent if provided and check nesting depth
+    let effectiveDomainId = domainId;
+    if (parentId) {
+      const parent = await ctx.db.get(parentId);
+      if (!parent || parent.userId !== userId || !parent.adhoc) {
+        throw new ConvexError({
+          code: 'INVALID_ARGUMENT',
+          message: 'Parent goal not found or is not an adhoc goal',
+        });
+      }
+
+      // Check nesting depth (soft limit at MAX_ADHOC_GOAL_DEPTH levels)
+      const parentDepth = await getAdhocGoalDepth(ctx, parentId);
+      if (parentDepth >= MAX_ADHOC_GOAL_DEPTH) {
+        throw new ConvexError({
+          code: 'INVALID_ARGUMENT',
+          message: `Maximum nesting depth (${MAX_ADHOC_GOAL_DEPTH} levels) exceeded`,
+        });
+      }
+
+      // Inherit week from parent
+      weekNumber = parent.adhoc.weekNumber;
+
+      // Inherit domain from parent if not specified
+      if (!effectiveDomainId && parent.domainId) {
+        effectiveDomainId = parent.domainId;
+      }
+    }
+
     // Validate week number
     if (weekNumber < 1 || weekNumber > 53) {
       throw new ConvexError({
@@ -75,8 +184,8 @@ export const createAdhocGoal = mutation({
     }
 
     // Validate domain if provided
-    if (domainId) {
-      const domain = await ctx.db.get(domainId);
+    if (effectiveDomainId) {
+      const domain = await ctx.db.get(effectiveDomainId);
       if (!domain || domain.userId !== userId) {
         throw new ConvexError({
           code: 'NOT_FOUND',
@@ -85,27 +194,7 @@ export const createAdhocGoal = mutation({
       }
     }
 
-    // Calculate the ISO week year for the given week number
-    // We need to determine which year this week number belongs to
-    const now = new Date();
-    const currentYear = getISOWeekYear(now);
-    const currentWeekNumber =
-      Math.floor(
-        (now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)
-      ) + 1;
-
-    // If the week number is much higher than current week and we're early in the year,
-    // it's likely from the previous year (e.g., week 52 in January)
-    // If the week number is much lower than current week and we're late in the year,
-    // it's likely from the next year (e.g., week 1 in December)
-    let adhocYear = currentYear;
-    if (weekNumber > 50 && currentWeekNumber < 10) {
-      // Week 51-53 when we're in weeks 1-9 means it's from previous year
-      adhocYear = currentYear - 1;
-    } else if (weekNumber < 10 && currentWeekNumber > 50) {
-      // Week 1-9 when we're in weeks 51-53 means it's from next year
-      adhocYear = currentYear + 1;
-    }
+    // adhocYear is provided directly from args
 
     // Create the adhoc goal
     const goalId = await ctx.db.insert('goals', {
@@ -114,7 +203,8 @@ export const createAdhocGoal = mutation({
       quarter: Math.ceil((new Date().getMonth() + 1) / 3), // Current quarter (used for general partitioning)
       title: title.trim(),
       details: details?.trim(),
-      domainId: domainId || undefined, // Store domain at goal level
+      domainId: effectiveDomainId || undefined, // Store domain at goal level
+      parentId: parentId || undefined, // Store parent reference for nesting
       adhoc: {
         weekNumber,
         dueDate,
@@ -361,7 +451,7 @@ export const getAdhocGoalsForWeek = query({
     year: v.number(),
     weekNumber: v.number(),
   },
-  handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
+  handler: async (ctx, args): Promise<AdhocGoalWithChildren[]> => {
     const { sessionId, year, weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
@@ -385,6 +475,51 @@ export const getAdhocGoalsForWeek = query({
     );
 
     // Combine goals with domain information
+    const goalsWithDomains = adhocGoals.map((goal) => {
+      const effectiveDomainId = goal.domainId;
+      return {
+        ...goal,
+        domain: effectiveDomainId ? domainMap.get(effectiveDomainId) : undefined,
+      };
+    });
+
+    // Build and return hierarchical structure
+    return buildAdhocGoalHierarchy(goalsWithDomains);
+  },
+});
+
+/**
+ * Retrieves adhoc goals for a specific week as a flat list (for backward compatibility).
+ */
+export const getAdhocGoalsForWeekFlat = query({
+  args: {
+    sessionId: v.id('sessions'),
+    year: v.number(),
+    weekNumber: v.number(),
+  },
+  handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
+    const { sessionId, year, weekNumber } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Query goals directly using the adhoc index
+    const adhocGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
+      )
+      .collect();
+
+    // Get domain information for goals that have domains
+    const domainIds = [
+      ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
+    ];
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domainMap = new Map(
+      domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+    );
+
+    // Combine goals with domain information (flat list)
     return adhocGoals.map((goal) => {
       const effectiveDomainId = goal.domainId;
       return {

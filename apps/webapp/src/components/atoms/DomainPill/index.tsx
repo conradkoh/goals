@@ -31,6 +31,8 @@ export interface DomainPillProps {
   domain?: Doc<'domains'> | null;
   /** Count to display in the pill (e.g., number of goals) */
   count?: number;
+  /** ISO week year for the popover context (for creating new tasks) */
+  year: number;
   /** Week number for the popover context (for creating new tasks) */
   weekNumber: number;
   /** Whether the pill should be interactive (show popover on click). Defaults to true. */
@@ -61,6 +63,7 @@ export interface DomainPillProps {
 export function DomainPill({
   domain,
   count,
+  year,
   weekNumber,
   interactive = true,
   className,
@@ -82,5 +85,7 @@ export function DomainPill({
     return pillView;
   }
 
-  return <DomainPopover domain={domain || null} trigger={pillView} weekNumber={weekNumber} />;
+  return (
+    <DomainPopover domain={domain || null} trigger={pillView} year={year} weekNumber={weekNumber} />
+  );
 }

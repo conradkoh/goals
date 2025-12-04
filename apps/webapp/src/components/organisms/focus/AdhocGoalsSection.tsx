@@ -1,6 +1,6 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import { ClipboardList, Info } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { DomainPill } from '@/components/atoms/DomainPill';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
@@ -8,24 +8,67 @@ import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useAdhocGoals, useAdhocGoalsForWeek } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
 import type { DayOfWeek } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
 
-interface AdhocGoalsSectionProps {
+/**
+ * Props for the AdhocGoalsSection component.
+ */
+export interface AdhocGoalsSectionProps {
+  /** ISO week year */
+  year: number;
+  /** ISO week number */
   weekNumber: number;
+  /** Optional day of week filter (legacy - not used) */
   dayOfWeek?: DayOfWeek;
-  showHeader?: boolean; // Whether to show the section header with icon
-  variant?: 'default' | 'card' | 'inline'; // Styling variant
+  /** Whether to show the section header with icon */
+  showHeader?: boolean;
+  /** Styling variant for the section */
+  variant?: 'default' | 'card' | 'inline';
 }
 
-type OptimisticAdhocGoal = Doc<'goals'> & {
+/**
+ * Adhoc goal with optimistic update tracking.
+ */
+type _OptimisticAdhocGoal = Doc<'goals'> & {
   domain?: Doc<'domains'>;
   isOptimistic?: boolean;
+  children?: _OptimisticAdhocGoal[];
 };
 
+/**
+ * Counts total goals including nested children recursively.
+ *
+ * @param goals - Array of goals to count
+ * @returns Total count including all nested children
+ */
+function _countGoalsRecursively(goals: _OptimisticAdhocGoal[]): number {
+  return goals.reduce((count, goal) => {
+    const childCount = goal.children ? _countGoalsRecursively(goal.children) : 0;
+    return count + 1 + childCount;
+  }, 0);
+}
+
+/**
+ * Filters goals by completion status.
+ * Only filters root level - children are displayed under their parent.
+ *
+ * @param goals - Array of goals to filter
+ * @param isComplete - Completion status to filter by
+ * @returns Filtered array of root goals
+ */
+function _filterGoalsByCompletion(
+  goals: _OptimisticAdhocGoal[],
+  isComplete: boolean
+): _OptimisticAdhocGoal[] {
+  // Only filter at root level - children are displayed under their parent
+  return goals.filter((goal) => goal.isComplete === isComplete);
+}
+
 export function AdhocGoalsSection({
+  year,
   weekNumber,
   dayOfWeek,
   showHeader = true,
@@ -35,24 +78,34 @@ export function AdhocGoalsSection({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [selectedDomainId, setSelectedDomainId] = useState<Id<'domains'> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [optimisticGoals, setOptimisticGoals] = useState<OptimisticAdhocGoal[]>([]);
+  const [optimisticGoals, setOptimisticGoals] = useState<_OptimisticAdhocGoal[]>([]);
 
-  const { adhocGoals, createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } =
-    useAdhocGoals(sessionId);
+  // Use useAdhocGoals for mutations only
+  const { createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
+
+  // Use useAdhocGoalsForWeek for hierarchical data
+  const { adhocGoals: hierarchicalGoals } = useAdhocGoalsForWeek(sessionId, year, weekNumber);
+
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
-  // Filter adhoc goals based on week (adhoc tasks are week-level only, not day-level)
-  const filteredAdhocGoals = adhocGoals.filter((goal) => goal.adhoc?.weekNumber === weekNumber);
+  // Hierarchical goals already filtered by week and structured - use directly
+  const filteredAdhocGoals: _OptimisticAdhocGoal[] = hierarchicalGoals.map((goal) => ({
+    ...goal,
+    children: goal.children as _OptimisticAdhocGoal[],
+  }));
 
   // Combine real and optimistic goals (optimistic at end for correct ordering)
-  const allGoals = [...filteredAdhocGoals, ...optimisticGoals];
+  const allGoals: _OptimisticAdhocGoal[] = [...filteredAdhocGoals, ...optimisticGoals];
 
-  // Separate incomplete and completed goals for this week
-  const incompleteGoals = allGoals.filter((goal) => !goal.isComplete);
-  const completedGoals = allGoals.filter((goal) => goal.isComplete);
+  // Separate incomplete and completed root goals for this week
+  // Note: Children are displayed under their parent, not filtered separately
+  const incompleteGoals = _filterGoalsByCompletion(allGoals, false);
+  const completedGoals = _filterGoalsByCompletion(allGoals, true);
 
-  // Helper function to group goals by domain
-  const groupGoalsByDomain = (goals: OptimisticAdhocGoal[]) => {
+  /**
+   * Groups goals by their domain ID.
+   */
+  const groupGoalsByDomain = (goals: _OptimisticAdhocGoal[]) => {
     return goals.reduce(
       (acc, goal) => {
         const domainId = goal.domainId || 'uncategorized';
@@ -65,7 +118,7 @@ export function AdhocGoalsSection({
         acc[domainId].goals.push(goal);
         return acc;
       },
-      {} as Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
+      {} as Record<string, { domain?: Doc<'domains'>; goals: _OptimisticAdhocGoal[] }>
     );
   };
 
@@ -80,13 +133,12 @@ export function AdhocGoalsSection({
     const tempId = `temp-${Date.now()}` as Id<'goals'>;
 
     // Create optimistic goal
-    const currentYear = new Date().getFullYear();
-    const optimisticGoal: OptimisticAdhocGoal = {
+    const optimisticGoal: _OptimisticAdhocGoal = {
       _id: tempId,
       _creationTime: Date.now(),
       userId: '' as Id<'users'>, // Placeholder for optimistic update
-      year: currentYear,
-      quarter: Math.ceil((new Date().getMonth() + 1) / 3),
+      year,
+      quarter: Math.ceil((new Date().getMonth() + 1) / 3), // Quarter is calculated based on current date
       title,
       inPath: '/',
       depth: -1,
@@ -99,6 +151,7 @@ export function AdhocGoalsSection({
         // dueDate could be added here if needed
       },
       domain: selectedDomainId ? domains.find((d) => d._id === selectedDomainId) : undefined,
+      children: [], // New goals start with no children
     };
 
     console.log('[AdhocGoalsSection.handleSubmit] Optimistic goal created', {
@@ -115,11 +168,12 @@ export function AdhocGoalsSection({
     try {
       await createAdhocGoal(
         title,
-        undefined,
-        selectedDomainId || undefined,
-        weekNumber,
-        dayOfWeek,
-        undefined
+        undefined, // details
+        selectedDomainId || undefined, // domainId
+        year, // year
+        weekNumber, // weekNumber
+        dayOfWeek, // dayOfWeek
+        undefined // dueDate
       );
 
       // Remove optimistic goal after successful creation
@@ -178,8 +232,32 @@ export function AdhocGoalsSection({
     }
   };
 
-  // Determine wrapper styling based on variant
-  const getWrapperClassName = () => {
+  // Handler for creating child/subtask goals
+  const handleCreateChild = useCallback(
+    async (parentId: Id<'goals'>, title: string) => {
+      try {
+        await createAdhocGoal(
+          title,
+          undefined, // details
+          undefined, // domainId - will inherit from parent
+          year, // year - will be overridden by parent's year in backend
+          weekNumber, // weekNumber - will be overridden by parent's week in backend
+          undefined, // dayOfWeek
+          undefined, // dueDate
+          parentId // parent goal ID for nesting
+        );
+      } catch (error) {
+        console.error('Failed to create subtask:', error);
+        throw error;
+      }
+    },
+    [createAdhocGoal, year, weekNumber]
+  );
+
+  /**
+   * Determines wrapper CSS class based on variant.
+   */
+  const _getWrapperClassName = () => {
     switch (variant) {
       case 'card':
         // For use inside FocusModeDailyView - orange tinted background for adhoc tasks
@@ -193,9 +271,11 @@ export function AdhocGoalsSection({
     }
   };
 
-  // Sort groups: domains first (alphabetically), then uncategorized
-  const sortGroups = (
-    groups: Record<string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }>
+  /**
+   * Sorts domain groups alphabetically with uncategorized at the end.
+   */
+  const _sortGroups = (
+    groups: Record<string, { domain?: Doc<'domains'>; goals: _OptimisticAdhocGoal[] }>
   ) => {
     return Object.entries(groups).sort(([keyA, groupA], [keyB, groupB]) => {
       if (keyA === 'uncategorized') return 1;
@@ -204,12 +284,14 @@ export function AdhocGoalsSection({
     });
   };
 
-  const incompleteGroups = sortGroups(incompleteGroupedGoals);
-  const completedGroups = sortGroups(completedGroupedGoals);
+  const incompleteGroups = _sortGroups(incompleteGroupedGoals);
+  const completedGroups = _sortGroups(completedGroupedGoals);
 
-  // Render a list of grouped goals
+  /**
+   * Renders a list of goals grouped by domain.
+   */
   const renderGoalsList = (
-    groups: [string, { domain?: Doc<'domains'>; goals: OptimisticAdhocGoal[] }][],
+    groups: [string, { domain?: Doc<'domains'>; goals: _OptimisticAdhocGoal[] }][],
     emptyMessage: string
   ) => {
     if (groups.length === 0) {
@@ -219,9 +301,11 @@ export function AdhocGoalsSection({
     return (
       <div className="space-y-3">
         {groups.map(([domainId, { domain, goals }]) => {
+          // Count includes nested children
+          const totalCount = _countGoalsRecursively(goals);
           return (
             <div key={domainId} className="space-y-1">
-              <DomainPill domain={domain} count={goals.length} weekNumber={weekNumber} />
+              <DomainPill domain={domain} count={totalCount} year={year} weekNumber={weekNumber} />
               <div className="space-y-0.5">
                 {goals.map((goal) => (
                   <AdhocGoalItem
@@ -230,8 +314,10 @@ export function AdhocGoalsSection({
                     onCompleteChange={handleCompleteChange}
                     onUpdate={handleUpdate}
                     onDelete={handleDelete}
+                    onCreateChild={handleCreateChild}
                     showDueDate={!dayOfWeek} // Only show due date in weekly view
                     showDomain={false}
+                    depth={0}
                   />
                 ))}
               </div>
@@ -305,7 +391,7 @@ export function AdhocGoalsSection({
   if (variant === 'card') {
     // Card variant for daily view - matches OnFire and Pending sections with dark orange theme
     return (
-      <div className={getWrapperClassName()}>
+      <div className={_getWrapperClassName()}>
         {showHeader && (
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -333,7 +419,7 @@ export function AdhocGoalsSection({
 
   // Default/inline variant - no card, optional header
   return (
-    <div className={getWrapperClassName()}>
+    <div className={_getWrapperClassName()}>
       {showHeader && (
         <div className="flex items-center gap-2 mb-3">
           <ClipboardList className="h-5 w-5 text-muted-foreground" />

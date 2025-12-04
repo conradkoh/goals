@@ -30,6 +30,8 @@ interface OnFireGoalsSectionProps {
   }>;
   /** The currently selected day of the week */
   selectedDayOfWeek: DayOfWeek;
+  /** The ISO week year being displayed */
+  year: number;
   /** The ISO week number being displayed */
   weekNumber: number;
   /** Whether focus mode is currently enabled */
@@ -44,6 +46,7 @@ interface OnFireGoalsSectionProps {
 export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   weeklyGoalsWithQuarterly,
   selectedDayOfWeek,
+  year,
   weekNumber,
   isFocusModeEnabled = false,
 }) => {
@@ -352,7 +355,12 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
               {onFireAdhocGoalsByDomain.map(([domainId, { domain, goals }]) => {
                 return (
                   <div key={domainId} className="space-y-1">
-                    <DomainPill domain={domain} count={goals.length} weekNumber={weekNumber} />
+                    <DomainPill
+                      domain={domain}
+                      count={goals.length}
+                      year={year}
+                      weekNumber={weekNumber}
+                    />
                     <div className="space-y-0.5">
                       {goals.map((goal) => (
                         <AdhocGoalItem

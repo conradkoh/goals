@@ -88,7 +88,12 @@ const WeekCardContent = ({
         </WeekCardSection>
 
         <WeekCardSection title="📋 Adhoc Tasks">
-          <AdhocGoalsSection weekNumber={week.weekNumber} showHeader={false} variant="inline" />
+          <AdhocGoalsSection
+            year={week.year}
+            weekNumber={week.weekNumber}
+            showHeader={false}
+            variant="inline"
+          />
         </WeekCardSection>
 
         <WeekCardSection title="🔍 Daily Goals">

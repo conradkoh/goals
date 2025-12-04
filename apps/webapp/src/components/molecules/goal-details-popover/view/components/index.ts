@@ -1,4 +1,9 @@
-// Composable components for building goal details popovers
+/**
+ * @fileoverview Composable components for building goal details popovers.
+ * These components can be mixed and matched to create different popover variants.
+ */
+
+export { AdhocSubGoalsList, type AdhocSubGoalsListProps } from './AdhocSubGoalsList';
 export { GoalActionMenuNew, type GoalActionMenuNewProps } from './GoalActionMenuNew';
 export { GoalChildrenSection, type GoalChildrenSectionProps } from './GoalChildrenSection';
 export { GoalCompletionDate, type GoalCompletionDateProps } from './GoalCompletionDate';

@@ -1,8 +1,6 @@
 import { api } from '@services/backend/convex/_generated/api';
 import { DayOfWeek } from '@services/backend/src/constants';
-import { getISOWeekYear } from '@services/backend/src/util/isoWeek';
 import { useMutation } from 'convex/react';
-import { DateTime } from 'luxon';
 import { type ReactElement, useCallback, useState } from 'react';
 import {
   type PreviewTask,
@@ -10,7 +8,6 @@ import {
   type TaskMovePreviewData,
 } from '@/components/molecules/day-of-week/components/TaskMovePreview';
 import { toast } from '@/components/ui/use-toast';
-import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -50,7 +47,6 @@ export const usePullGoals = ({
 }: UsePullGoalsProps): UsePullGoalsReturn => {
   const { sessionId } = useSession();
   const { moveGoalsFromDay } = useGoalActions();
-  const { moveAdhocGoalsFromDay } = useAdhocGoals(sessionId);
   const moveGoalsFromLastNonEmptyWeekMutation = useMutation(api.goal.moveGoalsFromLastNonEmptyWeek);
 
   const [isPulling, setIsPulling] = useState(false);
@@ -137,7 +133,7 @@ export const usePullGoals = ({
                 isPinned: false,
               },
               weeklyGoal: {
-                id: 'adhoc',
+                id: `adhoc-domain-${adhoc.domainId || 'uncategorized'}`,
                 title: adhoc.domainName || 'Uncategorized',
               },
             }));
@@ -147,10 +143,11 @@ export const usePullGoals = ({
       }
 
       // Step 2: Preview goals from past days in current week → Today
+      // NOTE: Adhoc goals are week-level (not day-level), so they don't need to be
+      // "pulled" from past days - they're already in the current week.
+      // Only regular daily goals need to be moved between days.
       if (!isMonday) {
         const pastDays = getPastDaysOfWeek();
-        const now = DateTime.now();
-        const isoYear = getISOWeekYear(now.toJSDate());
 
         for (const pastDay of pastDays) {
           // Preview regular goals from this past day
@@ -178,41 +175,6 @@ export const usePullGoals = ({
           ) {
             allTasksFromPastDays.push(...dayPreviewData.tasks);
           }
-
-          // Preview adhoc goals from this past day
-          const adhocPreviewData = await moveAdhocGoalsFromDay(
-            {
-              year: isoYear,
-              weekNumber,
-              dayOfWeek: pastDay,
-            },
-            {
-              year: isoYear,
-              weekNumber,
-              dayOfWeek: currentDayOfWeek,
-            },
-            true // dry-run
-          );
-
-          if ('canMove' in adhocPreviewData && adhocPreviewData.canMove && adhocPreviewData.goals) {
-            const adhocTasks = adhocPreviewData.goals.map((goal) => ({
-              id: goal._id,
-              title: goal.title,
-              details: goal.details,
-              isComplete: goal.isComplete,
-              quarterlyGoal: {
-                id: 'adhoc',
-                title: 'Adhoc Tasks',
-                isStarred: false,
-                isPinned: false,
-              },
-              weeklyGoal: {
-                id: 'adhoc',
-                title: goal.domain?.name || 'Uncategorized',
-              },
-            }));
-            allTasksFromPastDays.push(...adhocTasks);
-          }
         }
       }
 
@@ -236,7 +198,6 @@ export const usePullGoals = ({
     getPastDaysOfWeek,
     moveGoalsFromLastNonEmptyWeekMutation,
     moveGoalsFromDay,
-    moveAdhocGoalsFromDay,
   ]);
 
   /**
@@ -245,12 +206,11 @@ export const usePullGoals = ({
   const executePullGoals = useCallback(async () => {
     try {
       setIsPulling(true);
-      let totalMoved = 0;
 
       // Step 1: Pull from last non-empty week → Monday
       // IMPORTANT: Only pull from previous weeks within the same quarter (not from previous quarter)
       if (!isFirstWeekOfQuarter) {
-        const weekResult = await moveGoalsFromLastNonEmptyWeekMutation({
+        await moveGoalsFromLastNonEmptyWeekMutation({
           sessionId,
           to: {
             quarter,
@@ -260,22 +220,17 @@ export const usePullGoals = ({
           },
           dryRun: false,
         });
-
-        if ('dailyGoalsMoved' in weekResult) {
-          totalMoved += weekResult.dailyGoalsMoved || 0;
-          totalMoved += weekResult.adhocGoalsMoved || 0;
-        }
       }
 
       // Step 2: Pull from past days → Today
+      // NOTE: Adhoc goals are week-level, so they don't need day-to-day movement.
+      // Only regular daily goals are moved between days.
       if (!isMonday) {
         const pastDays = getPastDaysOfWeek();
-        const now = DateTime.now();
-        const isoYear = getISOWeekYear(now.toJSDate());
 
         for (const pastDay of pastDays) {
-          // Move regular goals
-          const dayResult = await moveGoalsFromDay({
+          // Move regular goals only
+          await moveGoalsFromDay({
             from: {
               year,
               quarter,
@@ -291,29 +246,6 @@ export const usePullGoals = ({
             dryRun: false,
             moveOnlyIncomplete: true,
           });
-
-          if (dayResult && typeof dayResult === 'object' && 'tasksMoved' in dayResult) {
-            totalMoved += (dayResult.tasksMoved as number) || 0;
-          }
-
-          // Move adhoc goals
-          const adhocResult = await moveAdhocGoalsFromDay(
-            {
-              year: isoYear,
-              weekNumber,
-              dayOfWeek: pastDay,
-            },
-            {
-              year: isoYear,
-              weekNumber,
-              dayOfWeek: currentDayOfWeek,
-            },
-            false // not dry-run
-          );
-
-          if (adhocResult && typeof adhocResult === 'object' && 'goalsMoved' in adhocResult) {
-            totalMoved += (adhocResult.goalsMoved as number) || 0;
-          }
         }
       }
 
@@ -339,7 +271,6 @@ export const usePullGoals = ({
     getPastDaysOfWeek,
     moveGoalsFromLastNonEmptyWeekMutation,
     moveGoalsFromDay,
-    moveAdhocGoalsFromDay,
   ]);
 
   /**

@@ -68,7 +68,12 @@ const FocusModeWeeklyViewInner = ({
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="font-semibold text-foreground mb-4">📋 Adhoc Tasks</div>
-        <AdhocGoalsSection weekNumber={weekNumber} showHeader={false} variant="inline" />
+        <AdhocGoalsSection
+          year={year}
+          weekNumber={weekNumber}
+          showHeader={false}
+          variant="inline"
+        />
       </div>
 
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">

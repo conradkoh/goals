@@ -4,6 +4,8 @@ import { DomainPill, DomainPillView } from '@/components/atoms/DomainPill';
 export interface GoalDomainDisplayProps {
   /** The domain to display (optional - if not provided, nothing is rendered) */
   domain?: Doc<'domains'> | null;
+  /** ISO week year for the domain popover context. Required when weekNumber is provided. */
+  year?: number;
   /** Week number for the domain popover context. When provided, the pill is interactive. */
   weekNumber?: number;
 }
@@ -25,15 +27,15 @@ export interface GoalDomainDisplayProps {
  * <GoalDomainDisplay domain={goal.domain} />
  * ```
  */
-export function GoalDomainDisplay({ domain, weekNumber }: GoalDomainDisplayProps) {
+export function GoalDomainDisplay({ domain, year, weekNumber }: GoalDomainDisplayProps) {
   if (!domain) {
     return null;
   }
 
   return (
     <div className="flex items-center">
-      {weekNumber !== undefined ? (
-        <DomainPill domain={domain} weekNumber={weekNumber} />
+      {year !== undefined && weekNumber !== undefined ? (
+        <DomainPill domain={domain} year={year} weekNumber={weekNumber} />
       ) : (
         <DomainPillView domainName={domain.name} domainColor={domain.color} interactive={false} />
       )}

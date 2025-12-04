@@ -15,14 +15,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface AdhocGoalListProps {
+/**
+ * Props for the AdhocGoalList component.
+ */
+export interface AdhocGoalListProps {
+  /** Array of adhoc goals with domain information */
   adhocGoals: (Doc<'goals'> & { domain?: Doc<'domains'> })[];
+  /** Available domains for filtering and creation */
   domains: Doc<'domains'>[];
+  /** Callback to create a new goal */
   onCreateGoal?: (data: {
     title: string;
     details?: string;
     domainId?: Id<'domains'> | null;
-    weekNumber?: number;
+    year: number;
+    weekNumber: number;
     dayOfWeek?: DayOfWeek;
     dueDate?: number;
   }) => Promise<void>;
@@ -53,7 +60,10 @@ interface AdhocGoalListProps {
   className?: string;
 }
 
-type FilterOption = 'all' | 'complete' | 'incomplete' | 'today' | 'this-week';
+/**
+ * Filter options for the goal list.
+ */
+type _FilterOption = 'all' | 'complete' | 'incomplete' | 'today' | 'this-week';
 
 export function AdhocGoalList({
   adhocGoals,
@@ -73,7 +83,7 @@ export function AdhocGoalList({
   const [editingGoal, setEditingGoal] = useState<
     (Doc<'goals'> & { domain?: Doc<'domains'> }) | null
   >(null);
-  const [filter, setFilter] = useState<FilterOption>('all');
+  const [filter, setFilter] = useState<_FilterOption>('all');
   const [selectedDomainId, setSelectedDomainId] = useState<string>('all');
 
   // Filter goals based on selected filters
@@ -194,7 +204,7 @@ export function AdhocGoalList({
 
         {showFilters && (
           <div className="flex gap-2">
-            <Select value={filter} onValueChange={(value) => setFilter(value as FilterOption)}>
+            <Select value={filter} onValueChange={(value) => setFilter(value as _FilterOption)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>

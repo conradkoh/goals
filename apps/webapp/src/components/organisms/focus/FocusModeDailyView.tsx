@@ -165,11 +165,12 @@ const FocusModeDailyViewInner = ({
         <OnFireGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
           selectedDayOfWeek={selectedDayOfWeek}
+          year={year}
           weekNumber={weekNumber}
           isFocusModeEnabled={isFocusModeEnabled}
         />
 
-        <AdhocGoalsSection weekNumber={weekNumber} variant="card" showHeader={true} />
+        <AdhocGoalsSection year={year} weekNumber={weekNumber} variant="card" showHeader={true} />
 
         <PendingGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
