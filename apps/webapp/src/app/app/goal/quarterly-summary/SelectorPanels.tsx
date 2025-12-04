@@ -12,28 +12,14 @@ import { cn } from '@/lib/utils';
 import { useQuarterlySummaryContext } from './QuarterlySummaryContext';
 
 /**
- * Skeleton loader for quarterly goals
- */
-function QuarterlyGoalSelectorSkeleton() {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-8 w-24" />
-      </div>
-      {Array.from({ length: 3 }).map((_, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loading items don't need unique keys
-        <div key={i} className="flex items-center space-x-3">
-          <Skeleton className="h-4 w-4" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Quarterly Goals Selector Panel
+ * Panel component for selecting quarterly goals to include in the summary.
+ * Displays goals with weekly goals prominently and empty goals in a collapsible section.
+ * Provides select all/deselect all functionality for bulk operations.
+ *
+ * @example
+ * ```tsx
+ * <QuarterlyGoalSelectorPanel />
+ * ```
  */
 export function QuarterlyGoalSelectorPanel() {
   const {
@@ -47,7 +33,6 @@ export function QuarterlyGoalSelectorPanel() {
 
   const [isEmptyGoalsOpen, setIsEmptyGoalsOpen] = React.useState(false);
 
-  // Separate goals into those with weekly goals and those without
   const { goalsWithWeekly, emptyGoals } = React.useMemo(() => {
     if (!quarterlyGoals) return { goalsWithWeekly: [], emptyGoals: [] };
     return {
@@ -97,7 +82,7 @@ export function QuarterlyGoalSelectorPanel() {
           </p>
         </div>
         <div className="p-6">
-          <QuarterlyGoalSelectorSkeleton />
+          <_QuarterlyGoalSelectorSkeleton />
         </div>
       </div>
     );
@@ -146,7 +131,6 @@ export function QuarterlyGoalSelectorPanel() {
         </p>
       </div>
       <div className="p-6 space-y-4">
-        {/* Header with select all/none buttons */}
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-foreground">
             Select Goals ({selectedGoalIds.length} of {quarterlyGoals.length} selected)
@@ -175,7 +159,6 @@ export function QuarterlyGoalSelectorPanel() {
           </div>
         </div>
 
-        {/* Goals with weekly goals */}
         {goalsWithWeekly.length > 0 && (
           <div className="space-y-2 max-h-72 overflow-y-auto border rounded-lg p-3 bg-card">
             {goalsWithWeekly.map((goal) => {
@@ -185,15 +168,17 @@ export function QuarterlyGoalSelectorPanel() {
                 hasWeeklyGoals && goal.completedWeeklyGoalCount === goal.weeklyGoalCount;
 
               return (
-                <div
+                <label
                   key={goal._id}
+                  htmlFor={`goal-${goal._id}`}
                   className={cn(
-                    'flex items-start space-x-3 p-3 rounded-lg transition-colors',
+                    'flex items-start space-x-3 p-3 rounded-lg transition-colors cursor-pointer',
                     'hover:bg-accent/50 dark:hover:bg-accent/30',
                     isSelected && 'bg-accent/30 dark:bg-accent/20'
                   )}
                 >
                   <Checkbox
+                    id={`goal-${goal._id}`}
                     checked={isSelected}
                     onCheckedChange={(checked) => handleGoalToggle(goal._id, checked === true)}
                     className="mt-0.5 flex-shrink-0"
@@ -226,13 +211,12 @@ export function QuarterlyGoalSelectorPanel() {
                       )}
                     </div>
                   </div>
-                </div>
+                </label>
               );
             })}
           </div>
         )}
 
-        {/* Empty goals in collapsed section */}
         {emptyGoals.length > 0 && (
           <Collapsible open={isEmptyGoalsOpen} onOpenChange={setIsEmptyGoalsOpen}>
             <CollapsibleTrigger asChild>
@@ -257,15 +241,17 @@ export function QuarterlyGoalSelectorPanel() {
                 {emptyGoals.map((goal) => {
                   const isSelected = selectedGoalIds.includes(goal._id);
                   return (
-                    <div
+                    <label
                       key={goal._id}
+                      htmlFor={`empty-goal-${goal._id}`}
                       className={cn(
-                        'flex items-start space-x-3 p-3 rounded-lg transition-colors',
+                        'flex items-start space-x-3 p-3 rounded-lg transition-colors cursor-pointer',
                         'hover:bg-accent/50 dark:hover:bg-accent/30',
                         isSelected && 'bg-accent/30 dark:bg-accent/20'
                       )}
                     >
                       <Checkbox
+                        id={`empty-goal-${goal._id}`}
                         checked={isSelected}
                         onCheckedChange={(checked) => handleGoalToggle(goal._id, checked === true)}
                         className="mt-0.5 flex-shrink-0"
@@ -291,7 +277,7 @@ export function QuarterlyGoalSelectorPanel() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </label>
                   );
                 })}
               </div>
@@ -304,7 +290,14 @@ export function QuarterlyGoalSelectorPanel() {
 }
 
 /**
- * Adhoc Domain Selector Panel
+ * Panel component for selecting domains to filter adhoc goals in the quarterly summary.
+ * Displays all available domains with goal counts and completion status.
+ * Includes an uncategorized option for goals without a domain.
+ *
+ * @example
+ * ```tsx
+ * <AdhocDomainSelectorPanel />
+ * ```
  */
 export function AdhocDomainSelectorPanel() {
   const { domains, selectedAdhocDomainIds, setSelectedAdhocDomainIds, adhocGoalCounts } =
@@ -362,7 +355,6 @@ export function AdhocDomainSelectorPanel() {
 
   const isNoneSelected = selectedAdhocDomainIds.length === 0;
 
-  // Count total non-empty domains
   const nonEmptyCount = React.useMemo(() => {
     if (!adhocGoalCounts || !domains) return 0;
     let count = 0;
@@ -393,7 +385,7 @@ export function AdhocDomainSelectorPanel() {
     );
   }
 
-  const totalOptions = domains.length + 1; // +1 for uncategorized
+  const totalOptions = domains.length + 1;
 
   return (
     <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
@@ -443,25 +435,23 @@ export function AdhocDomainSelectorPanel() {
             const allComplete = hasGoals && count.completed === count.total;
 
             return (
-              <div
+              <label
                 key={domain._id}
+                htmlFor={`domain-${domain._id}`}
                 className={cn(
-                  'flex items-center space-x-3 p-3 rounded-lg border transition-colors',
+                  'flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer',
                   'hover:bg-accent/50 dark:hover:bg-accent/30',
                   isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
                   !hasGoals && 'opacity-60'
                 )}
               >
                 <Checkbox
+                  id={`domain-${domain._id}`}
                   checked={isSelected}
                   onCheckedChange={(checked) => handleDomainToggle(domain._id, checked === true)}
                   className="flex-shrink-0"
-                  id={`domain-${domain._id}`}
                 />
-                <label
-                  htmlFor={`domain-${domain._id}`}
-                  className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2 flex-1"
-                >
+                <span className="text-sm font-medium leading-none flex items-center gap-2 flex-1">
                   {domain.color && (
                     <span
                       className="w-2.5 h-2.5 rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/10"
@@ -484,8 +474,8 @@ export function AdhocDomainSelectorPanel() {
                       {count.completed}/{count.total}
                     </span>
                   )}
-                </label>
-              </div>
+                </span>
+              </label>
             );
           })}
 
@@ -497,26 +487,24 @@ export function AdhocDomainSelectorPanel() {
             const isSelected = selectedAdhocDomainIds.includes('UNCATEGORIZED');
 
             return (
-              <div
+              <label
+                htmlFor="domain-uncategorized"
                 className={cn(
-                  'flex items-center space-x-3 p-3 rounded-lg border transition-colors',
+                  'flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer',
                   'hover:bg-accent/50 dark:hover:bg-accent/30',
                   isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
                   !hasGoals && 'opacity-60'
                 )}
               >
                 <Checkbox
+                  id="domain-uncategorized"
                   checked={isSelected}
                   onCheckedChange={(checked) =>
                     handleDomainToggle('UNCATEGORIZED', checked === true)
                   }
                   className="flex-shrink-0"
-                  id="domain-uncategorized"
                 />
-                <label
-                  htmlFor="domain-uncategorized"
-                  className="text-sm font-medium leading-none cursor-pointer flex items-center gap-2 flex-1 text-muted-foreground italic"
-                >
+                <span className="text-sm font-medium leading-none flex items-center gap-2 flex-1 text-muted-foreground italic">
                   Uncategorized
                   {count && (
                     <span
@@ -533,12 +521,33 @@ export function AdhocDomainSelectorPanel() {
                       {count.completed}/{count.total}
                     </span>
                   )}
-                </label>
-              </div>
+                </span>
+              </label>
             );
           })()}
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton loader displayed while quarterly goals are loading.
+ */
+function _QuarterlyGoalSelectorSkeleton() {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loading items don't need unique keys
+        <div key={i} className="flex items-center space-x-3">
+          <Skeleton className="h-4 w-4" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+      ))}
     </div>
   );
 }
