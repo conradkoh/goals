@@ -156,10 +156,36 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   const onFireAdhocGoals = useMemo(() => {
     if (fireGoals.size === 0 || !hierarchicalAdhocGoals) return [];
 
-    // hierarchicalAdhocGoals already filtered by week, just filter by fire status
-    return hierarchicalAdhocGoals.filter((goal) => {
-      return fireGoals.has(goal._id.toString());
-    });
+    // Helper to check if any goal in a subtree is on fire
+    const hasFireGoalInSubtree = (goal: (typeof hierarchicalAdhocGoals)[0]): boolean => {
+      if (fireGoals.has(goal._id.toString())) return true;
+      return goal.children?.some(hasFireGoalInSubtree) ?? false;
+    };
+
+    // Helper to filter hierarchy keeping only branches with fire goals
+    const filterFireBranches = (
+      goal: (typeof hierarchicalAdhocGoals)[0]
+    ): (typeof hierarchicalAdhocGoals)[0] | null => {
+      const isOnFire = fireGoals.has(goal._id.toString());
+      const fireChildren = goal.children
+        ?.map(filterFireBranches)
+        .filter((c): c is NonNullable<typeof c> => c !== null);
+
+      // Include this goal if it's on fire OR has fire children
+      if (isOnFire || (fireChildren && fireChildren.length > 0)) {
+        return {
+          ...goal,
+          children: fireChildren || [],
+        };
+      }
+      return null;
+    };
+
+    // Filter root goals to only those with fire in their subtree
+    return hierarchicalAdhocGoals
+      .filter(hasFireGoalInSubtree)
+      .map(filterFireBranches)
+      .filter((g): g is NonNullable<typeof g> => g !== null);
   }, [fireGoals, hierarchicalAdhocGoals]);
 
   const onFireAdhocGoalsByDomain = useMemo(() => {
