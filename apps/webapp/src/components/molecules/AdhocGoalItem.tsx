@@ -1,24 +1,17 @@
 import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
 import { format } from 'date-fns';
-import { Calendar, Edit2, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { Calendar, Edit2, Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
 import { DomainBadge } from '@/components/atoms/DomainBadge';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { cn } from '@/lib/utils';
-
-/**
- * Maximum nesting depth for adhoc goals (soft limit).
- */
-const MAX_ADHOC_GOAL_DEPTH = 3;
 
 /**
  * Props for the AdhocGoalItem component.
@@ -68,10 +61,6 @@ export function AdhocGoalItem({
   className,
   depth = 0,
 }: AdhocGoalItemProps) {
-  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
-  const [subtaskTitle, setSubtaskTitle] = useState('');
-  const [isCreatingSubtask, setIsCreatingSubtask] = useState(false);
-
   const handleCompleteChange = useCallback(
     (checked: boolean | 'indeterminate') => {
       if (checked !== 'indeterminate') {
@@ -104,77 +93,15 @@ export function AdhocGoalItem({
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);
 
-  const handleAddSubtaskClick = useCallback(() => {
-    setIsAddingSubtask(true);
-  }, []);
-
-  const handleSubtaskSubmit = useCallback(async () => {
-    if (!subtaskTitle.trim() || !onCreateChild) return;
-
-    setIsCreatingSubtask(true);
-    try {
-      await onCreateChild(goal._id, subtaskTitle.trim());
-      setSubtaskTitle('');
-      setIsAddingSubtask(false);
-    } catch (error) {
-      console.error('Failed to create subtask:', error);
-    } finally {
-      setIsCreatingSubtask(false);
-    }
-  }, [goal._id, subtaskTitle, onCreateChild]);
-
-  const handleSubtaskKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSubtaskSubmit();
-      } else if (e.key === 'Escape') {
-        setIsAddingSubtask(false);
-        setSubtaskTitle('');
-      }
-    },
-    [handleSubtaskSubmit]
-  );
-
   const effectiveDomainId = goal.domainId || null;
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
   const children = 'children' in goal ? goal.children : [];
-  const canAddSubtask = depth < MAX_ADHOC_GOAL_DEPTH && onCreateChild && !isOptimistic;
 
   const goalWithChildren = {
     ...goal,
     path: '/',
     children: [],
   };
-
-  // Add subtask button with tooltip for max depth
-  const addSubtaskButton = canAddSubtask ? (
-    <button
-      type="button"
-      onClick={handleAddSubtaskClick}
-      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
-      title="Add subtask"
-    >
-      <Plus className="h-3.5 w-3.5" />
-    </button>
-  ) : depth >= MAX_ADHOC_GOAL_DEPTH && onCreateChild ? (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            disabled
-            className="text-muted-foreground/40 opacity-0 group-hover/title:opacity-100 transition-opacity cursor-not-allowed"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-xs">Maximum nesting depth ({MAX_ADHOC_GOAL_DEPTH} levels) reached</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  ) : null;
 
   return (
     <GoalProvider goal={goalWithChildren}>
@@ -207,6 +134,7 @@ export function AdhocGoalItem({
                 depth={depth}
                 onChildCompleteChange={onCompleteChange}
                 onChildUpdate={onUpdate}
+                onChildDelete={onDelete}
                 onCreateChild={onCreateChild}
               />
             ) : (
@@ -243,7 +171,6 @@ export function AdhocGoalItem({
                 <>
                   <FireIcon goalId={goal._id} />
                   <PendingIcon goalId={goal._id} />
-                  {addSubtaskButton}
                   {onUpdate && (
                     <GoalEditPopover
                       title={goal.title}
@@ -276,22 +203,6 @@ export function AdhocGoalItem({
             </div>
           </div>
         </div>
-
-        {/* Inline subtask input */}
-        {isAddingSubtask && (
-          <div className="ml-6 flex items-center gap-2 py-1">
-            <Input
-              value={subtaskTitle}
-              onChange={(e) => setSubtaskTitle(e.target.value)}
-              onKeyDown={handleSubtaskKeyDown}
-              placeholder="Add subtask..."
-              className="h-7 text-sm flex-1"
-              autoFocus
-              disabled={isCreatingSubtask}
-            />
-            {isCreatingSubtask && <Spinner className="h-4 w-4" />}
-          </div>
-        )}
 
         {/* Render children recursively */}
         {children.length > 0 && (

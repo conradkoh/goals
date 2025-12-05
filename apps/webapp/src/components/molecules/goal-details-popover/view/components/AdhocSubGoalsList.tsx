@@ -1,7 +1,8 @@
 import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
-import { Plus } from 'lucide-react';
+import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,8 @@ export interface AdhocSubGoalsListProps {
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => void;
+  /** Callback when a goal is deleted */
+  onDelete?: (goalId: Id<'goals'>) => void;
   /** Callback when a new child goal is created */
   onCreateChild?: (parentId: Id<'goals'>, title: string) => Promise<void>;
   /** Parent goal ID for creating new children */
@@ -53,6 +56,7 @@ export function AdhocSubGoalsList({
   currentDepth,
   onCompleteChange,
   onUpdate,
+  onDelete,
   onCreateChild,
   parentId,
 }: AdhocSubGoalsListProps) {
@@ -152,6 +156,7 @@ export function AdhocSubGoalsList({
                 goal={subGoal}
                 onCompleteChange={handleCompleteChange}
                 onUpdate={onUpdate}
+                onDelete={onDelete}
                 onCreateChild={onCreateChild}
                 depth={currentDepth + 1}
               />
@@ -199,6 +204,7 @@ interface _SubGoalItemProps {
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => void;
+  onDelete?: (goalId: Id<'goals'>) => void;
   onCreateChild?: (parentId: Id<'goals'>, title: string) => Promise<void>;
   depth: number;
 }
@@ -210,6 +216,7 @@ function _SubGoalItem({
   goal,
   onCompleteChange,
   onUpdate,
+  onDelete,
   onCreateChild,
   depth,
 }: _SubGoalItemProps) {
@@ -234,12 +241,18 @@ function _SubGoalItem({
     [goal._id, onCompleteChange]
   );
 
+  const handleDelete = useCallback(() => {
+    onDelete?.(goal._id);
+  }, [goal._id, onDelete]);
+
   // Create a goal object compatible with GoalProvider
   const goalForProvider = {
     ...goal,
     path: '/',
     children: [],
   };
+
+  const effectiveDomainId = goal.domainId || null;
 
   return (
     <GoalProvider goal={goalForProvider}>
@@ -275,6 +288,7 @@ function _SubGoalItem({
               depth={depth}
               onChildCompleteChange={(goalId, isComplete) => onCompleteChange?.(goalId, isComplete)}
               onChildUpdate={onUpdate}
+              onChildDelete={onDelete}
               onCreateChild={onCreateChild}
             />
           ) : (
@@ -287,6 +301,39 @@ function _SubGoalItem({
               {goal.title}
             </span>
           )}
+
+          {/* Action buttons - shown on hover */}
+          {!isOptimistic && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {onUpdate && (
+                <GoalEditPopover
+                  title={goal.title}
+                  details={goal.details}
+                  initialDueDate={goal.adhoc?.dueDate}
+                  initialDomainId={effectiveDomainId}
+                  showDomainSelector={true}
+                  onSave={handleUpdate}
+                  trigger={
+                    <button
+                      type="button"
+                      className="text-muted-foreground opacity-0 group-hover/subgoal:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                  }
+                />
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="text-muted-foreground opacity-0 group-hover/subgoal:opacity-100 transition-opacity hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Render nested children recursively */}
@@ -298,6 +345,7 @@ function _SubGoalItem({
                 goal={child}
                 onCompleteChange={onCompleteChange}
                 onUpdate={onUpdate}
+                onDelete={onDelete}
                 onCreateChild={onCreateChild}
                 depth={depth + 1}
               />

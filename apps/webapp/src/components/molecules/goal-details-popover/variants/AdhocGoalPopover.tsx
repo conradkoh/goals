@@ -46,6 +46,8 @@ export interface AdhocGoalPopoverProps {
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => void;
+  /** Callback when a child goal is deleted */
+  onChildDelete?: (goalId: Id<'goals'>) => void;
   /** Callback when a new child goal is created */
   onCreateChild?: (parentId: Id<'goals'>, title: string) => Promise<void>;
 }
@@ -69,6 +71,7 @@ export function AdhocGoalPopover({
   depth = 0,
   onChildCompleteChange,
   onChildUpdate,
+  onChildDelete,
   onCreateChild,
 }: AdhocGoalPopoverProps) {
   const { goal } = useGoalContext();
@@ -89,6 +92,7 @@ export function AdhocGoalPopover({
           depth={depth}
           onChildCompleteChange={onChildCompleteChange}
           onChildUpdate={onChildUpdate}
+          onChildDelete={onChildDelete}
           onCreateChild={onCreateChild}
         />
       </GoalDisplayProvider>
@@ -120,6 +124,7 @@ function _AdhocGoalPopoverContent({
   depth = 0,
   onChildCompleteChange,
   onChildUpdate,
+  onChildDelete,
   onCreateChild,
 }: _AdhocGoalPopoverContentProps) {
   const { goal } = useGoalContext();
@@ -153,6 +158,7 @@ function _AdhocGoalPopoverContent({
           currentDepth={depth}
           onCompleteChange={onChildCompleteChange}
           onUpdate={onChildUpdate}
+          onDelete={onChildDelete}
           onCreateChild={onCreateChild}
           parentId={goal._id}
         />
