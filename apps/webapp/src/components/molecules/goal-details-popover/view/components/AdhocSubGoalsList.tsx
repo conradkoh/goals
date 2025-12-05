@@ -65,12 +65,15 @@ export function AdhocSubGoalsList({
   const [newSubGoalTitle, setNewSubGoalTitle] = useState('');
   const [optimisticSubGoals, setOptimisticSubGoals] = useState<_OptimisticSubGoal[]>([]);
 
+  /** Whether the current depth allows adding more sub-goals. */
   const canAddSubGoal = currentDepth < MAX_ADHOC_GOAL_DEPTH && onCreateChild;
+  /** Whether we've reached the maximum nesting depth. */
   const isAtMaxDepth = currentDepth >= MAX_ADHOC_GOAL_DEPTH;
 
-  // Combine real and optimistic sub-goals
+  /** Combined list of real and optimistic sub-goals for display. */
   const allSubGoals: _OptimisticSubGoal[] = [...subGoals, ...optimisticSubGoals];
 
+  /** Creates a new sub-goal with optimistic UI update. */
   const handleCreateSubGoal = useCallback(async () => {
     if (!newSubGoalTitle.trim() || !onCreateChild) return;
 
@@ -108,6 +111,7 @@ export function AdhocSubGoalsList({
     }
   }, [newSubGoalTitle, onCreateChild, parentId]);
 
+  /** Handles keyboard events for the create input (Enter to submit, Escape to clear). */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -122,6 +126,7 @@ export function AdhocSubGoalsList({
     [handleCreateSubGoal]
   );
 
+  /** Handles checkbox state change for sub-goal completion. */
   const handleCompleteChange = useCallback(
     (goalId: Id<'goals'>, checked: boolean | 'indeterminate') => {
       if (checked !== 'indeterminate') {
@@ -224,6 +229,7 @@ function _SubGoalItem({
 }: _SubGoalItemProps) {
   const isOptimistic = goal.isOptimistic;
 
+  /** Handles goal update from edit popover. */
   const handleUpdate = useCallback(
     async (
       title: string,
@@ -236,6 +242,7 @@ function _SubGoalItem({
     [goal._id, onUpdate]
   );
 
+  /** Handles completion toggle from popover. */
   const handleToggleComplete = useCallback(
     async (isComplete: boolean) => {
       onCompleteChange?.(goal._id, isComplete);
@@ -243,6 +250,7 @@ function _SubGoalItem({
     [goal._id, onCompleteChange]
   );
 
+  /** Handles goal deletion. */
   const handleDelete = useCallback(() => {
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);

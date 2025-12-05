@@ -58,6 +58,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   const { adhocGoals: hierarchicalAdhocGoals } = useAdhocGoalsForWeek(sessionId, year, weekNumber);
   const { updateAdhocGoal, deleteAdhocGoal, createAdhocGoal } = useAdhocGoals(sessionId);
 
+  /** Groups on-fire goals by their quarterly parent for hierarchical display. */
   const onFireGoalsByQuarterly = useMemo(() => {
     if (fireGoals.size === 0) return null;
 
@@ -153,6 +154,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     return result.size > 0 ? result : null;
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
+  /** Filters adhoc goals to only include trees with fire goals, preserving hierarchy. */
   const onFireAdhocGoals = useMemo(() => {
     if (fireGoals.size === 0 || !hierarchicalAdhocGoals) return [];
 
@@ -188,6 +190,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       .filter((g): g is NonNullable<typeof g> => g !== null);
   }, [fireGoals, hierarchicalAdhocGoals]);
 
+  /** Groups fire adhoc goals by domain for display. */
   const onFireAdhocGoalsByDomain = useMemo(() => {
     if (onFireAdhocGoals.length === 0) return [];
 
@@ -213,8 +216,10 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     });
   }, [onFireAdhocGoals]);
 
+  /** Whether any goals are on fire (for conditional rendering). */
   const hasAnyFireGoals = onFireGoalsByQuarterly !== null || onFireAdhocGoalsByDomain.length > 0;
 
+  /** Handles updating a quarterly/weekly/daily goal. */
   const _handleUpdateGoal = useCallback(
     async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
       await onUpdateGoal(goalId, title, details, dueDate);
@@ -222,6 +227,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [onUpdateGoal]
   );
 
+  /** Handles updating an adhoc goal. */
   const _handleUpdateAdhocGoal = useCallback(
     async (
       goalId: Id<'goals'>,
@@ -235,6 +241,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [updateAdhocGoal]
   );
 
+  /** Handles adhoc goal completion status change. */
   const _handleAdhocCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
       await updateAdhocGoal(goalId, { isComplete });
@@ -242,6 +249,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [updateAdhocGoal]
   );
 
+  /** Handles adhoc goal deletion. */
   const _handleDeleteAdhocGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       await deleteAdhocGoal(goalId);
@@ -249,6 +257,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     [deleteAdhocGoal]
   );
 
+  /** Handles creating a child adhoc goal. */
   const _handleCreateAdhocChild = useCallback(
     async (parentId: Id<'goals'>, title: string) => {
       await createAdhocGoal(

@@ -61,6 +61,7 @@ export function AdhocGoalItem({
   className,
   depth = 0,
 }: AdhocGoalItemProps) {
+  /** Handles checkbox state change for goal completion. */
   const handleCompleteChange = useCallback(
     (checked: boolean | 'indeterminate') => {
       if (checked !== 'indeterminate') {
@@ -70,6 +71,7 @@ export function AdhocGoalItem({
     [goal._id, onCompleteChange]
   );
 
+  /** Handles goal update from edit popover. */
   const handleUpdate = useCallback(
     async (
       title: string,
@@ -82,6 +84,7 @@ export function AdhocGoalItem({
     [goal._id, onUpdate]
   );
 
+  /** Handles completion toggle from popover. */
   const handleToggleComplete = useCallback(
     async (isComplete: boolean) => {
       onCompleteChange?.(goal._id, isComplete);
@@ -89,6 +92,7 @@ export function AdhocGoalItem({
     [goal._id, onCompleteChange]
   );
 
+  /** Handles goal deletion. */
   const handleDelete = useCallback(() => {
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);
