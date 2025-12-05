@@ -2,7 +2,9 @@ import type { Id } from '@services/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+import { PendingIcon } from '@/components/atoms/PendingIcon';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -305,6 +307,8 @@ function _SubGoalItem({
           {/* Action buttons - shown on hover */}
           {!isOptimistic && (
             <div className="flex items-center gap-1 flex-shrink-0">
+              <FireIcon goalId={goal._id} />
+              <PendingIcon goalId={goal._id} />
               {onUpdate && (
                 <GoalEditPopover
                   title={goal.title}
