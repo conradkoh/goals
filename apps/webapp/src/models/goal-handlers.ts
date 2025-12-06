@@ -64,12 +64,29 @@ export interface GoalDetailsHandlers {
 }
 
 /**
+ * Handler for tracking pending updates.
+ * Called when an update starts, receives the promise to track.
+ * The goal list item shows a loading indicator until the promise resolves.
+ *
+ * @example
+ * const handleSave = async () => {
+ *   const updatePromise = onSave(title, details, dueDate);
+ *   onUpdatePending?.(updatePromise);
+ *   await updatePromise;
+ * };
+ */
+export type GoalUpdatePendingHandler = (updatePromise: Promise<void>) => void;
+
+/**
  * Standard props for components in a list view that need CRUD operations.
  * Use this interface for list items, cards, and similar components.
  */
 export interface GoalListItemHandlers {
   /** Handler for updating goal properties */
   onUpdateGoal: GoalUpdateHandler;
+
+  /** Handler for tracking pending updates - shows loading indicator */
+  onUpdatePending?: GoalUpdatePendingHandler;
 
   /** Handler for deleting the goal */
   onDeleteGoal: GoalDeleteHandler;

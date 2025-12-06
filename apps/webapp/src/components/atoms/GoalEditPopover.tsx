@@ -14,23 +14,54 @@ import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { cn } from '@/lib/utils';
+import type { GoalUpdatePendingHandler } from '@/models/goal-handlers';
 import { useSession } from '@/modules/auth/useSession';
 
-interface GoalEditPopoverProps {
+/**
+ * Props for the GoalEditPopover component.
+ */
+export interface GoalEditPopoverProps {
+  /** Current title of the goal */
   title: string;
+  /** Current details/description of the goal */
   details?: string;
+  /** Callback fired when the goal is saved */
   onSave: (
     title: string,
     details: string,
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => Promise<void>;
+  /** Custom trigger element (defaults to edit icon button) */
   trigger?: React.ReactNode;
+  /** Initial due date as Unix timestamp */
   initialDueDate?: number;
+  /** Initial domain ID for adhoc goals */
   initialDomainId?: Id<'domains'> | null;
-  showDomainSelector?: boolean; // Whether to show the domain selector (for adhoc goals)
+  /** Whether to show the domain selector (for adhoc goals) */
+  showDomainSelector?: boolean;
+  /** Called with the update promise for tracking pending state in the parent */
+  onUpdatePending?: GoalUpdatePendingHandler;
 }
 
+/**
+ * Popover component for editing goal title, details, due date, and domain.
+ * Supports both popover mode (desktop) and fullscreen dialog mode (touch devices).
+ *
+ * Features optimistic UI - closes immediately on save while the update is in flight.
+ * Use `onUpdatePending` to track the save promise and show loading indicators.
+ *
+ * @example
+ * ```tsx
+ * <GoalEditPopover
+ *   title={goal.title}
+ *   details={goal.details}
+ *   initialDueDate={goal.dueDate}
+ *   onSave={handleSave}
+ *   onUpdatePending={setPendingUpdate}
+ * />
+ * ```
+ */
 export function GoalEditPopover({
   title: initialTitle,
   details: initialDetails,
@@ -39,6 +70,7 @@ export function GoalEditPopover({
   initialDueDate,
   initialDomainId,
   showDomainSelector = false,
+  onUpdatePending,
 }: GoalEditPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(initialTitle);
@@ -80,6 +112,9 @@ export function GoalEditPopover({
     }
   }, [isOpen, initialDomainId]);
 
+  /**
+   * Resets form state and closes the popover.
+   */
   const handleCancel = useCallback(() => {
     setTitle(initialTitle);
     setDetails(initialDetails ?? '');
@@ -88,15 +123,24 @@ export function GoalEditPopover({
     setIsOpen(false);
   }, [initialTitle, initialDetails, initialDueDate, initialDomainId]);
 
+  /**
+   * Saves the goal with optimistic UI - closes immediately while save is in flight.
+   */
   const handleSave = useCallback(async () => {
     if (!title.trim()) return;
 
+    setIsSubmitting(true);
+    // Optimistically close the dialog immediately
+    setIsOpen(false);
+
+    // Create the save promise
+    const savePromise = onSave(title.trim(), details, dueDate?.getTime(), domainId);
+
+    // Notify parent of pending update (allows showing loading indicator in list item)
+    onUpdatePending?.(savePromise);
+
     try {
-      setIsSubmitting(true);
-      // Optimistically close the dialog immediately
-      setIsOpen(false);
-      // Then perform the save operation
-      await onSave(title.trim(), details, dueDate?.getTime(), domainId);
+      await savePromise;
     } catch (error) {
       console.error('Failed to save goal:', error);
       toast({
@@ -107,8 +151,11 @@ export function GoalEditPopover({
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, details, dueDate, domainId, onSave]);
+  }, [title, details, dueDate, domainId, onSave, onUpdatePending]);
 
+  /**
+   * Handles Enter key press to submit the form.
+   */
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -123,6 +170,9 @@ export function GoalEditPopover({
     onSubmit: handleSave,
   });
 
+  /**
+   * Handles popover/dialog open state changes.
+   */
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
