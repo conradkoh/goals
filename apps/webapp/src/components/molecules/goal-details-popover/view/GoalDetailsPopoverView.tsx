@@ -118,7 +118,7 @@ export function GoalDetailsPopoverView({
             </DialogHeader>
             {/* Scrollable content area */}
             {/* pb-4 ensures content can scroll past keyboard on iOS */}
-            <div className="space-y-3 overflow-y-auto flex-1 px-4 py-1 pb-4 overscroll-contain">
+            <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
               {children}
             </div>
           </DialogContent>
