@@ -31,6 +31,21 @@ interface _UseDeviceScreenInfoReturn {
 }
 
 /**
+ * Reads the screen-type query parameter for development overrides.
+ * Supports: 'touch' to force touch device behavior, 'mouse' to force non-touch.
+ * @returns 'touch' | 'mouse' | null
+ */
+const _getDeviceTypeOverride = (): 'touch' | 'mouse' | null => {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const deviceType = params.get('screen-type');
+  if (deviceType === 'touch' || deviceType === 'mouse') {
+    return deviceType;
+  }
+  return null;
+};
+
+/**
  * SSR-safe hook for detecting responsive breakpoints and device capabilities.
  * Returns safe defaults during SSR/initial render to avoid hydration mismatches,
  * then updates to actual values after mount.
@@ -39,6 +54,11 @@ interface _UseDeviceScreenInfoReturn {
  * - Limited vertical height (for modal positioning on landscape/small screens)
  * - Touch capability (for optimizing touch interactions)
  * - Combined signals for preferring fullscreen dialogs over popovers
+ *
+ * **Development Override:**
+ * Add `?screen-type=touch` to the URL to force touch device behavior,
+ * or `?screen-type=mouse` to force non-touch behavior. Useful for testing
+ * touch-specific UI on non-touch development machines.
  *
  * @returns Object containing screen size, device capabilities, and hydration state
  *
@@ -51,6 +71,10 @@ interface _UseDeviceScreenInfoReturn {
  *   return <FullscreenDialog />;
  * }
  * ```
+ *
+ * @example
+ * // Force touch mode in development:
+ * // http://localhost:3000/app?screen-type=touch
  */
 export const useDeviceScreenInfo = (): _UseDeviceScreenInfoReturn => {
   // Always start with 'desktop' to match server render and avoid hydration mismatch
@@ -78,8 +102,17 @@ export const useDeviceScreenInfo = (): _UseDeviceScreenInfoReturn => {
       return window.innerHeight < 700;
     };
 
-    /** Detects touch capability via media query */
+    /**
+     * Detects touch capability via media query.
+     * Can be overridden with ?screen-type=touch or ?screen-type=mouse query param.
+     */
     const _isTouchDevice = (): boolean => {
+      // Check for development override first
+      const override = _getDeviceTypeOverride();
+      if (override === 'touch') return true;
+      if (override === 'mouse') return false;
+
+      // Fall back to media query detection
       // Check for coarse pointer (touch) vs fine pointer (mouse)
       return window.matchMedia('(pointer: coarse)').matches;
     };
