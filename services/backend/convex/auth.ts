@@ -829,7 +829,7 @@ export const getUser = query({
  *
  * @param oldSessionId - The old session document _id from goals-session-id localStorage
  * @param newSessionId - The new UUID sessionId to assign to the session
- * @returns Object with success status and the new sessionId
+ * @returns Object with success status, the sessionId, and whether migration was performed
  */
 export const exchangeSession = mutation({
   args: {
@@ -845,17 +845,17 @@ export const exchangeSession = mutation({
       session = await ctx.db.get(oldSessionId as Id<'sessions'>);
     } catch {
       // Invalid ID format
-      return { success: false, reason: 'invalid_session_id' };
+      return { success: false, reason: 'invalid_session_id', migrated: false };
     }
 
     if (!session) {
-      return { success: false, reason: 'session_not_found' };
+      return { success: false, reason: 'session_not_found', migrated: false };
     }
 
     // Check if this session already has a sessionId string
     if (session.sessionId) {
       // Already migrated, return the existing sessionId
-      return { success: true, sessionId: session.sessionId };
+      return { success: true, sessionId: session.sessionId, migrated: false };
     }
 
     // Update the session with the new sessionId string
@@ -865,6 +865,6 @@ export const exchangeSession = mutation({
       authMethod: session.authMethod || 'anonymous',
     });
 
-    return { success: true, sessionId: newSessionId };
+    return { success: true, sessionId: newSessionId, migrated: true };
   },
 });

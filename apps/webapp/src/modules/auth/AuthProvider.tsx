@@ -93,8 +93,14 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
             // Update the new session ID with the exchanged value
             localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
             // Keep the old session ID for master branch compatibility
-            // Reload to pick up the updated session
-            window.location.reload();
+            // Only reload if we actually performed a migration
+            if (result.migrated) {
+              window.location.reload();
+            } else {
+              // Already migrated, just continue
+              setMigrationChecked(true);
+              setIsMigrating(false);
+            }
           } else {
             // Migration failed, just mark as checked and continue
             console.warn('Session migration failed:', result.reason);
@@ -122,8 +128,14 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
           // Store the new session ID
           localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
           // Keep the old session ID for master branch compatibility
-          // Reload to pick up the new session
-          window.location.reload();
+          // Only reload if we actually performed a migration
+          if (result.migrated) {
+            window.location.reload();
+          } else {
+            // Already migrated, just continue
+            setMigrationChecked(true);
+            setIsMigrating(false);
+          }
         } else {
           // Migration failed, just clean up and let the app create a new session
           console.warn('Session migration failed:', result.reason);
