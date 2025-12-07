@@ -74,6 +74,7 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
     if (migrationChecked) return;
 
     const oldSessionId = localStorage.getItem(OLD_SESSION_KEY);
+    const newSessionId = localStorage.getItem(NEW_SESSION_KEY);
 
     // If there's no old session ID, nothing to migrate
     if (!oldSessionId) {
@@ -81,8 +82,36 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Need to migrate: exchange old session for new one
-    // Always do this when old key exists to ensure database session is updated
+    // If both exist, use the old one and update the new one (don't delete old)
+    // This allows master branch to keep using goals-session-id
+    if (newSessionId) {
+      setIsMigrating(true);
+
+      exchangeSession({ oldSessionId, newSessionId })
+        .then((result) => {
+          if (result.success && result.sessionId) {
+            // Update the new session ID with the exchanged value
+            localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
+            // Keep the old session ID for master branch compatibility
+            // Reload to pick up the updated session
+            window.location.reload();
+          } else {
+            // Migration failed, just mark as checked and continue
+            console.warn('Session migration failed:', result.reason);
+            setMigrationChecked(true);
+            setIsMigrating(false);
+          }
+        })
+        .catch((error) => {
+          console.error('Session migration error:', error);
+          setMigrationChecked(true);
+          setIsMigrating(false);
+        });
+
+      return;
+    }
+
+    // Only old session exists: exchange and create new one
     setIsMigrating(true);
 
     const newId = generateUUID();
@@ -92,8 +121,7 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
         if (result.success && result.sessionId) {
           // Store the new session ID
           localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
-          // Remove the old session ID
-          localStorage.removeItem(OLD_SESSION_KEY);
+          // Keep the old session ID for master branch compatibility
           // Reload to pick up the new session
           window.location.reload();
         } else {
