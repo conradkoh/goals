@@ -1,12 +1,17 @@
 'use client';
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { AuthState } from '@workspace/backend/modules/auth/types/AuthState';
+import { useMutation } from 'convex/react';
 import { SessionProvider, type UseStorage, useSessionQuery } from 'convex-helpers/react/sessions';
 import type { SessionId } from 'convex-helpers/server/sessions';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { generateUUID } from '@/lib/utils';
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
+
+// Constants for localStorage keys
+const OLD_SESSION_KEY = 'goals-session-id';
+const NEW_SESSION_KEY = 'sessionId';
 
 /**
  * Provides authentication context to the application with session management.
@@ -40,14 +45,94 @@ function _withSessionProvider(Component: React.ComponentType<{ children: React.R
   return (props: { children: React.ReactNode }) => {
     return (
       <SessionProvider
-        storageKey="sessionId"
+        storageKey={NEW_SESSION_KEY}
         useStorage={_useLocalStorage}
         idGenerator={generateUUID}
       >
-        <Component {...props} />
+        <_SessionMigrationWrapper>
+          <Component {...props} />
+        </_SessionMigrationWrapper>
       </SessionProvider>
     );
   };
+}
+
+/**
+ * Component that handles migration of old session IDs to new format.
+ * Checks for old goals-session-id and exchanges it for a new sessionId.
+ */
+function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationChecked, setMigrationChecked] = useState(false);
+  const exchangeSession = useMutation(api.auth.exchangeSession);
+
+  useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+
+    // Check if we've already done the migration check
+    if (migrationChecked) return;
+
+    const oldSessionId = localStorage.getItem(OLD_SESSION_KEY);
+    const newSessionId = localStorage.getItem(NEW_SESSION_KEY);
+
+    // If there's no old session ID, nothing to migrate
+    if (!oldSessionId) {
+      setMigrationChecked(true);
+      return;
+    }
+
+    // If there's already a new session ID, just clean up the old one
+    if (newSessionId) {
+      localStorage.removeItem(OLD_SESSION_KEY);
+      setMigrationChecked(true);
+      return;
+    }
+
+    // Need to migrate: exchange old session for new one
+    setIsMigrating(true);
+
+    const newId = generateUUID();
+
+    exchangeSession({ oldSessionId, newSessionId: newId })
+      .then((result) => {
+        if (result.success && result.sessionId) {
+          // Store the new session ID
+          localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
+          // Remove the old session ID
+          localStorage.removeItem(OLD_SESSION_KEY);
+          // Reload to pick up the new session
+          window.location.reload();
+        } else {
+          // Migration failed, just clean up and let the app create a new session
+          console.warn('Session migration failed:', result.reason);
+          localStorage.removeItem(OLD_SESSION_KEY);
+          setMigrationChecked(true);
+          setIsMigrating(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Session migration error:', error);
+        // Clean up and let the app continue
+        localStorage.removeItem(OLD_SESSION_KEY);
+        setMigrationChecked(true);
+        setIsMigrating(false);
+      });
+  }, [exchangeSession, migrationChecked]);
+
+  // Show loading state while migrating
+  if (isMigrating) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Migrating session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 /**

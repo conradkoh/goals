@@ -773,7 +773,7 @@ export const useAnonymousSession = mutation({
       // Try to find by _id if it looks like a Convex ID
       try {
         const prevSession = await ctx.db.get(prevSessionId as Id<'sessions'>);
-        if (prevSession && prevSession.userId) {
+        if (prevSession?.userId) {
           // Update lastActiveAt for existing session
           await ctx.db.patch(prevSessionId as Id<'sessions'>, {
             createdAt: Date.now(),
@@ -819,5 +819,52 @@ export const getUser = query({
     }
     const user = await ctx.db.get(session.userId);
     return user;
+  },
+});
+
+/**
+ * Exchanges an old session ID (document _id) for a new session ID (UUID string).
+ * This is used to migrate users from the old goals-session-id localStorage format
+ * to the new sessionId format used by the template.
+ *
+ * @param oldSessionId - The old session document _id from goals-session-id localStorage
+ * @param newSessionId - The new UUID sessionId to assign to the session
+ * @returns Object with success status and the new sessionId
+ */
+export const exchangeSession = mutation({
+  args: {
+    oldSessionId: v.string(),
+    newSessionId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { oldSessionId, newSessionId } = args;
+
+    // Try to find the old session by document _id
+    let session: Doc<'sessions'> | null = null;
+    try {
+      session = await ctx.db.get(oldSessionId as Id<'sessions'>);
+    } catch {
+      // Invalid ID format
+      return { success: false, reason: 'invalid_session_id' };
+    }
+
+    if (!session) {
+      return { success: false, reason: 'session_not_found' };
+    }
+
+    // Check if this session already has a sessionId string
+    if (session.sessionId) {
+      // Already migrated, return the existing sessionId
+      return { success: true, sessionId: session.sessionId };
+    }
+
+    // Update the session with the new sessionId string
+    await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+      sessionId: newSessionId,
+      createdAt: session.createdAt || Date.now(),
+      authMethod: session.authMethod || 'anonymous',
+    });
+
+    return { success: true, sessionId: newSessionId };
   },
 });
