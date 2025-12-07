@@ -3,6 +3,7 @@ node_modules
 .DS_Store
 dist/
 *.tsbuildinfo
+package-lock.json
 
 # Nx Cloud
 .nx/cache

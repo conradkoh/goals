@@ -307,4 +307,15 @@ input,
   .dialog-mobile {
     @apply max-w-[95vw] sm:max-w-lg p-4 sm:p-6;
   }
+
+  /* Scrollbar utilities */
+  .scrollbar-visible {
+    scrollbar-width: auto; /* Makes the scrollbar always visible in Firefox */
+    overflow-y: scroll; /* Ensures the scrollbar always appears, even if not needed */
+  }
+
+  /* For Webkit-based browsers (e.g., Chrome, Edge, etc.) */
+  .scrollbar-visible::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+  }
 }

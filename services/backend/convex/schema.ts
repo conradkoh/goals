@@ -1,15 +1,25 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { DayOfWeek } from '../src/constants';
+
+const carryOverSchema = v.object({
+  type: v.literal('week'),
+  numWeeks: v.number(),
+  fromGoal: v.object({
+    previousGoalId: v.id('goals'),
+    rootGoalId: v.id('goals'),
+  }),
+});
 
 /**
- * Database schema definition for the application.
- * Defines all tables, their fields, and indexes for optimal querying.
- *
- * DEPRECATION NOTICE: The fields `expiresAt` and `expiresAtLabel` in the sessions table
- * are deprecated and no longer used for session expiry. They are only kept for migration
- * compatibility and will be removed in a future migration.
+ * Database schema definition for the Goals application.
+ * Combines template infrastructure tables with app-specific goal management tables.
  */
 export default defineSchema({
+  // ============================================================================
+  // TEMPLATE INFRASTRUCTURE TABLES (from upstream)
+  // ============================================================================
+
   /**
    * Application metadata and version tracking.
    */
@@ -22,103 +32,103 @@ export default defineSchema({
    * Tracks current slide and active presenter information.
    */
   presentationState: defineTable({
-    key: v.string(), // The presentation key that identifies this presentation
-    currentSlide: v.number(), // The current slide number
-    lastUpdated: v.number(), // Timestamp of last update
+    key: v.string(),
+    currentSlide: v.number(),
+    lastUpdated: v.number(),
     activePresentation: v.optional(
       v.object({
-        presenterId: v.string(), // Session ID of the current presenter
+        presenterId: v.string(),
       })
-    ), // Optional object containing presenter information
+    ),
   }).index('by_key', ['key']),
 
   /**
    * Discussion state management for collaborative discussions.
-   * Tracks discussion lifecycle, conclusions, and metadata.
    */
   discussionState: defineTable({
-    key: v.string(), // Unique identifier for the discussion
-    title: v.string(), // Title of the discussion
-    isActive: v.boolean(), // Whether the discussion is active or concluded
-    createdAt: v.number(), // When the discussion was created
+    key: v.string(),
+    title: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
     conclusions: v.optional(
       v.array(
         v.object({
-          text: v.string(), // The conclusion text
-          tags: v.array(v.string()), // Optional tags for categorizing the conclusion (e.g., "task", "decision", "action", etc.)
+          text: v.string(),
+          tags: v.array(v.string()),
         })
       )
-    ), // Conclusions for this discussion
-    concludedAt: v.optional(v.number()), // When the discussion was concluded
-    concludedBy: v.optional(v.string()), // Session ID of who concluded the discussion
+    ),
+    concludedAt: v.optional(v.number()),
+    concludedBy: v.optional(v.string()),
   }).index('by_key', ['key']),
 
   /**
    * Individual messages within discussions.
-   * Stores message content, sender information, and timestamps.
    */
   discussionMessages: defineTable({
-    discussionKey: v.string(), // The discussion this message belongs to
-    name: v.string(), // Name of the person who wrote the message
-    message: v.string(), // The content of the message
-    timestamp: v.number(), // When the message was sent
-    sessionId: v.optional(v.string()), // Session ID of the sender (optional)
+    discussionKey: v.string(),
+    name: v.string(),
+    message: v.string(),
+    timestamp: v.number(),
+    sessionId: v.optional(v.string()),
   }).index('by_discussion', ['discussionKey']),
 
   /**
    * Checklist state management for collaborative task tracking.
-   * Tracks checklist lifecycle and metadata.
    */
   checklistState: defineTable({
-    key: v.string(), // Unique identifier for the checklist
-    title: v.string(), // Title of the checklist
-    isActive: v.boolean(), // Whether the checklist is active or concluded
-    createdAt: v.number(), // When the checklist was created
-    concludedAt: v.optional(v.number()), // When the checklist was concluded
-    concludedBy: v.optional(v.string()), // Session ID of who concluded the checklist
+    key: v.string(),
+    title: v.string(),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    concludedAt: v.optional(v.number()),
+    concludedBy: v.optional(v.string()),
   }).index('by_key', ['key']),
 
   /**
    * Individual items within checklists.
-   * Stores item content, completion status, ordering, and audit trail.
    */
   checklistItems: defineTable({
-    checklistKey: v.string(), // The checklist this item belongs to
-    text: v.string(), // The item text/description
-    isCompleted: v.boolean(), // Whether the item is completed
-    order: v.number(), // Display order
-    createdAt: v.number(), // When the item was created
-    completedAt: v.optional(v.number()), // When the item was completed
-    createdBy: v.optional(v.string()), // Session ID of who created the item
-    completedBy: v.optional(v.string()), // Session ID of who completed the item
+    checklistKey: v.string(),
+    text: v.string(),
+    isCompleted: v.boolean(),
+    order: v.number(),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+    createdBy: v.optional(v.string()),
+    completedBy: v.optional(v.string()),
   })
     .index('by_checklist', ['checklistKey'])
     .index('by_checklist_order', ['checklistKey', 'order']),
 
   /**
    * Attendance tracking for events and meetings.
-   * Records attendance status, reasons, and participant information.
    */
   attendanceRecords: defineTable({
-    attendanceKey: v.string(), // The attendance session key (hardcoded)
-    timestamp: v.number(), // When the attendance was recorded
-    userId: v.optional(v.id('users')), // Optional user ID (for authenticated users)
-    name: v.optional(v.string()), // Name (required for anonymous users)
-    status: v.optional(v.union(v.literal('attending'), v.literal('not_attending'))), // Attendance status
-    reason: v.optional(v.string()), // Optional reason for not attending
-    remarks: v.optional(v.string()), // Optional remarks for attending
-    isManuallyJoined: v.optional(v.boolean()), // Whether this person manually joined the list (vs being in expected list)
+    attendanceKey: v.string(),
+    timestamp: v.number(),
+    userId: v.optional(v.id('users')),
+    name: v.optional(v.string()),
+    status: v.optional(v.union(v.literal('attending'), v.literal('not_attending'))),
+    reason: v.optional(v.string()),
+    remarks: v.optional(v.string()),
+    isManuallyJoined: v.optional(v.boolean()),
   })
     .index('by_attendance', ['attendanceKey'])
     .index('by_name_attendance', ['attendanceKey', 'name'])
     .index('by_user_attendance', ['attendanceKey', 'userId']),
 
+  // ============================================================================
+  // AUTH TABLES (from template with app extensions)
+  // ============================================================================
+
   /**
    * User accounts supporting authenticated, anonymous, and Google OAuth users.
-   * Stores user credentials, names, and recovery information.
+   * Extended to support both template and app user types.
    */
   users: defineTable(
     v.union(
+      // Template full user type
       v.object({
         type: v.literal('full'),
         name: v.string(),
@@ -140,11 +150,19 @@ export default defineSchema({
           })
         ),
       }),
+      // Template anonymous user type
       v.object({
         type: v.literal('anonymous'),
-        name: v.string(), //system generated name
+        name: v.string(),
         recoveryCode: v.optional(v.string()),
         accessLevel: v.optional(v.union(v.literal('user'), v.literal('system_admin'))),
+      }),
+      // App user type (for existing app data compatibility)
+      v.object({
+        type: v.literal('user'),
+        email: v.string(),
+        name: v.string(),
+        displayName: v.string(),
       })
     )
   )
@@ -155,79 +173,222 @@ export default defineSchema({
 
   /**
    * User sessions for authentication and state management.
-   * Links session IDs to user accounts with creation timestamps.
+   * Combined schema supporting both template and app session types.
    */
   sessions: defineTable({
-    sessionId: v.string(), //this is provided by the client
-    userId: v.id('users'), // null means session exists but not authenticated
-    createdAt: v.number(),
+    sessionId: v.optional(v.string()), // Template style - client-provided session ID
+    userId: v.id('users'),
+    createdAt: v.optional(v.number()),
+    status: v.optional(v.literal('active')), // App style status
+    lastActiveAt: v.optional(v.number()), // App style activity tracking
     authMethod: v.optional(
       v.union(
-        v.literal('google'), // Authenticated via Google OAuth
-        v.literal('login_code'), // Authenticated via login code
-        v.literal('recovery_code'), // Authenticated via recovery code
-        v.literal('anonymous'), // Anonymous session
-        v.literal('username_password') // Traditional username/password (for future use)
+        v.literal('google'),
+        v.literal('login_code'),
+        v.literal('recovery_code'),
+        v.literal('anonymous'),
+        v.literal('username_password')
       )
-    ), // How the user authenticated for this session
-    expiresAt: v.optional(v.number()), // DEPRECATED: No longer used for session expiry. Kept for migration compatibility.
-    expiresAtLabel: v.optional(v.string()), // DEPRECATED: No longer used for session expiry. Kept for migration compatibility.
+    ),
+    expiresAt: v.optional(v.number()), // DEPRECATED
+    expiresAtLabel: v.optional(v.string()), // DEPRECATED
   }).index('by_sessionId', ['sessionId']),
 
   /**
    * Temporary login codes for cross-device authentication.
-   * Stores time-limited codes for secure device-to-device login.
    */
   loginCodes: defineTable({
-    code: v.string(), // The 8-letter login code
-    userId: v.id('users'), // The user who generated this code
-    createdAt: v.number(), // When the code was created
-    expiresAt: v.number(), // When the code expires (1 minute after creation)
+    code: v.string(),
+    userId: v.id('users'),
+    createdAt: v.number(),
+    expiresAt: v.number(),
   }).index('by_code', ['code']),
 
   /**
-   * Authentication provider configuration for dynamic auth provider setup.
-   * Supports multiple auth providers (Google, GitHub, etc.) with unified structure.
+   * Authentication provider configuration.
    */
   auth_providerConfigs: defineTable({
-    type: v.union(v.literal('google')), // Auth provider type (extensible for future providers)
-    enabled: v.boolean(), // Whether this auth provider is enabled
-    projectId: v.optional(v.string()), // Google Cloud Project ID (optional, for convenience links)
-    clientId: v.optional(v.string()), // OAuth client ID
-    clientSecret: v.optional(v.string()), // OAuth client secret (encrypted storage recommended)
-    redirectUris: v.array(v.string()), // Allowed redirect URIs for OAuth
-    configuredBy: v.id('users'), // User who configured this (must be system_admin)
-    configuredAt: v.number(), // When this configuration was created/updated
+    type: v.union(v.literal('google')),
+    enabled: v.boolean(),
+    projectId: v.optional(v.string()),
+    clientId: v.optional(v.string()),
+    clientSecret: v.optional(v.string()),
+    redirectUris: v.array(v.string()),
+    configuredBy: v.id('users'),
+    configuredAt: v.number(),
   }).index('by_type', ['type']),
 
   /**
-   * Login requests for authentication provider flows (e.g., Google OAuth).
-   * Tracks the state of a login attempt and links to sessions and users.
+   * Login requests for authentication provider flows.
    */
   auth_loginRequests: defineTable({
-    sessionId: v.string(), // Session initiating the login
-    status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')), // Status of the login request
-    error: v.optional(v.string()), // Error message if failed
-    createdAt: v.number(), // Timestamp of creation
-    completedAt: v.optional(v.number()), // Timestamp of completion
-    provider: v.union(v.literal('google')), // e.g., 'google'
-    expiresAt: v.number(), // When this login request expires (15 minutes from creation)
-    redirectUri: v.string(), // The OAuth redirect URI used for this login request
+    sessionId: v.string(),
+    status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+    provider: v.union(v.literal('google')),
+    expiresAt: v.number(),
+    redirectUri: v.string(),
   }),
 
   /**
-   * Connect requests for authentication provider account linking flows (e.g., Google OAuth).
-   * Tracks the state of a connect attempt and links to sessions and users.
-   * Separate from login requests to make flow types explicit and ensure proper validation.
+   * Connect requests for authentication provider account linking flows.
    */
   auth_connectRequests: defineTable({
-    sessionId: v.string(), // Session initiating the connect
-    status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')), // Status of the connect request
-    error: v.optional(v.string()), // Error message if failed
-    createdAt: v.number(), // Timestamp of creation
-    completedAt: v.optional(v.number()), // Timestamp of completion
-    provider: v.union(v.literal('google')), // e.g., 'google'
-    expiresAt: v.number(), // When this connect request expires (15 minutes from creation)
-    redirectUri: v.string(), // The OAuth redirect URI used for this connect request
+    sessionId: v.string(),
+    status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+    provider: v.union(v.literal('google')),
+    expiresAt: v.number(),
+    redirectUri: v.string(),
   }),
+
+  // ============================================================================
+  // APP-SPECIFIC TABLES (Goals application)
+  // ============================================================================
+
+  /**
+   * Domains for categorizing goals.
+   */
+  domains: defineTable({
+    userId: v.id('users'),
+    name: v.string(),
+    description: v.optional(v.string()),
+    color: v.optional(v.string()),
+  }).index('by_user', ['userId']),
+
+  /**
+   * Goals table - the core of the application.
+   * Supports quarterly, weekly, daily, and adhoc goals with hierarchical structure.
+   */
+  goals: defineTable({
+    // Partition
+    userId: v.id('users'),
+    year: v.number(),
+    quarter: v.number(),
+
+    // Data
+    title: v.string(),
+    details: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
+    domainId: v.optional(v.id('domains')),
+    parentId: v.optional(v.id('goals')),
+    inPath: v.string(),
+    depth: v.number(),
+    carryOver: v.optional(carryOverSchema),
+    isComplete: v.boolean(),
+    completedAt: v.optional(v.number()),
+
+    // Adhoc goal fields
+    adhoc: v.optional(
+      v.object({
+        weekNumber: v.number(),
+        dueDate: v.optional(v.number()),
+      })
+    ),
+  })
+    .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
+    .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
+    .index('by_user_and_adhoc_year_week', ['userId', 'year', 'adhoc.weekNumber'])
+    .index('by_user_and_domain', ['userId', 'domainId']),
+
+  /**
+   * Time series data for goal state snapshots by week.
+   */
+  goalStateByWeek: defineTable({
+    // Partition
+    userId: v.id('users'),
+    year: v.number(),
+    quarter: v.number(),
+
+    // Data
+    goalId: v.id('goals'),
+    weekNumber: v.number(),
+    isStarred: v.boolean(),
+    isPinned: v.boolean(),
+    daily: v.optional(
+      v.object({
+        dayOfWeek: v.union(
+          v.literal(DayOfWeek.MONDAY),
+          v.literal(DayOfWeek.TUESDAY),
+          v.literal(DayOfWeek.WEDNESDAY),
+          v.literal(DayOfWeek.THURSDAY),
+          v.literal(DayOfWeek.FRIDAY),
+          v.literal(DayOfWeek.SATURDAY),
+          v.literal(DayOfWeek.SUNDAY)
+        ),
+        dateTimestamp: v.optional(v.number()),
+      })
+    ),
+    carryOver: v.optional(carryOverSchema),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_year_and_quarter_and_week', ['userId', 'year', 'quarter', 'weekNumber'])
+    .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_user_and_goal_and_year_and_quarter_and_week', [
+      'userId',
+      'goalId',
+      'year',
+      'quarter',
+      'weekNumber',
+    ])
+    .index('by_user_and_year_and_quarter_and_week_and_daily', [
+      'userId',
+      'year',
+      'quarter',
+      'weekNumber',
+      'daily.dayOfWeek',
+      'goalId',
+    ]),
+
+  /**
+   * Sync sessions for data synchronization.
+   */
+  syncSessions: defineTable({
+    userId: v.id('users'),
+    passphrase: v.string(),
+    expiresAt: v.number(),
+    status: v.union(v.literal('active'), v.literal('consumed')),
+    durationMs: v.optional(v.number()),
+  }).index('by_passphrase', ['passphrase']),
+
+  /**
+   * Fire goals - priority/urgent goals.
+   */
+  fireGoals: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_goal', ['userId', 'goalId']),
+
+  /**
+   * Pending goals - goals awaiting action with descriptions.
+   */
+  pendingGoals: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    description: v.string(),
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_and_goal', ['userId', 'goalId']),
+
+  /**
+   * Adhoc goal states - completion status for adhoc goals by week.
+   */
+  adhocGoalStates: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    year: v.number(),
+    weekNumber: v.number(),
+    isComplete: v.boolean(),
+    completedAt: v.optional(v.number()),
+  })
+    .index('by_user_and_year_and_week', ['userId', 'year', 'weekNumber'])
+    .index('by_user_and_goal', ['userId', 'goalId']),
 });

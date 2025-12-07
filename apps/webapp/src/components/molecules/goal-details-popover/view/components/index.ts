@@ -1,0 +1,27 @@
+/**
+ * @fileoverview Composable components for building goal details popovers.
+ * These components can be mixed and matched to create different popover variants.
+ */
+
+export { AdhocSubGoalsList, type AdhocSubGoalsListProps } from './AdhocSubGoalsList';
+export { GoalActionMenuNew, type GoalActionMenuNewProps } from './GoalActionMenuNew';
+export { GoalChildrenSection, type GoalChildrenSectionProps } from './GoalChildrenSection';
+export { GoalCompletionDate, type GoalCompletionDateProps } from './GoalCompletionDate';
+export {
+  GoalDetailsChildrenList,
+  type GoalDetailsChildrenListProps,
+} from './GoalDetailsChildrenList';
+export { GoalDetailsContent, type GoalDetailsContentProps } from './GoalDetailsContent';
+export { GoalDetailsSection, type GoalDetailsSectionProps } from './GoalDetailsSection';
+export {
+  GoalDisplayProvider,
+  useGoalDisplayContext,
+  useGoalDisplayContextOptional,
+} from './GoalDisplayContext';
+export { GoalDomainDisplay, type GoalDomainDisplayProps } from './GoalDomainDisplay';
+export { GoalDueDateDisplay, type GoalDueDateDisplayProps } from './GoalDueDateDisplay';
+export { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
+export { GoalEditModal, type GoalEditModalProps } from './GoalEditModal';
+export { GoalHeader, type GoalHeaderProps } from './GoalHeader';
+export { GoalStatusIndicators, type GoalStatusIndicatorsProps } from './GoalStatusIndicators';
+export { MoveGoalToWeekModal, type MoveGoalToWeekModalProps } from './MoveGoalToWeekModal';

@@ -1,18 +1,22 @@
 {
-  "name": "next-convex-starter-app",
+  "name": "goals",
   "version": "1.0.0",
-  "description": "",
+  "description": "Goal tracking application with hierarchical goal management",
   "main": "index.js",
+  "license": "MIT",
+  "private": true,
   "scripts": {
-    "test": "nx run-many --target=test --projects=@workspace/webapp,@workspace/backend",
-    "test:watch": "nx run-many --target=test:watch --projects=@workspace/webapp,@workspace/backend",
-    "dev": "nx run @workspace/webapp:dev",
+    "test": "nx run-many --target=test --projects=@apps/webapp,@services/backend",
+    "test:watch": "nx run-many --target=test:watch --projects=@apps/webapp,@services/backend",
+    "dev": "nx run @apps/webapp:dev",
     "setup": "node scripts/setup.js",
+    "build": "nx run-many --target=build --all --parallel --outputStyle=dynamic",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format .",
     "format:fix": "biome format --write .",
-    "typecheck": "nx run-many --target=typecheck --projects=@workspace/webapp,@workspace/backend",
+    "typecheck": "nx run-many --target=typecheck --projects=@apps/webapp,@services/backend",
+    "clean": "find . -name 'node_modules' -type d -prune -exec trash {} +",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -21,9 +25,12 @@
       "biome check --write --no-errors-on-unmatched"
     ]
   },
-  "keywords": [],
+  "keywords": [
+    "goals",
+    "tracking",
+    "productivity"
+  ],
   "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "2.1.2",
     "@nx/workspace": "22.1.2",
@@ -31,9 +38,10 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.5.0",
     "nx": "22.1.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-tooltip": "^1.1.8"
   },
   "pnpm": {
