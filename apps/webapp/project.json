@@ -22,7 +22,7 @@
       "continuous": true,
       "dependsOn": [
         {
-          "projects": ["@workspace/backend"],
+          "projects": ["@services/backend"],
           "target": "dev"
         }
       ]

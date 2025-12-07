@@ -163,6 +163,8 @@ export default defineSchema({
         email: v.string(),
         name: v.string(),
         displayName: v.string(),
+        recoveryCode: v.optional(v.string()),
+        accessLevel: v.optional(v.union(v.literal('user'), v.literal('system_admin'))),
       })
     )
   )

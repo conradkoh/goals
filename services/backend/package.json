@@ -1,5 +1,5 @@
 {
-  "name": "@services/backend",
+  "name": "@workspace/backend",
   "version": "1.0.0",
   "description": "Convex backend for Goals application",
   "main": "index.js",
