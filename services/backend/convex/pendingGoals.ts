@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { mutation, query } from './_generated/server';
 
@@ -7,7 +8,7 @@ import { mutation, query } from './_generated/server';
  */
 export const setPendingStatus = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     description: v.string(),
   },
@@ -67,7 +68,7 @@ export const setPendingStatus = mutation({
  */
 export const clearPendingStatus = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
   },
   handler: async (ctx, args) => {
@@ -123,7 +124,7 @@ export const clearPendingStatus = mutation({
  */
 export const getPendingGoals = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args) => {
     const { sessionId } = args;

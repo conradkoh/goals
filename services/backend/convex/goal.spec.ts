@@ -1,3 +1,4 @@
+import type { SessionId } from 'convex-helpers/server/sessions';
 import { describe, expect, test } from 'vitest';
 import { DayOfWeek } from '../src/constants';
 import type { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
@@ -5,6 +6,16 @@ import { convexTest } from '../src/util/test';
 import { api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import schema from './schema';
+
+/**
+ * Helper to create a test session using the template's loginAnon pattern.
+ * Generates a UUID sessionId and calls loginAnon to create the session.
+ */
+const createTestSession = async (ctx: ReturnType<typeof convexTest>): Promise<SessionId> => {
+  const sessionId = crypto.randomUUID() as SessionId;
+  await ctx.mutation(api.auth.loginAnon, { sessionId });
+  return sessionId;
+};
 
 // Define the test context type based on the return value of convexTest
 type TestCtx = ReturnType<typeof convexTest>;
@@ -19,7 +30,7 @@ enum GoalDepth {
 // Helper to create a mock goal based on depth
 const createMockGoal = async (
   ctx: TestCtx,
-  sessionId: Id<'sessions'>,
+  sessionId: SessionId,
   depth: GoalDepth,
   parentId?: Id<'goals'>,
   _isComplete = false
@@ -59,7 +70,7 @@ const createMockGoal = async (
 describe('moveGoalsFromWeek', () => {
   test('basic move with starred and pinned states', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create test data
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -165,7 +176,7 @@ describe('moveGoalsFromWeek', () => {
 
   test('pinned/starred state precedence', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Test Case 1: Moving a pinned quarterly goal
     const pinnedQuarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -262,7 +273,7 @@ describe('moveGoalsFromWeek', () => {
 
   test('fire goal status is preserved during carry-over', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create test data
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -321,7 +332,7 @@ describe('moveGoalsFromWeek', () => {
 describe('moveGoalsFromDay', () => {
   test('moving incomplete daily goals from one day to another', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create test data
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -421,7 +432,7 @@ describe('moveGoalsFromDay', () => {
 
   test('moving daily goals to a different week', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create test data
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -472,7 +483,7 @@ describe('moveGoalsFromDay', () => {
 
   test('move all goals including completed ones', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create test data
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -551,7 +562,7 @@ describe('moveGoalsFromDay', () => {
 describe('deleteGoal', () => {
   test('should delete a goal and its children', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create two quarterly goals
     const quarterlyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -604,7 +615,7 @@ describe('deleteGoal', () => {
 
   test('should handle sibling paths correctly', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a quarterly goal
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -684,7 +695,7 @@ describe('deleteGoal', () => {
 
   test('should handle path comparison with similar prefixes', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create two quarterly goals (both with inPath = "/")
     const quarterlyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -780,7 +791,7 @@ describe('deleteGoal', () => {
 
   test('should handle deep hierarchies correctly', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a deep hierarchy of goals
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -849,7 +860,7 @@ describe('deleteGoal', () => {
 
   test('should not delete goals with similar IDs but different paths', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create two separate hierarchies
     // First hierarchy
@@ -928,8 +939,8 @@ describe('deleteGoal', () => {
     const ctx = convexTest(schema);
 
     // Create two different user sessions
-    const sessionId1 = await ctx.mutation(api.auth.useAnonymousSession, {});
-    const sessionId2 = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId1 = await createTestSession(ctx);
+    const sessionId2 = await createTestSession(ctx);
 
     // Create goals for user 1
     const user1QuarterlyGoalId = await createMockGoal(ctx, sessionId1, GoalDepth.Quarterly);
@@ -1003,7 +1014,7 @@ describe('deleteGoal', () => {
 
   test('should not delete goals from different quarters or years', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a goal in quarter 1
     const quarter1GoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
@@ -1059,7 +1070,7 @@ describe('deleteGoal', () => {
 
   test('should handle non-existent goals gracefully', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a real goal first
     const goalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
@@ -1081,7 +1092,7 @@ describe('deleteGoal', () => {
 
   test('dryRun should return a preview of goals to be deleted', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a quarterly goal
     const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);

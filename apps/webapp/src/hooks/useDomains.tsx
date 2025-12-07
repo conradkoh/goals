@@ -1,9 +1,10 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
+import type { SessionId } from 'convex-helpers/server/sessions';
 import { useState } from 'react';
 
-export function useDomains(sessionId: Id<'sessions'>) {
+export function useDomains(sessionId: SessionId) {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -76,7 +77,7 @@ export function useDomains(sessionId: Id<'sessions'>) {
   };
 }
 
-export function useDomain(sessionId: Id<'sessions'>, domainId: Id<'domains'>) {
+export function useDomain(sessionId: SessionId, domainId: Id<'domains'>) {
   const domain = useQuery(api.domain.getDomain, { sessionId, domainId });
 
   return {

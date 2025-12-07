@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DateTime } from 'luxon';
 import { DayOfWeek, getDayName } from '../src/constants';
 import {
@@ -19,7 +20,7 @@ import { action, internalMutation, internalQuery, mutation, query } from './_gen
 
 export const moveGoalsFromWeek = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     from: v.object({
       year: v.number(),
       quarter: v.number(),
@@ -61,7 +62,7 @@ export const moveGoalsFromWeek = mutation({
 
 export const moveGoalsFromLastNonEmptyWeek = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     to: v.object({
       year: v.number(),
       quarter: v.number(),
@@ -134,7 +135,7 @@ export type WeekOption = {
  */
 export const getAvailableWeeks = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     currentWeek: v.object({
       year: v.number(),
       quarter: v.number(),
@@ -171,7 +172,7 @@ export const getAvailableWeeks = query({
 
 export const moveGoalsFromDay = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     from: v.object({
       year: v.number(),
       quarter: v.number(),
@@ -376,7 +377,7 @@ export const getAllChildGoals = internalQuery({
 
 export const deleteGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     dryRun: v.optional(v.boolean()),
   },
@@ -619,7 +620,7 @@ type MoveQuarterlyGoalResult = {
 // Replace the existing moveGoalsFromQuarter mutation with an action
 export const moveGoalsFromQuarter = action({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     from: v.object({
       year: v.number(),
       quarter: v.number(),
@@ -635,7 +636,15 @@ export const moveGoalsFromQuarter = action({
   handler: async (ctx, args): Promise<any> => {
     const { sessionId, from, to, dryRun = false, debug = false } = args;
     // Auth check
-    const user = await ctx.runQuery(api.auth.getUser, { sessionId });
+    // Auth check - look up session by sessionId field
+    const session = await ctx.runQuery(internal.goal.getSessionBySessionId, { sessionId });
+    if (!session) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'Session not found',
+      });
+    }
+    const user = await ctx.runQuery(internal.goal.getUserById, { userId: session.userId });
     if (!user) {
       throw new ConvexError({
         code: 'UNAUTHORIZED',
@@ -946,7 +955,7 @@ export const moveAdhocGoalsToQuarter = internalMutation({
 // Add a mutation to move a single quarterly goal to a different quarter
 export const moveQuarterlyGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     from: v.object({
       year: v.number(),
@@ -1294,7 +1303,7 @@ export type MoveWeeklyGoalResult = {
  */
 export const moveWeeklyGoalToWeek = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     currentWeek: v.object({
       year: v.number(),
@@ -1571,5 +1580,32 @@ export const moveWeeklyGoalToWeek = mutation({
         weekNumber: targetWeekNumber,
       },
     };
+  },
+});
+
+// ============================================================================
+// INTERNAL QUERIES (for actions that need to look up data)
+// ============================================================================
+
+/**
+ * Internal query to look up a session by its sessionId string field.
+ */
+export const getSessionBySessionId = internalQuery({
+  args: { sessionId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('sessions')
+      .withIndex('by_sessionId', (q) => q.eq('sessionId', args.sessionId))
+      .first();
+  },
+});
+
+/**
+ * Internal query to look up a user by ID.
+ */
+export const getUserById = internalQuery({
+  args: { userId: v.id('users') },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.userId);
   },
 });

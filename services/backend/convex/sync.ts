@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { mutation, query } from './_generated/server';
 
@@ -114,7 +115,7 @@ function normalizePassphrase(passphrase: string): string {
  */
 export const createSyncSession = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args) => {
     const user = await requireLogin(ctx, args.sessionId);
@@ -122,10 +123,16 @@ export const createSyncSession = mutation({
       throw new Error('Not authenticated');
     }
 
-    // Update session's lastActiveAt
-    await ctx.db.patch(args.sessionId, {
-      lastActiveAt: Date.now(),
-    });
+    // Update session's lastActiveAt - look up by sessionId field first
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_sessionId', (q) => q.eq('sessionId', args.sessionId))
+      .first();
+    if (session) {
+      await ctx.db.patch(session._id, {
+        lastActiveAt: Date.now(),
+      });
+    }
 
     // Delete any existing sync sessions for this user
     const existingSessions = await ctx.db
@@ -153,7 +160,7 @@ export const createSyncSession = mutation({
  */
 export const getCurrentSyncSession = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args) => {
     const user = await requireLogin(ctx, args.sessionId);

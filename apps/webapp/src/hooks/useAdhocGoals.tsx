@@ -7,6 +7,7 @@ import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation, useQuery } from 'convex/react';
+import type { SessionId } from 'convex-helpers/server/sessions';
 import { useState } from 'react';
 
 /**
@@ -21,7 +22,7 @@ import { useState } from 'react';
  * await createAdhocGoal("New task", undefined, undefined, 2024, 48);
  * ```
  */
-export function useAdhocGoals(sessionId: Id<'sessions'>) {
+export function useAdhocGoals(sessionId: SessionId) {
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -189,7 +190,7 @@ export function useAdhocGoals(sessionId: Id<'sessions'>) {
  * @param weekNumber - ISO week number
  * @returns Object containing hierarchical adhoc goals and loading state
  */
-export function useAdhocGoalsForWeek(sessionId: Id<'sessions'>, year: number, weekNumber: number) {
+export function useAdhocGoalsForWeek(sessionId: SessionId, year: number, weekNumber: number) {
   const adhocGoals =
     useQuery(api.adhocGoal.getAdhocGoalsForWeek, {
       sessionId,
@@ -213,7 +214,7 @@ export function useAdhocGoalsForWeek(sessionId: Id<'sessions'>, year: number, we
  * @returns Object containing adhoc goals and loading state
  */
 export function useAdhocGoalsForDay(
-  sessionId: Id<'sessions'>,
+  sessionId: SessionId,
   year: number,
   weekNumber: number,
   dayOfWeek: DayOfWeek

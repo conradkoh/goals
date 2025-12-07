@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DateTime } from 'luxon';
 import { DayOfWeek } from '../src/constants';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
@@ -11,7 +12,7 @@ import { mutation, query } from './_generated/server';
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     quarter: v.number(),
     year: v.number(),
   },
@@ -51,7 +52,7 @@ export const getQuarterOverview = query({
 
 export const createQuarterlyGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
     title: v.string(),
@@ -137,7 +138,7 @@ export const createQuarterlyGoal = mutation({
 
 export const updateQuarterlyGoalStatus = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
     weekNumber: v.number(),
@@ -175,7 +176,7 @@ export const updateQuarterlyGoalStatus = mutation({
 
 export const updateQuarterlyGoalTitle = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     title: v.string(),
     details: v.optional(v.string()),
@@ -233,7 +234,7 @@ export const updateQuarterlyGoalTitle = mutation({
 
 export const updateGoalTitle = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     title: v.string(),
     details: v.optional(v.string()),
@@ -282,7 +283,7 @@ export const updateGoalTitle = mutation({
 
 export const createWeeklyGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     title: v.string(),
     details: v.optional(v.string()),
     dueDate: v.optional(v.number()),
@@ -358,7 +359,7 @@ export const createWeeklyGoal = mutation({
 
 export const createDailyGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     title: v.string(),
     details: v.optional(v.string()),
     dueDate: v.optional(v.number()),
@@ -385,11 +386,8 @@ export const createDailyGoal = mutation({
       weekNumber: args.weekNumber,
       dayOfWeek: args.dayOfWeek,
     });
-    const session = await ctx.db.get(args.sessionId);
-    if (!session) {
-      throw new Error('Session not found');
-    }
-    const { userId } = session;
+    const user = await requireLogin(ctx, args.sessionId);
+    const userId = user._id;
 
     // Get the weekly parent goal
     const weeklyParent = await ctx.db.get(args.parentId);
@@ -460,7 +458,7 @@ export const createDailyGoal = mutation({
 
 export const toggleGoalCompletion = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     weekNumber: v.number(),
     isComplete: v.boolean(),
@@ -564,7 +562,7 @@ export const toggleGoalCompletion = mutation({
 
 export const updateDailyGoalDay = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     weekNumber: v.number(),
     newDayOfWeek: v.union(
@@ -631,7 +629,7 @@ export const updateDailyGoalDay = mutation({
 
 export const useDailyGoal = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     weekNumber: v.number(),
     dayOfWeek: v.union(
@@ -685,7 +683,7 @@ export const useDailyGoal = query({
 // Get details for a specific week
 export const getWeek = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
     weekNumber: v.number(),
@@ -728,7 +726,7 @@ export const getWeek = query({
 // Get comprehensive quarterly goal summary with all weekly and daily goals
 export const getQuarterlyGoalSummary = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     quarterlyGoalId: v.id('goals'),
     year: v.number(),
     quarter: v.number(),
@@ -823,7 +821,7 @@ export const getQuarterlyGoalSummary = query({
 // Get all quarterly goals for a specific quarter (for selection UI)
 export const getAllQuarterlyGoalsForQuarter = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
   },
@@ -874,7 +872,7 @@ export const getAllQuarterlyGoalsForQuarter = query({
 // Get comprehensive summary for the quarter, including selected quarterly goals and optionally adhoc goals
 export const getQuarterSummary = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
     selectedQuarterlyGoalIds: v.optional(v.array(v.id('goals'))),
@@ -1056,7 +1054,7 @@ const mapWeeklyGoal = (weeklyGoal: WeeklyGoalTreeNode, weekNumber: number, year:
 // Get adhoc goal counts per domain for a specific quarter (for selection UI)
 export const getAdhocGoalCountsByDomainForQuarter = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     quarter: v.number(),
   },

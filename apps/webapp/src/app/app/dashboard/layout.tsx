@@ -26,7 +26,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 const Header = () => {
   const { sessionId } = useSession();
-  const user = useQuery(api.auth.getUser, { sessionId });
+  // Use getState (template pattern) and extract user from auth state
+  const authState = useQuery(api.auth.getState, { sessionId });
+  const user = authState?.state === 'authenticated' ? authState.user : undefined;
 
   return (
     <header className="border-b shadow-sm">

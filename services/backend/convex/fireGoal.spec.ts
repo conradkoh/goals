@@ -1,12 +1,22 @@
+import type { SessionId } from 'convex-helpers/server/sessions';
 import { describe, expect, test } from 'vitest';
 import { convexTest } from '../src/util/test';
 import { api } from './_generated/api';
 import schema from './schema';
 
+/**
+ * Helper to create a test session using the template's loginAnon pattern.
+ */
+const createTestSession = async (ctx: ReturnType<typeof convexTest>): Promise<SessionId> => {
+  const sessionId = crypto.randomUUID() as SessionId;
+  await ctx.mutation(api.auth.loginAnon, { sessionId });
+  return sessionId;
+};
+
 describe('fireGoal', () => {
   test('should toggle fire status correctly', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a test goal
     const goalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
@@ -53,7 +63,7 @@ describe('fireGoal', () => {
 
   test('should not allow toggling fire status of non-existent goals', async () => {
     const ctx = convexTest(schema);
-    const sessionId = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId = await createTestSession(ctx);
 
     // Create a goal and then delete it
     const goalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
@@ -76,8 +86,8 @@ describe('fireGoal', () => {
 
   test('should not allow toggling fire status of other users goals', async () => {
     const ctx = convexTest(schema);
-    const sessionId1 = await ctx.mutation(api.auth.useAnonymousSession, {});
-    const sessionId2 = await ctx.mutation(api.auth.useAnonymousSession, {});
+    const sessionId1 = await createTestSession(ctx);
+    const sessionId2 = await createTestSession(ctx);
 
     // Create a goal for user 1
     const goalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {

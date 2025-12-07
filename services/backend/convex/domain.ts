@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { requireLogin } from '../src/usecase/requireLogin';
 import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
@@ -22,7 +23,7 @@ import { mutation, query } from './_generated/server';
  */
 export const createDomain = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     name: v.string(),
     description: v.optional(v.string()),
     color: v.optional(v.string()),
@@ -74,7 +75,7 @@ export const createDomain = mutation({
  */
 export const updateDomain = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     domainId: v.id('domains'),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
@@ -143,7 +144,7 @@ export const updateDomain = mutation({
  */
 export const deleteDomain = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     domainId: v.id('domains'),
   },
   handler: async (ctx, args): Promise<void> => {
@@ -198,7 +199,7 @@ export const deleteDomain = mutation({
  */
 export const getDomains = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args): Promise<Doc<'domains'>[]> => {
     const { sessionId } = args;
@@ -229,7 +230,7 @@ export const getDomains = query({
  */
 export const getDomain = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     domainId: v.id('domains'),
   },
   handler: async (ctx, args): Promise<Doc<'domains'> | null> => {

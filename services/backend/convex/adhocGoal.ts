@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DayOfWeek } from '../src/constants';
 import { requireLogin } from '../src/usecase/requireLogin';
 import type { Doc, Id } from './_generated/dataModel';
@@ -103,7 +104,7 @@ function buildAdhocGoalHierarchy(
  */
 export const createAdhocGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     title: v.string(),
     details: v.optional(v.string()),
     domainId: v.optional(v.id('domains')),
@@ -236,7 +237,7 @@ export const createAdhocGoal = mutation({
  */
 export const updateAdhocGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
     title: v.optional(v.string()),
     details: v.optional(v.string()),
@@ -402,7 +403,7 @@ export const updateAdhocGoal = mutation({
  */
 export const deleteAdhocGoal = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
   },
   handler: async (ctx, args): Promise<void> => {
@@ -447,7 +448,7 @@ export const deleteAdhocGoal = mutation({
  */
 export const getAdhocGoalsForWeek = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     weekNumber: v.number(),
   },
@@ -493,7 +494,7 @@ export const getAdhocGoalsForWeek = query({
  */
 export const getAdhocGoalsForWeekFlat = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     weekNumber: v.number(),
   },
@@ -539,7 +540,7 @@ export const getAdhocGoalsForWeekFlat = query({
  */
 export const getAdhocGoalsForDay = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     year: v.number(),
     weekNumber: v.number(),
     dayOfWeek: v.union(
@@ -597,7 +598,7 @@ export const getAdhocGoalsForDay = query({
  */
 export const getAllAdhocGoals = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
     const { sessionId } = args;
@@ -643,7 +644,7 @@ export const getAllAdhocGoals = query({
  */
 export const getAdhocGoalsByDomain = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     domainId: v.union(v.id('domains'), v.null()),
   },
   handler: async (ctx, args): Promise<(Doc<'goals'> & { domain?: Doc<'domains'> })[]> => {
@@ -717,7 +718,7 @@ export const getAdhocGoalsByDomain = query({
  */
 export const moveAdhocGoalsFromWeek = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     from: v.object({
       year: v.number(),
       weekNumber: v.number(),
@@ -831,7 +832,7 @@ export const moveAdhocGoalsFromWeek = mutation({
  */
 export const moveAdhocGoalsFromDay = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     from: v.object({
       year: v.number(),
       weekNumber: v.number(),

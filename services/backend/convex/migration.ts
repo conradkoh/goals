@@ -512,7 +512,6 @@ export const removeAnonymousUserDisplayName = internalMutation({
     let updatedCount = 0;
     for (const user of usersToUpdate) {
       await ctx.db.patch(user._id, {
-        // @ts-expect-error - displayName is being removed from schema
         displayName: undefined,
       });
       updatedCount++;

@@ -1,4 +1,5 @@
 import { ConvexError, v } from 'convex/values';
+import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { mutation, query } from './_generated/server';
 
@@ -7,7 +8,7 @@ import { mutation, query } from './_generated/server';
  */
 export const toggleFireStatus = mutation({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
     goalId: v.id('goals'),
   },
   handler: async (ctx, args) => {
@@ -52,7 +53,7 @@ export const toggleFireStatus = mutation({
  */
 export const getFireGoals = query({
   args: {
-    sessionId: v.id('sessions'),
+    ...SessionIdArg,
   },
   handler: async (ctx, args) => {
     const { sessionId } = args;
