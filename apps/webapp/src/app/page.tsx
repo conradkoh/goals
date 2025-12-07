@@ -42,7 +42,7 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/app/dashboard"
+            href="/app"
             className="inline-flex items-center justify-center gap-2 px-8 py-3 text-base font-medium text-white bg-blue-600 rounded-full hover:bg-blue-700 transition-colors"
           >
             Try Dashboard

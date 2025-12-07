@@ -58,12 +58,12 @@ function QuarterlySummaryContent() {
     if (window.history.length > 1) {
       router.back();
     } else {
-      router.push('/app/dashboard');
+      router.push('/app');
     }
   }, [router]);
 
   const handleGoHome = React.useCallback(() => {
-    router.push('/app/dashboard');
+    router.push('/app');
   }, [router]);
 
   const handleYearChange = React.useCallback(

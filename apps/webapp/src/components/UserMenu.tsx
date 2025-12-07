@@ -145,7 +145,7 @@ function _renderUserDropdownMenu(
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link href="/app/dashboard">
+        <Link href="/app">
           <DropdownMenuItem className="cursor-pointer gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Dashboard

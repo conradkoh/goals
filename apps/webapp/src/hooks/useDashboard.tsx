@@ -161,7 +161,7 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         newParams.set('focusMode', params.focusMode.toString());
       }
 
-      router.push(`/app/dashboard?${newParams.toString()}`);
+      router.push(`/app?${newParams.toString()}`);
     },
     [router, searchParams]
   );

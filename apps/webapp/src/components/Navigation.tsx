@@ -28,7 +28,7 @@ export function Navigation() {
       <div className="flex h-16 items-center px-4 sm:px-6">
         <div className="mr-6 flex">
           <Link
-            href={authStatus.isAuthenticated ? '/app/dashboard' : '/'}
+            href={authStatus.isAuthenticated ? '/app' : '/'}
             className="flex items-center whitespace-nowrap"
           >
             <span className="font-bold text-lg">Goals</span>
