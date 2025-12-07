@@ -111,6 +111,7 @@ export function ThemeProvider({ children, targetSelector }: ThemeProviderProps) 
 
       {mounted ? (
         <ThemeContext.Provider value={{ theme, setTheme }}>
+          {/* @ts-expect-error - next-themes ThemeProvider types are not correctly recognized */}
           <NextThemesProvider
             attribute={attribute}
             defaultTheme="system"
