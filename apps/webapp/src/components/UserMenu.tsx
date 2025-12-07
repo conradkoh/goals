@@ -2,7 +2,7 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation } from 'convex-helpers/react/sessions';
-import { BookOpen, Settings, User } from 'lucide-react';
+import { BookOpen, LayoutDashboard, LogOut, Settings, User, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -131,24 +131,35 @@ function _renderUserDropdownMenu(
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{authState.user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {authState.user.type === 'anonymous' ? 'Anonymous User' : authState.user.email}
-            </p>
+        <DropdownMenuLabel className="font-normal px-2 py-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+              <User className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{authState.user.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {authState.user.type === 'anonymous' ? 'Anonymous User' : authState.user.email}
+              </span>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link href="/app/dashboard">
-          <DropdownMenuItem className="cursor-pointer">Dashboard</DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer gap-2">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </DropdownMenuItem>
         </Link>
         <Link href="/app/profile">
-          <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer gap-2">
+            <UserCircle className="h-4 w-4" />
+            Profile
+          </DropdownMenuItem>
         </Link>
         <Link href="/docs">
-          <DropdownMenuItem className="cursor-pointer">
-            <BookOpen className="h-4 w-4 mr-2" />
+          <DropdownMenuItem className="cursor-pointer gap-2">
+            <BookOpen className="h-4 w-4" />
             Documentation
           </DropdownMenuItem>
         </Link>
@@ -157,8 +168,8 @@ function _renderUserDropdownMenu(
           <>
             <DropdownMenuSeparator />
             <Link href="/app/admin">
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="h-4 w-4 mr-2" />
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <Settings className="h-4 w-4" />
                 System Admin
               </DropdownMenuItem>
             </Link>
@@ -166,10 +177,11 @@ function _renderUserDropdownMenu(
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+          className="cursor-pointer gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
           onClick={showLogoutConfirmation}
           disabled={isLoggingOut}
         >
+          <LogOut className="h-4 w-4" />
           {isLoggingOut ? 'Logging out...' : 'Log out'}
         </DropdownMenuItem>
       </DropdownMenuContent>
