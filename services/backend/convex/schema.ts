@@ -150,10 +150,11 @@ export default defineSchema({
           })
         ),
       }),
-      // Template anonymous user type
+      // Template anonymous user type (supports both name and displayName for backward compatibility)
       v.object({
         type: v.literal('anonymous'),
-        name: v.string(),
+        name: v.optional(v.string()),
+        displayName: v.optional(v.string()),
         recoveryCode: v.optional(v.string()),
         accessLevel: v.optional(v.union(v.literal('user'), v.literal('system_admin'))),
       }),

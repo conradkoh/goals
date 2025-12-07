@@ -376,7 +376,9 @@ function _renderDisplayView(
       <div className="flex items-center space-x-3">
         {_renderUserAvatar(user)}
         <div className="flex-1">
-          <p className="font-medium">{user.name}</p>
+          <p className="font-medium">
+            {user.name || (user as { displayName?: string }).displayName || 'Anonymous'}
+          </p>
           {_renderUserTypeInfo(
             user,
             showDisconnectConfirmation,
@@ -396,7 +398,12 @@ function _renderDisplayView(
 /**
  * Renders the user avatar if available (from any linked account).
  */
-function _renderUserAvatar(user: { type: string; google?: { picture?: string }; name: string }) {
+function _renderUserAvatar(user: {
+  type: string;
+  google?: { picture?: string };
+  name?: string;
+  displayName?: string;
+}) {
   // Check for profile picture from any linked account
   const profilePicture = user.type === 'full' ? user.google?.picture : undefined;
 
