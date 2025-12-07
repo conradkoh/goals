@@ -2,11 +2,12 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation } from 'convex-helpers/react/sessions';
-import { Settings } from 'lucide-react';
+import { BookOpen, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -123,27 +124,45 @@ function _renderUserDropdownMenu(
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative flex items-center text-sm font-medium focus:outline-none text-muted-foreground hover:text-foreground"
+          size="icon"
+          className="relative flex items-center focus:outline-none text-muted-foreground hover:text-foreground"
         >
-          {authState.user.name}
+          <User className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{authState.user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {authState.user.type === 'anonymous' ? 'Anonymous User' : authState.user.email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <Link href="/app/dashboard">
+          <DropdownMenuItem className="cursor-pointer">Dashboard</DropdownMenuItem>
+        </Link>
         <Link href="/app/profile">
           <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
         </Link>
-        <Link href="/app">
-          <DropdownMenuItem className="cursor-pointer">Dashboard</DropdownMenuItem>
+        <Link href="/docs">
+          <DropdownMenuItem className="cursor-pointer">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Documentation
+          </DropdownMenuItem>
         </Link>
+        <SyncPassphrase />
         {isSystemAdmin && (
-          <Link href="/app/admin">
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="h-4 w-4" />
-              System Admin
-            </DropdownMenuItem>
-          </Link>
+          <>
+            <DropdownMenuSeparator />
+            <Link href="/app/admin">
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                System Admin
+              </DropdownMenuItem>
+            </Link>
+          </>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
