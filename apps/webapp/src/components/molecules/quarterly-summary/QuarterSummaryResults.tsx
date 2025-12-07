@@ -1,4 +1,4 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { AlertCircle, BarChart3 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';

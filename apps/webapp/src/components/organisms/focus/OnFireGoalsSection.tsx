@@ -1,5 +1,5 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Eye, Flame, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { DomainPill } from '@/components/atoms/DomainPill';

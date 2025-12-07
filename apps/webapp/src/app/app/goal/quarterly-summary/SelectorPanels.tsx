@@ -1,6 +1,6 @@
 'use client';
 
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } from 'lucide-react';
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';

@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback } from 'react';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';

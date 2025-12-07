@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { ClipboardList } from 'lucide-react';
 import { useState } from 'react';

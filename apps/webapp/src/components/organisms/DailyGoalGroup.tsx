@@ -1,4 +1,4 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';

@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';

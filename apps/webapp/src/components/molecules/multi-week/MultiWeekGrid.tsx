@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 // Layout Constants
 const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1024;
-const _DESKTOP_BREAKPOINT = 1280;
 const DEFAULT_CARD_WIDTH = 320;
 const JUMP_BUTTON_OFFSET = {
   TOP: 16, // tailwind top-4

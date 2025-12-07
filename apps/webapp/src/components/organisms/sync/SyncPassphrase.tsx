@@ -1,4 +1,4 @@
-import { api } from '@services/backend/convex/_generated/api';
+import { api } from '@workspace/backend/convex/_generated/api';
 import { useMutation, useQuery } from 'convex/react';
 import { Check, Copy, Laptop } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

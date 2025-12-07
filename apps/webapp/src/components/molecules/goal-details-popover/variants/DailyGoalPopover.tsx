@@ -1,4 +1,4 @@
-import type { Doc } from '@services/backend/convex/_generated/dataModel';
+import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { useGoalContext } from '@/contexts/GoalContext';

@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Clock, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';

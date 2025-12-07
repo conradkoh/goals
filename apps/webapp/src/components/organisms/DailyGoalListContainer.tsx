@@ -1,4 +1,4 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';

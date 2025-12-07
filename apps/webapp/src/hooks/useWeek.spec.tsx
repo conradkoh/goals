@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 
 // Mock for Vitest functionality
 const describe = (_name: string, fn: () => void) => fn();

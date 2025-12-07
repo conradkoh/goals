@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { Clock } from 'lucide-react';
 import type React from 'react';
 import { PendingStatusDialog } from '@/components/atoms/PendingStatusDialog';

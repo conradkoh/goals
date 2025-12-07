@@ -1,6 +1,6 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Doc } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useMutation, useQuery } from 'convex/react';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from '@/components/ui/use-toast';

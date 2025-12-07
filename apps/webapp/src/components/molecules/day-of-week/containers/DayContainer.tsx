@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
@@ -58,14 +58,16 @@ const WeeklyGoalSection = ({
   mode,
   sortDailyGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
   onUpdateGoal,
-  // biome-ignore lint/correctness/noUnusedFunctionParameters: Kept for compatibility, children use context
   onDelete,
   onCreateDailyGoal,
-  // biome-ignore lint/correctness/noUnusedFunctionParameters: future enhancement will use this callback
   onCreateWeeklyGoal,
-  // biome-ignore lint/correctness/noUnusedFunctionParameters: passed for optimistic UI state management
   isCreating,
 }: WeeklyGoalSectionProps) => {
+  // Suppress unused parameter warnings - kept for API compatibility
+  void onDelete;
+  void onCreateWeeklyGoal;
+  void isCreating;
+
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
 
@@ -78,7 +80,7 @@ const WeeklyGoalSection = ({
   );
 
   // Handle creating a new daily goal
-  const _handleCreateGoal = useCallback(async () => {
+  const handleCreateGoal = useCallback(async () => {
     if (newTaskTitle.trim() === '') return;
     setIsAddingTask(true);
     try {
@@ -90,6 +92,8 @@ const WeeklyGoalSection = ({
       setIsAddingTask(false);
     }
   }, [weeklyGoal._id, newTaskTitle, onCreateDailyGoal]);
+  // Ensure handleCreateGoal is available for potential use
+  void handleCreateGoal;
 
   // Filter daily goals for this day of week
   const dailyGoals = weeklyGoal.children.filter(

@@ -1,6 +1,6 @@
 'use client';
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
 import { createContext, useEffect, useState } from 'react';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';

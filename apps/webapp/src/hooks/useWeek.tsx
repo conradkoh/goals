@@ -1,10 +1,10 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { DayOfWeek } from '@services/backend/src/constants';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import type {
   GoalWithDetailsAndChildren,
   WeekGoalsTree,
-} from '@services/backend/src/usecase/getWeekDetails';
+} from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import { useSession } from '@/modules/auth/useSession';

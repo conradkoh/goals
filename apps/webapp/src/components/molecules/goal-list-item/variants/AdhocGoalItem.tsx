@@ -1,5 +1,5 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
-import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { format } from 'date-fns';
 import { Calendar, Edit2, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';

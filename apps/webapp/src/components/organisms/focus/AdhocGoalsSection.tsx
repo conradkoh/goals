@@ -1,4 +1,4 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { ClipboardList, Info } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';

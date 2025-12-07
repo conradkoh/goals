@@ -219,7 +219,7 @@ describe('moveGoalsFromWeek', () => {
     });
 
     // Move goals from week 1 to week 2
-    const _moveResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
+    await ctx.mutation(api.goal.moveGoalsFromWeek, {
       sessionId,
       from: { year: 2024, quarter: 1, weekNumber: 1 },
       to: { year: 2024, quarter: 1, weekNumber: 2 },
@@ -934,22 +934,12 @@ describe('deleteGoal', () => {
     // Create goals for user 1
     const user1QuarterlyGoalId = await createMockGoal(ctx, sessionId1, GoalDepth.Quarterly);
 
-    const _user1WeeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId1,
-      GoalDepth.Weekly,
-      user1QuarterlyGoalId
-    );
+    await createMockGoal(ctx, sessionId1, GoalDepth.Weekly, user1QuarterlyGoalId);
 
     // Create goals for user 2
     const user2QuarterlyGoalId = await createMockGoal(ctx, sessionId2, GoalDepth.Quarterly);
 
-    const _user2WeeklyGoalId = await createMockGoal(
-      ctx,
-      sessionId2,
-      GoalDepth.Weekly,
-      user2QuarterlyGoalId
-    );
+    await createMockGoal(ctx, sessionId2, GoalDepth.Weekly, user2QuarterlyGoalId);
 
     // User 2 tries to delete user 1's goal (should fail with unauthorized)
     await expect(
@@ -1100,9 +1090,8 @@ describe('deleteGoal', () => {
     const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
 
     // Create daily goals under the weekly goal
-    const _dailyGoalId1 = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
-
-    const _dailyGoalId2 = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
+    await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
+    await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
 
     // Test deleting the weekly goal with dryRun
     const result = (await ctx.mutation(api.goal.deleteGoal, {
@@ -1130,7 +1119,7 @@ describe('deleteGoal', () => {
     expect(weeklyGoalPreview.children).toHaveLength(2);
 
     // Now test actual deletion
-    const _deleteResult = await ctx.mutation(api.goal.deleteGoal, {
+    await ctx.mutation(api.goal.deleteGoal, {
       sessionId,
       goalId: weeklyGoalId,
     });

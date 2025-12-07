@@ -749,3 +749,75 @@ function _generateAnonUsername(): string {
 
   return `${randomAdjective}${randomNoun}${randomNumber}`;
 }
+
+// ============================================================================
+// BACKWARD COMPATIBILITY FUNCTIONS (for app migration)
+// ============================================================================
+
+/**
+ * Creates an anonymous session and returns the session ID.
+ * This is a backward-compatible function for the app's existing code that expects
+ * to receive a session ID directly from the mutation.
+ *
+ * @deprecated Use loginAnon with a client-provided sessionId for new code.
+ */
+export const useAnonymousSession = mutation({
+  args: {
+    sessionId: v.optional(v.union(v.id('sessions'), v.string(), v.null())),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId: prevSessionId } = args;
+
+    // Check if an existing session ID was provided and is still valid
+    if (prevSessionId && typeof prevSessionId === 'string') {
+      // Try to find by _id if it looks like a Convex ID
+      try {
+        const prevSession = await ctx.db.get(prevSessionId as Id<'sessions'>);
+        if (prevSession && prevSession.userId) {
+          // Update lastActiveAt for existing session
+          await ctx.db.patch(prevSessionId as Id<'sessions'>, {
+            createdAt: Date.now(),
+          });
+          return prevSessionId as Id<'sessions'>;
+        }
+      } catch {
+        // Not a valid session ID, continue to create new session
+      }
+    }
+
+    // Create an anonymous user
+    const displayName = `anonymous${Math.random().toString(36).substring(2, 15)}`;
+    const userId = await ctx.db.insert('users', {
+      type: 'anonymous',
+      name: displayName,
+      accessLevel: 'user',
+    });
+
+    // Create a new session
+    const sessionId = await ctx.db.insert('sessions', {
+      userId,
+      createdAt: Date.now(),
+      authMethod: 'anonymous',
+    });
+
+    return sessionId;
+  },
+});
+
+/**
+ * Gets the user associated with a session.
+ * This is a backward-compatible query for code that needs to look up a user by session ID.
+ */
+export const getUser = query({
+  args: {
+    sessionId: v.id('sessions'),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      return null;
+    }
+    const user = await ctx.db.get(session.userId);
+    return user;
+  },
+});

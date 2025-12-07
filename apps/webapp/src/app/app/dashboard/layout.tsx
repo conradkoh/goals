@@ -1,6 +1,6 @@
 'use client';
 
-import { api } from '@services/backend/convex/_generated/api';
+import { api } from '@workspace/backend/convex/_generated/api';
 import { useQuery } from 'convex/react';
 import { BookOpen, User } from 'lucide-react';
 import Link from 'next/link';
@@ -50,9 +50,7 @@ const Header = () => {
                     <User className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium leading-none">
-                      {user?.displayName || 'Loading...'}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user?.name || 'Loading...'}</p>
                     <p className="text-xs text-muted-foreground mt-1">Anonymous User</p>
                   </div>
                 </div>

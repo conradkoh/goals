@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useAction } from 'convex/react';
 import type React from 'react';
 import { useCallback, useState } from 'react';
@@ -148,7 +148,7 @@ export const useMoveGoalsForQuarter = ({
       }
 
       // Use the new action instead of the mutation
-      const _result = await moveGoalsAction({
+      await moveGoalsAction({
         sessionId,
         from: {
           year: prevQuarter.year,

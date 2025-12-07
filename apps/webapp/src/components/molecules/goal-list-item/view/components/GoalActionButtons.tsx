@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';

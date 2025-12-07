@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback, useMemo, useState } from 'react';
 import {
   CollapsibleMinimal,
@@ -125,7 +125,7 @@ export const WeekCardQuarterlyGoals = ({
     [updateQuarterlyGoalTitle]
   );
 
-  const _handleDeleteGoal = useCallback(
+  const handleDeleteGoal = useCallback(
     async (goalId: Id<'goals'>) => {
       try {
         await deleteGoal(goalId);
@@ -136,6 +136,8 @@ export const WeekCardQuarterlyGoals = ({
     },
     [deleteGoal]
   );
+  // Ensure handleDeleteGoal is available for potential use
+  void handleDeleteGoal;
 
   // Sort the goals before rendering
   const sortedGoals = useMemo(() => sortGoals(quarterlyGoals), [quarterlyGoals]);

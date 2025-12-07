@@ -1,4 +1,4 @@
-import type { QuarterlyGoalSummary } from '@services/backend/src/usecase/getWeekDetails';
+import type { QuarterlyGoalSummary } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Check, Copy } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';

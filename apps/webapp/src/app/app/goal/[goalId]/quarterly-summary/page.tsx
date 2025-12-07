@@ -1,6 +1,6 @@
 'use client';
 
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { ArrowLeft, Eye, FileText, Home } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';

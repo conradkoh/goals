@@ -48,21 +48,12 @@ const FocusModeQuarterlyViewInner = ({
       ? 'Moving goals...'
       : "Can't pull from previous quarter";
 
-  // Memoize the QuarterActionMenu props
-  const _quarterActionMenuProps = useMemo(
-    () => ({
-      isDisabled,
-      isFirstQuarter,
-      isMovingGoals,
-      handlePreviewGoals,
-      tooltipContent,
-      buttonSize: 'default' as const,
-      showLabel: true,
-      year,
-      quarter,
-    }),
-    [isDisabled, isFirstQuarter, isMovingGoals, handlePreviewGoals, tooltipContent, year, quarter]
-  );
+  // Suppress unused variable warnings - these are prepared for QuarterActionMenu
+  void isDisabled;
+  void isFirstQuarter;
+  void isMovingGoals;
+  void handlePreviewGoals;
+  void tooltipContent;
 
   return (
     <div id="focus-mode-quarterly-view" className="w-full h-full" key={instanceKey}>

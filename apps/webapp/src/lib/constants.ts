@@ -1,2 +1,2 @@
-export type { DayOfWeek as DayOfWeekType } from '@services/backend/src/constants';
-export { DayOfWeek, getDayName } from '@services/backend/src/constants';
+export type { DayOfWeek as DayOfWeekType } from '@workspace/backend/src/constants';
+export { DayOfWeek, getDayName } from '@workspace/backend/src/constants';

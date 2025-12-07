@@ -1,7 +1,7 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import { errorTitles } from '@services/backend/errors';
-import type { DayOfWeek } from '@services/backend/src/constants';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import { errorTitles } from '@workspace/backend/errors';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
 import { toast } from '@/components/ui/use-toast';

@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { QuarterlyGoalOption } from '@services/backend/src/usecase/getWeekDetails';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { QuarterlyGoalOption } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { useSession } from '@/modules/auth/useSession';
 

@@ -1,5 +1,5 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback, useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
@@ -86,11 +86,6 @@ const FocusModeDailyViewInner = ({
   const weeklyGoalsWithQuarterly = useMemo(() => {
     return preparedWeeklyGoalsForDay();
   }, [preparedWeeklyGoalsForDay]);
-
-  // Determine if there are any fire goals to display
-  const _hasFireGoals = useMemo(() => {
-    return fireGoals.size > 0;
-  }, [fireGoals]);
 
   // Check if there are any fire goals for the current day
   const hasVisibleFireGoalsForCurrentDay = useMemo(() => {

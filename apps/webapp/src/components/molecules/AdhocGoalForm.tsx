@@ -1,5 +1,5 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
-import { DayOfWeek } from '@services/backend/src/constants';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -60,19 +60,6 @@ export interface AdhocGoalFormProps {
   /** Additional CSS class names */
   className?: string;
 }
-
-/**
- * Day options for week day selection (currently unused - adhoc tasks are week-level).
- */
-const _DAY_OPTIONS = [
-  { value: DayOfWeek.MONDAY, label: 'Monday' },
-  { value: DayOfWeek.TUESDAY, label: 'Tuesday' },
-  { value: DayOfWeek.WEDNESDAY, label: 'Wednesday' },
-  { value: DayOfWeek.THURSDAY, label: 'Thursday' },
-  { value: DayOfWeek.FRIDAY, label: 'Friday' },
-  { value: DayOfWeek.SATURDAY, label: 'Saturday' },
-  { value: DayOfWeek.SUNDAY, label: 'Sunday' },
-];
 
 /**
  * Form component for creating and editing adhoc goals.

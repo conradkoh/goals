@@ -1,4 +1,4 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { DomainPillView } from '@/components/atoms/DomainPill';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 

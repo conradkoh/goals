@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { PendingIcon } from '@/components/atoms/PendingIcon';

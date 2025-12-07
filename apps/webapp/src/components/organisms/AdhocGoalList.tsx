@@ -1,5 +1,5 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
-import type { DayOfWeek } from '@services/backend/src/constants';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { AdhocGoalForm } from '@/components/molecules/AdhocGoalForm';
@@ -172,10 +172,6 @@ export function AdhocGoalList({
     } catch (error) {
       console.error('Failed to update adhoc goal:', error);
     }
-  };
-
-  const _handleEdit = (goal: Doc<'goals'> & { domain?: Doc<'domains'> }) => {
-    setEditingGoal(goal);
   };
 
   const handleDelete = async (goalId: Id<'goals'>) => {

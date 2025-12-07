@@ -1,7 +1,7 @@
 import type {
   MultipleQuarterlyGoalsSummary,
   QuarterlyGoalSummary,
-} from '@services/backend/src/usecase/getWeekDetails';
+} from '@workspace/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 
 /**

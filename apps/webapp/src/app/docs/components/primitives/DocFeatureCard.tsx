@@ -13,12 +13,6 @@ export function DocFeatureCard({
   icon,
   variant = 'blue',
 }: DocFeatureCardProps) {
-  const _variantClasses = {
-    blue: 'bg-blue-50',
-    indigo: 'bg-indigo-50',
-    slate: 'bg-slate-100',
-  };
-
   const iconClasses = {
     blue: 'bg-blue-100 text-blue-600',
     indigo: 'bg-indigo-100 text-indigo-600',

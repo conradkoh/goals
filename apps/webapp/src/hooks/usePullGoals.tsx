@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import { DayOfWeek } from '@services/backend/src/constants';
+import { api } from '@workspace/backend/convex/_generated/api';
+import { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { type ReactElement, useCallback, useState } from 'react';
 import {

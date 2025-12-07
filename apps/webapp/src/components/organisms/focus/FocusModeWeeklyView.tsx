@@ -1,4 +1,4 @@
-import type { DayOfWeek } from '@services/backend/src/constants';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMemo } from 'react';
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';

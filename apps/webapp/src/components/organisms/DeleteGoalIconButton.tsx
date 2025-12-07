@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';

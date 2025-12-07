@@ -1,4 +1,4 @@
-import type { MultipleQuarterlyGoalsSummary } from '@services/backend/src/usecase/getWeekDetails';
+import type { MultipleQuarterlyGoalsSummary } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Copy, Download, Eye, FileText } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';

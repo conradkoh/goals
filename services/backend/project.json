@@ -1,5 +1,5 @@
 {
-  "name": "@services/backend",
+  "name": "@workspace/backend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "services/backend",

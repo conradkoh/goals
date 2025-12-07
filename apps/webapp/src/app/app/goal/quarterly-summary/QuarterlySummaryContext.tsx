@@ -1,8 +1,8 @@
 'use client';
 
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { QuarterlyGoalOption } from '@services/backend/src/usecase/getWeekDetails';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { QuarterlyGoalOption } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { DateTime } from 'luxon';
 import React from 'react';

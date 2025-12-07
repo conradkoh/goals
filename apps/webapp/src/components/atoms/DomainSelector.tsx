@@ -1,4 +1,4 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';

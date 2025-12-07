@@ -3,9 +3,9 @@
  * Provides CRUD operations and queries for adhoc goals with session-based authentication.
  */
 
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
-import type { DayOfWeek } from '@services/backend/src/constants';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation, useQuery } from 'convex/react';
 import { useState } from 'react';
 

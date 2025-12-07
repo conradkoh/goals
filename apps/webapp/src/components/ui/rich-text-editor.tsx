@@ -9,15 +9,15 @@ import StarterKit from '@tiptap/starter-kit';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { cn } from '@/lib/utils';
 
-// Helper function to check if HTML content is effectively empty
-const _isHTMLEmpty = (html: string) => {
+/** Helper function to check if HTML content is effectively empty */
+export function isHTMLEmpty(html: string) {
   // Remove all HTML tags
   const textContent = html.replace(/<[^>]*>/g, '');
   // Remove all whitespace, including non-breaking spaces and other special characters
   // biome-ignore lint/suspicious/noMisleadingCharacterClass: Unicode ranges intentionally match individual characters
   const cleanContent = textContent.replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, '');
   return cleanContent === '';
-};
+}
 
 /**
  * Custom Tiptap extension that prevents new lines from being added when Cmd/Ctrl + Enter is pressed.

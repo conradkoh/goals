@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 
 /**
  * Handler for updating a goal's title, details, and due date.

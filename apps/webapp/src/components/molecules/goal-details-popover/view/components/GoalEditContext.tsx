@@ -1,4 +1,4 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
 /**

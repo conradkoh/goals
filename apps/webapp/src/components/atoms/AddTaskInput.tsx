@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback, useRef, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { toast } from '@/components/ui/use-toast';

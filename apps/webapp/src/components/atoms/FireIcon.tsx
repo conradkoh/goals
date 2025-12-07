@@ -1,4 +1,4 @@
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { Flame } from 'lucide-react';
 import type React from 'react';
 import { useCallback } from 'react';

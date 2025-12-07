@@ -1082,40 +1082,8 @@ export const moveQuarterlyGoal = mutation({
     // Create map to track new weekly goal IDs
     const weeklyGoalIdMap = new Map<Id<'goals'>, Id<'goals'>>();
 
-    // Find states for weekly goals in the latest week
-    const weeklyGoalIds = weeklyGoals.map((goal) => goal._id);
-    const weeklyGoalStates = await ctx.db
-      .query('goalStateByWeek')
-      .withIndex('by_user_and_year_and_quarter_and_week_and_daily', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', from.year)
-          .eq('quarter', from.quarter)
-          .eq('weekNumber', latestWeek)
-      )
-      .filter((q) => q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
-      .collect();
-    // Create a map of goalId -> latest state to handle any duplicates
-    const _latestStateByGoalId = weeklyGoalStates.reduce(
-      (acc, state) => {
-        const existing = acc[state.goalId];
-        if (!existing || existing._creationTime < state._creationTime) {
-          acc[state.goalId] = state;
-        }
-        return acc;
-      },
-      {} as Record<Id<'goals'>, Doc<'goalStateByWeek'>>
-    );
-
-    // Get full details for each weekly goal including whether they're complete
-    const goalsWithCompletion = await Promise.all(
-      weeklyGoals.map(async (goal) => {
-        return goal;
-      })
-    );
-
     // Filter for incomplete weekly goals based on direct completion status
-    const incompleteWeeklyGoals = goalsWithCompletion.filter((goal) => !goal.isComplete);
+    const incompleteWeeklyGoals = weeklyGoals.filter((goal) => !goal.isComplete);
 
     // Copy each incomplete weekly goal in parallel
     const weeklyGoalPromises = incompleteWeeklyGoals.map(async (weeklyGoal) => {

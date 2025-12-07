@@ -1,4 +1,4 @@
-import type { GoalWithDetailsAndChildren } from '@services/backend/src/usecase/getWeekDetails';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Edit2, Trash2 } from 'lucide-react';
 import React from 'react';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';

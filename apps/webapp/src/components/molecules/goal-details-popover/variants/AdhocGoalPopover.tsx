@@ -1,5 +1,5 @@
-import type { Doc, Id } from '@services/backend/convex/_generated/dataModel';
-import type { AdhocGoalWithChildren } from '@services/backend/convex/adhocGoal';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';

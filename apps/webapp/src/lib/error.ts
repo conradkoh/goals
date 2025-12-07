@@ -1,4 +1,4 @@
-import { type ErrorData, errorDataSchema } from '@services/backend/errors';
+import { type ErrorData, errorDataSchema } from '@workspace/backend/errors';
 import { ConvexError } from 'convex/values';
 
 /**
@@ -25,4 +25,4 @@ export function parseConvexError(error: unknown): ErrorData {
   };
 }
 
-export { type ErrorData, errorTitles } from '@services/backend/errors';
+export { type ErrorData, errorTitles } from '@workspace/backend/errors';

@@ -1,5 +1,5 @@
-import { api } from '@services/backend/convex/_generated/api';
-import type { Id } from '@services/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation, useQuery } from 'convex/react';
 import type React from 'react';
 import { createContext, type ReactNode, useCallback, useContext, useMemo } from 'react';
