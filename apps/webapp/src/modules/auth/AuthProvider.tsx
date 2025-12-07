@@ -4,7 +4,7 @@ import type { AuthState } from '@workspace/backend/modules/auth/types/AuthState'
 import { useMutation } from 'convex/react';
 import { SessionProvider, type UseStorage, useSessionQuery } from 'convex-helpers/react/sessions';
 import type { SessionId } from 'convex-helpers/server/sessions';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { generateUUID } from '@/lib/utils';
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -59,99 +59,57 @@ function _withSessionProvider(Component: React.ComponentType<{ children: React.R
 
 /**
  * Component that handles migration of old session IDs to new format.
- * Checks for old goals-session-id and exchanges it for a new sessionId.
+ *
+ * Only executes if:
+ * - goals-session-id (old) EXISTS
+ * - sessionId (new) does NOT exist
+ *
+ * If only the new sessionId exists, no migration is needed.
  */
 function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
   const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationChecked, setMigrationChecked] = useState(false);
   const exchangeSession = useMutation(api.auth.exchangeSession);
+  const hasAttemptedMigration = useRef(false);
 
   useEffect(() => {
     // Only run on client
     if (typeof window === 'undefined') return;
 
-    // Check if we've already done the migration check
-    if (migrationChecked) return;
+    // Only attempt migration once per mount
+    if (hasAttemptedMigration.current) return;
 
     const oldSessionId = localStorage.getItem(OLD_SESSION_KEY);
     const newSessionId = localStorage.getItem(NEW_SESSION_KEY);
 
-    // If there's no old session ID, nothing to migrate
-    if (!oldSessionId) {
-      setMigrationChecked(true);
+    // ONLY migrate when: old EXISTS and new does NOT exist
+    if (!oldSessionId || newSessionId) {
+      // Either no old session, or new session already exists - nothing to do
       return;
     }
 
-    // If both exist, use the old one and update the new one (don't delete old)
-    // This allows master branch to keep using goals-session-id
-    if (newSessionId) {
-      setIsMigrating(true);
-
-      exchangeSession({ oldSessionId, newSessionId })
-        .then((result) => {
-          if (result.success && result.sessionId) {
-            // Update the new session ID with the exchanged value
-            localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
-            // Keep the old session ID for master branch compatibility
-            // Only reload if we actually performed a migration
-            if (result.migrated) {
-              window.location.reload();
-            } else {
-              // Already migrated, just continue
-              setMigrationChecked(true);
-              setIsMigrating(false);
-            }
-          } else {
-            // Migration failed, just mark as checked and continue
-            console.warn('Session migration failed:', result.reason);
-            setMigrationChecked(true);
-            setIsMigrating(false);
-          }
-        })
-        .catch((error) => {
-          console.error('Session migration error:', error);
-          setMigrationChecked(true);
-          setIsMigrating(false);
-        });
-
-      return;
-    }
-
-    // Only old session exists: exchange and create new one
+    // Mark that we've attempted migration
+    hasAttemptedMigration.current = true;
     setIsMigrating(true);
 
-    const newId = generateUUID();
-
-    exchangeSession({ oldSessionId, newSessionId: newId })
+    // Call backend to exchange old session for new sessionId
+    exchangeSession({ oldSessionId })
       .then((result) => {
         if (result.success && result.sessionId) {
           // Store the new session ID
           localStorage.setItem(NEW_SESSION_KEY, result.sessionId);
-          // Keep the old session ID for master branch compatibility
-          // Only reload if we actually performed a migration
-          if (result.migrated) {
-            window.location.reload();
-          } else {
-            // Already migrated, just continue
-            setMigrationChecked(true);
-            setIsMigrating(false);
-          }
+          // Reload to pick up the new session
+          window.location.reload();
         } else {
-          // Migration failed, just clean up and let the app create a new session
+          // Migration failed - continue without it
           console.warn('Session migration failed:', result.reason);
-          localStorage.removeItem(OLD_SESSION_KEY);
-          setMigrationChecked(true);
           setIsMigrating(false);
         }
       })
       .catch((error) => {
         console.error('Session migration error:', error);
-        // Clean up and let the app continue
-        localStorage.removeItem(OLD_SESSION_KEY);
-        setMigrationChecked(true);
         setIsMigrating(false);
       });
-  }, [exchangeSession, migrationChecked]);
+  }, [exchangeSession]);
 
   // Show loading state while migrating
   if (isMigrating) {

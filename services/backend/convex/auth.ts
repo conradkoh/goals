@@ -827,44 +827,82 @@ export const getUser = query({
  * This is used to migrate users from the old goals-session-id localStorage format
  * to the new sessionId format used by the template.
  *
+ * Logic:
+ * 1. If no newSessionId provided: look up old session, generate and return a new sessionId
+ * 2. If newSessionId provided: check if both sessions belong to the same user
+ *    - Same user: return the provided newSessionId
+ *    - Different user: create new sessionId linked to user from old session
+ *
  * @param oldSessionId - The old session document _id from goals-session-id localStorage
- * @param newSessionId - The new UUID sessionId to assign to the session
- * @returns Object with success status, the sessionId, and whether migration was performed
+ * @param newSessionId - Optional: the new UUID sessionId to check/use
+ * @returns Object with success status and the sessionId
  */
 export const exchangeSession = mutation({
   args: {
     oldSessionId: v.string(),
-    newSessionId: v.string(),
+    newSessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { oldSessionId, newSessionId } = args;
 
     // Try to find the old session by document _id
-    let session: Doc<'sessions'> | null = null;
+    let oldSession: Doc<'sessions'> | null = null;
     try {
-      session = await ctx.db.get(oldSessionId as Id<'sessions'>);
+      oldSession = await ctx.db.get(oldSessionId as Id<'sessions'>);
     } catch {
       // Invalid ID format
-      return { success: false, reason: 'invalid_session_id', migrated: false };
+      return { success: false, reason: 'invalid_session_id' };
     }
 
-    if (!session) {
-      return { success: false, reason: 'session_not_found', migrated: false };
+    if (!oldSession) {
+      return { success: false, reason: 'session_not_found' };
     }
 
-    // Check if this session already has a sessionId string
-    if (session.sessionId) {
-      // Already migrated, return the existing sessionId
-      return { success: true, sessionId: session.sessionId, migrated: false };
+    // If the old session already has a sessionId string, return it
+    if (oldSession.sessionId) {
+      return { success: true, sessionId: oldSession.sessionId };
     }
 
-    // Update the session with the new sessionId string
+    // Case 1: No newSessionId provided - generate one and assign to old session
+    if (!newSessionId) {
+      const generatedSessionId = crypto.randomUUID();
+      await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+        sessionId: generatedSessionId,
+        createdAt: oldSession.createdAt || Date.now(),
+        authMethod: oldSession.authMethod || 'anonymous',
+      });
+      return { success: true, sessionId: generatedSessionId };
+    }
+
+    // Case 2: newSessionId provided - check if it belongs to the same user
+    const newSession = await ctx.db
+      .query('sessions')
+      .withIndex('by_sessionId', (q) => q.eq('sessionId', newSessionId))
+      .first();
+
+    if (!newSession) {
+      // New session doesn't exist yet, assign the newSessionId to old session
+      await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+        sessionId: newSessionId,
+        createdAt: oldSession.createdAt || Date.now(),
+        authMethod: oldSession.authMethod || 'anonymous',
+      });
+      return { success: true, sessionId: newSessionId };
+    }
+
+    // Both sessions exist - check if they belong to the same user
+    if (newSession.userId === oldSession.userId) {
+      // Same user, return the newSessionId (already using new format)
+      return { success: true, sessionId: newSessionId };
+    }
+
+    // Different users - update old session with a new sessionId to preserve old user
+    const generatedSessionId = crypto.randomUUID();
     await ctx.db.patch(oldSessionId as Id<'sessions'>, {
-      sessionId: newSessionId,
-      createdAt: session.createdAt || Date.now(),
-      authMethod: session.authMethod || 'anonymous',
+      sessionId: generatedSessionId,
+      createdAt: oldSession.createdAt || Date.now(),
+      authMethod: oldSession.authMethod || 'anonymous',
     });
-
-    return { success: true, sessionId: newSessionId, migrated: true };
+    return { success: true, sessionId: generatedSessionId };
   },
 });
