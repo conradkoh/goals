@@ -74,7 +74,6 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
     if (migrationChecked) return;
 
     const oldSessionId = localStorage.getItem(OLD_SESSION_KEY);
-    const newSessionId = localStorage.getItem(NEW_SESSION_KEY);
 
     // If there's no old session ID, nothing to migrate
     if (!oldSessionId) {
@@ -82,14 +81,8 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If there's already a new session ID, just clean up the old one
-    if (newSessionId) {
-      localStorage.removeItem(OLD_SESSION_KEY);
-      setMigrationChecked(true);
-      return;
-    }
-
     // Need to migrate: exchange old session for new one
+    // Always do this when old key exists to ensure database session is updated
     setIsMigrating(true);
 
     const newId = generateUUID();
