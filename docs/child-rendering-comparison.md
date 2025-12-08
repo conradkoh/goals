@@ -5,6 +5,7 @@
 This document analyzes how different goal types handle sub-goal rendering in their detail popovers. The hierarchy has two parallel systems that now use consistent `subGoals` terminology.
 
 **Update**: As of the latest changes, both hierarchies now:
+
 - ✅ Use `subGoals` terminology (avoiding confusion with React children)
 - ✅ Support filtering via `subGoalsToRender` prop
 - ✅ Maintain backward compatibility with `parentGoal.children` access
@@ -29,21 +30,24 @@ Adhoc Goals (depth=-1, but has adhoc.level)
 ### 1. **Quarterly/Weekly/Daily Goals** (Context-Based with Filtering Support)
 
 #### Property Names
-| Level | Component | Sub-Goals Property | Sub-Goals Type |
-|---|---|---|---|
-| Quarterly | `QuarterlyGoalPopover` | `goal.children` | `Weekly goals` |
-| Weekly | `WeeklyGoalPopover` | `goal.children` | `Daily goals` |
-| Daily | `DailyGoalPopover` | _(no sub-goals)_ | - |
+
+| Level     | Component              | Sub-Goals Property | Sub-Goals Type |
+| --------- | ---------------------- | ------------------ | -------------- |
+| Quarterly | `QuarterlyGoalPopover` | `goal.children`    | `Weekly goals` |
+| Weekly    | `WeeklyGoalPopover`    | `goal.children`    | `Daily goals`  |
+| Daily     | `DailyGoalPopover`     | _(no sub-goals)_   | -              |
 
 #### How Sub-Goals are Accessed
-- **Source**: `goal.children` from `GoalContext` 
+
+- **Source**: `goal.children` from `GoalContext`
 - **Prop**: NOT passed as prop by default - accessed via context using `useGoalContext()`
 - **Filtering**: NEW - Supports `subGoalsToRender` prop for filtered display
-- **Decision Logic**: 
+- **Decision Logic**:
   - Check `goal.children && goal.children.length > 0`
   - Determined by `parentGoal.depth` (0 = quarterly, 1 = weekly)
 
 #### Sub-Goal Rendering Component
+
 - **Component**: `GoalDetailsChildrenList`
 - **Location**: `goal-details-popover/view/components/GoalDetailsChildrenList.tsx`
 - **Props**:
@@ -56,33 +60,34 @@ Adhoc Goals (depth=-1, but has adhoc.level)
   ```
 
 #### Rendering Logic (GoalDetailsChildrenList)
+
 ```typescript
 // Uses subGoalsToRender if provided, otherwise falls back to goal.children
-const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.children;
+const subGoals =
+  subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.children;
 
-{subGoals.map((child) => (
-  <GoalProvider key={child._id} goal={child}>
-    {isQuarterlyParent ? (
-      <WeeklyGoalTaskItem />
-    ) : (
-      <DailyGoalTaskItem />
-    )}
-    
-    {/* Grandchildren for quarterly goals */}
-    {isQuarterlyParent && child.children?.length > 0 && (
-      <div className="ml-6 ...">
-        {child.children.map((grandchild) => (
-          <GoalProvider key={grandchild._id} goal={grandchild}>
-            <DailyGoalTaskItem />
-          </GoalProvider>
-        ))}
-      </div>
-    )}
-  </GoalProvider>
-))}
+{
+  subGoals.map((child) => (
+    <GoalProvider key={child._id} goal={child}>
+      {isQuarterlyParent ? <WeeklyGoalTaskItem /> : <DailyGoalTaskItem />}
+
+      {/* Grandchildren for quarterly goals */}
+      {isQuarterlyParent && child.children?.length > 0 && (
+        <div className="ml-6 ...">
+          {child.children.map((grandchild) => (
+            <GoalProvider key={grandchild._id} goal={grandchild}>
+              <DailyGoalTaskItem />
+            </GoalProvider>
+          ))}
+        </div>
+      )}
+    </GoalProvider>
+  ));
+}
 ```
 
 **Key Characteristics:**
+
 - ✅ Uses `goal.children` property consistently at data level
 - ✅ Context-based: child components get goal via `useGoalContext()`
 - ✅ Shared rendering component for all hierarchy levels
@@ -95,19 +100,22 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
 ### 2. **Adhoc Goals** (Prop-Based)
 
 #### Property Names
-| Level | Component | Sub-Goals Property | Sub-Goals Type |
-|---|---|---|---|
-| Adhoc (root) | `AdhocGoalPopover` | `subGoals` (prop) | `AdhocGoalWithChildren[]` |
-| Adhoc (nested) | `AdhocGoalPopover` | `subGoals` (prop) | `AdhocGoalWithChildren[]` |
+
+| Level          | Component          | Sub-Goals Property | Sub-Goals Type            |
+| -------------- | ------------------ | ------------------ | ------------------------- |
+| Adhoc (root)   | `AdhocGoalPopover` | `subGoals` (prop)  | `AdhocGoalWithChildren[]` |
+| Adhoc (nested) | `AdhocGoalPopover` | `subGoals` (prop)  | `AdhocGoalWithChildren[]` |
 
 #### How Sub-Goals are Accessed
+
 - **Source**: `subGoals` prop passed explicitly
 - **Prop**: Passed as explicit prop through component tree
-- **Decision Logic**: 
-  - Check `subGoals !== undefined || onCreateChild` 
+- **Decision Logic**:
+  - Check `subGoals !== undefined || onCreateChild`
   - Uses `depth` parameter to track nesting level
 
 #### Sub-Goal Rendering Component
+
 - **Component**: `AdhocSubGoalsList`
 - **Location**: `goal-details-popover/view/components/AdhocSubGoalsList.tsx`
 - **Props**:
@@ -124,6 +132,7 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
   ```
 
 #### Rendering Logic (AdhocSubGoalsList)
+
 ```typescript
 // Maps over explicit subGoals prop
 {allSubGoals.map((subGoal) => (
@@ -149,7 +158,7 @@ function _SubGoalItem({ goal, depth, ... }) {
           depth={depth}
           ...
         />
-        
+
         {/* Recursive rendering happens inside AdhocGoalPopover */}
       </div>
     </GoalProvider>
@@ -158,6 +167,7 @@ function _SubGoalItem({ goal, depth, ... }) {
 ```
 
 **Key Characteristics:**
+
 - ✅ Uses `subGoals` prop name (explicit)
 - ✅ Prop-based: children passed through component hierarchy
 - ✅ Supports filtering: can pass filtered `subGoals` array
@@ -172,6 +182,7 @@ function _SubGoalItem({ goal, depth, ... }) {
 ## Filtering Behavior Comparison
 
 ### Quarterly/Weekly/Daily Goals
+
 ```typescript
 // In GoalDetailsChildrenList - NOW supports filtering
 // Uses subGoalsToRender if provided, otherwise falls back to parentGoal.children
@@ -181,9 +192,11 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
   // Renders filtered or all sub-goals based on prop
 ))}
 ```
+
 **Result**: ✅ Can now filter which sub-goals to show via `subGoalsToRender` prop.
 
 ### Adhoc Goals
+
 ```typescript
 // In AdhocGoalPopover - Can control which sub-goals to show
 <AdhocSubGoalsList
@@ -199,6 +212,7 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
   ...
 />
 ```
+
 **Result**: ✅ Can filter sub-goals for display while preserving full children for modal.
 
 ---
@@ -206,23 +220,26 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
 ## Property Name Consistency
 
 ### Standard Hierarchy
-| Component | Sub-Goals Prop Name | Source |
-|---|---|---|
-| QuarterlyGoalPopover | `goal.children` | Context |
-| WeeklyGoalPopover | `goal.children` | Context |
-| DailyGoalPopover | _(no sub-goals)_ | - |
+
+| Component               | Sub-Goals Prop Name           | Source          |
+| ----------------------- | ----------------------------- | --------------- |
+| QuarterlyGoalPopover    | `goal.children`               | Context         |
+| WeeklyGoalPopover       | `goal.children`               | Context         |
+| DailyGoalPopover        | _(no sub-goals)_              | -               |
 | GoalDetailsChildrenList | `subGoalsToRender` (optional) | Prop (override) |
-| GoalDetailsChildrenList | `parentGoal.children` | Prop (default) |
+| GoalDetailsChildrenList | `parentGoal.children`         | Prop (default)  |
 
 ### Adhoc Hierarchy
-| Component | Sub-Goals Prop Name | Source |
-|---|---|---|
-| AdhocGoalPopover | `subGoals` | Prop (explicit) |
-| AdhocSubGoalsList | `subGoals` | Prop (explicit) |
-| AdhocGoalItem | `goal.children` + `childrenToRender` | Prop (goal object + override) |
-| _SubGoalItem | `goal.children` | Prop (from goal object) |
+
+| Component         | Sub-Goals Prop Name                  | Source                        |
+| ----------------- | ------------------------------------ | ----------------------------- |
+| AdhocGoalPopover  | `subGoals`                           | Prop (explicit)               |
+| AdhocSubGoalsList | `subGoals`                           | Prop (explicit)               |
+| AdhocGoalItem     | `goal.children` + `childrenToRender` | Prop (goal object + override) |
+| \_SubGoalItem     | `goal.children`                      | Prop (from goal object)       |
 
 **Naming Consistency:**
+
 - Standard hierarchy: Uses `children` at data level, `subGoalsToRender` for filtering
 - Adhoc hierarchy: Uses `subGoals` at prop level, `children` in nested items
 - Both now support filtering through similar patterns
@@ -232,6 +249,7 @@ const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.
 ## Data Flow Comparison
 
 ### Quarterly/Weekly/Daily (Context Flow)
+
 ```
 Database → useWeek() hook → GoalContext → goal.children
                                               ↓
@@ -245,6 +263,7 @@ Database → useWeek() hook → GoalContext → goal.children
 ```
 
 ### Adhoc (Prop Flow)
+
 ```
 Database → useAdhocGoalsForWeek() → hierarchicalAdhocGoals
                                               ↓
@@ -265,22 +284,23 @@ Database → useAdhocGoalsForWeek() → hierarchicalAdhocGoals
 
 ## Key Differences Summary
 
-| Aspect | Quarterly/Weekly/Daily | Adhoc Goals |
-|---|---|---|
-| **Sub-Goals Prop Name** | `subGoalsToRender` (optional) | `subGoals` (required) |
-| **Data Passing** | Context-based | Prop-based |
-| **Filtering Support** | ✅ Yes (via `subGoalsToRender`) | ✅ Yes (via `childrenToRender`) |
+| Aspect                  | Quarterly/Weekly/Daily             | Adhoc Goals                     |
+| ----------------------- | ---------------------------------- | ------------------------------- |
+| **Sub-Goals Prop Name** | `subGoalsToRender` (optional)      | `subGoals` (required)           |
+| **Data Passing**        | Context-based                      | Prop-based                      |
+| **Filtering Support**   | ✅ Yes (via `subGoalsToRender`)    | ✅ Yes (via `childrenToRender`) |
 | **Rendering Component** | Shared (`GoalDetailsChildrenList`) | Dedicated (`AdhocSubGoalsList`) |
-| **Recursion** | Handled explicitly (grandchildren) | Recursive component structure |
-| **Depth Tracking** | Implicit (via `depth` field) | Explicit (`depth` parameter) |
-| **Create Input** | Only at parent level | At every level (up to limit) |
-| **Child Access** | `useGoalContext()` in children | Prop drilling |
+| **Recursion**           | Handled explicitly (grandchildren) | Recursive component structure   |
+| **Depth Tracking**      | Implicit (via `depth` field)       | Explicit (`depth` parameter)    |
+| **Create Input**        | Only at parent level               | At every level (up to limit)    |
+| **Child Access**        | `useGoalContext()` in children     | Prop drilling                   |
 
 ---
 
 ## Ease of Working with Both Systems
 
 ### ✅ Strengths
+
 1. **Both use `goal.children` at the data level** - The actual goal objects use `.children` consistently
 2. **Both support filtering** - Standard hierarchy via `subGoalsToRender`, Adhoc via `childrenToRender`
 3. **Similar component patterns** - Both have a popover → sub-goals list structure
@@ -289,6 +309,7 @@ Database → useAdhocGoalsForWeek() → hierarchicalAdhocGoals
 6. **Terminology alignment** - Using `subGoals` terminology avoids confusion with React children
 
 ### ⚠️ Remaining Differences
+
 1. **Different data flow patterns** - Context vs Props serves different architectural purposes
 2. **Separate rendering components** - `GoalDetailsChildrenList` vs `AdhocSubGoalsList`
 3. **Prop naming** - `subGoalsToRender` vs `childrenToRender` (minor difference)
@@ -303,9 +324,9 @@ The two hierarchies now work consistently with aligned patterns:
 - **Adhoc hierarchy**: Prop-based with filtering via `childrenToRender`
 
 **Recent Improvements:**
+
 1. ✅ Added filtering support to standard hierarchy
 2. ✅ Uses `subGoals` terminology in documentation (avoiding React children confusion)
 3. ✅ Both systems now support selective sub-goal rendering
 
 The different data flow patterns (context vs props) remain intentional design choices that serve each system's requirements well. The minor prop naming difference (`subGoalsToRender` vs `childrenToRender`) maintains clarity about which hierarchy is being used.
-
