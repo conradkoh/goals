@@ -2,6 +2,7 @@ import { Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InteractiveHTML } from '@/components/ui/interactive-html';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { cn } from '@/lib/utils';
 
@@ -17,11 +18,16 @@ export interface GoalDetailsContentProps {
   className?: string;
   /** Whether to show the title above the content */
   showTitle?: boolean;
+  /** Callback when task list items are checked/unchecked */
+  onDetailsChange?: (newDetails: string) => void;
+  /** If true, task list checkboxes are disabled */
+  readOnly?: boolean;
 }
 
 /**
  * Displays goal details content with an expandable full view dialog.
  * Shows HTML content in a scrollable container with an expand button on hover.
+ * Supports interactive task lists with checkable items.
  *
  * @example
  * ```tsx
@@ -29,6 +35,7 @@ export interface GoalDetailsContentProps {
  *   title="My Goal"
  *   details="<p>Some <strong>HTML</strong> content</p>"
  *   showTitle={false}
+ *   onDetailsChange={(newHtml) => saveGoal(newHtml)}
  * />
  * ```
  */
@@ -37,8 +44,11 @@ export function GoalDetailsContent({
   details,
   className,
   showTitle = false,
+  onDetailsChange,
+  readOnly = false,
 }: GoalDetailsContentProps) {
   const [isFullViewOpen, setIsFullViewOpen] = useState(false);
+  const hasInteractiveFeatures = onDetailsChange && !readOnly;
 
   return (
     <>
@@ -55,7 +65,16 @@ export function GoalDetailsContent({
             className
           )}
         >
-          <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+          {hasInteractiveFeatures ? (
+            <InteractiveHTML
+              html={details}
+              className="text-sm prose prose-sm max-w-none"
+              onContentChange={onDetailsChange}
+              readOnly={readOnly}
+            />
+          ) : (
+            <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+          )}
 
           {/* Absolutely positioned expand button */}
           <div className="absolute top-0 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
@@ -71,7 +90,16 @@ export function GoalDetailsContent({
             <DialogTitle className="text-xl font-semibold break-words">{title}</DialogTitle>
           </DialogHeader>
           <div className="mt-4 overflow-y-auto flex-1 pr-2">
-            <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+            {hasInteractiveFeatures ? (
+              <InteractiveHTML
+                html={details}
+                className="text-sm prose prose-sm max-w-none"
+                onContentChange={onDetailsChange}
+                readOnly={readOnly}
+              />
+            ) : (
+              <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+            )}
           </div>
         </DialogContent>
       </Dialog>

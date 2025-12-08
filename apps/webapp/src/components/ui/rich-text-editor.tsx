@@ -1,6 +1,8 @@
 import { Extension } from '@tiptap/core';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
 import Underline from '@tiptap/extension-underline';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
@@ -44,6 +46,118 @@ const NoNewLineOnSubmit = Extension.create({
               return true; // Return true to mark the event as handled
             }
             return false; // Allow other key events to be handled normally
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Custom Tiptap extension that handles pasting of markdown task list syntax.
+ * Converts `- [ ] task` or `- [x] task` syntax to proper task list nodes.
+ */
+const MarkdownTaskListPaste = Extension.create({
+  name: 'markdown_task_list_paste',
+  addProseMirrorPlugins() {
+    // Store editor reference to avoid 'this' aliasing
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('markdownTaskListPaste'),
+        props: {
+          handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+            const clipboardText = event.clipboardData?.getData('text/plain');
+            if (!clipboardText) return false;
+
+            // Check if the pasted text contains task list markdown syntax
+            // Matches: - [ ] task, - [x] task, * [ ] task, * [X] task
+            const taskListRegex = /^(\s*)[-*]\s*\[([ xX])\]\s*(.*)$/;
+            const lines = clipboardText.split('\n');
+            const hasTaskListSyntax = lines.some((line) => taskListRegex.test(line));
+
+            if (!hasTaskListSyntax) return false;
+
+            // Prevent default paste
+            event.preventDefault();
+
+            // Convert markdown task list syntax to Tiptap content
+            type TaskItemNode = {
+              type: 'taskItem';
+              attrs: { checked: boolean };
+              content: Array<{
+                type: 'paragraph';
+                content?: Array<{ type: 'text'; text: string }>;
+              }>;
+            };
+            type ParagraphNode = {
+              type: 'paragraph';
+              content?: Array<{ type: 'text'; text: string }>;
+            };
+            type TaskListNode = {
+              type: 'taskList';
+              content: TaskItemNode[];
+            };
+            type ContentNode = TaskListNode | ParagraphNode;
+
+            const content: ContentNode[] = [];
+            let currentTaskList: TaskItemNode[] | null = null;
+
+            for (const line of lines) {
+              const match = line.match(taskListRegex);
+              if (match) {
+                const isChecked = match[2].toLowerCase() === 'x';
+                const text = match[3];
+
+                if (!currentTaskList) {
+                  currentTaskList = [];
+                }
+
+                currentTaskList.push({
+                  type: 'taskItem',
+                  attrs: { checked: isChecked },
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: text ? [{ type: 'text', text }] : undefined,
+                    },
+                  ],
+                });
+              } else {
+                // Non-task line: flush current task list and add paragraph
+                if (currentTaskList && currentTaskList.length > 0) {
+                  content.push({
+                    type: 'taskList',
+                    content: currentTaskList,
+                  });
+                  currentTaskList = null;
+                }
+
+                // Add non-empty lines as paragraphs
+                if (line.trim()) {
+                  content.push({
+                    type: 'paragraph',
+                    content: [{ type: 'text', text: line }],
+                  });
+                }
+              }
+            }
+
+            // Flush remaining task list
+            if (currentTaskList && currentTaskList.length > 0) {
+              content.push({
+                type: 'taskList',
+                content: currentTaskList,
+              });
+            }
+
+            if (content.length > 0) {
+              // Insert the converted content
+              editor?.commands.insertContent(content);
+              return true;
+            }
+
+            return false;
           },
         },
       }),
@@ -98,6 +212,17 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
           },
         },
       }),
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'task-list my-2',
+        },
+      }),
+      TaskItem.configure({
+        nested: true,
+        HTMLAttributes: {
+          class: 'task-item flex gap-2',
+        },
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -109,6 +234,7 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
         placeholder,
       }),
       NoNewLineOnSubmit,
+      MarkdownTaskListPaste,
     ],
     content: value || '',
     editorProps: {
@@ -174,6 +300,10 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
               editor.commands.toggleOrderedList();
               return true;
             }
+            if (line.endsWith('[ ] ') || line.endsWith('[x] ')) {
+              editor.commands.toggleTaskList();
+              return true;
+            }
             if (line.endsWith('> ')) {
               editor.commands.toggleBlockquote();
               return true;
@@ -186,12 +316,16 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
           return false;
         },
         handlePaste: (_view, event) => {
-          // Handle link pasting over selected text
           const clipboardText = event.clipboardData?.getData('text/plain');
-          if (clipboardText?.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
+          if (!clipboardText) return false;
+
+          // Handle link pasting over selected text
+          if (clipboardText.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
             editor.commands.setLink({ href: clipboardText });
             return true;
           }
+
+          // Task list paste is handled by MarkdownTaskListPaste extension
           return false;
         },
       },

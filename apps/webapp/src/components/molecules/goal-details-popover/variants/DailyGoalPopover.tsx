@@ -100,6 +100,11 @@ function _DailyGoalPopoverContent({
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
 
+  // Handler for updating goal details when task list items are toggled
+  const handleDetailsChange = (newDetails: string) => {
+    onSave(goal.title, newDetails, goal.dueDate);
+  };
+
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
@@ -116,7 +121,13 @@ function _DailyGoalPopoverContent({
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-      {goal.details && <GoalDetailsSection title={goal.title} details={goal.details} />}
+      {goal.details && (
+        <GoalDetailsSection
+          title={goal.title}
+          details={goal.details}
+          onDetailsChange={handleDetailsChange}
+        />
+      )}
 
       {additionalContent && (
         <>

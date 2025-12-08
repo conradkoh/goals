@@ -73,6 +73,177 @@
   list-style-type: square !important;
 }
 
+/* Task lists - special styling for checkable items */
+/* Tiptap uses ul[data-type="taskList"] and li.task-item with data-checked attribute */
+.prose :global(ul[data-type="taskList"]),
+.prose :global(ul.task-list) {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+.prose :global(li[data-type="taskItem"]),
+.prose :global(li.task-item) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+/* Injected checkbox styling (from InteractiveHTML) - matches shadcn Checkbox */
+.prose :global(li[data-type="taskItem"] > input.task-checkbox),
+.prose :global(li.task-item > input.task-checkbox) {
+  /* Size and shrink */
+  width: 1rem !important;
+  height: 1rem !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+
+  /* Use native checkbox with accent color and clear border */
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  accent-color: hsl(var(--primary)) !important;
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--primary)) !important;
+  border-radius: 0.125rem !important; /* rounded-sm */
+
+  /* Focus ring styling */
+  outline: none !important;
+}
+
+.prose :global(li[data-type="taskItem"] > input.task-checkbox:focus-visible),
+.prose :global(li.task-item > input.task-checkbox:focus-visible) {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Checked state - filled with primary color and checkmark */
+.prose :global(li[data-type="taskItem"] > input.task-checkbox:checked),
+.prose :global(li.task-item > input.task-checkbox:checked) {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.prose :global(li[data-type="taskItem"] > input.task-checkbox:disabled),
+.prose :global(li.task-item > input.task-checkbox:disabled) {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* Task item checkbox styling from Tiptap editor (with label wrapper) */
+.prose :global(li[data-type="taskItem"] > label),
+.prose :global(li.task-item > label) {
+  display: flex !important;
+  align-items: center !important;
+  margin-right: 0 !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  flex-shrink: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Checkbox styling to match shadcn/radix Checkbox component */
+.prose :global(li[data-type="taskItem"] > label > input[type="checkbox"]),
+.prose :global(li.task-item > label > input[type="checkbox"]) {
+  /* Size and shrink */
+  width: 1rem !important;
+  height: 1rem !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+
+  /* Use native checkbox with accent color and clear border */
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  accent-color: hsl(var(--primary)) !important;
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--primary)) !important;
+  border-radius: 0.125rem !important; /* rounded-sm */
+
+  /* Focus ring styling */
+  outline: none !important;
+}
+
+.prose :global(li[data-type="taskItem"] > label > input[type="checkbox"]:focus-visible),
+.prose :global(li.task-item > label > input[type="checkbox"]:focus-visible) {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Checked state - filled with primary color and checkmark */
+.prose :global(li[data-type="taskItem"] > label > input[type="checkbox"]:checked),
+.prose :global(li.task-item > label > input[type="checkbox"]:checked) {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  /* Checkmark using SVG data URI */
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Disabled state */
+.prose :global(li[data-type="taskItem"] > label > input[type="checkbox"]:disabled),
+.prose :global(li.task-item > label > input[type="checkbox"]:disabled) {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* Hide the empty span that Tiptap adds after checkbox */
+.prose :global(li[data-type="taskItem"] > label > span),
+.prose :global(li.task-item > label > span) {
+  display: none !important;
+}
+
+/* Task item content wrapper (when wrapped in div) */
+.prose :global(li[data-type="taskItem"] > div),
+.prose :global(li.task-item > div) {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+  align-items: flex-start !important;
+}
+
+/* Task item checked state - strikethrough for content in div */
+.prose :global(li[data-type="taskItem"][data-checked="true"] > div),
+.prose :global(li.task-item[data-checked="true"] > div) {
+  text-decoration: line-through !important;
+  opacity: 0.6 !important;
+}
+
+/* Task item checked state - strikethrough for direct text content */
+.prose :global(li[data-type="taskItem"][data-checked="true"]),
+.prose :global(li.task-item[data-checked="true"]) {
+  text-decoration: line-through !important;
+  color: var(--muted-foreground) !important;
+}
+
+/* But don't strikethrough the checkbox itself */
+.prose :global(li[data-type="taskItem"][data-checked="true"] > input.task-checkbox),
+.prose :global(li.task-item[data-checked="true"] > input.task-checkbox),
+.prose :global(li[data-type="taskItem"][data-checked="true"] > label),
+.prose :global(li.task-item[data-checked="true"] > label) {
+  text-decoration: none !important;
+}
+
+/* Nested task lists */
+.prose :global(li[data-type="taskItem"] ul[data-type="taskList"]),
+.prose :global(li.task-item ul.task-list) {
+  margin-top: 0.5rem !important;
+  margin-left: 1.5rem !important;
+}
+
 /* ==========================================================================
    HEADINGS
    ========================================================================== */

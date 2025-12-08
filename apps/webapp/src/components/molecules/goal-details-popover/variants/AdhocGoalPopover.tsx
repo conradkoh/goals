@@ -131,6 +131,11 @@ function _AdhocGoalPopoverContent({
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
 
+  // Handler for updating goal details when task list items are toggled
+  const handleDetailsChange = (newDetails: string) => {
+    onSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+  };
+
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
@@ -149,7 +154,13 @@ function _AdhocGoalPopoverContent({
         <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
       )}
 
-      {goal.details && <GoalDetailsSection title={goal.title} details={goal.details} />}
+      {goal.details && (
+        <GoalDetailsSection
+          title={goal.title}
+          details={goal.details}
+          onDetailsChange={handleDetailsChange}
+        />
+      )}
 
       {/* Sub-tasks section */}
       {(subGoals !== undefined || onCreateChild) && (

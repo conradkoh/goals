@@ -158,6 +158,11 @@ function _QuarterlyGoalPopoverContent({
 
   const hasChildren = goal.children && goal.children.length > 0;
 
+  // Handler for updating goal details when task list items are toggled
+  const handleDetailsChange = (newDetails: string) => {
+    onSave(goal.title, newDetails, goal.dueDate);
+  };
+
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
@@ -183,7 +188,13 @@ function _QuarterlyGoalPopoverContent({
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-      {goal.details && <GoalDetailsSection title={goal.title} details={goal.details} />}
+      {goal.details && (
+        <GoalDetailsSection
+          title={goal.title}
+          details={goal.details}
+          onDetailsChange={handleDetailsChange}
+        />
+      )}
 
       <GoalChildrenSection
         title="Weekly Goals"

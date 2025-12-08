@@ -18,6 +18,9 @@ const purifyConfig = {
     'ul',
     'ol',
     'li',
+    // Task list elements
+    'label',
+    'input',
     // Headers
     'h1',
     'h2',
@@ -33,7 +36,7 @@ const purifyConfig = {
     'a',
     'div',
   ],
-  ALLOWED_ATTR: ['href', 'class', 'target'],
+  ALLOWED_ATTR: ['href', 'class', 'target', 'data-type', 'data-checked', 'type', 'checked'],
   ALLOWED_URI_REGEXP:
     /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|xxx):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
 };
