@@ -133,6 +133,8 @@ describe('moveGoalsFromWeek', () => {
           isPinned: false, // Should be false since isStarred is true
         },
       ],
+      adhocGoalsToMove: [],
+      skippedGoals: [],
     });
 
     // Test actual move
@@ -148,9 +150,11 @@ describe('moveGoalsFromWeek', () => {
       weekStatesToCopy: expect.any(Array),
       dailyGoalsToMove: expect.any(Array),
       quarterlyGoalsToUpdate: expect.any(Array),
+      adhocGoalsToMove: expect.any(Array),
       weekStatesCopied: 1,
       dailyGoalsMoved: 1,
       quarterlyGoalsUpdated: 1,
+      adhocGoalsMoved: 0,
     });
 
     // Verify the state after move
