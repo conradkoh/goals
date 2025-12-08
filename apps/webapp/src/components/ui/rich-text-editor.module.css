@@ -1,10 +1,37 @@
-/* Rich text editor prose styling overrides */
+/**
+ * Rich Text Editor & Prose Styling
+ * 
+ * This module provides comprehensive styling overrides for rendered markdown/HTML content.
+ * It addresses common issues with Tailwind's prose typography and ensures consistent
+ * rendering across edit mode (TipTap) and view mode (SafeHTML).
+ * 
+ * Key principles:
+ * - Compact spacing for dialog/popover contexts
+ * - Consistent dark mode support
+ * - Proper nested element handling
+ * - Overflow management for code blocks
+ * - Accessible contrast ratios
+ */
 
-/* Override left margin for lists - reduce from ml-8 (2rem) to ml-4 (1rem) */
+/* ==========================================================================
+   LISTS (Ordered & Unordered)
+   ========================================================================== */
+
+/* Base list styling - reduce default margins and control padding */
 .prose :global(ol),
 .prose :global(ul) {
-  margin-left: 1rem !important;
-  padding-left: 1.25rem !important; /* Add explicit padding-left for list markers */
+  margin-left: 0 !important;
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
+  padding-left: 1.5rem !important; /* Space for list markers */
+}
+
+/* List item spacing - compact for dialog contexts */
+.prose :global(ol > li),
+.prose :global(ul > li) {
+  margin-top: 0.125em !important;
+  margin-bottom: 0.125em !important;
+  padding-left: 0.25em !important;
 }
 
 /* Remove min-height and margins from paragraphs inside list items */
@@ -14,23 +41,414 @@
   min-height: 0 !important;
 }
 
-/* Compact spacing for list items */
-.prose :global(ol > li),
-.prose :global(ul > li) {
-  margin-top: 0.125em;
-  margin-bottom: 0.125em;
-  padding-left: 0.25em !important; /* Minimal padding for list content */
-}
-
-/* Ensure proper spacing between lists and other content */
-.prose :global(ol),
-.prose :global(ul) {
-  margin-top: 0.75em;
-  margin-bottom: 0.75em;
-}
-
-/* Remove extra line-height from list item paragraphs */
+/* Normalize line-height in list items */
+.prose :global(li),
 .prose :global(li p) {
   line-height: 1.5 !important;
 }
 
+/* Nested lists - reduce indentation for readability */
+.prose :global(li ol),
+.prose :global(li ul) {
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
+  padding-left: 1.25rem !important; /* Slightly less than parent for visual hierarchy */
+}
+
+/* Ensure list markers are visible and properly colored */
+.prose :global(ul) {
+  list-style-type: disc !important;
+}
+
+.prose :global(ol) {
+  list-style-type: decimal !important;
+}
+
+/* Nested list marker variations */
+.prose :global(ul ul) {
+  list-style-type: circle !important;
+}
+
+.prose :global(ul ul ul) {
+  list-style-type: square !important;
+}
+
+/* ==========================================================================
+   HEADINGS
+   ========================================================================== */
+
+/* Base heading styles - compact spacing for dialog contexts */
+.prose :global(h1),
+.prose :global(h2),
+.prose :global(h3),
+.prose :global(h4),
+.prose :global(h5),
+.prose :global(h6) {
+  margin-top: 1em !important;
+  margin-bottom: 0.5em !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+}
+
+/* First heading should not have top margin */
+.prose :global(h1:first-child),
+.prose :global(h2:first-child),
+.prose :global(h3:first-child),
+.prose :global(h4:first-child),
+.prose :global(h5:first-child),
+.prose :global(h6:first-child) {
+  margin-top: 0 !important;
+}
+
+/* Heading following another heading - reduce spacing */
+.prose :global(h1 + h2),
+.prose :global(h2 + h3),
+.prose :global(h3 + h4),
+.prose :global(h4 + h5),
+.prose :global(h5 + h6) {
+  margin-top: 0.5em !important;
+}
+
+/* Heading sizes - proportional scale */
+.prose :global(h1) {
+  font-size: 1.5em !important;
+}
+
+.prose :global(h2) {
+  font-size: 1.25em !important;
+}
+
+.prose :global(h3) {
+  font-size: 1.125em !important;
+}
+
+.prose :global(h4) {
+  font-size: 1em !important;
+}
+
+.prose :global(h5) {
+  font-size: 0.9em !important;
+}
+
+.prose :global(h6) {
+  font-size: 0.85em !important;
+}
+
+/* ==========================================================================
+   PARAGRAPHS
+   ========================================================================== */
+
+.prose :global(p) {
+  margin-top: 0 !important;
+  margin-bottom: 0.75em !important;
+  line-height: 1.6 !important;
+  min-height: 0 !important;
+}
+
+/* Last paragraph should not have bottom margin */
+.prose :global(p:last-child) {
+  margin-bottom: 0 !important;
+}
+
+/* Paragraphs after headings - reduce top spacing */
+.prose :global(h1 + p),
+.prose :global(h2 + p),
+.prose :global(h3 + p),
+.prose :global(h4 + p),
+.prose :global(h5 + p),
+.prose :global(h6 + p) {
+  margin-top: 0 !important;
+}
+
+/* ==========================================================================
+   BLOCKQUOTES
+   ========================================================================== */
+
+.prose :global(blockquote) {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 1rem !important;
+  padding-top: 0.25em !important;
+  padding-bottom: 0.25em !important;
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  font-style: italic !important;
+}
+
+/* Blockquote paragraphs - no extra margin */
+.prose :global(blockquote p) {
+  margin-bottom: 0.5em !important;
+}
+
+.prose :global(blockquote p:last-child) {
+  margin-bottom: 0 !important;
+}
+
+/* Nested blockquotes */
+.prose :global(blockquote blockquote) {
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
+}
+
+/* ==========================================================================
+   CODE (Inline & Blocks)
+   ========================================================================== */
+
+/* Inline code */
+.prose :global(code) {
+  padding: 0.125em 0.35em !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875em !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  word-break: break-word !important;
+}
+
+/* Code blocks */
+.prose :global(pre) {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0.375rem !important;
+  overflow-x: auto !important;
+  font-size: 0.85em !important;
+  line-height: 1.5 !important;
+}
+
+/* Code inside pre - reset inline styles */
+.prose :global(pre code) {
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: inherit !important;
+  color: inherit !important;
+  word-break: normal !important;
+  white-space: pre !important;
+}
+
+/* ==========================================================================
+   LINKS
+   ========================================================================== */
+
+.prose :global(a) {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  transition: opacity 0.15s ease !important;
+}
+
+.prose :global(a:hover) {
+  opacity: 0.8 !important;
+}
+
+/* Links in headings - no underline by default */
+.prose :global(h1 a),
+.prose :global(h2 a),
+.prose :global(h3 a),
+.prose :global(h4 a),
+.prose :global(h5 a),
+.prose :global(h6 a) {
+  text-decoration: none !important;
+}
+
+.prose :global(h1 a:hover),
+.prose :global(h2 a:hover),
+.prose :global(h3 a:hover),
+.prose :global(h4 a:hover),
+.prose :global(h5 a:hover),
+.prose :global(h6 a:hover) {
+  text-decoration: underline !important;
+}
+
+/* ==========================================================================
+   TEXT EMPHASIS
+   ========================================================================== */
+
+.prose :global(strong),
+.prose :global(b) {
+  font-weight: 600 !important;
+}
+
+.prose :global(em),
+.prose :global(i) {
+  font-style: italic !important;
+}
+
+.prose :global(u) {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
+.prose :global(s),
+.prose :global(strike),
+.prose :global(del) {
+  text-decoration: line-through !important;
+}
+
+/* ==========================================================================
+   HORIZONTAL RULES
+   ========================================================================== */
+
+.prose :global(hr) {
+  margin-top: 1.5em !important;
+  margin-bottom: 1.5em !important;
+  border-top-width: 1px !important;
+  border-color: currentColor !important;
+  opacity: 0.2 !important;
+}
+
+/* ==========================================================================
+   IMAGES
+   ========================================================================== */
+
+.prose :global(img) {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  border-radius: 0.375rem !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+.prose :global(table) {
+  width: 100% !important;
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  border-collapse: collapse !important;
+  font-size: 0.9em !important;
+}
+
+.prose :global(thead) {
+  border-bottom-width: 2px !important;
+}
+
+.prose :global(th) {
+  padding: 0.5em 0.75em !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+}
+
+.prose :global(td) {
+  padding: 0.5em 0.75em !important;
+  vertical-align: top !important;
+}
+
+.prose :global(tbody tr) {
+  border-bottom-width: 1px !important;
+}
+
+.prose :global(tbody tr:last-child) {
+  border-bottom-width: 0 !important;
+}
+
+/* ==========================================================================
+   DEFINITION LISTS
+   ========================================================================== */
+
+.prose :global(dl) {
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+}
+
+.prose :global(dt) {
+  font-weight: 600 !important;
+  margin-top: 0.5em !important;
+}
+
+.prose :global(dt:first-child) {
+  margin-top: 0 !important;
+}
+
+.prose :global(dd) {
+  margin-left: 1rem !important;
+  margin-top: 0.25em !important;
+  margin-bottom: 0.5em !important;
+}
+
+/* ==========================================================================
+   KEYBOARD & ABBREVIATIONS
+   ========================================================================== */
+
+.prose :global(kbd) {
+  padding: 0.125em 0.375em !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.875em !important;
+  font-family: inherit !important;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.prose :global(abbr) {
+  text-decoration: underline dotted !important;
+  cursor: help !important;
+}
+
+/* ==========================================================================
+   SUPERSCRIPT & SUBSCRIPT
+   ========================================================================== */
+
+.prose :global(sup),
+.prose :global(sub) {
+  font-size: 0.75em !important;
+  line-height: 0 !important;
+  position: relative !important;
+  vertical-align: baseline !important;
+}
+
+.prose :global(sup) {
+  top: -0.5em !important;
+}
+
+.prose :global(sub) {
+  bottom: -0.25em !important;
+}
+
+/* ==========================================================================
+   MISCELLANEOUS
+   ========================================================================== */
+
+/* Mark/highlight */
+.prose :global(mark) {
+  padding: 0.125em 0.25em !important;
+  border-radius: 0.125rem !important;
+}
+
+/* Small text */
+.prose :global(small) {
+  font-size: 0.875em !important;
+}
+
+/* Address */
+.prose :global(address) {
+  font-style: normal !important;
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
+}
+
+/* ==========================================================================
+   SPACING RESETS FOR FIRST/LAST CHILDREN
+   ========================================================================== */
+
+/* Remove top margin from first child elements */
+.prose :global(> *:first-child) {
+  margin-top: 0 !important;
+}
+
+/* Remove bottom margin from last child elements */
+.prose :global(> *:last-child) {
+  margin-bottom: 0 !important;
+}
+
+/* ==========================================================================
+   EMPTY STATE HANDLING
+   ========================================================================== */
+
+/* Ensure empty paragraphs still have minimum height in edit mode */
+.prose:global(.ProseMirror) :global(p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
