@@ -6,7 +6,6 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { cn } from '@/lib/utils';
 import styles from './rich-text-editor.module.css';
 
@@ -198,15 +197,9 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
       },
     });
   }
-  const isEmpty = value === '';
   return (
     <div className="relative">
       <EditorContent editor={editor} />
-      <ConditionalRender condition={isEmpty && !!placeholder}>
-        <div className="absolute top-3 left-4 text-muted-foreground text-sm pointer-events-none">
-          {placeholder}
-        </div>
-      </ConditionalRender>
     </div>
   );
 }
