@@ -1,8 +1,8 @@
-# Next Convex Starter App - Project Map
+# Goals Application - Project Map
 
 ## Project Overview
 
-A full-stack web application starter template built with Next.js and Convex, featuring real-time capabilities, authentication, and modern development tools. The project includes functionality for presentations, discussions, attendance tracking, checklists, and user management with a monorepo structure managed by NX and pnpm workspaces.
+A full-stack goals tracking and management web application built with Next.js and Convex, featuring real-time capabilities, authentication, and modern development tools. The project includes functionality for hierarchical goal management (quarterly, weekly, daily), presentations, discussions, attendance tracking, checklists, and user management with a monorepo structure managed by NX and pnpm workspaces.
 
 ## Project Structure
 
