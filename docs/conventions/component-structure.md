@@ -330,3 +330,5 @@ import { MainView } from '../view/MainView';
 - Components that don't need composition flexibility
 - Atoms or basic UI elements
 
+
+
