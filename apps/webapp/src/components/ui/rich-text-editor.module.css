@@ -243,7 +243,7 @@
 .prose :global(li.task-item ul.task-list) {
   margin-top: 0.125rem !important;
   margin-bottom: 0 !important;
-  margin-left: 1.5rem !important;
+  margin-left: 0 !important; /* Subtle indent for nested items */
 }
 
 /* Paragraphs inside task items should have minimal margins */
