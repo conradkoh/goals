@@ -269,7 +269,7 @@ function _SubGoalItem({
       <div className="space-y-1">
         <div
           className={cn(
-            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent/50 transition-colors group/subgoal',
+            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent/50 transition-colors group/title',
             goal.isComplete && 'opacity-60',
             isOptimistic && 'opacity-70'
           )}
@@ -328,7 +328,7 @@ function _SubGoalItem({
                   trigger={
                     <button
                       type="button"
-                      className="text-muted-foreground opacity-0 group-hover/subgoal:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
+                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
                     >
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
@@ -339,7 +339,7 @@ function _SubGoalItem({
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="text-muted-foreground opacity-0 group-hover/subgoal:opacity-100 transition-opacity hover:text-red-600"
+                  className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

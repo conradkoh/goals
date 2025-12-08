@@ -43,6 +43,8 @@ export interface AdhocGoalItemProps {
   className?: string;
   /** Current nesting depth (0 = root level) */
   depth?: number;
+  /** Override which children to render (for filtered views). If not provided, uses goal.children */
+  childrenToRender?: AdhocGoalWithChildren[];
 }
 
 /**
@@ -74,6 +76,7 @@ export function AdhocGoalItem({
   showDomain = true,
   className,
   depth = 0,
+  childrenToRender,
 }: AdhocGoalItemProps) {
   // Track pending update state for this item
   const [isPending, setIsPending] = useState(false);
@@ -132,7 +135,10 @@ export function AdhocGoalItem({
 
   const effectiveDomainId = goal.domainId || null;
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
-  const children = 'children' in goal ? goal.children : [];
+  // Get full children array from goal (for modal display)
+  const fullChildren = 'children' in goal ? goal.children : [];
+  // Use provided childrenToRender if available for rendering in list, otherwise use fullChildren
+  const childrenForList = childrenToRender !== undefined ? childrenToRender : fullChildren;
 
   const goalWithChildren = {
     ...goal,
@@ -170,7 +176,7 @@ export function AdhocGoalItem({
                 onToggleComplete={handleToggleComplete}
                 domain={goal.domain}
                 weekNumber={goal.adhoc?.weekNumber}
-                subGoals={children}
+                subGoals={fullChildren}
                 depth={depth}
                 onChildCompleteChange={onCompleteChange}
                 onChildUpdate={onUpdate}
@@ -244,9 +250,9 @@ export function AdhocGoalItem({
         </div>
 
         {/* Render children recursively */}
-        {children.length > 0 && (
+        {childrenForList.length > 0 && (
           <div className="space-y-0.5">
-            {children.map((child) => (
+            {childrenForList.map((child) => (
               <AdhocGoalItem
                 key={child._id}
                 goal={child}
@@ -257,6 +263,12 @@ export function AdhocGoalItem({
                 showDueDate={showDueDate}
                 showDomain={showDomain}
                 depth={depth + 1}
+                childrenToRender={
+                  '_filteredChildren' in child
+                    ? (child as unknown as { _filteredChildren?: AdhocGoalWithChildren[] })
+                        ._filteredChildren
+                    : undefined
+                }
               />
             ))}
           </div>

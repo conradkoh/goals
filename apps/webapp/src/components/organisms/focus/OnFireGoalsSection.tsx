@@ -154,30 +154,39 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
     return result.size > 0 ? result : null;
   }, [fireGoals, weeklyGoalsWithQuarterly, selectedDayOfWeek, weeklyGoals]);
 
-  /** Filters adhoc goals to only include trees with fire goals, preserving hierarchy. */
+  /**
+   * Filters adhoc goals to show fire goals with their parent chain.
+   * Each goal preserves its full children array (for modal display),
+   * but we filter the tree to only show branches that lead to fire goals.
+   */
   const onFireAdhocGoals = useMemo(() => {
     if (fireGoals.size === 0 || !hierarchicalAdhocGoals) return [];
 
-    // Helper to check if any goal in a subtree is on fire
-    const hasFireGoalInSubtree = (goal: (typeof hierarchicalAdhocGoals)[0]): boolean => {
-      if (fireGoals.has(goal._id.toString())) return true;
-      return goal.children?.some(hasFireGoalInSubtree) ?? false;
+    type GoalWithFilteredChildren = (typeof hierarchicalAdhocGoals)[0] & {
+      _filteredChildren?: GoalWithFilteredChildren[];
     };
 
-    // Helper to filter hierarchy keeping only branches with fire goals
-    const filterFireBranches = (
+    // Helper to filter hierarchy: keep fire goals and parents that lead to fire goals
+    // Each node keeps its FULL children array (for modal), but we only include nodes in the tree
+    // that are either fire goals themselves OR parents of fire goals
+    const filterToFireBranches = (
       goal: (typeof hierarchicalAdhocGoals)[0]
-    ): (typeof hierarchicalAdhocGoals)[0] | null => {
+    ): GoalWithFilteredChildren | null => {
       const isOnFire = fireGoals.has(goal._id.toString());
-      const fireChildren = goal.children
-        ?.map(filterFireBranches)
+
+      // Recursively filter children
+      const filteredChildren = goal.children
+        ?.map(filterToFireBranches)
         .filter((c): c is NonNullable<typeof c> => c !== null);
 
-      // Include this goal if it's on fire OR has fire children
-      if (isOnFire || (fireChildren && fireChildren.length > 0)) {
+      // Include this goal if it's on fire OR has fire descendants
+      if (isOnFire || (filteredChildren && filteredChildren.length > 0)) {
+        // Important: Keep the FULL original children array for modal display
+        // The filteredChildren is only used to determine tree structure in the urgent section
         return {
           ...goal,
-          children: fireChildren || [],
+          // Store filtered children in a special property for rendering in urgent section
+          _filteredChildren: filteredChildren || [],
         };
       }
       return null;
@@ -185,8 +194,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
     // Filter root goals to only those with fire in their subtree
     return hierarchicalAdhocGoals
-      .filter(hasFireGoalInSubtree)
-      .map(filterFireBranches)
+      .map(filterToFireBranches)
       .filter((g): g is NonNullable<typeof g> => g !== null);
   }, [fireGoals, hierarchicalAdhocGoals]);
 
@@ -423,6 +431,12 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
                           onCreateChild={_handleCreateAdhocChild}
                           showDueDate={false}
                           showDomain={false}
+                          childrenToRender={
+                            '_filteredChildren' in goal
+                              ? (goal as unknown as { _filteredChildren?: typeof onFireAdhocGoals })
+                                  ._filteredChildren
+                              : undefined
+                          }
                         />
                       ))}
                     </div>
