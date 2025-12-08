@@ -85,7 +85,7 @@
 .prose :global(li[data-type="taskItem"]),
 .prose :global(li.task-item) {
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important; /* Top align for nested list support */
   gap: 0.5rem !important;
   list-style: none !important;
   padding-left: 0 !important;
@@ -102,6 +102,7 @@
   height: 1rem !important;
   flex-shrink: 0 !important;
   margin: 0 !important;
+  margin-top: 0.125rem !important; /* Offset to align with text baseline */
   cursor: pointer !important;
 
   /* Use native checkbox with accent color and clear border */
@@ -145,10 +146,10 @@
   display: flex !important;
   align-items: center !important;
   margin-right: 0 !important;
+  margin-top: 0.125rem !important; /* Offset to align with text baseline */
   cursor: pointer !important;
   user-select: none !important;
   flex-shrink: 0 !important;
-  padding-top: 0 !important;
 }
 
 /* Checkbox styling to match shadcn/radix Checkbox component */
