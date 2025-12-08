@@ -212,7 +212,7 @@
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.25rem !important;
+  gap: 0 !important; /* Tight spacing - nested lists have their own margin */
   align-items: flex-start !important;
 }
 
@@ -238,11 +238,19 @@
   text-decoration: none !important;
 }
 
-/* Nested task lists */
+/* Nested task lists - override Tiptap's my-2 class margins */
 .prose :global(li[data-type="taskItem"] ul[data-type="taskList"]),
 .prose :global(li.task-item ul.task-list) {
-  margin-top: 0.5rem !important;
+  margin-top: 0.125rem !important;
+  margin-bottom: 0 !important;
   margin-left: 1.5rem !important;
+}
+
+/* Paragraphs inside task items should have minimal margins */
+.prose :global(li[data-type="taskItem"] p),
+.prose :global(li.task-item p) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 /* ==========================================================================
