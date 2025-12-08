@@ -25,7 +25,6 @@ import type * as migration from "../migration.js";
 import type * as pendingGoals from "../pendingGoals.js";
 import type * as presentations from "../presentations.js";
 import type * as serviceDesk from "../serviceDesk.js";
-import type * as sync from "../sync.js";
 import type * as system_auth_google from "../system/auth/google.js";
 
 import type {
@@ -52,7 +51,6 @@ declare const fullApi: ApiFromModules<{
   pendingGoals: typeof pendingGoals;
   presentations: typeof presentations;
   serviceDesk: typeof serviceDesk;
-  sync: typeof sync;
   "system/auth/google": typeof system_auth_google;
 }>;
 

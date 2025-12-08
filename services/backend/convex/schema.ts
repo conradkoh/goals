@@ -348,17 +348,6 @@ export default defineSchema({
     ]),
 
   /**
-   * Sync sessions for data synchronization.
-   */
-  syncSessions: defineTable({
-    userId: v.id('users'),
-    passphrase: v.string(),
-    expiresAt: v.number(),
-    status: v.union(v.literal('active'), v.literal('consumed')),
-    durationMs: v.optional(v.number()),
-  }).index('by_passphrase', ['passphrase']),
-
-  /**
    * Fire goals - priority/urgent goals.
    */
   fireGoals: defineTable({

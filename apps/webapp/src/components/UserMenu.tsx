@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { SyncPassphrase } from '@/components/organisms/sync/SyncPassphrase';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -163,7 +162,6 @@ function _renderUserDropdownMenu(
             Documentation
           </DropdownMenuItem>
         </Link>
-        <SyncPassphrase />
         {isSystemAdmin && (
           <>
             <DropdownMenuSeparator />
