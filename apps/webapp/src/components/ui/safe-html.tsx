@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
+import styles from './rich-text-editor.module.css';
 
 // Configure DOMPurify to only allow specific tags and attributes
 const purifyConfig = {
@@ -51,7 +52,11 @@ export function SafeHTML({ html, sanitize = true, className, ...props }: SafeHTM
 
   return (
     <div
-      className={cn('prose prose-sm max-w-none break-words overflow-wrap-anywhere', className)}
+      className={cn(
+        'prose prose-sm max-w-none break-words overflow-wrap-anywhere',
+        styles.prose,
+        className
+      )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized using DOMPurify before rendering
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
       {...props}

@@ -1,0 +1,36 @@
+/* Rich text editor prose styling overrides */
+
+/* Override left margin for lists - reduce from ml-8 (2rem) to ml-4 (1rem) */
+.prose :global(ol),
+.prose :global(ul) {
+  margin-left: 1rem !important;
+  padding-left: 1.25rem !important; /* Add explicit padding-left for list markers */
+}
+
+/* Remove min-height and margins from paragraphs inside list items */
+.prose :global(li > p) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Compact spacing for list items */
+.prose :global(ol > li),
+.prose :global(ul > li) {
+  margin-top: 0.125em;
+  margin-bottom: 0.125em;
+  padding-left: 0.25em !important; /* Minimal padding for list content */
+}
+
+/* Ensure proper spacing between lists and other content */
+.prose :global(ol),
+.prose :global(ul) {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+/* Remove extra line-height from list item paragraphs */
+.prose :global(li p) {
+  line-height: 1.5 !important;
+}
+

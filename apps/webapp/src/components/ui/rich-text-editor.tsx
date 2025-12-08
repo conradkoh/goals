@@ -8,6 +8,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { cn } from '@/lib/utils';
+import styles from './rich-text-editor.module.css';
 
 /** Helper function to check if HTML content is effectively empty */
 export function isHTMLEmpty(html: string) {
@@ -64,17 +65,22 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
       StarterKit.configure({
         paragraph: {
           HTMLAttributes: {
-            class: 'min-h-[1.5em] leading-normal',
+            class: 'leading-normal',
           },
         },
         bulletList: {
           HTMLAttributes: {
-            class: 'list-disc ml-8',
+            class: 'list-disc ml-4 my-2',
           },
         },
         orderedList: {
           HTMLAttributes: {
-            class: 'list-decimal ml-8',
+            class: 'list-decimal ml-4 my-2',
+          },
+        },
+        listItem: {
+          HTMLAttributes: {
+            class: 'leading-normal',
           },
         },
         code: {
@@ -110,6 +116,7 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
       attributes: {
         class: cn(
           'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border break-words [word-break:break-word]',
+          styles.prose,
           className
         ),
       },
