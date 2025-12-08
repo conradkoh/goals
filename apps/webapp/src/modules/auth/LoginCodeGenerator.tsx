@@ -3,7 +3,7 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import { formatLoginCode } from '@workspace/backend/modules/auth/codeUtils';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
-import { Loader2 } from 'lucide-react';
+import { Check, Copy, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ export function LoginCodeGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [loginCode, setLoginCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Computed values
   const getTimeRemaining = useCallback(() => _getTimeRemaining(expiresAt), [expiresAt]);
@@ -99,6 +100,24 @@ export function LoginCodeGenerator() {
     });
   }, [authState, isGenerating, createLoginCode, getTimeRemaining]);
 
+  const handleCopyCode = useCallback(async () => {
+    if (!loginCode) return;
+
+    try {
+      await navigator.clipboard.writeText(loginCode);
+      setIsCopied(true);
+      toast.success('Code copied to clipboard');
+
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy code:', error);
+      toast.error('Failed to copy code to clipboard');
+    }
+  }, [loginCode]);
+
   // Early return if not an authenticated user
   if (!isAuthenticatedUser) {
     return null;
@@ -118,9 +137,27 @@ export function LoginCodeGenerator() {
           <div className="space-y-4">
             <div className="p-4 bg-secondary/50 rounded-lg text-center">
               <p className="text-sm text-muted-foreground mb-1">Your login code:</p>
-              <p className="text-3xl font-mono font-bold tracking-wider" aria-live="polite">
-                {formatLoginCode(loginCode)}
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-3xl font-mono font-bold tracking-wider" aria-live="polite">
+                  {formatLoginCode(loginCode)}
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopyCode}
+                  aria-label="Copy login code to clipboard"
+                  className="h-9 w-9"
+                >
+                  {isCopied ? (
+                    <Check
+                      className="h-5 w-5 text-green-600 dark:text-green-400"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <Copy className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </Button>
+              </div>
               <p className="text-sm text-muted-foreground mt-2" aria-live="polite">
                 Valid for {timeRemaining}
               </p>
