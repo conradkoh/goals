@@ -14,10 +14,10 @@
   "keywords": [],
   "author": "",
   "dependencies": {
-    "convex": "^1.29.3",
+    "convex": "^1.30.0",
     "convex-helpers": "^0.1.106",
-    "luxon": "^3.5.0",
-    "zod": "^3.25.0"
+    "zod": "^4.0.5",
+    "luxon": "^3.5.0"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",

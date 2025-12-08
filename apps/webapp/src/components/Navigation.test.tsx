@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { ComponentProps, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { Navigation } from './Navigation';
 
@@ -14,11 +15,7 @@ vi.mock('next/link', () => ({
     href,
     children,
     ...props
-  }: {
-    href: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }) => (
+  }: { href: string; children: ReactNode } & ComponentProps<'a'>) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -49,7 +46,7 @@ describe('Navigation', () => {
 
     render(<Navigation />);
 
-    const titleLink = screen.getByRole('link', { name: /next convex/i });
+    const titleLink = screen.getByRole('link', { name: /goals/i });
     expect(titleLink).toBeInTheDocument();
     expect(titleLink).toHaveAttribute('href', '/');
   });
@@ -62,7 +59,7 @@ describe('Navigation', () => {
         _id: 'test-user-id' as Id<'users'>,
         _creationTime: Date.now(),
         type: 'anonymous',
-        displayName: 'Test User',
+        name: 'Test User',
       },
       accessLevel: 'user',
       isSystemAdmin: false,
@@ -70,7 +67,7 @@ describe('Navigation', () => {
 
     render(<Navigation />);
 
-    const titleLink = screen.getByRole('link', { name: /next convex/i });
+    const titleLink = screen.getByRole('link', { name: /goals/i });
     expect(titleLink).toBeInTheDocument();
     expect(titleLink).toHaveAttribute('href', '/app');
   });
@@ -95,7 +92,7 @@ describe('Navigation', () => {
         _id: 'test-user-id' as Id<'users'>,
         _creationTime: Date.now(),
         type: 'anonymous',
-        displayName: 'Test User',
+        name: 'Test User',
       },
       accessLevel: 'user',
       isSystemAdmin: false,

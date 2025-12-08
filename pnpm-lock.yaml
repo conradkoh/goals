@@ -37,7 +37,7 @@ importers:
         specifier: 22.1.2
         version: 22.1.2
       typescript:
-        specifier: ^5.7.3
+        specifier: ^5.9.3
         version: 5.9.3
 
   apps/webapp:
@@ -154,11 +154,11 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       convex:
-        specifier: ^1.29.3
-        version: 1.29.3(react@19.2.1)
+        specifier: ^1.30.0
+        version: 1.30.0(react@19.2.1)
       convex-helpers:
-        specifier: ^0.1.105
-        version: 0.1.105(@standard-schema/spec@1.0.0)(convex@1.29.3(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49)
+        specifier: ^0.1.106
+        version: 0.1.106(@standard-schema/spec@1.0.0)(convex@1.30.0(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -284,17 +284,17 @@ importers:
   services/backend:
     dependencies:
       convex:
-        specifier: ^1.29.3
-        version: 1.29.3(react@19.2.1)
+        specifier: ^1.30.0
+        version: 1.30.0(react@19.2.1)
       convex-helpers:
         specifier: ^0.1.106
-        version: 0.1.106(@standard-schema/spec@1.0.0)(convex@1.29.3(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49)
+        version: 0.1.106(@standard-schema/spec@1.0.0)(convex@1.30.0(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@4.1.13)
       luxon:
         specifier: ^3.5.0
         version: 3.6.1
       zod:
-        specifier: ^3.25.0
-        version: 3.25.49
+        specifier: ^4.0.5
+        version: 4.1.13
     devDependencies:
       '@edge-runtime/vm':
         specifier: ^5.0.0
@@ -310,7 +310,7 @@ importers:
         version: 8.31.1(eslint@9.26.0(jiti@2.4.2))(typescript@5.9.3)
       convex-test:
         specifier: ^0.0.41
-        version: 0.0.41(convex@1.29.3(react@19.2.1))
+        version: 0.0.41(convex@1.30.0(react@19.2.1))
       eslint:
         specifier: ^9
         version: 9.26.0(jiti@2.4.2)
@@ -3289,28 +3289,6 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  convex-helpers@0.1.105:
-    resolution: {integrity: sha512-B6EUQsBpLFcXpa1g/9Zsc7EaFHdaeMlPLCa/snSD+4hRBFMWKJjT589dZ/0Z40taBOQWC2tb81ciTNr4ctJb2w==}
-    hasBin: true
-    peerDependencies:
-      '@standard-schema/spec': ^1.0.0
-      convex: ^1.24.0
-      hono: ^4.0.5
-      react: ^17.0.2 || ^18.0.0 || ^19.0.0
-      typescript: ^5.5
-      zod: ^3.25.0 || ^4.0.0
-    peerDependenciesMeta:
-      '@standard-schema/spec':
-        optional: true
-      hono:
-        optional: true
-      react:
-        optional: true
-      typescript:
-        optional: true
-      zod:
-        optional: true
-
   convex-helpers@0.1.106:
     resolution: {integrity: sha512-hWRe3yDaAVHMe4CUYw1YoQLiPZ1KIx6Kbf0w6UcRDx1BXpJgMCl3GVIMiSeYiA0PkbwjnIwGWIvoUVKloG5Tyw==}
     hasBin: true
@@ -3338,8 +3316,8 @@ packages:
     peerDependencies:
       convex: ^1.16.4
 
-  convex@1.29.3:
-    resolution: {integrity: sha512-tg5TXzMjpNk9m50YRtdp6US+t7ckxE4E+7DNKUCjJ2MupQs2RBSPF/z5SNN4GUmQLSfg0eMILDySzdAvjTrhnw==}
+  convex@1.30.0:
+    resolution: {integrity: sha512-YvFFxLg3bICP7u5hSVxW6BUYgI4LkWJHdim+9XrXUkdyOziloiQ21EbSCq6NNG2ycba2x7hsgxUKCGAhJmkv1g==}
     engines: {node: '>=18.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -5949,6 +5927,9 @@ packages:
 
   zod@3.25.49:
     resolution: {integrity: sha512-JMMPMy9ZBk3XFEdbM3iL1brx4NUSejd6xr3ELrrGEfGb355gjhiAWtG3K5o+AViV/3ZfkIrCzXsZn6SbLwTR8Q==}
+
+  zod@4.1.13:
+    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
 
   zustand@5.0.9:
     resolution: {integrity: sha512-ALBtUj0AfjJt3uNRQoL1tL2tMvj6Gp/6e39dnfT6uzpelGru8v1tPOGBzayOWbPJvujM8JojDk3E1LxeFisBNg==}
@@ -8762,29 +8743,29 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.105(@standard-schema/spec@1.0.0)(convex@1.29.3(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49):
+  convex-helpers@0.1.106(@standard-schema/spec@1.0.0)(convex@1.30.0(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49):
     dependencies:
-      convex: 1.29.3(react@19.2.1)
+      convex: 1.30.0(react@19.2.1)
     optionalDependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.2.1
       typescript: 5.9.3
       zod: 3.25.49
 
-  convex-helpers@0.1.106(@standard-schema/spec@1.0.0)(convex@1.29.3(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@3.25.49):
+  convex-helpers@0.1.106(@standard-schema/spec@1.0.0)(convex@1.30.0(react@19.2.1))(react@19.2.1)(typescript@5.9.3)(zod@4.1.13):
     dependencies:
-      convex: 1.29.3(react@19.2.1)
+      convex: 1.30.0(react@19.2.1)
     optionalDependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.2.1
       typescript: 5.9.3
-      zod: 3.25.49
+      zod: 4.1.13
 
-  convex-test@0.0.41(convex@1.29.3(react@19.2.1)):
+  convex-test@0.0.41(convex@1.30.0(react@19.2.1)):
     dependencies:
-      convex: 1.29.3(react@19.2.1)
+      convex: 1.30.0(react@19.2.1)
 
-  convex@1.29.3(react@19.2.1):
+  convex@1.30.0(react@19.2.1):
     dependencies:
       esbuild: 0.25.4
       prettier: 3.6.2
@@ -12116,6 +12097,8 @@ snapshots:
       zod: 3.25.49
 
   zod@3.25.49: {}
+
+  zod@4.1.13: {}
 
   zustand@5.0.9(@types/react@19.2.1)(react@19.2.1)(use-sync-external-store@1.6.0(react@19.2.1)):
     optionalDependencies:

@@ -21,7 +21,7 @@ export const errorDataSchema = z.object({
     'UNEXPECTED_ERROR',
   ]),
   message: z.string(),
-  details: z.record(z.unknown()).optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ErrorData = z.infer<typeof errorDataSchema>;
