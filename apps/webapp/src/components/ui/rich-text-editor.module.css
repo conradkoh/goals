@@ -1,10 +1,10 @@
 /**
  * Rich Text Editor & Prose Styling
- * 
+ *
  * This module provides comprehensive styling overrides for rendered markdown/HTML content.
  * It addresses common issues with Tailwind's prose typography and ensures consistent
  * rendering across edit mode (TipTap) and view mode (SafeHTML).
- * 
+ *
  * Key principles:
  * - Compact spacing for dialog/popover contexts
  * - Consistent dark mode support
@@ -557,7 +557,9 @@
   border-radius: 0.25rem !important;
   font-size: 0.875em !important;
   font-family: inherit !important;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.1) !important;
 }
 
 .prose :global(abbr) {
@@ -612,12 +614,12 @@
    ========================================================================== */
 
 /* Remove top margin from first child elements */
-.prose :global(> *:first-child) {
+.prose :global(*:first-child) {
   margin-top: 0 !important;
 }
 
 /* Remove bottom margin from last child elements */
-.prose :global(> *:last-child) {
+.prose :global(*:last-child) {
   margin-bottom: 0 !important;
 }
 

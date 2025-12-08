@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { describe, expect, it, vi } from 'vitest';
 import { Navigation } from './Navigation';
 
@@ -9,7 +10,15 @@ vi.mock('@/modules/auth/AuthProvider', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: any) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+    [key: string]: unknown;
+  }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -33,8 +42,10 @@ import { useAuthState } from '@/modules/auth/AuthProvider';
 describe('Navigation', () => {
   it('renders title link to "/" when user is not authenticated', () => {
     vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
       state: 'unauthenticated',
-    } as any);
+      reason: 'test',
+    });
 
     render(<Navigation />);
 
@@ -45,13 +56,17 @@ describe('Navigation', () => {
 
   it('renders title link to "/app" when user is authenticated', () => {
     vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
       state: 'authenticated',
       user: {
+        _id: 'test-user-id' as Id<'users'>,
+        _creationTime: Date.now(),
         type: 'anonymous',
-        id: 'test-user-id',
         displayName: 'Test User',
       },
-    } as any);
+      accessLevel: 'user',
+      isSystemAdmin: false,
+    });
 
     render(<Navigation />);
 
@@ -62,8 +77,10 @@ describe('Navigation', () => {
 
   it('renders login button when user is not authenticated', () => {
     vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
       state: 'unauthenticated',
-    } as any);
+      reason: 'test',
+    });
 
     render(<Navigation />);
 
@@ -72,13 +89,17 @@ describe('Navigation', () => {
 
   it('renders user menu when user is authenticated', () => {
     vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
       state: 'authenticated',
       user: {
+        _id: 'test-user-id' as Id<'users'>,
+        _creationTime: Date.now(),
         type: 'anonymous',
-        id: 'test-user-id',
         displayName: 'Test User',
       },
-    } as any);
+      accessLevel: 'user',
+      isSystemAdmin: false,
+    });
 
     render(<Navigation />);
 

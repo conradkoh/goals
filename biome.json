@@ -40,6 +40,11 @@
       "semicolons": "always"
     }
   },
+  "css": {
+    "parser": {
+      "cssModules": true
+    }
+  },
   "files": {
     "includes": [
       "**",
