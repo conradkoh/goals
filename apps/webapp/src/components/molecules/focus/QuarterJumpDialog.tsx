@@ -113,6 +113,26 @@ export function QuarterJumpDialog({
     }
   }, [customYear, customQuarter, handleSelect]);
 
+  const handleSelectCurrent = useCallback(() => {
+    handleSelect(actualCurrentYear, actualCurrentQuarter);
+  }, [handleSelect, actualCurrentYear, actualCurrentQuarter]);
+
+  const handleShowCustomInput = useCallback(() => {
+    setShowCustomInput(true);
+  }, []);
+
+  const handleHideCustomInput = useCallback(() => {
+    setShowCustomInput(false);
+  }, []);
+
+  const handleYearChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomYear(e.target.value);
+  }, []);
+
+  const handleQuarterChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomQuarter(e.target.value);
+  }, []);
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput placeholder="Jump to quarter... (e.g. Q1 2024)" />
@@ -125,7 +145,7 @@ export function QuarterJumpDialog({
               <CommandGroup heading="Jump to Current">
                 <CommandItem
                   value={`Q${actualCurrentQuarter} ${actualCurrentYear} current`}
-                  onSelect={() => handleSelect(actualCurrentYear, actualCurrentQuarter)}
+                  onSelect={handleSelectCurrent}
                   className="flex items-center gap-2"
                 >
                   <Clock className="h-4 w-4" />
@@ -155,10 +175,7 @@ export function QuarterJumpDialog({
             </CommandGroup>
 
             <CommandGroup heading="Other">
-              <CommandItem
-                onSelect={() => setShowCustomInput(true)}
-                className="flex items-center gap-2"
-              >
+              <CommandItem onSelect={handleShowCustomInput} className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>Custom quarter...</span>
               </CommandItem>
@@ -177,7 +194,7 @@ export function QuarterJumpDialog({
                   id="custom-year"
                   type="number"
                   value={customYear}
-                  onChange={(e) => setCustomYear(e.target.value)}
+                  onChange={handleYearChange}
                   placeholder="2024"
                   className="mt-1"
                 />
@@ -195,18 +212,14 @@ export function QuarterJumpDialog({
                   min={1}
                   max={4}
                   value={customQuarter}
-                  onChange={(e) => setCustomQuarter(e.target.value)}
+                  onChange={handleQuarterChange}
                   placeholder="1-4"
                   className="mt-1"
                 />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowCustomInput(false)}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={handleHideCustomInput} className="flex-1">
                 Back
               </Button>
               <Button onClick={handleCustomSubmit} className="flex-1">
