@@ -1,4 +1,4 @@
-import { type MouseEvent, type ReactNode, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export interface GoalHeaderProps {
@@ -44,24 +44,15 @@ export function GoalHeader({
 }: GoalHeaderProps) {
   const titleClassName = size === 'large' ? 'font-semibold text-xl' : 'font-semibold text-lg';
 
-  // Prevent click from bubbling up to parent elements (like dialog close handlers)
-  const handleCheckboxContainerClick = useCallback((e: MouseEvent) => {
-    e.stopPropagation();
-  }, []);
-
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-center gap-2 flex-1">
-        {/* Wrapper div stops propagation to prevent modal from closing when toggling completion */}
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: Checkbox handles keyboard events */}
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: Click handler prevents event bubbling only */}
-        <div onClick={handleCheckboxContainerClick} className="flex-shrink-0">
-          <Checkbox
-            checked={isComplete}
-            disabled={disableCompletion || !onToggleComplete}
-            onCheckedChange={(checked) => onToggleComplete?.(checked === true)}
-          />
-        </div>
+        <Checkbox
+          className="flex-shrink-0"
+          checked={isComplete}
+          disabled={disableCompletion || !onToggleComplete}
+          onCheckedChange={(checked) => onToggleComplete?.(checked === true)}
+        />
         <h3 className={`${titleClassName} break-words flex-1 leading-tight`}>{title}</h3>
       </div>
       <div className="flex items-center gap-2">

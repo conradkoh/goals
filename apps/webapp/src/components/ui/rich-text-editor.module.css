@@ -22,7 +22,7 @@
 .prose :global(ul) {
   margin-left: 0 !important;
   margin-top: 0.5em !important;
-  margin-bottom: 0.5em !important;
+  margin-bottom: 0 !important;
   padding-left: 1.5rem !important; /* Space for list markers */
 }
 
@@ -326,7 +326,7 @@
 
 .prose :global(p) {
   margin-top: 0 !important;
-  margin-bottom: 0.75em !important;
+  margin-bottom: 0.25em !important;
   line-height: 1.6 !important;
   min-height: 0 !important;
 }
