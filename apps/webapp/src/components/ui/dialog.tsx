@@ -42,12 +42,24 @@ function DialogOverlay({
 interface DialogContentProps extends React.ComponentProps<typeof DialogPrimitive.Content> {
   /** Use fullscreen-safe positioning (for mobile fullscreen dialogs) */
   fullscreenSafe?: boolean;
+  /** Callback to intercept escape key press. Return false to prevent closing. */
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
+  /** Callback to intercept pointer down outside. Return false to prevent closing. */
+  onPointerDownOutside?: (event: Event) => void;
+  /** Callback to intercept interact outside. Return false to prevent closing. */
+  onInteractOutside?: (event: Event) => void;
+  /** Whether to hide the default close button */
+  hideCloseButton?: boolean;
 }
 
 function DialogContent({
   className,
   children,
   fullscreenSafe = false,
+  onEscapeKeyDown,
+  onPointerDownOutside,
+  onInteractOutside,
+  hideCloseButton = false,
   ...props
 }: DialogContentProps) {
   // Fix iOS text selection handles not being draggable
@@ -60,6 +72,9 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onEscapeKeyDown={onEscapeKeyDown}
+        onPointerDownOutside={onPointerDownOutside}
+        onInteractOutside={onInteractOutside}
         className={cn(
           fullscreenSafe
             ? // Fullscreen-safe: use inset positioning instead of transform centering
@@ -72,10 +87,12 @@ function DialogContent({
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
-          <XIcon />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
+        {!hideCloseButton && (
+          <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+            <XIcon />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
       </DialogPrimitive.Content>
     </DialogPortal>
   );

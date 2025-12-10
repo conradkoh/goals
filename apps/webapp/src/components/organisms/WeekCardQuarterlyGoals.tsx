@@ -28,10 +28,10 @@ const QuarterlyGoalsSkeleton = () => (
   </div>
 );
 
-// Helper function to sort goals by status and title
+// Helper function to sort goals by status and creation time
 const sortGoals = (goals: GoalWithDetailsAndChildren[]): GoalWithDetailsAndChildren[] => {
   // Sort function that prioritizes starred -> pinned -> neither
-  // Within each group, sort alphabetically by title
+  // Within each group, sort by creation time (oldest first for stability)
   return [...goals].sort((a, b) => {
     const aWeekly = a.state;
     const bWeekly = b.state;
@@ -42,8 +42,11 @@ const sortGoals = (goals: GoalWithDetailsAndChildren[]): GoalWithDetailsAndChild
     if (aWeekly?.isPinned && !bWeekly?.isPinned) return -1;
     if (!aWeekly?.isPinned && bWeekly?.isPinned) return 1;
 
-    // Within the same status group, sort alphabetically
-    return a.title.localeCompare(b.title);
+    // Within the same status group, sort by creation time (oldest first)
+    // This provides a stable, predictable ordering that respects user intent
+    const aCreationTime = a._creationTime ?? 0;
+    const bCreationTime = b._creationTime ?? 0;
+    return aCreationTime - bCreationTime;
   });
 };
 

@@ -119,7 +119,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   return (
     <GoalStatusProvider>
       <div id="db-focus-view" className="w-full h-full">
-        <ViewModeKeyboardShortcuts onViewModeChange={onViewModeChange} />
+        <ViewModeKeyboardShortcuts
+          onViewModeChange={onViewModeChange}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          currentYear={selectedYear}
+          currentQuarter={selectedQuarter}
+          onYearQuarterChange={onYearQuarterChange}
+        />
         <div className="w-full">
           <FocusMenuBar
             viewMode={viewMode}

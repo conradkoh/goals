@@ -3,6 +3,16 @@ import { CalendarIcon, Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -80,9 +90,31 @@ export function GoalEditPopover({
   );
   const [domainId, setDomainId] = useState<Id<'domains'> | null | undefined>(initialDomainId);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
+
+  /**
+   * Checks if there are unsaved changes in the form.
+   */
+  const hasUnsavedChanges = useMemo(() => {
+    const titleChanged = title.trim() !== initialTitle.trim();
+    const detailsChanged = (details || '').trim() !== (initialDetails || '').trim();
+    const dueDateChanged =
+      (dueDate?.getTime() || undefined) !== (initialDueDate ? initialDueDate : undefined);
+    const domainChanged = domainId !== initialDomainId;
+    return titleChanged || detailsChanged || dueDateChanged || domainChanged;
+  }, [
+    title,
+    initialTitle,
+    details,
+    initialDetails,
+    dueDate,
+    initialDueDate,
+    domainId,
+    initialDomainId,
+  ]);
 
   // Sync title with external data when it changes or popover opens
   useEffect(() => {
@@ -171,18 +203,83 @@ export function GoalEditPopover({
   });
 
   /**
+   * Forces the dialog to close and discards changes.
+   */
+  const forceClose = useCallback(() => {
+    setTitle(initialTitle);
+    setDetails(initialDetails ?? '');
+    setDueDate(initialDueDate ? new Date(initialDueDate) : undefined);
+    setDomainId(initialDomainId);
+    setShowDiscardDialog(false);
+    setIsOpen(false);
+  }, [initialTitle, initialDetails, initialDueDate, initialDomainId]);
+
+  /**
+   * Attempts to close the dialog, showing confirmation if there are unsaved changes.
+   */
+  const attemptClose = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowDiscardDialog(true);
+    } else {
+      forceClose();
+    }
+  }, [hasUnsavedChanges, forceClose]);
+
+  /**
    * Handles popover/dialog open state changes.
    */
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        handleCancel();
+        attemptClose();
       } else {
         setIsOpen(true);
       }
     },
-    [handleCancel]
+    [attemptClose]
   );
+
+  /**
+   * Handles escape key press - prevents default close if there are unsaved changes.
+   */
+  const handleEscapeKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        setShowDiscardDialog(true);
+      }
+    },
+    [hasUnsavedChanges]
+  );
+
+  /**
+   * Handles interaction outside the dialog - prevents close if there are unsaved changes.
+   */
+  const handleInteractOutside = useCallback(
+    (event: Event) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        setShowDiscardDialog(true);
+      }
+    },
+    [hasUnsavedChanges]
+  );
+
+  // Handle escape key for popover mode (Dialog handles it via onEscapeKeyDown prop)
+  useEffect(() => {
+    if (!isOpen || (isHydrated && preferFullscreenDialogs)) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && hasUnsavedChanges) {
+        event.preventDefault();
+        event.stopPropagation();
+        setShowDiscardDialog(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, { capture: true });
+    return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
+  }, [isOpen, hasUnsavedChanges, isHydrated, preferFullscreenDialogs]);
 
   const defaultTrigger = useMemo(
     () => (
@@ -289,6 +386,24 @@ export function GoalEditPopover({
     </div>
   );
 
+  // Discard confirmation dialog
+  const discardDialog = (
+    <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+          <AlertDialogDescription>
+            You have unsaved changes. Are you sure you want to discard them?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Keep editing</AlertDialogCancel>
+          <AlertDialogAction onClick={forceClose}>Discard</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // Use fullscreen dialog on touch devices
   if (isHydrated && preferFullscreenDialogs) {
     return (
@@ -301,6 +416,8 @@ export function GoalEditPopover({
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
           <DialogContent
             fullscreenSafe
+            onEscapeKeyDown={handleEscapeKeyDown}
+            onInteractOutside={handleInteractOutside}
             className={cn(
               // Width: full width minus small margin
               'w-[calc(100vw-16px)] max-w-none',
@@ -318,16 +435,20 @@ export function GoalEditPopover({
             <div className="flex-1 overflow-y-auto overscroll-contain pb-4 pr-4">{formContent}</div>
           </DialogContent>
         </Dialog>
+        {discardDialog}
       </>
     );
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
-      <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-4">
-        {formContent}
-      </PopoverContent>
-    </Popover>
+    <>
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
+        <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-4">
+          {formContent}
+        </PopoverContent>
+      </Popover>
+      {discardDialog}
+    </>
   );
 }

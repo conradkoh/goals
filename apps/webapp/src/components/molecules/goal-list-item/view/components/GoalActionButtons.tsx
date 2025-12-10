@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { useGoalContext } from '@/contexts/GoalContext';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 import type { GoalSaveHandler, GoalUpdatePendingHandler } from '@/models/goal-handlers';
 
@@ -54,6 +55,13 @@ export function GoalActionButtons({
   suffixButtons,
 }: GoalActionButtonsProps) {
   const { goal } = useGoalContext();
+  const { isTouchDevice } = useDeviceScreenInfo();
+
+  // On touch devices, always show buttons (no hover state available)
+  // On desktop, show on hover via group-hover/title
+  const buttonVisibilityClass = isTouchDevice
+    ? 'opacity-70'
+    : 'opacity-0 group-hover/title:opacity-100';
 
   return (
     <div className={cn('flex items-center gap-1', className)}>
@@ -70,7 +78,10 @@ export function GoalActionButtons({
           trigger={
             <button
               type="button"
-              className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
+              className={cn(
+                'text-muted-foreground transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0',
+                buttonVisibilityClass
+              )}
             >
               <Edit2 className="h-3.5 w-3.5" />
             </button>
@@ -81,6 +92,7 @@ export function GoalActionButtons({
         <DeleteGoalIconButton
           goalId={goal._id as Id<'goals'>}
           requireConfirmation={deleteRequiresConfirmation}
+          buttonClassName={buttonVisibilityClass}
         />
       )}
       {suffixButtons}

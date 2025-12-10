@@ -56,7 +56,7 @@ const WeeklyGoalSection = ({
   weeklyGoal,
   dayOfWeek,
   mode,
-  sortDailyGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
+  sortDailyGoals = (goals) => goals.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
   onUpdateGoal,
   onDelete,
   onCreateDailyGoal,

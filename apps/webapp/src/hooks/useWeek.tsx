@@ -117,9 +117,9 @@ export const WeekProvider = ({ weekData, children }: WeekProviderProps) => {
       }
     });
 
-    // Sort weekly goals by name within each quarterly goal
+    // Sort weekly goals by creation time within each quarterly goal (oldest first)
     quarterlyGoalsMap.forEach((quarterlyGoal) => {
-      quarterlyGoal.children.sort((a, b) => a.title.localeCompare(b.title));
+      quarterlyGoal.children.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0));
     });
 
     // Distribute daily goals to their parent weekly goals

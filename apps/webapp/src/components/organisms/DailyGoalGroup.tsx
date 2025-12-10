@@ -28,7 +28,7 @@ export const DailyGoalGroup = ({
   onCreateGoal,
   isCreating = false,
   className,
-  sortGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
+  sortGoals = (goals) => goals.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
 }: DailyGoalGroupProps) => {
   const { onUpdateGoal } = useGoalActionsContext();
   const [newGoalTitle, setNewGoalTitle] = useState('');
