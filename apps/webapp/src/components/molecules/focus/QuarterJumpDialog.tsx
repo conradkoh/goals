@@ -11,7 +11,10 @@ import {
 } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 
-interface QuarterJumpDialogProps {
+/**
+ * Props for the QuarterJumpDialog component.
+ */
+export interface QuarterJumpDialogProps {
   /** Whether the dialog is open */
   open: boolean;
   /** Callback when the dialog open state changes */
@@ -24,10 +27,17 @@ interface QuarterJumpDialogProps {
   onQuarterSelect: (year: number, quarter: number) => void;
 }
 
-interface QuarterOption {
+/**
+ * Internal type representing a quarter option in the selection list.
+ */
+interface _QuarterOption {
+  /** Display label for the quarter (e.g., "Q1 2024") */
   label: string;
+  /** Year of the quarter */
   year: number;
+  /** Quarter number (1-4) */
   quarter: number;
+  /** Whether this quarter is currently selected/viewing */
   isSelected: boolean;
 }
 
@@ -68,8 +78,8 @@ export function QuarterJumpDialog({
   }, [open, selectedYear, selectedQuarter]);
 
   // Generate quarter options (actual current year -1 to +1, all quarters)
-  const quarterOptions = useMemo((): QuarterOption[] => {
-    const options: QuarterOption[] = [];
+  const quarterOptions = useMemo((): _QuarterOption[] => {
+    const options: _QuarterOption[] = [];
     const years = [actualCurrentYear - 1, actualCurrentYear, actualCurrentYear + 1];
 
     for (const year of years) {

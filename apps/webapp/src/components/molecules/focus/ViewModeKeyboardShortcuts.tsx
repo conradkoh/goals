@@ -1,19 +1,30 @@
 import { useEffect } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 
-interface ViewModeKeyboardShortcutsProps {
+/**
+ * Props for the ViewModeKeyboardShortcuts component.
+ */
+export interface ViewModeKeyboardShortcutsProps {
+  /** Callback fired when view mode should change */
   onViewModeChange: (viewMode: ViewMode) => void;
-  /**
-   * Whether the keyboard shortcuts are enabled
-   * @default true
-   */
+  /** Whether the keyboard shortcuts are enabled (default: true) */
   enabled?: boolean;
-  /**
-   * Callback when Cmd+K is pressed to open quarter jump dialog
-   */
+  /** Callback fired when Cmd+K is pressed to open quarter jump dialog */
   onOpenQuarterJump?: () => void;
 }
 
+/**
+ * Invisible component that listens for keyboard shortcuts to change view modes.
+ * Supports D (daily), W (weekly), Q (quarterly), and Cmd+K (quarter jump).
+ *
+ * @example
+ * ```tsx
+ * <ViewModeKeyboardShortcuts
+ *   onViewModeChange={setViewMode}
+ *   onOpenQuarterJump={() => setQuarterJumpOpen(true)}
+ * />
+ * ```
+ */
 export function ViewModeKeyboardShortcuts({
   onViewModeChange,
   enabled = true,
