@@ -1,5 +1,6 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
@@ -144,6 +145,7 @@ function _AdhocGoalPopoverContent({
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
         actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+        statusControls={<GoalStatusIcons goalId={goal._id} />}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
