@@ -4,7 +4,6 @@ import { useMutation } from 'convex/react';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useWeek } from '@/hooks/useWeek';
-import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
 
@@ -23,14 +22,11 @@ interface DeletePreview {
 interface DeleteGoalIconButtonProps {
   requireConfirmation: boolean;
   goalId: Id<'goals'>;
-  /** Additional class names for the button visibility (e.g., for touch devices) */
-  buttonClassName?: string;
 }
 
 export const DeleteGoalIconButton = ({
   requireConfirmation = true,
   goalId,
-  buttonClassName,
 }: DeleteGoalIconButtonProps) => {
   const { sessionId } = useSession();
   const deleteGoalMutation = useMutation(api.goal.deleteGoal);
@@ -85,18 +81,12 @@ export const DeleteGoalIconButton = ({
     }
   }, [sessionId, goalId, deleteGoalMutation]);
 
-  // Default visibility: hidden on desktop (show on hover), configurable via buttonClassName
-  const defaultVisibility = 'opacity-0 group-hover/title:opacity-100';
-
   return (
     <>
       <button
         type="button"
         onClick={handleDeleteClick}
-        className={cn(
-          'text-muted-foreground transition-opacity hover:text-red-600',
-          buttonClassName ?? defaultVisibility
-        )}
+        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
         disabled={isDeleting}
       >
         <Trash2 className="h-3.5 w-3.5" />
