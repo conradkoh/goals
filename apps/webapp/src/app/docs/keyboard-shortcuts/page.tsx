@@ -67,7 +67,7 @@ export default function KeyboardShortcutsPage() {
         </DocSection>
 
         <DocSection
-          title="Global Navigation"
+          title="Global Actions"
           icon={<Command className="h-5 w-5" />}
           variant="secondary"
         >
@@ -79,8 +79,8 @@ export default function KeyboardShortcutsPage() {
             <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">?</span>
-                  <span className="text-slate-600">Show keyboard shortcuts help</span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">⌘/Ctrl + K</span>
+                  <span className="text-slate-600">Jump to quarter</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Esc</span>

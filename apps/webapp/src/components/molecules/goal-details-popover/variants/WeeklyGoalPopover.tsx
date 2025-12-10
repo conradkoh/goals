@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import {
   Select,
   SelectContent,
@@ -160,6 +161,7 @@ function _WeeklyGoalPopoverContent({
         title={goal.title}
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
+        statusControls={<GoalStatusIcons goalId={goal._id} />}
         actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
       />
 

@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
+import { QuarterJumpDialog } from '@/components/molecules/focus/QuarterJumpDialog';
 import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
@@ -40,6 +41,9 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   const { selectedYear, selectedQuarter, handleDayNavigation, isFocusModeEnabled } = useDashboard();
   const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
   const { weekday: currentDay } = useCurrentWeekInfo();
+
+  // State for quarter jump dialog (Cmd+K)
+  const [isQuarterJumpOpen, setIsQuarterJumpOpen] = useState(false);
 
   // Use the hook for the "Pull from previous quarter" functionality
   const {
@@ -119,7 +123,19 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   return (
     <GoalStatusProvider>
       <div id="db-focus-view" className="w-full h-full">
-        <ViewModeKeyboardShortcuts onViewModeChange={onViewModeChange} />
+        <ViewModeKeyboardShortcuts
+          onViewModeChange={onViewModeChange}
+          onOpenQuarterJump={() => setIsQuarterJumpOpen(true)}
+        />
+        <QuarterJumpDialog
+          open={isQuarterJumpOpen}
+          onOpenChange={setIsQuarterJumpOpen}
+          selectedYear={selectedYear}
+          selectedQuarter={selectedQuarter}
+          onQuarterSelect={(year, quarter) => {
+            onYearQuarterChange?.(year, quarter);
+          }}
+        />
         <div className="w-full">
           <FocusMenuBar
             viewMode={viewMode}

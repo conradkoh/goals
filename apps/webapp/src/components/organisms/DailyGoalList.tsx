@@ -226,7 +226,7 @@ export const DailyGoalGroupContainer = ({
   onDeleteGoal,
   onCreateGoal,
   isCreating = false,
-  sortGoals = (goals) => goals.sort((a, b) => a.title.localeCompare(b.title)),
+  sortGoals = (goals) => goals.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
 }: DailyGoalGroupContainerProps) => {
   const dailyGoals = useMemo(
     () =>

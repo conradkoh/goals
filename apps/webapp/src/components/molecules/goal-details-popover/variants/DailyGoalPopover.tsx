@@ -1,5 +1,6 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { Separator } from '@/components/ui/separator';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
@@ -112,6 +113,7 @@ function _DailyGoalPopoverContent({
         title={goal.title}
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
+        statusControls={<GoalStatusIcons goalId={goal._id} />}
         actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
       />
 

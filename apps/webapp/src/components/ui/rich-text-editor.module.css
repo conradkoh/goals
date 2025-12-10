@@ -22,7 +22,7 @@
 .prose :global(ul) {
   margin-left: 0 !important;
   margin-top: 0.5em !important;
-  margin-bottom: 0.5em !important;
+  margin-bottom: 0 !important;
   padding-left: 1.5rem !important; /* Space for list markers */
 }
 
@@ -53,6 +53,12 @@
   margin-top: 0.25em !important;
   margin-bottom: 0.25em !important;
   padding-left: 1.25rem !important; /* Slightly less than parent for visual hierarchy */
+}
+
+/* Lists following paragraphs - reduce top margin for tighter spacing */
+.prose :global(p + ol),
+.prose :global(p + ul) {
+  margin-top: 0.25em !important;
 }
 
 /* Ensure list markers are visible and properly colored */
@@ -320,7 +326,7 @@
 
 .prose :global(p) {
   margin-top: 0 !important;
-  margin-bottom: 0.75em !important;
+  margin-bottom: 0.25em !important;
   line-height: 1.6 !important;
   min-height: 0 !important;
 }
