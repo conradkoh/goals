@@ -1,4 +1,4 @@
-import { Calendar } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,10 +16,10 @@ interface QuarterJumpDialogProps {
   open: boolean;
   /** Callback when the dialog open state changes */
   onOpenChange: (open: boolean) => void;
-  /** Current year */
-  currentYear: number;
-  /** Current quarter (1-4) */
-  currentQuarter: number;
+  /** Selected year (the year user is currently viewing) */
+  selectedYear: number;
+  /** Selected quarter (the quarter user is currently viewing, 1-4) */
+  selectedQuarter: number;
   /** Callback when a quarter is selected */
   onQuarterSelect: (year: number, quarter: number) => void;
 }
@@ -28,7 +28,7 @@ interface QuarterOption {
   label: string;
   year: number;
   quarter: number;
-  isCurrent: boolean;
+  isSelected: boolean;
 }
 
 /**
@@ -39,27 +39,38 @@ interface QuarterOption {
 export function QuarterJumpDialog({
   open,
   onOpenChange,
-  currentYear,
-  currentQuarter,
+  selectedYear,
+  selectedQuarter,
   onQuarterSelect,
 }: QuarterJumpDialogProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customYear, setCustomYear] = useState(currentYear.toString());
-  const [customQuarter, setCustomQuarter] = useState(currentQuarter.toString());
+  const [customYear, setCustomYear] = useState(selectedYear.toString());
+  const [customQuarter, setCustomQuarter] = useState(selectedQuarter.toString());
+
+  // Get actual current year and quarter (not selected, but actual current date)
+  const actualCurrentYear = useMemo(() => new Date().getFullYear(), []);
+  const actualCurrentQuarter = useMemo(
+    () => Math.ceil((new Date().getMonth() + 1) / 3) as 1 | 2 | 3 | 4,
+    []
+  );
+
+  // Check if user is viewing the actual current quarter
+  const isViewingCurrentQuarter =
+    selectedYear === actualCurrentYear && selectedQuarter === actualCurrentQuarter;
 
   // Reset custom input state when dialog closes
   useEffect(() => {
     if (!open) {
       setShowCustomInput(false);
-      setCustomYear(currentYear.toString());
-      setCustomQuarter(currentQuarter.toString());
+      setCustomYear(selectedYear.toString());
+      setCustomQuarter(selectedQuarter.toString());
     }
-  }, [open, currentYear, currentQuarter]);
+  }, [open, selectedYear, selectedQuarter]);
 
-  // Generate quarter options (current year -1 to +1, all quarters)
+  // Generate quarter options (actual current year -1 to +1, all quarters)
   const quarterOptions = useMemo((): QuarterOption[] => {
     const options: QuarterOption[] = [];
-    const years = [currentYear - 1, currentYear, currentYear + 1];
+    const years = [actualCurrentYear - 1, actualCurrentYear, actualCurrentYear + 1];
 
     for (const year of years) {
       for (const quarter of [1, 2, 3, 4]) {
@@ -67,13 +78,13 @@ export function QuarterJumpDialog({
           label: `Q${quarter} ${year}`,
           year,
           quarter,
-          isCurrent: year === currentYear && quarter === currentQuarter,
+          isSelected: year === selectedYear && quarter === selectedQuarter,
         });
       }
     }
 
     return options;
-  }, [currentYear, currentQuarter]);
+  }, [actualCurrentYear, selectedYear, selectedQuarter]);
 
   const handleSelect = useCallback(
     (year: number, quarter: number) => {
@@ -100,6 +111,22 @@ export function QuarterJumpDialog({
 
         {!showCustomInput && (
           <>
+            {!isViewingCurrentQuarter && (
+              <CommandGroup heading="Jump to Current">
+                <CommandItem
+                  value={`Q${actualCurrentQuarter} ${actualCurrentYear} current`}
+                  onSelect={() => handleSelect(actualCurrentYear, actualCurrentQuarter)}
+                  className="flex items-center gap-2"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span>
+                    Q{actualCurrentQuarter} {actualCurrentYear}
+                  </span>
+                  <span className="ml-auto text-xs text-muted-foreground">(current)</span>
+                </CommandItem>
+              </CommandGroup>
+            )}
+
             <CommandGroup heading="Quick Jump">
               {quarterOptions.map((option) => (
                 <CommandItem
@@ -110,8 +137,8 @@ export function QuarterJumpDialog({
                 >
                   <Calendar className="h-4 w-4" />
                   <span>{option.label}</span>
-                  {option.isCurrent && (
-                    <span className="ml-auto text-xs text-muted-foreground">(current)</span>
+                  {option.isSelected && (
+                    <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
                   )}
                 </CommandItem>
               ))}

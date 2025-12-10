@@ -130,8 +130,8 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
         <QuarterJumpDialog
           open={isQuarterJumpOpen}
           onOpenChange={setIsQuarterJumpOpen}
-          currentYear={selectedYear}
-          currentQuarter={selectedQuarter}
+          selectedYear={selectedYear}
+          selectedQuarter={selectedQuarter}
           onQuarterSelect={(year, quarter) => {
             onYearQuarterChange?.(year, quarter);
           }}
