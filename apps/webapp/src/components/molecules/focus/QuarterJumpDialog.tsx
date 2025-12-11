@@ -73,8 +73,8 @@ export function QuarterJumpDialog({
     }
   }, [open, selectedYear, selectedQuarter]);
 
-  // Generate quarter options with prioritized ordering
-  const { quickJumpOptions, allQuarterOptions } = useMemo(() => {
+  // Generate quarter options organized by sections
+  const { quickJumpOptions, thisYearOptions, nextYearOptions, lastYearOptions } = useMemo(() => {
     // Helper function to get next quarter
     const getNextQuarter = (year: number, quarter: number): { year: number; quarter: number } => {
       if (quarter === 4) {
@@ -110,7 +110,7 @@ export function QuarterJumpDialog({
       }
     }
 
-    // Build prioritized list for quick jump (top 3):
+    // Build quick jump list (top 3):
     // 1. Current quarter (always shown)
     const currentQuarterOption = allQuarters.find(
       (q) => q.year === actualCurrentYear && q.quarter === actualCurrentQuarter
@@ -137,13 +137,16 @@ export function QuarterJumpDialog({
       quickJump.push(prevQuarterOption);
     }
 
-    // All remaining quarters (excluding the top 3)
-    const quickJumpKeys = new Set(quickJump.map((q) => `${q.year}-${q.quarter}`));
-    const remaining = allQuarters.filter((q) => !quickJumpKeys.has(`${q.year}-${q.quarter}`));
+    // Organize remaining quarters by year
+    const thisYear = allQuarters.filter((q) => q.year === actualCurrentYear);
+    const nextYear = allQuarters.filter((q) => q.year === actualCurrentYear + 1);
+    const lastYear = allQuarters.filter((q) => q.year === actualCurrentYear - 1);
 
     return {
       quickJumpOptions: quickJump,
-      allQuarterOptions: remaining,
+      thisYearOptions: thisYear,
+      nextYearOptions: nextYear,
+      lastYearOptions: lastYear,
     };
   }, [actualCurrentYear, actualCurrentQuarter, selectedYear, selectedQuarter]);
 
@@ -218,8 +221,52 @@ export function QuarterJumpDialog({
               })}
             </CommandGroup>
 
-            <CommandGroup heading="Jump to Quarter">
-              {allQuarterOptions.map((option) => {
+            <CommandGroup heading="This Year">
+              {thisYearOptions.map((option) => {
+                const isCurrentQuarter =
+                  option.year === actualCurrentYear && option.quarter === actualCurrentQuarter;
+
+                return (
+                  <CommandItem
+                    key={`${option.year}-${option.quarter}`}
+                    value={option.label}
+                    onSelect={() => handleSelect(option.year, option.quarter)}
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>{option.label}</span>
+                    {isCurrentQuarter && (
+                      <span className="ml-auto text-xs text-muted-foreground">(current)</span>
+                    )}
+                    {option.isSelected && !isCurrentQuarter && (
+                      <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+
+            <CommandGroup heading="Next Year">
+              {nextYearOptions.map((option) => {
+                return (
+                  <CommandItem
+                    key={`${option.year}-${option.quarter}`}
+                    value={option.label}
+                    onSelect={() => handleSelect(option.year, option.quarter)}
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>{option.label}</span>
+                    {option.isSelected && (
+                      <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+
+            <CommandGroup heading="Last Year">
+              {lastYearOptions.map((option) => {
                 return (
                   <CommandItem
                     key={`${option.year}-${option.quarter}`}
