@@ -64,10 +64,6 @@ export function QuarterJumpDialog({
     []
   );
 
-  // Check if user is viewing the actual current quarter
-  const isViewingCurrentQuarter =
-    selectedYear === actualCurrentYear && selectedQuarter === actualCurrentQuarter;
-
   // Reset custom input state when dialog closes
   useEffect(() => {
     if (!open) {
@@ -77,14 +73,35 @@ export function QuarterJumpDialog({
     }
   }, [open, selectedYear, selectedQuarter]);
 
-  // Generate quarter options (actual current year -1 to +1, all quarters)
-  const quarterOptions = useMemo((): _QuarterOption[] => {
-    const options: _QuarterOption[] = [];
+  // Generate quarter options with prioritized ordering
+  const { quickJumpOptions, allQuarterOptions } = useMemo(() => {
+    // Helper function to get next quarter
+    const getNextQuarter = (year: number, quarter: number): { year: number; quarter: number } => {
+      if (quarter === 4) {
+        return { year: year + 1, quarter: 1 };
+      }
+      return { year, quarter: quarter + 1 };
+    };
+
+    // Helper function to get previous quarter
+    const getPreviousQuarter = (
+      year: number,
+      quarter: number
+    ): { year: number; quarter: number } => {
+      if (quarter === 1) {
+        return { year: year - 1, quarter: 4 };
+      }
+      return { year, quarter: quarter - 1 };
+    };
+
+    const quickJump: _QuarterOption[] = [];
     const years = [actualCurrentYear - 1, actualCurrentYear, actualCurrentYear + 1];
 
+    // Generate all quarters first
+    const allQuarters: _QuarterOption[] = [];
     for (const year of years) {
       for (const quarter of [1, 2, 3, 4]) {
-        options.push({
+        allQuarters.push({
           label: `Q${quarter} ${year}`,
           year,
           quarter,
@@ -93,8 +110,42 @@ export function QuarterJumpDialog({
       }
     }
 
-    return options;
-  }, [actualCurrentYear, selectedYear, selectedQuarter]);
+    // Build prioritized list for quick jump (top 3):
+    // 1. Current quarter (always shown)
+    const currentQuarterOption = allQuarters.find(
+      (q) => q.year === actualCurrentYear && q.quarter === actualCurrentQuarter
+    );
+    if (currentQuarterOption) {
+      quickJump.push(currentQuarterOption);
+    }
+
+    // 2. Next quarter
+    const nextQuarter = getNextQuarter(actualCurrentYear, actualCurrentQuarter);
+    const nextQuarterOption = allQuarters.find(
+      (q) => q.year === nextQuarter.year && q.quarter === nextQuarter.quarter
+    );
+    if (nextQuarterOption) {
+      quickJump.push(nextQuarterOption);
+    }
+
+    // 3. Previous quarter
+    const prevQuarter = getPreviousQuarter(actualCurrentYear, actualCurrentQuarter);
+    const prevQuarterOption = allQuarters.find(
+      (q) => q.year === prevQuarter.year && q.quarter === prevQuarter.quarter
+    );
+    if (prevQuarterOption) {
+      quickJump.push(prevQuarterOption);
+    }
+
+    // All remaining quarters (excluding the top 3)
+    const quickJumpKeys = new Set(quickJump.map((q) => `${q.year}-${q.quarter}`));
+    const remaining = allQuarters.filter((q) => !quickJumpKeys.has(`${q.year}-${q.quarter}`));
+
+    return {
+      quickJumpOptions: quickJump,
+      allQuarterOptions: remaining,
+    };
+  }, [actualCurrentYear, actualCurrentQuarter, selectedYear, selectedQuarter]);
 
   const handleSelect = useCallback(
     (year: number, quarter: number) => {
@@ -112,10 +163,6 @@ export function QuarterJumpDialog({
       handleSelect(year, quarter);
     }
   }, [customYear, customQuarter, handleSelect]);
-
-  const handleSelectCurrent = useCallback(() => {
-    handleSelect(actualCurrentYear, actualCurrentQuarter);
-  }, [handleSelect, actualCurrentYear, actualCurrentQuarter]);
 
   const handleShowCustomInput = useCallback(() => {
     setShowCustomInput(true);
@@ -141,37 +188,53 @@ export function QuarterJumpDialog({
 
         {!showCustomInput && (
           <>
-            {!isViewingCurrentQuarter && (
-              <CommandGroup heading="Jump to Current">
-                <CommandItem
-                  value={`Q${actualCurrentQuarter} ${actualCurrentYear} current`}
-                  onSelect={handleSelectCurrent}
-                  className="flex items-center gap-2"
-                >
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    Q{actualCurrentQuarter} {actualCurrentYear}
-                  </span>
-                  <span className="ml-auto text-xs text-muted-foreground">(current)</span>
-                </CommandItem>
-              </CommandGroup>
-            )}
-
             <CommandGroup heading="Quick Jump">
-              {quarterOptions.map((option) => (
-                <CommandItem
-                  key={`${option.year}-${option.quarter}`}
-                  value={option.label}
-                  onSelect={() => handleSelect(option.year, option.quarter)}
-                  className="flex items-center gap-2"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span>{option.label}</span>
-                  {option.isSelected && (
-                    <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
-                  )}
-                </CommandItem>
-              ))}
+              {quickJumpOptions.map((option) => {
+                // Check if this is the current quarter
+                const isCurrentQuarter =
+                  option.year === actualCurrentYear && option.quarter === actualCurrentQuarter;
+
+                return (
+                  <CommandItem
+                    key={`${option.year}-${option.quarter}`}
+                    value={option.label}
+                    onSelect={() => handleSelect(option.year, option.quarter)}
+                    className="flex items-center gap-2"
+                  >
+                    {isCurrentQuarter ? (
+                      <Clock className="h-4 w-4" />
+                    ) : (
+                      <Calendar className="h-4 w-4" />
+                    )}
+                    <span>{option.label}</span>
+                    {isCurrentQuarter && (
+                      <span className="ml-auto text-xs text-muted-foreground">(current)</span>
+                    )}
+                    {option.isSelected && !isCurrentQuarter && (
+                      <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+
+            <CommandGroup heading="Jump to Quarter">
+              {allQuarterOptions.map((option) => {
+                return (
+                  <CommandItem
+                    key={`${option.year}-${option.quarter}`}
+                    value={option.label}
+                    onSelect={() => handleSelect(option.year, option.quarter)}
+                    className="flex items-center gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>{option.label}</span>
+                    {option.isSelected && (
+                      <span className="ml-auto text-xs text-muted-foreground">(viewing)</span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
 
             <CommandGroup heading="Other">
