@@ -151,7 +151,7 @@ export const TaskMovePreview = ({
                   : `The following incomplete goals from ${preview?.previousDay} will be moved to ${preview?.targetDay}. Note that goals will be moved, not copied.`}
               </p>
               {!preview?.tasks.length ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>All previous goals are complete!</p>
                 </div>
@@ -166,7 +166,7 @@ export const TaskMovePreview = ({
                         {quarterlyGroup.quarterlyGoal.isPinned && (
                           <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
                         )}
-                        <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                        <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
                           {quarterlyGroup.quarterlyGoal.title}
                         </div>
                       </h4>
@@ -183,7 +183,7 @@ export const TaskMovePreview = ({
                         {Object.values(quarterlyGroup.weeklyGoals).map((weeklyGroup) => (
                           <div key={weeklyGroup.weeklyGoal.id} className="pl-4 space-y-1 py-2">
                             <h5 className="text-sm text-muted-foreground">
-                              <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                              <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
                                 {weeklyGroup.weeklyGoal.title}
                               </div>
                             </h5>

@@ -116,7 +116,7 @@ function _QuarterlyGoalItemContent({
           ? 'bg-green-50 dark:bg-green-950/20'
           : isAllWeeklyGoalsComplete
             ? 'bg-green-50/50 dark:bg-green-950/10'
-            : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+            : 'hover:bg-accent/50',
         className
       )}
     >

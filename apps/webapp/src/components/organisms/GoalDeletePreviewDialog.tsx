@@ -61,7 +61,7 @@ export const GoalDeletePreviewDialog = ({
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <span className="block">There are no goals to delete.</span>
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <Trash2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <span className="block">No goals were found to delete.</span>
                 </div>
@@ -97,14 +97,14 @@ export const GoalDeletePreviewDialog = ({
     let textColor = '';
 
     if (isQuarterly) {
-      bgColor = 'bg-yellow-50';
-      textColor = 'text-yellow-800';
+      bgColor = 'bg-yellow-50 dark:bg-yellow-950/20';
+      textColor = 'text-yellow-800 dark:text-yellow-400';
     } else if (isWeekly) {
-      bgColor = 'bg-blue-50';
-      textColor = 'text-blue-800';
+      bgColor = 'bg-blue-50 dark:bg-blue-950/20';
+      textColor = 'text-blue-800 dark:text-blue-400';
     } else if (isDaily) {
-      bgColor = 'bg-green-50';
-      textColor = 'text-green-800';
+      bgColor = 'bg-green-50 dark:bg-green-950/20';
+      textColor = 'text-green-800 dark:text-green-400';
     }
 
     return (
@@ -187,12 +187,12 @@ export const GoalDeletePreviewDialog = ({
                 {/* Summary of goals to be deleted */}
                 {isDeletingQuarterlyGoal && (
                   <div className="flex flex-wrap gap-2 mb-3">
-                    <div className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                    <div className="bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400 text-xs px-2 py-1 rounded-full flex items-center gap-1">
                       <span>💭</span>
                       <span>1 Quarterly Goal</span>
                     </div>
                     {weeklyGoalsCount > 0 && (
-                      <div className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <div className="bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400 text-xs px-2 py-1 rounded-full flex items-center gap-1">
                         <span>🚀</span>
                         <span>
                           {weeklyGoalsCount} Weekly Goal
@@ -201,7 +201,7 @@ export const GoalDeletePreviewDialog = ({
                       </div>
                     )}
                     {dailyGoalsCount > 0 && (
-                      <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <div className="bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400 text-xs px-2 py-1 rounded-full flex items-center gap-1">
                         <span>🔍</span>
                         <span>
                           {dailyGoalsCount} Daily Goal
@@ -213,7 +213,7 @@ export const GoalDeletePreviewDialog = ({
                 )}
 
                 {/* Goals to delete section */}
-                <div className="space-y-4 border border-gray-200 rounded-md p-3 bg-gray-50">
+                <div className="space-y-4 border border-border rounded-md p-3 bg-muted">
                   {preview.goalsToDelete.map((goal) => renderGoalTree(goal))}
                 </div>
               </div>

@@ -66,10 +66,10 @@ export const DailyGoalGroup = ({
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : '',
-          isPinned ? 'bg-blue-50' : '',
-          isStarred && !isPinned ? 'bg-yellow-50' : '',
-          !isStarred && !isPinned && !isSoftComplete ? 'bg-white' : ''
+          isSoftComplete ? 'bg-green-50 dark:bg-green-950/20' : '',
+          isPinned ? 'bg-blue-50 dark:bg-blue-950/20' : '',
+          isStarred && !isPinned ? 'bg-yellow-50 dark:bg-yellow-950/20' : '',
+          !isStarred && !isPinned && !isSoftComplete ? 'bg-card' : ''
         )}
       >
         <div>
@@ -110,7 +110,7 @@ export const DailyGoalGroup = ({
                 variant="ghost"
                 className="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               >
-                <span className="break-words w-full whitespace-pre-wrap text-gray-600">
+                <span className="break-words w-full whitespace-pre-wrap text-muted-foreground">
                   {weeklyGoal.title}
                 </span>
               </Button>

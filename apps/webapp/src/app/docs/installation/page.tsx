@@ -78,19 +78,19 @@ export default function InstallationGuidePage() {
             variant="secondary"
           >
             <div className="space-y-6">
-              <p className="text-slate-700">
+              <p className="text-muted-foreground">
                 Follow these steps to install Goals as a Progressive Web App (PWA) using Safari:
               </p>
 
               <div className="space-y-4">
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Globe className="h-4 w-4 text-blue-600" />
                     Step 1: Visit the Website
                   </h3>
                   <p className="text-sm text-slate-600 mb-2">
                     Open Safari and navigate to{' '}
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                       goals.duskfare.com
                     </span>
                   </p>
@@ -102,13 +102,13 @@ export default function InstallationGuidePage() {
                   </DocInfoCard>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Command className="h-4 w-4 text-blue-600" />
                     Step 2: Add to Dock
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">To add Goals to your dock:</p>
+                    <p className="text-sm text-muted-foreground">To add Goals to your dock:</p>
                     <DocList>
                       <DocListItem variant="blue">
                         Click on the "Share" button in Safari's toolbar (square with arrow pointing
@@ -125,12 +125,12 @@ export default function InstallationGuidePage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Rocket className="h-4 w-4 text-blue-600" />
                     Step 3: Launch the App
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Click on the Goals icon in your dock to launch it. The app will open in its own
                     window, separate from Safari, providing a native app-like experience.
                   </p>
@@ -145,13 +145,13 @@ export default function InstallationGuidePage() {
             variant="neutral"
           >
             <div className="space-y-6">
-              <p className="text-slate-700">
+              <p className="text-muted-foreground">
                 For quick access to Goals, you can set up a hotkey using Raycast:
               </p>
 
               <div className="space-y-4">
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Download className="h-4 w-4 text-indigo-600" />
                     Step 1: Install Raycast
                   </h3>
@@ -161,9 +161,7 @@ export default function InstallationGuidePage() {
                   <DocList>
                     <DocListItem variant="indigo">
                       Visit{' '}
-                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                        raycast.com
-                      </span>{' '}
+                      <span className="font-mono bg-muted px-1.5 py-0.5 rounded">raycast.com</span>{' '}
                       and download the installer
                     </DocListItem>
                     <DocListItem variant="indigo">
@@ -173,15 +171,15 @@ export default function InstallationGuidePage() {
                   </DocList>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Command className="h-4 w-4 text-indigo-600" />
                     Step 2: Configure Hotkey
                   </h3>
                   <DocList>
                     <DocListItem variant="indigo">
                       Open Raycast (default hotkey is{' '}
-                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                      <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                         Option (⌥) + Space
                       </span>
                       )
@@ -200,7 +198,7 @@ export default function InstallationGuidePage() {
                     </DocListItem>
                     <DocListItem variant="indigo">
                       Click "Add Hotkey" and press your desired key combination (e.g.,{' '}
-                      <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">⌘ + G</span>)
+                      <span className="font-mono bg-muted px-1.5 py-0.5 rounded">⌘ + G</span>)
                     </DocListItem>
                     <DocListItem variant="indigo">Click "Save" to confirm your hotkey</DocListItem>
                   </DocList>
@@ -241,20 +239,20 @@ export default function InstallationGuidePage() {
             variant="secondary"
           >
             <div className="space-y-6">
-              <p className="text-slate-700">
+              <p className="text-muted-foreground">
                 Follow these steps to install Goals as a Progressive Web App (PWA) on your iOS
                 device:
               </p>
 
               <div className="space-y-4">
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Globe className="h-4 w-4 text-blue-600" />
                     Step 1: Visit the Website
                   </h3>
                   <p className="text-sm text-slate-600 mb-2">
                     Open Safari on your iOS device and navigate to{' '}
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                       goals.duskfare.com
                     </span>
                   </p>
@@ -266,13 +264,13 @@ export default function InstallationGuidePage() {
                   </DocInfoCard>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Share2 className="h-4 w-4 text-blue-600" />
                     Step 2: Open Share Menu
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">Tap the Share button in Safari:</p>
+                    <p className="text-sm text-muted-foreground">Tap the Share button in Safari:</p>
                     <DocList>
                       <DocListItem variant="blue">
                         Tap the Share button at the bottom of the screen (square with an arrow
@@ -285,13 +283,13 @@ export default function InstallationGuidePage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Plus className="h-4 w-4 text-blue-600" />
                     Step 3: Add to Home Screen
                   </h3>
                   <div className="space-y-3">
-                    <p className="text-sm text-slate-600">Add Goals to your home screen:</p>
+                    <p className="text-sm text-muted-foreground">Add Goals to your home screen:</p>
                     <DocList>
                       <DocListItem variant="blue">
                         Scroll down in the share menu and tap "Add to Home Screen"
@@ -304,12 +302,12 @@ export default function InstallationGuidePage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border bg-white p-5 shadow-sm">
-                  <h3 className="font-medium mb-3 text-slate-900 flex items-center gap-2">
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                  <h3 className="font-medium mb-3 text-foreground flex items-center gap-2">
                     <Home className="h-4 w-4 text-blue-600" />
                     Step 4: Launch the App
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Tap the Goals icon on your home screen to launch it. The app will open in its
                     own window, separate from Safari, providing a native app-like experience with
                     full-screen mode.

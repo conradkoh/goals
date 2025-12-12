@@ -117,7 +117,7 @@ export function ChecklistInlineInput({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="border-dashed border-gray-300 focus:border-solid focus:border-gray-400 focus:ring-2 focus:ring-offset-1"
+        className="border-dashed border-input focus:border-solid focus:border-ring focus:ring-2 focus:ring-offset-1"
       />
     </div>
   );

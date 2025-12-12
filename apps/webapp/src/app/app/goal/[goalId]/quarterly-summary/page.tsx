@@ -76,8 +76,8 @@ export default function QuarterlySummaryPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
+    <div className="min-h-screen bg-background">
+      <div className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Breadcrumb Navigation */}
@@ -118,7 +118,7 @@ export default function QuarterlySummaryPage() {
             {/* View Toggle and Quarter Badge */}
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center bg-muted rounded-lg p-1">
                 <Button
                   variant={viewMode === 'summary' ? 'default' : 'ghost'}
                   size="sm"
@@ -156,7 +156,7 @@ export default function QuarterlySummaryPage() {
             year={year}
             quarter={quarter}
             goalActions={goalActions}
-            className="bg-white rounded-lg shadow-sm border p-6"
+            className="bg-card rounded-lg shadow-sm border p-6"
           />
         ) : (
           summaryData && (

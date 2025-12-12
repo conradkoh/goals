@@ -17,6 +17,7 @@
 
 import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
+import { useIsDarkMode } from '@/modules/theme/ThemeProvider';
 import { getDomainPillColors } from '../lib/colors';
 
 export interface DomainPillViewProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -44,7 +45,8 @@ export interface DomainPillViewProps extends React.HTMLAttributes<HTMLDivElement
  */
 export const DomainPillView = forwardRef<HTMLDivElement, DomainPillViewProps>(
   ({ domainName, domainColor, count, interactive = false, className, style, ...props }, ref) => {
-    const colors = getDomainPillColors(domainColor);
+    const isDarkMode = useIsDarkMode();
+    const colors = getDomainPillColors(domainColor, isDarkMode);
 
     return (
       <div

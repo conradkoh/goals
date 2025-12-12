@@ -28,7 +28,7 @@ export default function DocsPage() {
           href="/docs/installation"
           variant="blue"
         >
-          <p className="text-sm text-slate-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Get started with the Goals installation process for macOS with Safari and Raycast
             integration.
           </p>
@@ -46,7 +46,7 @@ export default function DocsPage() {
           href="/docs/terminology"
           variant="indigo"
         >
-          <p className="text-sm text-slate-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Understand how to use Goals effectively with quarterly, weekly, and daily planning to
             achieve your objectives.
           </p>
@@ -68,7 +68,7 @@ export default function DocsPage() {
           href="/docs/keyboard-shortcuts"
           variant="blue"
         >
-          <p className="text-sm text-slate-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Master Goals with keyboard shortcuts to navigate and perform actions quickly without
             using the mouse.
           </p>
@@ -82,15 +82,15 @@ export default function DocsPage() {
         </DocCard>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 shadow-sm">
+      <div className="rounded-lg border bg-muted p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400">
               <HelpCircle className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-medium text-slate-900 mb-1">Need more help?</h3>
-              <p className="text-sm text-slate-600">
+              <h3 className="text-lg font-medium text-foreground mb-1">Need more help?</h3>
+              <p className="text-sm text-muted-foreground">
                 If you have any questions or need assistance, check out our support resources.
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function DocsPage() {
             asChild
             variant="outline"
             size="sm"
-            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 font-medium whitespace-nowrap"
+            className="border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 font-medium whitespace-nowrap"
           >
             <Link href="/app" className="flex items-center gap-1.5">
               Go to Dashboard

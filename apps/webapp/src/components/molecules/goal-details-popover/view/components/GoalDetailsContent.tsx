@@ -61,19 +61,22 @@ export function GoalDetailsContent({
 
         <div
           className={cn(
-            'max-h-[300px] overflow-y-auto rounded-md pt-4 pb-4 px-3 relative group',
+            'max-h-[300px] overflow-y-auto rounded-md pt-4 pb-4 px-3 relative group bg-muted/30',
             className
           )}
         >
           {hasInteractiveFeatures ? (
             <InteractiveHTML
               html={details}
-              className="text-sm prose prose-sm max-w-none"
+              className="text-sm prose prose-sm dark:prose-invert max-w-none"
               onContentChange={onDetailsChange}
               readOnly={readOnly}
             />
           ) : (
-            <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+            <SafeHTML
+              html={details}
+              className="text-sm prose prose-sm dark:prose-invert max-w-none"
+            />
           )}
 
           {/* Absolutely positioned expand button */}
@@ -93,12 +96,15 @@ export function GoalDetailsContent({
             {hasInteractiveFeatures ? (
               <InteractiveHTML
                 html={details}
-                className="text-sm prose prose-sm max-w-none"
+                className="text-sm prose prose-sm dark:prose-invert max-w-none"
                 onContentChange={onDetailsChange}
                 readOnly={readOnly}
               />
             ) : (
-              <SafeHTML html={details} className="text-sm prose prose-sm max-w-none" />
+              <SafeHTML
+                html={details}
+                className="text-sm prose prose-sm dark:prose-invert max-w-none"
+              />
             )}
           </div>
         </DialogContent>

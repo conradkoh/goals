@@ -44,11 +44,11 @@ export function QuarterlySummaryMarkdownView({
   return (
     <Card className={cn('relative', className)}>
       {/* Header with options and copy button */}
-      <div className="p-4 border-b bg-gray-50">
+      <div className="p-4 border-b bg-muted">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Markdown Export</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-foreground">Markdown Export</h3>
+            <p className="text-sm text-muted-foreground">
               Copy this markdown to share or save your quarterly summary
             </p>
           </div>
@@ -86,7 +86,7 @@ export function QuarterlySummaryMarkdownView({
           />
           <label
             htmlFor="omit-incomplete"
-            className="text-sm font-medium text-gray-700 cursor-pointer"
+            className="text-sm font-medium text-muted-foreground cursor-pointer"
           >
             Show only completed goals
           </label>
@@ -96,8 +96,8 @@ export function QuarterlySummaryMarkdownView({
       {/* Markdown content */}
       <div className="p-4">
         <div className="relative">
-          <pre className="whitespace-pre-wrap font-mono text-sm bg-gray-50 border rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
-            <code className="text-gray-800">{markdownContent}</code>
+          <pre className="whitespace-pre-wrap font-mono text-sm bg-muted border rounded-lg p-4 overflow-x-auto max-h-96 overflow-y-auto">
+            <code className="text-foreground">{markdownContent}</code>
           </pre>
 
           {/* Fade overlay at bottom when scrollable */}
@@ -105,7 +105,7 @@ export function QuarterlySummaryMarkdownView({
         </div>
 
         {/* Character count */}
-        <div className="mt-3 text-xs text-gray-500 text-right">
+        <div className="mt-3 text-xs text-muted-foreground text-right">
           {markdownContent.length.toLocaleString()} characters
         </div>
       </div>

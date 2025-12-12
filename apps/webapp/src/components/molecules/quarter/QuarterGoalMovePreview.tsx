@@ -64,7 +64,7 @@ export const QuarterGoalMovePreview = ({
                 <span className="block">
                   There are no incomplete goals from the previous quarter to move to this quarter.
                 </span>
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <span className="block">All goals from the previous quarter are complete!</span>
                 </div>
@@ -160,8 +160,8 @@ export const QuarterGoalMovePreview = ({
                     <div className="h-5 w-5 flex-shrink-0 mt-0.5">
                       <Star className="h-4 w-4 text-yellow-500" />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Quarterly Goals</span> that are
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Quarterly Goals</span> that are
                       incomplete will be copied to this quarter with their pinned and starred status
                     </p>
                   </div>
@@ -169,8 +169,8 @@ export const QuarterGoalMovePreview = ({
                     <div className="h-5 w-5 flex-shrink-0 mt-0.5">
                       <History className="h-4 w-4 text-blue-500" />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Weekly Goals</span> that are
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Weekly Goals</span> that are
                       incomplete from the final week of the previous quarter (e.g., week 13 for Q1)
                       will be copied to this quarter with their weekly assignments
                     </p>
@@ -179,8 +179,8 @@ export const QuarterGoalMovePreview = ({
                     <div className="h-5 w-5 flex-shrink-0 mt-0.5">
                       <Calendar className="h-4 w-4 text-green-500" />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-gray-900">Daily Goals</span> that are
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Daily Goals</span> that are
                       associated with moved weekly goals from the final week and are incomplete will
                       be copied with their day assignments
                     </p>
@@ -190,8 +190,8 @@ export const QuarterGoalMovePreview = ({
                       <div className="h-5 w-5 flex-shrink-0 mt-0.5">
                         <Calendar className="h-4 w-4 text-purple-500" />
                       </div>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium text-gray-900">Adhoc Tasks</span> that are
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Adhoc Tasks</span> that are
                         incomplete will be moved to the first week of this quarter
                       </p>
                     </div>
@@ -210,7 +210,7 @@ export const QuarterGoalMovePreview = ({
                       {quarterlyGoal.isPinned && (
                         <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
                       )}
-                      <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                      <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
                         {quarterlyGoal.title}
                       </div>
                     </h4>
@@ -222,14 +222,14 @@ export const QuarterGoalMovePreview = ({
                           ? 'bg-yellow-50 border border-yellow-200'
                           : quarterlyGoal.isPinned
                             ? 'bg-blue-50 border border-blue-200'
-                            : 'bg-gray-50 border border-gray-200'
+                            : 'bg-muted border border-border'
                       )}
                     >
                       {/* Weekly goals under this quarterly goal */}
                       {weeklyGoalsByQuarterly.get(quarterlyGoal.id)?.map((weeklyGoal) => (
                         <div key={weeklyGoal.id.toString()} className="pl-4 space-y-1 py-2">
                           <h5 className="text-sm text-muted-foreground">
-                            <div className="font-semibold text-sm text-gray-800 px-2 py-1 rounded-md break-words">
+                            <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
                               {weeklyGoal.title}
                             </div>
                           </h5>
@@ -269,7 +269,7 @@ export const QuarterGoalMovePreview = ({
                         >
                           <div className="flex items-center gap-2">
                             <span className="h-2 w-2 rounded-full bg-purple-500" />
-                            <div className="font-medium text-sm text-gray-800 break-words flex-1">
+                            <div className="font-medium text-sm text-foreground break-words flex-1">
                               {adhocGoal.title}
                             </div>
                             {adhocGoal.domainName && (

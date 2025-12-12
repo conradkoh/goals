@@ -89,7 +89,7 @@ function _WeeklyGoalItemContent({ className }: _WeeklyGoalItemContentProps) {
   );
 
   return (
-    <div className={cn('weekly-goal-item ml-1 group rounded-sm hover:bg-gray-50/50', className)}>
+    <div className={cn('weekly-goal-item ml-1 group rounded-sm hover:bg-accent/50', className)}>
       <div className="text-sm flex items-center gap-2 group/title">
         <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />
 

@@ -31,27 +31,27 @@ export default function GettingStartedPage() {
       <div className="grid gap-8">
         <DocSection title="How Goals Works" icon={<Target className="h-5 w-5" />} variant="primary">
           <div className="space-y-4">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Goals helps you organize your objectives using a hierarchical approach, breaking down
               large goals into manageable tasks. This structure makes it easier to track progress
               and stay focused on what matters.
             </p>
             <DocInfoCard variant="default">
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
-                <div className="bg-indigo-100 text-indigo-800 font-medium px-4 py-2 rounded-md">
+                <div className="bg-indigo-100 dark:bg-indigo-950/30 text-indigo-800 dark:text-indigo-400 font-medium px-4 py-2 rounded-md">
                   Quarterly Goals
                 </div>
-                <div className="text-slate-400">→</div>
-                <div className="bg-blue-100 text-blue-800 font-medium px-4 py-2 rounded-md">
+                <div className="text-muted-foreground">→</div>
+                <div className="bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400 font-medium px-4 py-2 rounded-md">
                   Weekly Goals
                 </div>
-                <div className="text-slate-400">→</div>
-                <div className="bg-slate-100 text-slate-800 font-medium px-4 py-2 rounded-md">
+                <div className="text-muted-foreground">→</div>
+                <div className="bg-muted text-foreground font-medium px-4 py-2 rounded-md">
                   Daily Goals
                 </div>
               </div>
             </DocInfoCard>
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Start by setting your quarterly goals, then break them down into weekly objectives,
               and finally into daily tasks. This approach helps you maintain focus while making
               consistent progress toward your larger ambitions.
@@ -65,13 +65,13 @@ export default function GettingStartedPage() {
           variant="secondary"
         >
           <div className="space-y-6">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Quarterly goals represent your major objectives for a three-month period. These are
               the high-level achievements you're working toward.
             </p>
 
-            <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
-              <h3 className="text-lg font-medium text-slate-900 mb-4">
+            <div className="bg-muted rounded-lg p-5 border">
+              <h3 className="text-lg font-medium text-foreground mb-4">
                 How to use quarterly goals:
               </h3>
               <div className="grid gap-6 sm:grid-cols-2">
@@ -90,7 +90,7 @@ export default function GettingStartedPage() {
               </div>
             </div>
 
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               We recommend setting 3-5 quarterly goals that align with your long-term vision. Each
               goal should be specific enough to measure but broad enough to encompass multiple weeks
               of work.
@@ -104,14 +104,14 @@ export default function GettingStartedPage() {
           variant="neutral"
         >
           <div className="space-y-6">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Weekly goals are specific objectives you aim to accomplish within a week. They help
               break down quarterly goals into actionable steps and provide a clear focus for each
               week.
             </p>
 
-            <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
-              <h3 className="text-lg font-medium text-slate-900 mb-4">How to use weekly goals:</h3>
+            <div className="bg-muted rounded-lg p-5 border">
+              <h3 className="text-lg font-medium text-foreground mb-4">How to use weekly goals:</h3>
               <div className="space-y-4">
                 <DocFeatureCard
                   title="Track Completion"
@@ -120,14 +120,14 @@ export default function GettingStartedPage() {
                   variant="blue"
                 />
 
-                <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+                <div className="bg-card rounded-lg p-4 border shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mt-0.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 mt-0.5">
                       <span className="text-xs font-bold">i</span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-slate-900 mb-1">Weekly Planning</h4>
-                      <p className="text-sm text-slate-600">
+                      <h4 className="font-medium text-foreground mb-1">Weekly Planning</h4>
+                      <p className="text-sm text-muted-foreground">
                         Set aside time each Sunday or Monday to review your quarterly goals and plan
                         your weekly objectives. Aim for 3-7 weekly goals that directly contribute to
                         your quarterly targets.
@@ -146,13 +146,13 @@ export default function GettingStartedPage() {
           variant="primary"
         >
           <div className="space-y-6">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Daily goals are the specific tasks you plan to accomplish in a single day. They are
               the most granular level of planning and help you make consistent daily progress.
             </p>
 
-            <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
-              <h3 className="text-lg font-medium text-slate-900 mb-4">How to use daily goals:</h3>
+            <div className="bg-muted rounded-lg p-5 border">
+              <h3 className="text-lg font-medium text-foreground mb-4">How to use daily goals:</h3>
               <div className="space-y-4">
                 <DocFeatureCard
                   title="Daily Planning"
@@ -161,13 +161,13 @@ export default function GettingStartedPage() {
                   variant="blue"
                 />
 
-                <div className="flex items-start gap-3 bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 mt-0.5">
+                <div className="flex items-start gap-3 bg-card rounded-lg p-4 border shadow-sm">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 mt-0.5">
                     <span className="text-xs font-bold">i</span>
                   </div>
                   <div>
-                    <h4 className="font-medium text-slate-900 mb-1">Focus Mode</h4>
-                    <p className="text-sm text-slate-600">
+                    <h4 className="font-medium text-foreground mb-1">Focus Mode</h4>
+                    <p className="text-sm text-muted-foreground">
                       Use the Focus Mode to concentrate on your daily tasks without distractions.
                       This view shows only what you need to accomplish today, helping you stay on
                       track.
@@ -185,39 +185,39 @@ export default function GettingStartedPage() {
           variant="secondary"
         >
           <div className="space-y-4">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Goals offers different views to help you focus on your goals at various levels. Switch
               between these views based on your current planning needs.
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">Quarterly View</h3>
-                <p className="text-sm text-slate-600">
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <h3 className="font-medium text-foreground mb-2">Quarterly View</h3>
+                <p className="text-sm text-muted-foreground">
                   Use this view for big-picture planning and to track progress on your major
                   objectives. Great for monthly reviews and adjustments.
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">Weekly View</h3>
-                <p className="text-sm text-slate-600">
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <h3 className="font-medium text-foreground mb-2">Weekly View</h3>
+                <p className="text-sm text-muted-foreground">
                   Perfect for mid-term planning and tracking. Review this view at the beginning and
                   end of each week to assess progress.
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">Daily View</h3>
-                <p className="text-sm text-slate-600">
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <h3 className="font-medium text-foreground mb-2">Daily View</h3>
+                <p className="text-sm text-muted-foreground">
                   Your go-to view for daily planning and execution. Check this first thing in the
                   morning to plan your day.
                 </p>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">Focus Mode</h3>
-                <p className="text-sm text-slate-600">
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <h3 className="font-medium text-foreground mb-2">Focus Mode</h3>
+                <p className="text-sm text-muted-foreground">
                   A distraction-free view that shows only your current day's tasks. Perfect for when
                   you need to concentrate on execution.
                 </p>

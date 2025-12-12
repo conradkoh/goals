@@ -57,7 +57,7 @@ export const GoalSelector = ({
         ) : (
           <SelectItem value="none" disabled className="h-12">
             <div className="py-1">
-              <span className="text-gray-500">No goals available</span>
+              <span className="text-muted-foreground">No goals available</span>
             </div>
           </SelectItem>
         )}

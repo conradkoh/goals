@@ -14,22 +14,22 @@ export function DocFeatureCard({
   variant = 'blue',
 }: DocFeatureCardProps) {
   const iconClasses = {
-    blue: 'bg-blue-100 text-blue-600',
-    indigo: 'bg-indigo-100 text-indigo-600',
-    slate: 'bg-slate-200 text-slate-700',
+    blue: 'bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400',
+    indigo: 'bg-indigo-100 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400',
+    slate: 'bg-muted text-muted-foreground',
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+    <div className="bg-card rounded-lg p-4 border shadow-sm">
       <div className="flex items-center gap-3 mb-3">
         <div
           className={`flex h-8 w-8 items-center justify-center rounded-full ${iconClasses[variant]}`}
         >
           {icon}
         </div>
-        <h4 className="font-medium text-slate-900">{title}</h4>
+        <h4 className="font-medium text-foreground">{title}</h4>
       </div>
-      <p className="text-sm text-slate-600">{description}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );
 }

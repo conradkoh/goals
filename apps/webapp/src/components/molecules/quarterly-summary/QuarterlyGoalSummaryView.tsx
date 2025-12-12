@@ -171,23 +171,23 @@ export function QuarterlyGoalSummaryView({
   return (
     <div className={cn('space-y-6', className)}>
       {/* Quarterly Goal Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <div className="flex items-start gap-4 mb-4">
           <Checkbox checked={isComplete} disabled className="mt-1 flex-shrink-0" />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+              <span className="text-sm font-semibold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/30 px-3 py-1 rounded-full">
                 Q{quarter} {year}
               </span>
               {isStarred && (
-                <div className="flex items-center gap-1 text-yellow-600">
+                <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="text-xs font-medium">Starred</span>
                 </div>
               )}
               {isPinned && (
-                <div className="flex items-center gap-1 text-blue-600">
+                <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
                   <Pin className="h-4 w-4 fill-current" />
                   <span className="text-xs font-medium">Pinned</span>
                 </div>
@@ -196,22 +196,25 @@ export function QuarterlyGoalSummaryView({
 
             <h1
               className={cn(
-                'text-2xl font-bold text-gray-900 mb-2 leading-tight',
-                isComplete && 'text-gray-500'
+                'text-2xl font-bold text-foreground mb-2 leading-tight',
+                isComplete && 'text-muted-foreground'
               )}
             >
               {quarterlyGoal?.title}
             </h1>
 
             {completedDate && (
-              <div className="text-sm text-green-600 font-medium mb-2">
+              <div className="text-sm text-green-600 dark:text-green-400 font-medium mb-2">
                 Completed on {completedDate}
               </div>
             )}
 
             {quarterlyGoal?.details && (
               <div
-                className={cn('text-gray-700 leading-relaxed', isComplete && 'text-gray-500')}
+                className={cn(
+                  'text-muted-foreground leading-relaxed',
+                  isComplete && 'text-muted-foreground/70'
+                )}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                 dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
               />
@@ -254,7 +257,7 @@ export function QuarterlyGoalSummaryView({
       {/* Weekly Goals Sections */}
       {weeksByNumber.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Weekly Goals ({totalWeeklyGoals})
           </h2>
 
@@ -270,7 +273,7 @@ export function QuarterlyGoalSummaryView({
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground">
           <div className="text-lg font-medium mb-2">No weekly goals yet</div>
           <div className="text-sm">
             This quarterly goal doesn't have any weekly goals assigned to it.
