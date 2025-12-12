@@ -53,9 +53,9 @@ function darkenColor(r: number, g: number, b: number, factor = 0.6): string {
 }
 
 /**
- * Default colors for uncategorized domains (gray theme).
+ * Default colors for uncategorized domains (gray theme) - Light mode.
  */
-const DEFAULT_COLORS: DomainPillColors = {
+const DEFAULT_COLORS_LIGHT: DomainPillColors = {
   foreground: 'rgb(55, 65, 81)', // gray-700
   background: 'rgb(243, 244, 246)', // gray-100
   border: 'rgb(229, 231, 235)', // gray-200
@@ -63,14 +63,25 @@ const DEFAULT_COLORS: DomainPillColors = {
 };
 
 /**
+ * Default colors for uncategorized domains (gray theme) - Dark mode.
+ */
+const DEFAULT_COLORS_DARK: DomainPillColors = {
+  foreground: 'rgb(209, 213, 219)', // gray-300
+  background: 'rgb(31, 41, 55)', // gray-800
+  border: 'rgb(55, 65, 81)', // gray-700
+  dotColor: 'rgb(156, 163, 175)', // gray-400
+};
+
+/**
  * Generates color variations for domain pill styling.
  * Creates accessible foreground/background combinations based on the base color's luminance.
  * @param domainColor - Hex color string for the domain
+ * @param isDarkMode - Whether the app is in dark mode
  * @returns Color configuration for pill styling
  */
-export function getDomainPillColors(domainColor?: string): DomainPillColors {
+export function getDomainPillColors(domainColor?: string, isDarkMode = false): DomainPillColors {
   if (!domainColor) {
-    return DEFAULT_COLORS;
+    return isDarkMode ? DEFAULT_COLORS_DARK : DEFAULT_COLORS_LIGHT;
   }
 
   const rgb = hexToRgb(domainColor);

@@ -20,7 +20,7 @@ const CollapsibleMinimalTrigger = ({
       variant="ghost"
       size="sm"
       className={cn(
-        'bg-gray-50 rounded-lg px-3 py-2 h-auto w-full text-sm text-muted-foreground hover:text-foreground transition-colors',
+        'bg-muted rounded-lg px-3 py-2 h-auto w-full text-sm text-muted-foreground hover:text-foreground transition-colors',
         className
       )}
     >

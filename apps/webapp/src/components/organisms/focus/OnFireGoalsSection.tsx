@@ -285,7 +285,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   if (!hasAnyFireGoals) {
     if (isFocusModeEnabled) {
       return (
-        <div className="bg-red-50 rounded-lg p-4 mb-4">
+        <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-red-500" />
@@ -328,7 +328,7 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
   }
 
   return (
-    <div className="bg-red-50 rounded-lg p-4 mb-4">
+    <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-red-500" />

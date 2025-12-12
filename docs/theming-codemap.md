@@ -202,7 +202,7 @@ interface DomainPillColors {
 }
 ```
 
-**⚠️ Issue**: Default colors (when no domain color set) use hardcoded gray values that don't adapt to dark mode.
+**✅ FIXED**: Updated `getDomainPillColors()` to accept `isDarkMode` parameter with separate light/dark default colors.
 
 ### Domain Color Usage
 
@@ -395,7 +395,7 @@ isCurrentWeek && "ring-2 ring-blue-500";
 isCurrentWeek && "bg-blue-50";
 ```
 
-**⚠️ Issue**: Uses hardcoded blue without dark variant.
+**✅ FIXED**: Updated to use `ring-blue-500 dark:ring-blue-400` and `bg-blue-50 dark:bg-blue-950/20`.
 
 ### Focus Ring Pattern
 
@@ -444,7 +444,7 @@ const DEFAULT_COLORS_DARK: DomainPillColors = {
 };
 ```
 
-**⚠️ ACTION REQUIRED**: Implement this logic in `getDomainPillColors`.
+**✅ COMPLETED**: Implemented `isDarkMode` parameter in `getDomainPillColors()` with `DEFAULT_COLORS_LIGHT` and `DEFAULT_COLORS_DARK` constants.
 
 ---
 
@@ -485,7 +485,7 @@ export const statusColors = {
 } as const;
 ```
 
-**⚠️ ACTION REQUIRED**: Create this utility file and use it across all components.
+**✅ COMPLETED**: Created `src/lib/colors/statusColors.ts` with standardized status color patterns including `starred`, `pinned`, `complete`, `onFire`, `selected`, and `currentWeek` states.
 
 ---
 
@@ -501,7 +501,7 @@ The `/docs` section uses a completely different color system (`slate-*` instead 
 
 **Recommendation**: Option 2 - Update the primitives in `src/app/docs/components/primitives/` to use semantic tokens, which will cascade to all docs pages.
 
-**⚠️ ACTION REQUIRED**: Execute Option 2 for docs primitives.
+**⚠️ STILL PENDING**: The docs section uses `slate-*` colors and needs a separate refactoring pass to use semantic tokens.
 
 ---
 
@@ -525,7 +525,7 @@ input,
 }
 ```
 
-**⚠️ ACTION REQUIRED**: Review `globals.css` transition rules.
+**ℹ️ LOW PRIORITY**: Review `globals.css` transition rules for potential optimization.
 
 ---
 

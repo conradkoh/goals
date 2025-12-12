@@ -146,7 +146,7 @@ const FocusModeDailyViewInner = ({
 
   return (
     <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={handleDeleteGoal}>
-      <div className="bg-white rounded-lg shadow-sm p-4">
+      <div className="bg-card rounded-lg shadow-sm p-4">
         <div className="flex justify-end mb-2 gap-2">
           <JumpToCurrentButton
             year={year}

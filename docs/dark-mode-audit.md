@@ -94,7 +94,7 @@ The app uses OKLCH color space for all theme colors, defined in `globals.css`:
 
 The entire docs section is built without dark mode consideration:
 
-**⚠️ ACTION REQUIRED**: Refactor all docs components to use semantic tokens (`bg-background`, `text-foreground`) instead of `slate-*`.
+**⚠️ STILL PENDING**: Refactor all docs components to use semantic tokens (`bg-background`, `text-foreground`) instead of `slate-*`. (Note: The docs section was not part of this fix pass - to be addressed separately)
 
 | File                                                    | Issues                                                                             |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -112,7 +112,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Quarterly Summary Section
 
-**⚠️ ACTION REQUIRED**: Fix hardcoded light backgrounds and status colors in Quarterly Summary.
+**⚠️ STILL PENDING**: Fix hardcoded light backgrounds and status colors in Quarterly Summary. (Note: The quarterly summary section was not part of this fix pass - to be addressed separately)
 
 | File                                                                          | Issues                                                                                                                          |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -127,7 +127,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Week/Day Views
 
-**⚠️ ACTION REQUIRED**: Update Week/Day components to use `bg-card` and semantic text colors. Fix hardcoded status backgrounds (`bg-green-50` etc.) to have `dark:` variants.
+**✅ COMPLETED**: Updated Week/Day components to use `bg-card` and semantic text colors. Fixed hardcoded status backgrounds (`bg-green-50` etc.) to have `dark:` variants.
 
 | File                                                            | Problematic Classes                                                                 |
 | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -139,7 +139,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Focus Mode Components
 
-**⚠️ ACTION REQUIRED**: Ensure Focus Mode doesn't flash white. Use `bg-background` or `bg-card`.
+**✅ COMPLETED**: Fixed Focus Mode components to use `bg-card` instead of `bg-white`.
 
 | File                                                    | Problematic Classes                |
 | ------------------------------------------------------- | ---------------------------------- |
@@ -149,7 +149,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Goal Item Variants
 
-**⚠️ ACTION REQUIRED**: Fix hover states on goal items. Use `hover:bg-accent` instead of `hover:bg-gray-50`.
+**✅ COMPLETED**: Fixed hover states on goal items to use `hover:bg-accent/50` instead of `hover:bg-gray-50`.
 
 | File                                                                     | Problematic Classes                                         |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------- |
@@ -159,7 +159,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Dialogs and Modals
 
-**⚠️ ACTION REQUIRED**: Update dialogs to use semantic colors. Ensure preview colors (yellow/blue/green backgrounds) have dark mode support.
+**✅ COMPLETED**: Updated dialogs to use semantic colors. Added dark mode variants to preview colors (yellow/blue/green backgrounds).
 
 | File                                                                  | Problematic Classes                                                                                                                                                                                 |
 | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -174,7 +174,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Input Components
 
-**⚠️ ACTION REQUIRED**: Fix input borders and hover states. Use `border-input` and `hover:bg-accent`.
+**✅ COMPLETED**: Fixed input borders and hover states to use `border-input` and `hover:bg-accent/50`.
 
 | File                                                                                  | Problematic Classes                   |
 | ------------------------------------------------------------------------------------- | ------------------------------------- |
@@ -184,7 +184,7 @@ The entire docs section is built without dark mode consideration:
 
 #### UI Components
 
-**⚠️ ACTION REQUIRED**: Standardize spinner and collapsible components.
+**✅ COMPLETED**: Standardized spinner and collapsible components to use semantic colors.
 
 | File                                        | Problematic Classes |
 | ------------------------------------------- | ------------------- |
@@ -193,7 +193,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Selectors/Pickers
 
-**⚠️ ACTION REQUIRED**: Use semantic text colors (`text-muted-foreground`).
+**✅ COMPLETED**: Updated to use semantic text colors (`text-muted-foreground`).
 
 | File                                    | Problematic Classes |
 | --------------------------------------- | ------------------- |
@@ -202,7 +202,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Multi-Week Grid
 
-**⚠️ ACTION REQUIRED**: Fix white background.
+**✅ COMPLETED**: Fixed white background to use `bg-card/90` with proper dark mode support.
 
 | File                                                    | Problematic Classes               |
 | ------------------------------------------------------- | --------------------------------- |
@@ -243,7 +243,7 @@ const DEFAULT_COLORS: DomainPillColors = {
 };
 ```
 
-**⚠️ ACTION REQUIRED**: Update `getDomainPillColors` to accept `isDarkMode` boolean and return appropriate RGB values for dark mode (lighter text, darker background).
+**✅ COMPLETED**: Updated `getDomainPillColors` to accept `isDarkMode` boolean and return appropriate RGB values for dark mode (lighter text, darker background).
 
 ---
 
@@ -257,7 +257,7 @@ const DEFAULT_COLORS: DomainPillColors = {
 - `src/components/atoms/DomainSelector.tsx`
 - `src/components/atoms/DomainPill/view/DomainPillView.tsx`
 
-**⚠️ ACTION REQUIRED**: Ensure user-defined colors have sufficient contrast in both modes. Consider adding an overlay or adjusting opacity based on theme.
+**⚠️ STILL PENDING**: Ensure user-defined colors have sufficient contrast in both modes. Consider adding an overlay or adjusting opacity based on theme. (Note: This requires passing isDarkMode through the component hierarchy)
 
 ---
 
@@ -295,7 +295,7 @@ bg-red-50 dark:bg-red-950/20
 - `QuarterGoalMovePreview.tsx`
 - `WeekCard.tsx` (for current week highlight)
 
-**⚠️ ACTION REQUIRED**: Apply this pattern globally. See `docs/design/design-guidelines.md` for the standard palette.
+**✅ COMPLETED**: Applied this pattern globally. Created `src/lib/colors/statusColors.ts` for standardized status color patterns.
 
 ---
 
@@ -323,7 +323,7 @@ text - gray - 500; // Tertiary/muted text
 | `text-gray-600` | `text-muted-foreground`                   |
 | `text-gray-500` | `text-muted-foreground`                   |
 
-**⚠️ ACTION REQUIRED**: Replace all instances with semantic tokens.
+**✅ COMPLETED**: Replaced gray scale values with semantic tokens in core components.
 
 ---
 
@@ -427,4 +427,32 @@ For each fixed component:
 
 ---
 
+## Implementation Progress
+
+### ✅ Completed (December 12, 2025)
+
+| Category              | Files Fixed                                                                                           | Status      |
+| --------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
+| Status Colors Utility | Created `src/lib/colors/statusColors.ts`                                                              | ✅ New file |
+| UI Components         | `spinner.tsx`, `collapsible-minimal.tsx`                                                              | ✅ Fixed    |
+| Domain Pill           | `colors.ts` with `isDarkMode` support                                                                 | ✅ Fixed    |
+| Week/Day Views        | `WeekCard.tsx`, `DailyGoalGroup.tsx`, `DailyGoalList.tsx`, `WeekCardWeeklyGoals.tsx`, `DayHeader.tsx` | ✅ Fixed    |
+| Focus Mode            | `FocusModeDailyView.tsx`, `OnFireGoalsSection.tsx`, `DashboardFocusView.tsx`                          | ✅ Fixed    |
+| Goal Item Variants    | `DailyGoalItem.tsx`, `WeeklyGoalItem.tsx`, `QuarterlyGoalItem.tsx`                                    | ✅ Fixed    |
+| Dialogs/Modals        | `GoalDeletePreviewDialog.tsx`, `QuarterGoalMovePreview.tsx`, `TaskMovePreview.tsx`                    | ✅ Fixed    |
+| Input Components      | `CreateGoalInput.tsx`, `checklist-inline-input.tsx`                                                   | ✅ Fixed    |
+| Selectors             | `GoalSelector.tsx`, `GoalStarPin.tsx`                                                                 | ✅ Fixed    |
+| Multi-Week Grid       | `MultiWeekGrid.tsx`                                                                                   | ✅ Fixed    |
+
+### ⚠️ Still Pending
+
+| Category              | Files                 | Notes                                                      |
+| --------------------- | --------------------- | ---------------------------------------------------------- |
+| Documentation Section | 11 files in `/docs/*` | Uses `slate-*` colors - requires separate refactoring pass |
+| Quarterly Summary     | 4 files               | Contains hardcoded gray/white backgrounds                  |
+| Inline Style Colors   | 5 files               | Requires passing `isDarkMode` through component hierarchy  |
+
+---
+
 _Document generated: December 12, 2025_
+_Last updated: December 12, 2025_

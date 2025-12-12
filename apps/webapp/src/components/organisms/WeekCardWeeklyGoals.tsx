@@ -127,7 +127,10 @@ const WeeklyGoal = ({
   return (
     <>
       <div
-        className={cn('group rounded-sm', isSoftComplete ? 'bg-green-50' : 'hover:bg-gray-50/50')}
+        className={cn(
+          'group rounded-sm',
+          isSoftComplete ? 'bg-green-50 dark:bg-green-950/20' : 'hover:bg-accent/50'
+        )}
       >
         <div className="px-2 py-1">
           <div className="text-sm flex items-center gap-2 group/title">
@@ -395,14 +398,16 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                   key={goal._id}
                   className={cn(
                     'px-3 space-y-2 rounded-md',
-                    isAllWeeklyGoalsComplete ? 'bg-green-50' : ''
+                    isAllWeeklyGoalsComplete ? 'bg-green-50 dark:bg-green-950/20' : ''
                   )}
                 >
                   <div
                     className={cn(
-                      'font-semibold text-sm text-gray-800 px-2 py-1 rounded-md',
+                      'font-semibold text-sm text-foreground px-2 py-1 rounded-md',
                       !isAllWeeklyGoalsComplete &&
-                        (isStarred ? 'bg-yellow-50' : isPinned && 'bg-blue-50')
+                        (isStarred
+                          ? 'bg-yellow-50 dark:bg-yellow-950/20'
+                          : isPinned && 'bg-blue-50 dark:bg-blue-950/20')
                     )}
                   >
                     <GoalProvider goal={goal}>

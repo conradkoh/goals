@@ -39,15 +39,20 @@ export const WeekCard = ({
     <WeekProvider weekData={weekData}>
       <div
         className={cn(
-          'h-full flex flex-col border rounded-lg shadow bg-white',
-          isCurrentWeek && 'ring-2 ring-blue-500'
+          'h-full flex flex-col border rounded-lg shadow bg-card',
+          isCurrentWeek && 'ring-2 ring-blue-500 dark:ring-blue-400'
         )}
       >
-        <div className={cn('border-b p-2 md:p-3 flex-shrink-0', isCurrentWeek && 'bg-blue-50')}>
+        <div
+          className={cn(
+            'border-b p-2 md:p-3 flex-shrink-0',
+            isCurrentWeek && 'bg-blue-50 dark:bg-blue-950/20'
+          )}
+        >
           <div className="flex items-baseline justify-between">
             <div className="flex flex-col md:flex-row md:items-baseline md:gap-2">
               <h3 className="font-semibold">{weekLabel}</h3>
-              <span className="text-xs md:text-sm text-gray-500">{mondayDate}</span>
+              <span className="text-xs md:text-sm text-muted-foreground">{mondayDate}</span>
             </div>
             {isCurrentWeek && (
               <div className="flex items-center gap-1 md:gap-2">

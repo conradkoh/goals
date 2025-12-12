@@ -60,7 +60,7 @@ export const GoalStarPin = ({ value, onStarred, onPinned }: GoalStarPinProps) =>
           <ActionButton
             icon={<Pin className="h-3.5 w-3.5" />}
             onClick={onPinned}
-            className="text-gray-400 hover:text-blue-500"
+            className="text-muted-foreground hover:text-blue-500"
           />
         </div>
         <ActionButton
@@ -79,7 +79,7 @@ export const GoalStarPin = ({ value, onStarred, onPinned }: GoalStarPinProps) =>
           <ActionButton
             icon={<Star className="h-3.5 w-3.5" />}
             onClick={onStarred}
-            className="text-gray-400 hover:text-yellow-500"
+            className="text-muted-foreground hover:text-yellow-500"
           />
         </div>
         <ActionButton
@@ -97,13 +97,13 @@ export const GoalStarPin = ({ value, onStarred, onPinned }: GoalStarPinProps) =>
         <ActionButton
           icon={<Star className="h-3.5 w-3.5" />}
           onClick={onStarred}
-          className="text-gray-400 hover:text-yellow-500"
+          className="text-muted-foreground hover:text-yellow-500"
         />
       </div>
       <ActionButton
         icon={<Pin className="h-3.5 w-3.5" />}
         onClick={onPinned}
-        className="text-gray-400 hover:text-blue-500"
+        className="text-muted-foreground hover:text-blue-500"
       />
     </div>
   );

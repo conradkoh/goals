@@ -185,7 +185,7 @@ export const DailyGoalGroupHeader = ({
           />
         </GoalProvider>
       </div>
-      <div className="flex items-center gap-1.5 text-sm text-gray-500">
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
         {isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
         {isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
         {isComplete && <Check className="h-3.5 w-3.5 text-green-500" />}
@@ -267,7 +267,7 @@ export const DailyGoalGroupContainer = ({
       <div
         className={cn(
           'rounded-md px-3 py-2 transition-colors',
-          isSoftComplete ? 'bg-green-50' : ''
+          isSoftComplete ? 'bg-green-50 dark:bg-green-950/20' : ''
         )}
       >
         <DailyGoalGroupHeader

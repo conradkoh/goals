@@ -239,13 +239,13 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
   return (
     <>
       <div className="space-y-2">
-        <div className="bg-gray-100 py-1 px-3 rounded-md">
+        <div className="bg-muted py-1 px-3 rounded-md">
           <div className="flex items-center justify-between">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="p-0 h-auto hover:bg-transparent font-bold text-gray-900 text-sm w-full cursor-pointer flex items-center gap-2">
+                <div className="p-0 h-auto hover:bg-transparent font-bold text-foreground text-sm w-full cursor-pointer flex items-center gap-2">
                   <span>{getDayName(dayOfWeek)}</span>
-                  <span className="text-gray-500 font-normal">{formattedDate}</span>
+                  <span className="text-muted-foreground font-normal">{formattedDate}</span>
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -258,7 +258,9 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
                             <History className="mr-2 h-4 w-4" />
                             <div className="flex flex-col w-full items-center">
                               <span>Pull Incomplete</span>
-                              <span className="text-gray-500 text-xs">from previous day</span>
+                              <span className="text-muted-foreground text-xs">
+                                from previous day
+                              </span>
                             </div>
                           </DropdownMenuItem>
                         </div>
@@ -277,7 +279,7 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
                       <History className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">from previous day</span>
+                        <span className="text-muted-foreground text-xs">from previous day</span>
                       </div>
                     </DropdownMenuItem>
 
@@ -290,7 +292,9 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
                       <CalendarDays className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 text-xs">from all past days in week</span>
+                        <span className="text-muted-foreground text-xs">
+                          from all past days in week
+                        </span>
                       </div>
                     </DropdownMenuItem>
                   </>

@@ -194,7 +194,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {(viewMode === 'weekly' || viewMode === 'daily') && !weekData && (
-            <div className="p-8 text-center bg-white rounded-lg shadow-sm">
+            <div className="p-8 text-center bg-card rounded-lg shadow-sm">
               <p className="text-muted-foreground">Loading week data...</p>
             </div>
           )}
