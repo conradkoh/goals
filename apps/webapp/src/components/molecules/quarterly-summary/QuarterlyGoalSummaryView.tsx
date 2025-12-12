@@ -171,23 +171,23 @@ export function QuarterlyGoalSummaryView({
   return (
     <div className={cn('space-y-6', className)}>
       {/* Quarterly Goal Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <div className="flex items-start gap-4 mb-4">
           <Checkbox checked={isComplete} disabled className="mt-1 flex-shrink-0" />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+              <span className="text-sm font-semibold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-950/30 px-3 py-1 rounded-full">
                 Q{quarter} {year}
               </span>
               {isStarred && (
-                <div className="flex items-center gap-1 text-yellow-600">
+                <div className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                   <Star className="h-4 w-4 fill-current" />
                   <span className="text-xs font-medium">Starred</span>
                 </div>
               )}
               {isPinned && (
-                <div className="flex items-center gap-1 text-blue-600">
+                <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
                   <Pin className="h-4 w-4 fill-current" />
                   <span className="text-xs font-medium">Pinned</span>
                 </div>
@@ -204,7 +204,7 @@ export function QuarterlyGoalSummaryView({
             </h1>
 
             {completedDate && (
-              <div className="text-sm text-green-600 font-medium mb-2">
+              <div className="text-sm text-green-600 dark:text-green-400 font-medium mb-2">
                 Completed on {completedDate}
               </div>
             )}

@@ -61,7 +61,7 @@ export function GoalDetailsContent({
 
         <div
           className={cn(
-            'max-h-[300px] overflow-y-auto rounded-md pt-4 pb-4 px-3 relative group',
+            'max-h-[300px] overflow-y-auto rounded-md pt-4 pb-4 px-3 relative group bg-muted/30',
             className
           )}
         >

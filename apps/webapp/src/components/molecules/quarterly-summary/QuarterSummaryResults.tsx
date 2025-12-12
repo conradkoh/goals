@@ -85,9 +85,9 @@ export function QuarterSummaryResults({
 
   return (
     <div className={cn('space-y-8', className)}>
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
-          <BarChart3 className="h-6 w-6 text-blue-600" />
+          <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           <div>
             <h1 className="text-2xl font-bold text-foreground">
               Q{quarter} {year} Summary
