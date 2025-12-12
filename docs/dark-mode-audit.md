@@ -450,7 +450,7 @@ For each fixed component:
 | --------------------- | --------------------- | ---------------------------------------------------------- |
 | Documentation Section | 11 files in `/docs/*` | ✅ Completed - uses semantic tokens now |
 | Quarterly Summary     | 4 files               | ✅ Completed - uses semantic tokens now |
-| Inline Style Colors   | 4 remaining files     | DomainPillView fixed; others still need `isDarkMode` prop (low priority) |
+| Inline Style Colors   | ✅ No action needed   | DomainPillView fixed; remaining 4 files only use inline styles for small color indicator dots (not text) |
 
 ---
 
