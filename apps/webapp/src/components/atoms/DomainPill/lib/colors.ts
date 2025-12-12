@@ -53,6 +53,20 @@ function darkenColor(r: number, g: number, b: number, factor = 0.6): string {
 }
 
 /**
+ * Lightens an RGB color by increasing component values towards white.
+ * @param r - Red value (0-255)
+ * @param g - Green value (0-255)
+ * @param b - Blue value (0-255)
+ * @param factor - Multiplier for lightening (1.5 = 50% lighter)
+ * @returns RGB color string
+ */
+function lightenColor(r: number, g: number, b: number, factor = 1.5): string {
+  const lighten = (value: number) =>
+    Math.min(255, Math.round(value + (255 - value) * (factor - 1)));
+  return `rgb(${lighten(r)}, ${lighten(g)}, ${lighten(b)})`;
+}
+
+/**
  * Default colors for uncategorized domains (gray theme) - Light mode.
  */
 const DEFAULT_COLORS_LIGHT: DomainPillColors = {
@@ -86,19 +100,30 @@ export function getDomainPillColors(domainColor?: string, isDarkMode = false): D
 
   const rgb = hexToRgb(domainColor);
   if (!rgb) {
-    return {
-      foreground: '#000000',
-      background: domainColor,
-      border: domainColor,
-      dotColor: '#000000',
-    };
+    return isDarkMode ? DEFAULT_COLORS_DARK : DEFAULT_COLORS_LIGHT;
   }
 
   // Calculate luminance to determine if it's a light or dark color
   const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
 
-  // For light colors (luminance > 0.5), darken the text significantly for contrast
-  // For dark colors, use the original color for text
+  if (isDarkMode) {
+    // Dark mode: Use lighter text that contrasts with dark backgrounds
+    // For light colors (high luminance), we can use the original or slightly saturated
+    // For dark colors, we need to lighten them significantly
+    const textColor =
+      luminance > 0.4
+        ? `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})` // Light colors: use original
+        : lightenColor(rgb.r, rgb.g, rgb.b, 1.5); // Dark colors: lighten by 50%
+
+    return {
+      foreground: textColor,
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`, // Slightly less opacity for dark mode
+      border: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`,
+      dotColor: `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`,
+    };
+  }
+
+  // Light mode: Darken text for light colors to ensure contrast
   const textColor =
     luminance > 0.5
       ? darkenColor(rgb.r, rgb.g, rgb.b, 0.4) // Darken to 40% for light colors

@@ -28,6 +28,39 @@ export function useTheme() {
   return context;
 }
 
+/**
+ * Returns whether the app is currently in dark mode.
+ * This resolves 'system' theme to the actual mode based on the document class.
+ */
+export function useIsDarkMode(): boolean {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check if the dark class is present on the document
+    const checkDarkMode = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+
+    // Initial check
+    checkDarkMode();
+
+    // Observe changes to the class attribute
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          checkDarkMode();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return isDark;
+}
+
 // Script to prevent flash of incorrect theme
 const themeScript = `
 (() => {

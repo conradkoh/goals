@@ -202,7 +202,11 @@ interface DomainPillColors {
 }
 ```
 
-**✅ FIXED**: Updated `getDomainPillColors()` to accept `isDarkMode` parameter with separate light/dark default colors.
+**✅ FIXED**: Updated `getDomainPillColors()` to accept `isDarkMode` parameter. Now generates appropriate text colors based on luminance AND theme mode:
+- Light mode: Darkens light colors for contrast on white backgrounds
+- Dark mode: Uses original color or lightens dark colors for contrast on dark backgrounds
+- Added `useIsDarkMode()` hook to `ThemeProvider.tsx` for detecting resolved theme
+- `DomainPillView` now passes `isDarkMode` to color calculation
 
 ### Domain Color Usage
 

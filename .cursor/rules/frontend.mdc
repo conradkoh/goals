@@ -58,6 +58,24 @@ bg-red-50  // Will cause white text on light red in dark mode
 | Card background | `bg-card` | `bg-white` |
 | Hover states | `hover:bg-accent/50` | `hover:bg-gray-50` |
 
+### **Dynamic/Inline Style Colors**
+When colors must be computed at runtime (e.g., user-defined colors), use the `useIsDarkMode()` hook:
+
+```tsx
+import { useIsDarkMode } from '@/modules/theme/ThemeProvider';
+
+function MyComponent({ userColor }: { userColor: string }) {
+  const isDarkMode = useIsDarkMode();
+  
+  // Pass isDarkMode to color calculation functions
+  const colors = getComputedColors(userColor, isDarkMode);
+  
+  return <div style={{ color: colors.text, backgroundColor: colors.bg }} />;
+}
+```
+
+**Example**: See `DomainPillView` and `getDomainPillColors()` for the pattern.
+
 ### **Testing Checklist**
 Test each component in: light mode → dark mode → system mode
 

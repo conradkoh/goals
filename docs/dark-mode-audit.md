@@ -257,7 +257,7 @@ const DEFAULT_COLORS: DomainPillColors = {
 - `src/components/atoms/DomainSelector.tsx`
 - `src/components/atoms/DomainPill/view/DomainPillView.tsx`
 
-**⚠️ STILL PENDING**: Ensure user-defined colors have sufficient contrast in both modes. Consider adding an overlay or adjusting opacity based on theme. (Note: This requires passing isDarkMode through the component hierarchy)
+**✅ COMPLETED**: Updated `DomainPillView` to use `useIsDarkMode()` hook and pass it to `getDomainPillColors()`. The function now generates appropriate light/dark text colors based on the domain color luminance and current theme mode.
 
 ---
 
@@ -450,7 +450,7 @@ For each fixed component:
 | --------------------- | --------------------- | ---------------------------------------------------------- |
 | Documentation Section | 11 files in `/docs/*` | Uses `slate-*` colors - requires separate refactoring pass |
 | Quarterly Summary     | 4 files               | Contains hardcoded gray/white backgrounds                  |
-| Inline Style Colors   | 5 files               | Requires passing `isDarkMode` through component hierarchy  |
+| Inline Style Colors   | 4 remaining files     | DomainPillView fixed; others still need `isDarkMode` prop  |
 
 ---
 
