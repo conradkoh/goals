@@ -16,9 +16,9 @@ export function DocHeader({
   badgeColor = 'blue',
 }: DocHeaderProps) {
   const badgeColorClasses = {
-    blue: 'bg-blue-50 text-blue-700',
-    indigo: 'bg-indigo-50 text-indigo-700',
-    slate: 'bg-slate-100 text-slate-700',
+    blue: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
+    indigo: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400',
+    slate: 'bg-muted text-muted-foreground',
   };
 
   return (
@@ -29,8 +29,8 @@ export function DocHeader({
         {icon}
         <span>{badge}</span>
       </div>
-      <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
-      <p className="text-lg text-slate-600 max-w-2xl">{description}</p>
+      <h1 className="text-3xl font-bold tracking-tight text-foreground">{title}</h1>
+      <p className="text-lg text-muted-foreground max-w-2xl">{description}</p>
     </div>
   );
 }

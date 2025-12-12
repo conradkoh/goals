@@ -94,7 +94,7 @@ The app uses OKLCH color space for all theme colors, defined in `globals.css`:
 
 The entire docs section is built without dark mode consideration:
 
-**⚠️ STILL PENDING**: Refactor all docs components to use semantic tokens (`bg-background`, `text-foreground`) instead of `slate-*`. (Note: The docs section was not part of this fix pass - to be addressed separately)
+**✅ COMPLETED**: Refactored all docs components (primitives and pages) to use semantic tokens (`bg-background`, `text-foreground`, `bg-card`, `bg-muted`, `text-muted-foreground`) instead of `slate-*`.
 
 | File                                                    | Issues                                                                             |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------- |
@@ -112,7 +112,7 @@ The entire docs section is built without dark mode consideration:
 
 #### Quarterly Summary Section
 
-**⚠️ STILL PENDING**: Fix hardcoded light backgrounds and status colors in Quarterly Summary. (Note: The quarterly summary section was not part of this fix pass - to be addressed separately)
+**✅ COMPLETED**: Fixed hardcoded light backgrounds and status colors in Quarterly Summary components and pages.
 
 | File                                                                          | Issues                                                                                                                          |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -448,9 +448,9 @@ For each fixed component:
 
 | Category              | Files                 | Notes                                                      |
 | --------------------- | --------------------- | ---------------------------------------------------------- |
-| Documentation Section | 11 files in `/docs/*` | Uses `slate-*` colors - requires separate refactoring pass |
-| Quarterly Summary     | 4 files               | Contains hardcoded gray/white backgrounds                  |
-| Inline Style Colors   | 4 remaining files     | DomainPillView fixed; others still need `isDarkMode` prop  |
+| Documentation Section | 11 files in `/docs/*` | ✅ Completed - uses semantic tokens now |
+| Quarterly Summary     | 4 files               | ✅ Completed - uses semantic tokens now |
+| Inline Style Colors   | 4 remaining files     | DomainPillView fixed; others still need `isDarkMode` prop (low priority) |
 
 ---
 

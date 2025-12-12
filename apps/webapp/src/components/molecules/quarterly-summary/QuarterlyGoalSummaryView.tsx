@@ -196,8 +196,8 @@ export function QuarterlyGoalSummaryView({
 
             <h1
               className={cn(
-                'text-2xl font-bold text-gray-900 mb-2 leading-tight',
-                isComplete && 'text-gray-500'
+                'text-2xl font-bold text-foreground mb-2 leading-tight',
+                isComplete && 'text-muted-foreground'
               )}
             >
               {quarterlyGoal?.title}
@@ -211,7 +211,10 @@ export function QuarterlyGoalSummaryView({
 
             {quarterlyGoal?.details && (
               <div
-                className={cn('text-gray-700 leading-relaxed', isComplete && 'text-gray-500')}
+                className={cn(
+                  'text-muted-foreground leading-relaxed',
+                  isComplete && 'text-muted-foreground/70'
+                )}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
                 dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
               />
@@ -254,7 +257,7 @@ export function QuarterlyGoalSummaryView({
       {/* Weekly Goals Sections */}
       {weeksByNumber.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             Weekly Goals ({totalWeeklyGoals})
           </h2>
 
@@ -270,7 +273,7 @@ export function QuarterlyGoalSummaryView({
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground">
           <div className="text-lg font-medium mb-2">No weekly goals yet</div>
           <div className="text-sm">
             This quarterly goal doesn't have any weekly goals assigned to it.

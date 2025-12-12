@@ -7,15 +7,15 @@ interface DocInfoCardProps {
 
 export function DocInfoCard({ children, variant = 'default' }: DocInfoCardProps) {
   const variantClasses = {
-    default: 'bg-slate-50 border-slate-200',
-    note: 'bg-blue-50 border-blue-200',
-    warning: 'bg-amber-50 border-amber-200',
+    default: 'bg-muted border-border',
+    note: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+    warning: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800',
   };
 
   const textClasses = {
-    default: 'text-slate-700',
-    note: 'text-blue-800',
-    warning: 'text-amber-800',
+    default: 'text-muted-foreground',
+    note: 'text-blue-800 dark:text-blue-400',
+    warning: 'text-amber-800 dark:text-amber-400',
   };
 
   return (

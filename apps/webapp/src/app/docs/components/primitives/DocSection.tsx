@@ -9,9 +9,9 @@ interface DocSectionProps {
 
 export function DocSection({ title, icon, children, variant = 'primary' }: DocSectionProps) {
   const headerVariants = {
-    primary: 'bg-blue-600',
-    secondary: 'bg-indigo-600',
-    neutral: 'bg-slate-700',
+    primary: 'bg-blue-600 dark:bg-blue-700',
+    secondary: 'bg-indigo-600 dark:bg-indigo-700',
+    neutral: 'bg-muted-foreground',
   };
 
   return (
@@ -23,7 +23,7 @@ export function DocSection({ title, icon, children, variant = 'primary' }: DocSe
             {title}
           </h2>
         </div>
-        <div className="bg-white p-6">{children}</div>
+        <div className="bg-card p-6">{children}</div>
       </div>
     </section>
   );

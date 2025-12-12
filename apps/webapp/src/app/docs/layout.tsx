@@ -30,8 +30,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
         <div className="container flex h-16 items-center px-4 sm:px-6">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -55,7 +55,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
       {/* Mobile navigation overlay */}
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-40 bg-white md:hidden pt-16">
+        <div className="fixed inset-0 z-40 bg-background md:hidden pt-16">
           <nav className="container py-8">
             <ul className="space-y-3 flex flex-col items-center">
               {navItems.map((item) => (
@@ -63,25 +63,27 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   <Link
                     href={item.href}
                     className={cn(
-                      'flex items-center w-full gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-slate-100',
-                      pathname === item.href ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                      'flex items-center w-full gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-accent',
+                      pathname === item.href
+                        ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400'
+                        : 'text-muted-foreground'
                     )}
                     onClick={() => setMobileNavOpen(false)}
                   >
-                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 shrink-0">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
                       {item.icon}
                     </span>
                     <span>{item.title}</span>
                   </Link>
                 </li>
               ))}
-              <li className="w-full max-w-xs pt-3 mt-3 border-t border-slate-200">
+              <li className="w-full max-w-xs pt-3 mt-3 border-t border-border">
                 <Link
                   href="/app"
-                  className="flex items-center w-full gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-slate-100 text-slate-700"
+                  className="flex items-center w-full gap-3 rounded-md px-4 py-3 text-sm font-medium hover:bg-accent text-muted-foreground"
                   onClick={() => setMobileNavOpen(false)}
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 shrink-0">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
                     <ArrowLeft className="h-4 w-4" />
                   </span>
                   <span>Go to Dashboard</span>
@@ -104,22 +106,22 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   className={cn(
                     'flex items-center w-full gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                     pathname === item.href
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                   )}
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 shrink-0">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
                     {item.icon}
                   </span>
                   <span>{item.title}</span>
                 </Link>
               ))}
-              <div className="pt-4 mt-4 border-t border-slate-200">
+              <div className="pt-4 mt-4 border-t border-border">
                 <Link
                   href="/app"
-                  className="flex items-center w-full gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                  className="flex items-center w-full gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 shrink-0">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted shrink-0">
                     <ArrowLeft className="h-4 w-4" />
                   </span>
                   <span>Go to Dashboard</span>

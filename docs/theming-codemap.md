@@ -505,7 +505,7 @@ The `/docs` section uses a completely different color system (`slate-*` instead 
 
 **Recommendation**: Option 2 - Update the primitives in `src/app/docs/components/primitives/` to use semantic tokens, which will cascade to all docs pages.
 
-**⚠️ STILL PENDING**: The docs section uses `slate-*` colors and needs a separate refactoring pass to use semantic tokens.
+**✅ COMPLETED**: The docs section has been refactored to use semantic tokens (`bg-background`, `bg-card`, `bg-muted`, `text-foreground`, `text-muted-foreground`) instead of `slate-*` colors.
 
 ---
 

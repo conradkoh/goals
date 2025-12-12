@@ -26,28 +26,28 @@ export default function KeyboardShortcutsPage() {
           variant="primary"
         >
           <div className="space-y-4">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Quickly switch between different views to focus on your goals at various levels.
             </p>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                <h3 className="font-medium text-slate-900 mb-2">View Switching</h3>
-                <p className="text-sm text-slate-600 mb-3">
+              <div className="bg-card rounded-lg p-4 border shadow-sm">
+                <h3 className="font-medium text-foreground mb-2">View Switching</h3>
+                <p className="text-sm text-muted-foreground mb-3">
                   When no element is focused, use these shortcuts to switch views:
                 </p>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Q</span>
-                    <span className="text-slate-600">Switch to Quarterly View</span>
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded">Q</span>
+                    <span className="text-muted-foreground">Switch to Quarterly View</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">W</span>
-                    <span className="text-slate-600">Switch to Weekly View</span>
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded">W</span>
+                    <span className="text-muted-foreground">Switch to Weekly View</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">D</span>
-                    <span className="text-slate-600">Switch to Daily View</span>
+                    <span className="font-mono bg-muted px-1.5 py-0.5 rounded">D</span>
+                    <span className="text-muted-foreground">Switch to Daily View</span>
                   </div>
                 </div>
               </div>
@@ -72,19 +72,21 @@ export default function KeyboardShortcutsPage() {
           variant="secondary"
         >
           <div className="space-y-4">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Navigate through the application quickly using these global shortcuts.
             </p>
 
-            <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+            <div className="bg-card rounded-lg p-4 border shadow-sm">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">⌘/Ctrl + K</span>
-                  <span className="text-slate-600">Jump to quarter</span>
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded">⌘/Ctrl + K</span>
+                  <span className="text-muted-foreground">Jump to quarter</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">Esc</span>
-                  <span className="text-slate-600">Close popups / Cancel current action</span>
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded">Esc</span>
+                  <span className="text-muted-foreground">
+                    Close popups / Cancel current action
+                  </span>
                 </div>
               </div>
             </div>
@@ -97,17 +99,15 @@ export default function KeyboardShortcutsPage() {
           variant="neutral"
         >
           <div className="space-y-4">
-            <p className="text-slate-700">
+            <p className="text-muted-foreground">
               Common shortcuts for working with forms and text inputs.
             </p>
 
-            <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+            <div className="bg-card rounded-lg p-4 border shadow-sm">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded">
-                    ⌘/Ctrl + Enter
-                  </span>
-                  <span className="text-slate-600">Submit form</span>
+                  <span className="font-mono bg-muted px-1.5 py-0.5 rounded">⌘/Ctrl + Enter</span>
+                  <span className="text-muted-foreground">Submit form</span>
                 </div>
               </div>
             </div>

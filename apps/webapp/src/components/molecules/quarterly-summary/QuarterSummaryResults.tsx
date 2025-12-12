@@ -89,7 +89,7 @@ export function QuarterSummaryResults({
         <div className="flex items-center gap-3 mb-4">
           <BarChart3 className="h-6 w-6 text-blue-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-foreground">
               Q{quarter} {year} Summary
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -109,7 +109,7 @@ export function QuarterSummaryResults({
 
           return (
             <div key={quarterlyGoal._id} className="space-y-6">
-              <div className="bg-white border rounded-lg p-6">
+              <div className="bg-card border rounded-lg p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
                     Quarterly Goal {index + 1}
@@ -123,8 +123,8 @@ export function QuarterSummaryResults({
 
                 <h2
                   className={cn(
-                    'text-xl font-bold text-gray-900 mb-2 leading-tight',
-                    isComplete && 'text-gray-500 line-through'
+                    'text-xl font-bold text-foreground mb-2 leading-tight',
+                    isComplete && 'text-muted-foreground line-through'
                   )}
                 >
                   {quarterlyGoal.title}
@@ -144,7 +144,7 @@ export function QuarterSummaryResults({
 
               {Object.keys(weeklyGoalsByWeek).length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800">Weekly Goals</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Weekly Goals</h3>
                   {Object.entries(weeklyGoalsByWeek)
                     .sort(([a], [b]) => Number(a) - Number(b))
                     .map(([weekNum, weeklyGoals]) => (
@@ -164,20 +164,20 @@ export function QuarterSummaryResults({
 
         {includeAdhocGoals && summaryData.adhocGoals && summaryData.adhocGoals.length > 0 && (
           <div className="space-y-6">
-            <div className="bg-white border rounded-lg p-6">
+            <div className="bg-card border rounded-lg p-6">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-sm font-medium text-purple-700 bg-purple-100 px-3 py-1 rounded-full">
                   Adhoc Goals
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">
+              <h2 className="text-xl font-bold text-foreground mb-2 leading-tight">
                 Adhoc Goals ({summaryData.adhocGoals.length})
               </h2>
             </div>
 
             <div className="space-y-4">
               {summaryData.adhocGoals.map((goal: Doc<'goals'>) => (
-                <div key={goal._id} className="bg-white border rounded-lg p-4">
+                <div key={goal._id} className="bg-card border rounded-lg p-4">
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
@@ -196,7 +196,9 @@ export function QuarterSummaryResults({
                   {goal.details && (
                     <p className="text-sm text-muted-foreground mt-1">{goal.details}</p>
                   )}
-                  <div className="text-xs text-gray-500 mt-2">Week {goal.adhoc?.weekNumber}</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Week {goal.adhoc?.weekNumber}
+                  </div>
                 </div>
               ))}
             </div>
