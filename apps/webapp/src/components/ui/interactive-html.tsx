@@ -193,7 +193,7 @@ export function InteractiveHTML({
     <div
       ref={containerRef}
       className={cn(
-        'prose prose-sm max-w-none break-words overflow-wrap-anywhere',
+        'prose prose-sm dark:prose-invert max-w-none break-words overflow-wrap-anywhere',
         styles.prose,
         className
       )}
