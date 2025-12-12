@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
@@ -194,8 +195,11 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {(viewMode === 'weekly' || viewMode === 'daily') && !weekData && (
-            <div className="p-8 text-center bg-card rounded-lg shadow-sm">
-              <p className="text-muted-foreground">Loading week data...</p>
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading week data...</p>
+              </div>
             </div>
           )}
         </div>
