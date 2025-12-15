@@ -1,7 +1,11 @@
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
+import { GoalQuickViewModal } from '@/components/molecules/focus/GoalQuickViewModal';
+import { GoalSearchDialog } from '@/components/molecules/focus/GoalSearchDialog';
 import { QuarterJumpDialog } from '@/components/molecules/focus/QuarterJumpDialog';
 import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
@@ -13,7 +17,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useMoveGoalsForQuarter } from '@/hooks/useMoveGoalsForQuarter';
 import { usePullGoals } from '@/hooks/usePullGoals';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
-import { useWeekData } from '@/hooks/useWeek';
+import { useWeek as useWeekContext, useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
 interface DashboardFocusViewProps {
@@ -43,8 +47,11 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
   const { weekday: currentDay } = useCurrentWeekInfo();
 
-  // State for quarter jump dialog (Cmd+K)
+  // State for dialogs
   const [isQuarterJumpOpen, setIsQuarterJumpOpen] = useState(false);
+  const [isGoalSearchOpen, setIsGoalSearchOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<GoalWithDetailsAndChildren | null>(null);
+  const [isGoalQuickViewOpen, setIsGoalQuickViewOpen] = useState(false);
 
   // Use the hook for the "Pull from previous quarter" functionality
   const {
@@ -121,12 +128,34 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     [handleDayNavigation]
   );
 
+  // Handler for opening the appropriate dialog based on view mode
+  const handleOpenCommandDialog = useCallback(() => {
+    if (viewMode === 'quarterly') {
+      // In quarterly view, open quarter jump dialog
+      setIsQuarterJumpOpen(true);
+    } else {
+      // In weekly/daily view, open goal search dialog
+      setIsGoalSearchOpen(true);
+    }
+  }, [viewMode]);
+
+  // Handler for goal selection from search dialog
+  const handleGoalSelect = useCallback((_goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => {
+    setSelectedGoal(goal);
+    setIsGoalQuickViewOpen(true);
+  }, []);
+
+  // Handler for "Jump to quarter" from goal search
+  const handleJumpToQuarter = useCallback(() => {
+    setIsQuarterJumpOpen(true);
+  }, []);
+
   return (
     <GoalStatusProvider>
       <div id="db-focus-view" className="w-full h-full">
         <ViewModeKeyboardShortcuts
           onViewModeChange={onViewModeChange}
-          onOpenQuarterJump={() => setIsQuarterJumpOpen(true)}
+          onOpenQuarterJump={handleOpenCommandDialog}
         />
         <QuarterJumpDialog
           open={isQuarterJumpOpen}
@@ -137,6 +166,29 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             onYearQuarterChange?.(year, quarter);
           }}
         />
+
+        {/* Render goal search and quick view within WeekProvider context if week data available */}
+        {weekData && (viewMode === 'weekly' || viewMode === 'daily') && (
+          <WeekProvider weekData={weekData}>
+            <_GoalSearchDialogWrapper
+              open={isGoalSearchOpen}
+              onOpenChange={setIsGoalSearchOpen}
+              onGoalSelect={handleGoalSelect}
+              onJumpToQuarter={handleJumpToQuarter}
+              isGoalModalOpen={isGoalQuickViewOpen}
+            />
+            <GoalQuickViewModal
+              open={isGoalQuickViewOpen}
+              onOpenChange={setIsGoalQuickViewOpen}
+              goal={selectedGoal}
+            />
+          </WeekProvider>
+        )}
+
+        {/* Render goal quick view outside WeekProvider for quarterly view (no week data needed) */}
+        {viewMode === 'quarterly' && (
+          <GoalQuickViewModal open={false} onOpenChange={() => {}} goal={null} />
+        )}
         <div className="w-full">
           <FocusMenuBar
             viewMode={viewMode}
@@ -210,3 +262,38 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     </GoalStatusProvider>
   );
 };
+
+/**
+ * Wrapper component for GoalSearchDialog that uses useWeek hook.
+ * Must be rendered inside WeekProvider context.
+ */
+interface _GoalSearchDialogWrapperProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
+  onJumpToQuarter: () => void;
+  isGoalModalOpen: boolean;
+}
+
+function _GoalSearchDialogWrapper({
+  open,
+  onOpenChange,
+  onGoalSelect,
+  onJumpToQuarter,
+  isGoalModalOpen,
+}: _GoalSearchDialogWrapperProps) {
+  const { weeklyGoals, dailyGoals, quarterlyGoals } = useWeekContext();
+
+  return (
+    <GoalSearchDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      weeklyGoals={weeklyGoals}
+      dailyGoals={dailyGoals}
+      quarterlyGoals={quarterlyGoals}
+      onGoalSelect={onGoalSelect}
+      onJumpToQuarter={onJumpToQuarter}
+      isGoalModalOpen={isGoalModalOpen}
+    />
+  );
+}

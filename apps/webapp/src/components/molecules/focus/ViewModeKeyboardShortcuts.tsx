@@ -15,7 +15,10 @@ export interface ViewModeKeyboardShortcutsProps {
 
 /**
  * Invisible component that listens for keyboard shortcuts to change view modes.
- * Supports D (daily), W (weekly), Q (quarterly), and Cmd+K (quarter jump).
+ * Supports D (daily), W (weekly), Q (quarterly), and Cmd+K (opens appropriate command dialog based on view).
+ *
+ * In quarterly view: Cmd+K opens quarter jump dialog
+ * In weekly/daily view: Cmd+K opens goal search dialog (with option to jump to quarter)
  *
  * @example
  * ```tsx
