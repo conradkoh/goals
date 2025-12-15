@@ -1,9 +1,7 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
+
 import { featureFlags } from '../config/featureFlags';
-import { getAccessLevel, isSystemAdmin } from '../modules/auth/accessControl';
-import { generateLoginCode, getCodeExpirationTime, isCodeExpired } from '../modules/auth/codeUtils';
-import type { AuthState } from '../modules/auth/types/AuthState';
 import { api, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import {
@@ -14,6 +12,9 @@ import {
   mutation,
   query,
 } from './_generated/server';
+import { getAccessLevel, isSystemAdmin } from '../modules/auth/accessControl';
+import { generateLoginCode, getCodeExpirationTime, isCodeExpired } from '../modules/auth/codeUtils';
+import type { AuthState } from '../modules/auth/types/AuthState';
 
 /**
  * Retrieves the current authentication state for a session.
@@ -44,7 +45,7 @@ export const getState = query({
       };
     }
 
-    const user = await ctx.db.get(exists.userId);
+    const user = await ctx.db.get('users', exists.userId);
 
     if (!user) {
       return {
@@ -106,7 +107,7 @@ export const loginAnon = mutation({
       });
     } else {
       // Update existing session with the new user and auth method
-      await ctx.db.patch(existingSession._id, {
+      await ctx.db.patch('sessions', existingSession._id, {
         userId: userId as Id<'users'>,
         authMethod: 'anonymous',
       });
@@ -131,7 +132,7 @@ export const logout = mutation({
       .first();
 
     if (existingSession) {
-      await ctx.db.delete(existingSession._id);
+      await ctx.db.delete('sessions', existingSession._id);
     }
 
     return { success: true };
@@ -179,7 +180,7 @@ export const updateUserName = mutation({
     }
 
     // Get the user
-    const user = await ctx.db.get(existingSession.userId);
+    const user = await ctx.db.get('users', existingSession.userId);
     if (!user) {
       return {
         success: false,
@@ -189,7 +190,7 @@ export const updateUserName = mutation({
     }
 
     // Update the user's name
-    await ctx.db.patch(existingSession.userId, {
+    await ctx.db.patch('users', existingSession.userId, {
       name: args.newName.trim(),
     });
 
@@ -279,7 +280,7 @@ export const createLoginCode = mutation({
     }
 
     // Get the user
-    const user = await ctx.db.get(existingSession.userId);
+    const user = await ctx.db.get('users', existingSession.userId);
     if (!user) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -297,7 +298,7 @@ export const createLoginCode = mutation({
 
     // Delete all existing codes for this user
     for (const code of existingCodes) {
-      await ctx.db.delete(code._id);
+      await ctx.db.delete('loginCodes', code._id);
     }
 
     // Generate a new login code
@@ -358,7 +359,7 @@ export const verifyLoginCode = mutation({
     // Check if the code is expired
     if (isCodeExpired(loginCode.expiresAt)) {
       // Delete the expired code
-      await ctx.db.delete(loginCode._id);
+      await ctx.db.delete('loginCodes', loginCode._id);
       return {
         success: false,
         reason: 'code_expired',
@@ -367,7 +368,7 @@ export const verifyLoginCode = mutation({
     }
 
     // Get the user associated with the code
-    const user = await ctx.db.get(loginCode.userId);
+    const user = await ctx.db.get('users', loginCode.userId);
     if (!user) {
       return {
         success: false,
@@ -377,7 +378,7 @@ export const verifyLoginCode = mutation({
     }
 
     // Delete the code once used
-    await ctx.db.delete(loginCode._id);
+    await ctx.db.delete('loginCodes', loginCode._id);
 
     // Check if the session exists
     const existingSession = await ctx.db
@@ -390,7 +391,7 @@ export const verifyLoginCode = mutation({
 
     if (existingSession) {
       // Update existing session to point to the user
-      await ctx.db.patch(existingSession._id, {
+      await ctx.db.patch('sessions', existingSession._id, {
         userId: loginCode.userId,
         authMethod: 'login_code',
       });
@@ -623,7 +624,7 @@ export const getSessionBySessionId = internalQuery({
 export const getUserById = internalQuery({
   args: { userId: v.id('users') },
   handler: async (ctx, args): Promise<Doc<'users'> | null> => {
-    return await ctx.db.get(args.userId);
+    return await ctx.db.get('users', args.userId);
   },
 });
 
@@ -646,7 +647,7 @@ export const getUserByRecoveryCode = internalQuery({
 export const updateUserRecoveryCode = internalMutation({
   args: { userId: v.id('users'), recoveryCode: v.string() },
   handler: async (ctx, args): Promise<void> => {
-    await ctx.db.patch(args.userId, { recoveryCode: args.recoveryCode });
+    await ctx.db.patch('users', args.userId, { recoveryCode: args.recoveryCode });
   },
 });
 
@@ -696,7 +697,7 @@ export const updateSession = internalMutation({
     ),
   },
   handler: async (ctx, args): Promise<void> => {
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch('sessions', args.sessionId, {
       userId: args.userId,
       authMethod: args.authMethod,
     });
@@ -772,10 +773,10 @@ export const useAnonymousSession = mutation({
     if (prevSessionId && typeof prevSessionId === 'string') {
       // Try to find by _id if it looks like a Convex ID
       try {
-        const prevSession = await ctx.db.get(prevSessionId as Id<'sessions'>);
+        const prevSession = await ctx.db.get('sessions', prevSessionId as Id<'sessions'>);
         if (prevSession?.userId) {
           // Update lastActiveAt for existing session
-          await ctx.db.patch(prevSessionId as Id<'sessions'>, {
+          await ctx.db.patch('sessions', prevSessionId as Id<'sessions'>, {
             createdAt: Date.now(),
           });
           return prevSessionId as Id<'sessions'>;
@@ -813,11 +814,11 @@ export const getUser = query({
     sessionId: v.id('sessions'),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db.get(args.sessionId);
+    const session = await ctx.db.get('sessions', args.sessionId);
     if (!session) {
       return null;
     }
-    const user = await ctx.db.get(session.userId);
+    const user = await ctx.db.get('users', session.userId);
     return user;
   },
 });
@@ -848,7 +849,7 @@ export const exchangeSession = mutation({
     // Try to find the old session by document _id
     let oldSession: Doc<'sessions'> | null = null;
     try {
-      oldSession = await ctx.db.get(oldSessionId as Id<'sessions'>);
+      oldSession = await ctx.db.get('sessions', oldSessionId as Id<'sessions'>);
     } catch {
       // Invalid ID format
       return { success: false, reason: 'invalid_session_id' };
@@ -866,7 +867,7 @@ export const exchangeSession = mutation({
     // Case 1: No newSessionId provided - generate one and assign to old session
     if (!newSessionId) {
       const generatedSessionId = crypto.randomUUID();
-      await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+      await ctx.db.patch('sessions', oldSessionId as Id<'sessions'>, {
         sessionId: generatedSessionId,
         createdAt: oldSession.createdAt || Date.now(),
         authMethod: oldSession.authMethod || 'anonymous',
@@ -882,7 +883,7 @@ export const exchangeSession = mutation({
 
     if (!newSession) {
       // New session doesn't exist yet, assign the newSessionId to old session
-      await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+      await ctx.db.patch('sessions', oldSessionId as Id<'sessions'>, {
         sessionId: newSessionId,
         createdAt: oldSession.createdAt || Date.now(),
         authMethod: oldSession.authMethod || 'anonymous',
@@ -898,7 +899,7 @@ export const exchangeSession = mutation({
 
     // Different users - update old session with a new sessionId to preserve old user
     const generatedSessionId = crypto.randomUUID();
-    await ctx.db.patch(oldSessionId as Id<'sessions'>, {
+    await ctx.db.patch('sessions', oldSessionId as Id<'sessions'>, {
       sessionId: generatedSessionId,
       createdAt: oldSession.createdAt || Date.now(),
       authMethod: oldSession.authMethod || 'anonymous',

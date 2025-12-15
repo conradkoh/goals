@@ -1,10 +1,12 @@
 'use client';
+
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { AuthState } from '@workspace/backend/modules/auth/types/AuthState';
 import { useMutation } from 'convex/react';
 import { SessionProvider, type UseStorage, useSessionQuery } from 'convex-helpers/react/sessions';
 import type { SessionId } from 'convex-helpers/server/sessions';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+
 import { generateUUID } from '@/lib/utils';
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -46,12 +48,12 @@ function _withSessionProvider(Component: React.ComponentType<{ children: React.R
     return (
       <SessionProvider
         storageKey={NEW_SESSION_KEY}
-        useStorage={_useLocalStorage}
+        useStorage={useLocalStorageSession}
         idGenerator={generateUUID}
       >
-        <_SessionMigrationWrapper>
+        <SessionMigrationWrapper>
           <Component {...props} />
-        </_SessionMigrationWrapper>
+        </SessionMigrationWrapper>
       </SessionProvider>
     );
   };
@@ -66,7 +68,7 @@ function _withSessionProvider(Component: React.ComponentType<{ children: React.R
  *
  * If only the new sessionId exists, no migration is needed.
  */
-function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
+function SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
   const [isMigrating, setIsMigrating] = useState(false);
   const exchangeSession = useMutation(api.auth.exchangeSession);
   const hasAttemptedMigration = useRef(false);
@@ -129,7 +131,7 @@ function _SessionMigrationWrapper({ children }: { children: React.ReactNode }) {
 /**
  * Custom local storage hook for session management that handles client-side hydration.
  */
-const _useLocalStorage = (
+const useLocalStorageSession = (
   key: string,
   nextSessionId: SessionId | undefined
 ): ReturnType<UseStorage<SessionId | undefined>> => {

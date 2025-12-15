@@ -1,6 +1,8 @@
 'use client';
+
 import { useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
+
 import { DashboardFocusView } from '@/components/organisms/DashboardFocusView';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';

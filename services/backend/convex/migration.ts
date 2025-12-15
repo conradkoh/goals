@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { internalAction, internalMutation, internalQuery } from './_generated/server';
@@ -21,7 +22,7 @@ interface PaginationOpts {
 export const unsetSessionExpiration = internalMutation({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.sessionId, {
+    await ctx.db.patch('sessions', args.sessionId, {
       expiresAt: undefined,
       expiresAtLabel: undefined,
     });
@@ -79,13 +80,13 @@ export const getSessionsBatch = internalQuery({
 export const setUserAccessLevelDefault = internalMutation({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
+    const user = await ctx.db.get('users', args.userId);
     if (!user) {
       return;
     }
 
     if (user.accessLevel === undefined) {
-      await ctx.db.patch(args.userId, {
+      await ctx.db.patch('users', args.userId, {
         accessLevel: 'user',
       });
     }
@@ -103,7 +104,7 @@ export const setAllUndefinedAccessLevelsToUser = internalMutation({
 
     await Promise.all(
       usersToUpdate.map((user) =>
-        ctx.db.patch(user._id, {
+        ctx.db.patch('users', user._id, {
           accessLevel: 'user',
         })
       )
@@ -197,7 +198,7 @@ export const removeAdhocYearField = internalMutation({
       if (goal.adhoc && 'year' in goal.adhoc) {
         const { year: _removedYear, ...adhocWithoutYear } = goal.adhoc;
 
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           adhoc: adhocWithoutYear,
         });
 
@@ -257,7 +258,7 @@ export const fixAdhocGoalYears = internalMutation({
       }
 
       if (goal.year !== correctYear) {
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           year: correctYear,
         });
 
@@ -267,7 +268,7 @@ export const fixAdhocGoalYears = internalMutation({
           .first();
 
         if (state) {
-          await ctx.db.patch(state._id, {
+          await ctx.db.patch('adhocGoalStates', state._id, {
             year: correctYear,
           });
         }
@@ -313,7 +314,7 @@ export const removeAdhocDayOfWeekField = internalMutation({
       if (goal.adhoc && 'dayOfWeek' in goal.adhoc) {
         const { dayOfWeek: _removedDayOfWeek, ...adhocWithoutDayOfWeek } = goal.adhoc;
 
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           adhoc: adhocWithoutDayOfWeek,
         });
 
@@ -328,7 +329,7 @@ export const removeAdhocDayOfWeekField = internalMutation({
         .first();
 
       if (state && 'dayOfWeek' in state) {
-        await ctx.db.patch(state._id, {
+        await ctx.db.patch('adhocGoalStates', state._id, {
           // @ts-expect-error - dayOfWeek is being removed from schema
           dayOfWeek: undefined,
         });
@@ -372,7 +373,7 @@ export const removeAllAdhocGoalStatesDayOfWeek = internalMutation({
 
     for (const state of allStates) {
       if ('dayOfWeek' in state) {
-        await ctx.db.patch(state._id, {
+        await ctx.db.patch('adhocGoalStates', state._id, {
           // @ts-expect-error - dayOfWeek is being removed from schema
           dayOfWeek: undefined,
         });
@@ -469,7 +470,7 @@ export const normalizeAnonymousUserNames = internalMutation({
     let updatedCount = 0;
     for (const user of usersToUpdate) {
       const userWithDisplayName = user as { displayName?: string };
-      await ctx.db.patch(user._id, {
+      await ctx.db.patch('users', user._id, {
         name: userWithDisplayName.displayName,
       });
       updatedCount++;
@@ -511,7 +512,7 @@ export const removeAnonymousUserDisplayName = internalMutation({
 
     let updatedCount = 0;
     for (const user of usersToUpdate) {
-      await ctx.db.patch(user._id, {
+      await ctx.db.patch('users', user._id, {
         displayName: undefined,
       });
       updatedCount++;
@@ -550,7 +551,7 @@ export const removeAdhocDomainIdField = internalMutation({
           dueDate?: number;
         };
         if (adhocWithDomainId.domainId && !goal.domainId) {
-          await ctx.db.patch(goal._id, {
+          await ctx.db.patch('goals', goal._id, {
             domainId: adhocWithDomainId.domainId,
           });
           console.log(`Copied adhoc.domainId to root domainId for goal ${goal._id}`);
@@ -558,7 +559,7 @@ export const removeAdhocDomainIdField = internalMutation({
 
         const { domainId: _removedDomainId, ...adhocWithoutDomainId } = adhocWithDomainId;
 
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           adhoc: adhocWithoutDomainId,
         });
 
