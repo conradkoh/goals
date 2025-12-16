@@ -316,6 +316,9 @@ importers:
       convex-helpers:
         specifier: ^0.1.107
         version: 0.1.107(@standard-schema/spec@1.0.0)(convex@1.31.0(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(zod@4.0.5)
+      luxon:
+        specifier: ^3.6.1
+        version: 3.6.1
       zod:
         specifier: ^4.0.5
         version: 4.0.5
@@ -323,6 +326,9 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
+      '@types/luxon':
+        specifier: ^3.6.2
+        version: 3.6.2
       convex-test:
         specifier: ^0.0.41
         version: 0.0.41(convex@1.31.0(react@19.2.3))
