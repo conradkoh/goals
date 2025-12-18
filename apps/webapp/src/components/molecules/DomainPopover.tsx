@@ -3,6 +3,7 @@ import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { ClipboardList } from 'lucide-react';
 import { useState } from 'react';
+
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -148,15 +149,15 @@ export function DomainPopover({ domain, trigger, year, weekNumber }: DomainPopov
 
   const domainName = domain?.name || 'Uncategorized';
 
-  // Separate incomplete and completed goals
+  // Separate incomplete and completed goals (oldest first)
   const incompleteGoals = allGoals
     .filter((goal) => !goal.isComplete)
-    .sort((a, b) => (b._creationTime || 0) - (a._creationTime || 0));
+    .sort((a, b) => (a._creationTime || 0) - (b._creationTime || 0));
 
   const completedGoals = allGoals
     .filter((goal) => goal.isComplete)
     .sort(
-      (a, b) => (b.completedAt || b._creationTime || 0) - (a.completedAt || a._creationTime || 0)
+      (a, b) => (a.completedAt || a._creationTime || 0) - (b.completedAt || b._creationTime || 0)
     );
 
   // Shared content for both popover and dialog
