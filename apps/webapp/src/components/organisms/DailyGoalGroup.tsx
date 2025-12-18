@@ -1,6 +1,7 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
+
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
@@ -28,7 +29,7 @@ export const DailyGoalGroup = ({
   onCreateGoal,
   isCreating = false,
   className,
-  sortGoals = (goals) => goals.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
+  sortGoals = (goals) => [...goals].sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
 }: DailyGoalGroupProps) => {
   const { onUpdateGoal } = useGoalActionsContext();
   const [newGoalTitle, setNewGoalTitle] = useState('');

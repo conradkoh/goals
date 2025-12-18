@@ -2,6 +2,10 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Check, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+
+import { DailyGoalTaskItem } from './DailyGoalTaskItem';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+
 import {
   QuarterlyGoalPopover,
   WeeklyGoalPopover,
@@ -11,8 +15,6 @@ import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { DailyGoalTaskItem } from './DailyGoalTaskItem';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -226,7 +228,7 @@ export const DailyGoalGroupContainer = ({
   onDeleteGoal,
   onCreateGoal,
   isCreating = false,
-  sortGoals = (goals) => goals.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
+  sortGoals = (goals) => [...goals].sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)),
 }: DailyGoalGroupContainerProps) => {
   const dailyGoals = useMemo(
     () =>
