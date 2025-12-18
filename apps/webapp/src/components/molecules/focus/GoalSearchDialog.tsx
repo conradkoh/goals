@@ -1,7 +1,8 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Calendar, Target } from 'lucide-react';
+import { Calendar, Plus, Target } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,6 +14,20 @@ import {
 
 /**
  * Props for the GoalSearchDialog component.
+ *
+ * @public
+ *
+ * @example
+ * ```typescript
+ * <GoalSearchDialog
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ *   weeklyGoals={weeklyGoals}
+ *   dailyGoals={dailyGoals}
+ *   quarterlyGoals={quarterlyGoals}
+ *   onGoalSelect={(id, goal) => console.log('Selected:', goal)}
+ * />
+ * ```
  */
 export interface GoalSearchDialogProps {
   /** Whether the dialog is open */
@@ -29,12 +44,16 @@ export interface GoalSearchDialogProps {
   onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
   /** Callback when "Jump to quarter" is selected */
   onJumpToQuarter?: () => void;
+  /** Callback when "New Adhoc Goal" is selected */
+  onNewAdhocGoal?: () => void;
   /** Whether a goal details modal is currently open (dims the search dialog) */
   isGoalModalOpen?: boolean;
 }
 
 /**
  * Internal type for a searchable goal item.
+ *
+ * @internal
  */
 interface _GoalSearchItem {
   /** The goal object */
@@ -49,6 +68,11 @@ interface _GoalSearchItem {
   dayOfWeek?: string;
 }
 
+/**
+ * Names of the days of the week for display context.
+ *
+ * @internal
+ */
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
@@ -63,6 +87,11 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
  *
  * Press Escape once to close the goal details modal (if open)
  * Press Escape again to close the search dialog
+ *
+ * @public
+ *
+ * @param props - Component props
+ * @returns Rendered search dialog component
  */
 export function GoalSearchDialog({
   open,
@@ -72,11 +101,16 @@ export function GoalSearchDialog({
   quarterlyGoals,
   onGoalSelect,
   onJumpToQuarter,
+  onNewAdhocGoal,
   isGoalModalOpen = false,
 }: GoalSearchDialogProps) {
   const [searchValue, setSearchValue] = useState('');
 
-  // Build searchable items from weekly and daily goals
+  /**
+   * Builds searchable items from weekly and daily goals with parent context.
+   *
+   * @internal
+   */
   const searchItems = useMemo((): _GoalSearchItem[] => {
     const items: _GoalSearchItem[] = [];
 
@@ -115,7 +149,11 @@ export function GoalSearchDialog({
     return items;
   }, [weeklyGoals, dailyGoals, quarterlyGoals]);
 
-  // Filter items based on search
+  /**
+   * Filters items based on search input value.
+   *
+   * @internal
+   */
   const filteredItems = useMemo(() => {
     if (!searchValue.trim()) {
       return searchItems;
@@ -130,13 +168,22 @@ export function GoalSearchDialog({
     });
   }, [searchItems, searchValue]);
 
-  // Group filtered items by type
+  /**
+   * Groups filtered items by their goal type (weekly vs daily).
+   *
+   * @internal
+   */
   const { weeklyItems, dailyItems } = useMemo(() => {
     const weekly = filteredItems.filter((item) => item.type === 'weekly');
     const daily = filteredItems.filter((item) => item.type === 'daily');
     return { weeklyItems: weekly, dailyItems: daily };
   }, [filteredItems]);
 
+  /**
+   * Handles selecting a goal from the search results.
+   *
+   * @internal
+   */
   const handleSelect = useCallback(
     (item: _GoalSearchItem) => {
       onGoalSelect(item.goal._id, item.goal);
@@ -144,6 +191,35 @@ export function GoalSearchDialog({
     },
     [onGoalSelect]
   );
+
+  /**
+   * Handles selecting the "Jump to Quarter" action.
+   *
+   * @internal
+   */
+  const handleJumpToQuarterClick = useCallback(() => {
+    onOpenChange(false);
+    onJumpToQuarter?.();
+  }, [onOpenChange, onJumpToQuarter]);
+
+  /**
+   * Handles selecting the "New Adhoc Goal" action.
+   *
+   * @internal
+   */
+  const handleNewAdhocGoalClick = useCallback(() => {
+    onOpenChange(false);
+    onNewAdhocGoal?.();
+  }, [onOpenChange, onNewAdhocGoal]);
+
+  /**
+   * Handles search value changes.
+   *
+   * @internal
+   */
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+  }, []);
 
   return (
     <CommandDialog
@@ -154,25 +230,34 @@ export function GoalSearchDialog({
       <CommandInput
         placeholder="Search goals or jump to quarter..."
         value={searchValue}
-        onValueChange={setSearchValue}
+        onValueChange={handleSearchChange}
       />
       <CommandList>
         <CommandEmpty>No goals found.</CommandEmpty>
 
-        {/* Show "Jump to Quarter" option */}
-        {onJumpToQuarter && (
+        {/* Show Navigation Group */}
+        {(onJumpToQuarter || onNewAdhocGoal) && (
           <CommandGroup heading="Navigation">
-            <CommandItem
-              value="jump-to-quarter"
-              onSelect={() => {
-                onOpenChange(false); // Close search dialog when jumping to quarter
-                onJumpToQuarter();
-              }}
-              className="flex items-center gap-2"
-            >
-              <Calendar className="h-4 w-4" />
-              <span>Jump to quarter...</span>
-            </CommandItem>
+            {onNewAdhocGoal && (
+              <CommandItem
+                value="new-adhoc-goal"
+                onSelect={handleNewAdhocGoalClick}
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>New Adhoc Goal</span>
+              </CommandItem>
+            )}
+            {onJumpToQuarter && (
+              <CommandItem
+                value="jump-to-quarter"
+                onSelect={handleJumpToQuarterClick}
+                className="flex items-center gap-2"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Jump to quarter...</span>
+              </CommandItem>
+            )}
           </CommandGroup>
         )}
 

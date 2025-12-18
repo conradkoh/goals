@@ -2,7 +2,9 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
+
 import type { ViewMode } from '@/components/molecules/focus/constants';
+import { CreateAdhocGoalDialog } from '@/components/molecules/focus/CreateAdhocGoalDialog';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
 import { GoalQuickViewModal } from '@/components/molecules/focus/GoalQuickViewModal';
 import { GoalSearchDialog } from '@/components/molecules/focus/GoalSearchDialog';
@@ -20,18 +22,75 @@ import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useWeek as useWeekContext, useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
-interface DashboardFocusViewProps {
+/**
+ * Props for the DashboardFocusView component.
+ *
+ * @public
+ *
+ * @example
+ * ```typescript
+ * <DashboardFocusView
+ *   viewMode="weekly"
+ *   selectedWeekNumber={48}
+ *   selectedDayOfWeek={1}
+ *   isAtMinBound={false}
+ *   isAtMaxBound={false}
+ *   onViewModeChange={(mode) => console.log('View mode:', mode)}
+ *   onPrevious={() => console.log('Previous')}
+ *   onNext={() => console.log('Next')}
+ * />
+ * ```
+ */
+export interface DashboardFocusViewProps {
+  /** Current active view mode */
   viewMode: ViewMode;
+  /** Currently selected ISO week number */
   selectedWeekNumber: number;
+  /** Currently selected day of week */
   selectedDayOfWeek: DayOfWeek;
+  /** Whether the view is at the minimum date boundary */
   isAtMinBound: boolean;
+  /** Whether the view is at the maximum date boundary */
   isAtMaxBound: boolean;
+  /** Callback fired when the view mode changes */
   onViewModeChange: (viewMode: ViewMode) => void;
+  /** Callback fired when navigating to the previous period */
   onPrevious: () => void;
+  /** Callback fired when navigating to the next period */
   onNext: () => void;
+  /** Optional callback fired when the year or quarter changes */
   onYearQuarterChange?: (year: number, quarter: number) => void;
 }
 
+/**
+ * Props for the GoalSearchDialogWrapper internal component.
+ *
+ * @internal
+ */
+interface GoalSearchDialogWrapperProps {
+  /** Whether the search dialog is open */
+  open: boolean;
+  /** Callback fired when the dialog open state changes */
+  onOpenChange: (open: boolean) => void;
+  /** Callback fired when a goal is selected from search results */
+  onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
+  /** Callback fired when "Jump to Quarter" is selected */
+  onJumpToQuarter: () => void;
+  /** Callback fired when "New Adhoc Goal" is selected */
+  onNewAdhocGoal: () => void;
+  /** Whether the goal details modal is currently open */
+  isGoalModalOpen: boolean;
+}
+
+/**
+ * Main dashboard focus view component that manages state and layout for different view modes.
+ * Orchestrates navigation, search, goal creation, and period-specific views.
+ *
+ * @public
+ *
+ * @param props - Component props
+ * @returns Rendered focus view component
+ */
 export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   viewMode,
   selectedWeekNumber,
@@ -50,10 +109,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   // State for dialogs
   const [isQuarterJumpOpen, setIsQuarterJumpOpen] = useState(false);
   const [isGoalSearchOpen, setIsGoalSearchOpen] = useState(false);
+  const [isCreateAdhocGoalOpen, setIsCreateAdhocGoalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalWithDetailsAndChildren | null>(null);
   const [isGoalQuickViewOpen, setIsGoalQuickViewOpen] = useState(false);
 
-  // Use the hook for the "Pull from previous quarter" functionality
+  /**
+   * Hook for managing "Pull from previous quarter" functionality.
+   * @internal
+   */
   const {
     isFirstQuarter,
     isMovingGoals,
@@ -64,7 +127,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     quarter: selectedQuarter as 1 | 2 | 3 | 4,
   });
 
-  // Use the hook for "Pull goals" functionality for daily/weekly views
+  /**
+   * Hook for managing "Pull goals" functionality for daily/weekly views.
+   * @internal
+   */
   const {
     isPulling: isPullingGoals,
     handlePullGoals,
@@ -75,9 +141,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     quarter: selectedQuarter,
   });
 
-  // Determine if pull goals should be shown based on current view
-  // For daily view: only show when viewing today
-  // For weekly view: only show when viewing current week
+  /**
+   * Determine if pull goals should be shown based on current view context.
+   * @internal
+   */
   const showPullGoals = useMemo(() => {
     if (viewMode === 'daily') {
       return selectedWeekNumber === currentWeekNumber && selectedDayOfWeek === currentDay;
@@ -91,36 +158,47 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
 
-  // Fetch week data for the selected week
+  /**
+   * Fetch week-specific data for the selected period.
+   * @internal
+   */
   const weekData = useWeekData({
     year: selectedYear,
     quarter: selectedQuarter,
     week: selectedWeekNumber,
   });
 
-  // When year or quarter changes, force a re-render
+  // When year or quarter changes, force a re-render to refresh hooks
   React.useEffect(() => {
     setForceRender((prev) => prev + 1);
   }, []);
 
-  // Create unique keys for view components to force re-renders when year/quarter change
+  /**
+   * Unique keys for view components to force fresh renders on period changes.
+   * @internal
+   */
   const quarterlyViewKey = useMemo(
     () => `quarterly-${selectedYear}-${selectedQuarter}-${forceRender}`,
     [selectedYear, selectedQuarter, forceRender]
   );
 
+  /** @internal */
   const weeklyViewKey = useMemo(
     () => `weekly-${selectedYear}-${selectedQuarter}-${selectedWeekNumber}-${forceRender}`,
     [selectedYear, selectedQuarter, selectedWeekNumber, forceRender]
   );
 
+  /** @internal */
   const dailyViewKey = useMemo(
     () =>
       `daily-${selectedYear}-${selectedQuarter}-${selectedWeekNumber}-${selectedDayOfWeek}-${forceRender}`,
     [selectedYear, selectedQuarter, selectedWeekNumber, selectedDayOfWeek, forceRender]
   );
 
-  // Unified callback for jumping to today - updates both week and day across all views
+  /**
+   * Unified callback for jumping to the current date across all views.
+   * @internal
+   */
   const handleJumpToToday = useCallback(
     (weekNumber: number, dayOfWeek: DayOfWeek) => {
       handleDayNavigation(weekNumber, dayOfWeek);
@@ -128,26 +206,76 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     [handleDayNavigation]
   );
 
-  // Handler for opening the appropriate dialog based on view mode
+  /**
+   * Handler for opening the appropriate command dialog based on the current view mode.
+   * @internal
+   */
   const handleOpenCommandDialog = useCallback(() => {
     if (viewMode === 'quarterly') {
-      // In quarterly view, open quarter jump dialog
       setIsQuarterJumpOpen(true);
     } else {
-      // In weekly/daily view, open goal search dialog
       setIsGoalSearchOpen(true);
     }
   }, [viewMode]);
 
-  // Handler for goal selection from search dialog
+  /**
+   * Handler for goal selection from search results to show quick view modal.
+   * @internal
+   */
   const handleGoalSelect = useCallback((_goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => {
     setSelectedGoal(goal);
     setIsGoalQuickViewOpen(true);
   }, []);
 
-  // Handler for "Jump to quarter" from goal search
+  /**
+   * Handler for "Jump to Quarter" action from the goal search dialog.
+   * @internal
+   */
   const handleJumpToQuarter = useCallback(() => {
     setIsQuarterJumpOpen(true);
+  }, []);
+
+  /**
+   * Handler for "New Adhoc Goal" action from the goal search dialog.
+   * @internal
+   */
+  const handleNewAdhocGoal = useCallback(() => {
+    setIsCreateAdhocGoalOpen(true);
+  }, []);
+
+  /**
+   * Handles quarter selection from the jump dialog.
+   * @internal
+   */
+  const handleQuarterSelect = useCallback(
+    (year: number, quarter: number) => {
+      onYearQuarterChange?.(year, quarter);
+    },
+    [onYearQuarterChange]
+  );
+
+  /**
+   * Handles close events for the goal search dialog.
+   * @internal
+   */
+  const handleGoalSearchOpenChange = useCallback((open: boolean) => {
+    setIsGoalSearchOpen(open);
+  }, []);
+
+  /**
+   * Handles close events for the create adhoc goal dialog.
+   * @internal
+   */
+  const handleCreateAdhocGoalOpenChange = useCallback((open: boolean) => {
+    setIsCreateAdhocGoalOpen(open);
+  }, []);
+
+  /**
+   * Handles close events for the goal quick view modal.
+   * @internal
+   */
+  const handleGoalQuickViewOpenChange = useCallback((open: boolean) => {
+    setIsGoalQuickViewOpen(open);
   }, []);
 
   return (
@@ -162,30 +290,35 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           onOpenChange={setIsQuarterJumpOpen}
           selectedYear={selectedYear}
           selectedQuarter={selectedQuarter}
-          onQuarterSelect={(year, quarter) => {
-            onYearQuarterChange?.(year, quarter);
-          }}
+          onQuarterSelect={handleQuarterSelect}
         />
 
         {/* Render goal search and quick view within WeekProvider context if week data available */}
         {weekData && (viewMode === 'weekly' || viewMode === 'daily') && (
           <WeekProvider weekData={weekData}>
-            <_GoalSearchDialogWrapper
+            <GoalSearchDialogWrapper
               open={isGoalSearchOpen}
-              onOpenChange={setIsGoalSearchOpen}
+              onOpenChange={handleGoalSearchOpenChange}
               onGoalSelect={handleGoalSelect}
               onJumpToQuarter={handleJumpToQuarter}
+              onNewAdhocGoal={handleNewAdhocGoal}
               isGoalModalOpen={isGoalQuickViewOpen}
+            />
+            <CreateAdhocGoalDialog
+              open={isCreateAdhocGoalOpen}
+              onOpenChange={handleCreateAdhocGoalOpenChange}
+              year={selectedYear}
+              weekNumber={selectedWeekNumber}
             />
             <GoalQuickViewModal
               open={isGoalQuickViewOpen}
-              onOpenChange={setIsGoalQuickViewOpen}
+              onOpenChange={handleGoalQuickViewOpenChange}
               goal={selectedGoal}
             />
           </WeekProvider>
         )}
 
-        {/* Render goal quick view outside WeekProvider for quarterly view (no week data needed) */}
+        {/* Render goal quick view placeholder outside WeekProvider for quarterly view */}
         {viewMode === 'quarterly' && (
           <GoalQuickViewModal open={false} onOpenChange={() => {}} goal={null} />
         )}
@@ -202,11 +335,9 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             selectedQuarter={selectedQuarter}
             onViewModeChange={onViewModeChange}
             onYearQuarterChange={onYearQuarterChange}
-            // Pass props for QuarterActionMenu
             isFirstQuarter={isFirstQuarter}
             isMovingGoals={isMovingGoals}
             handlePreviewGoals={handlePreviewGoals}
-            // Pass props for DailyWeeklyActionMenu
             isPullingGoals={isPullingGoals}
             showPullGoals={showPullGoals}
             onPullGoals={handlePullGoals}
@@ -264,24 +395,22 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 };
 
 /**
- * Wrapper component for GoalSearchDialog that uses useWeek hook.
- * Must be rendered inside WeekProvider context.
+ * Wrapper component for GoalSearchDialog that provides data context from useWeek hook.
+ * Must be rendered within a WeekProvider context.
+ *
+ * @internal
+ *
+ * @param props - Component props
+ * @returns Rendered search dialog wrapper
  */
-interface _GoalSearchDialogWrapperProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
-  onJumpToQuarter: () => void;
-  isGoalModalOpen: boolean;
-}
-
-function _GoalSearchDialogWrapper({
+function GoalSearchDialogWrapper({
   open,
   onOpenChange,
   onGoalSelect,
   onJumpToQuarter,
+  onNewAdhocGoal,
   isGoalModalOpen,
-}: _GoalSearchDialogWrapperProps) {
+}: GoalSearchDialogWrapperProps) {
   const { weeklyGoals, dailyGoals, quarterlyGoals } = useWeekContext();
 
   return (
@@ -293,6 +422,7 @@ function _GoalSearchDialogWrapper({
       quarterlyGoals={quarterlyGoals}
       onGoalSelect={onGoalSelect}
       onJumpToQuarter={onJumpToQuarter}
+      onNewAdhocGoal={onNewAdhocGoal}
       isGoalModalOpen={isGoalModalOpen}
     />
   );
