@@ -34,11 +34,10 @@
   padding-left: 0.25em !important;
 }
 
-/* Remove min-height and margins from paragraphs inside list items */
+/* Remove margins from paragraphs inside list items */
 .prose :global(li > p) {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
-  min-height: 0 !important;
 }
 
 /* Normalize line-height in list items */
@@ -334,7 +333,11 @@
   margin-top: 0 !important;
   margin-bottom: 0.25em !important;
   line-height: 1.6 !important;
-  min-height: 0 !important;
+}
+
+/* Ensure empty paragraphs are visible by giving them height */
+.prose :global(p:empty) {
+  min-height: 1.6em;
 }
 
 /* Last paragraph should not have bottom margin */
