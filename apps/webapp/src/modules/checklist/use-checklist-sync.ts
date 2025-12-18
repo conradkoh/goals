@@ -88,7 +88,14 @@ export function useChecklistSync({ key, title }: UseChecklistSyncProps) {
             : item;
         }),
       ...optimisticItems,
-    ].sort((a, b) => a.order - b.order);
+    ].sort((a, b) => {
+      // First sort by order if available
+      if (a.order !== b.order) {
+        return a.order - b.order;
+      }
+      // Fallback to creation time (oldest first)
+      return (a._creationTime ?? 0) - (b._creationTime ?? 0);
+    });
   }, [serverItems, deletingItemIds, optimisticToggles, optimisticItems]);
 
   // Computed statistics (use the items array which already includes optimistic changes)

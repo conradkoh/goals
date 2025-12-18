@@ -7,9 +7,11 @@ import type {
 } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { createContext, useContext, useMemo, useRef } from 'react';
-import { useSession } from '@/modules/auth/useSession';
+
 import { useGoalActions } from './useGoalActions';
 import { isOptimisticId, useOptimisticArray } from './useOptimistic';
+
+import { useSession } from '@/modules/auth/useSession';
 
 // Modify how we extend GoalWithDetailsAndChildren to add isOptimistic flag
 export type GoalWithOptimisticStatus = GoalWithDetailsAndChildren & {
@@ -26,11 +28,11 @@ interface WeekContextValue {
   weekNumber: number;
   year: number;
   quarter: number;
-  days: Array<{
+  days: {
     dayOfWeek: number;
     date: string;
     dateTimestamp: number;
-  }>;
+  }[];
   stats: {
     totalTasks: number;
     completedTasks: number;
@@ -122,9 +124,14 @@ export const WeekProvider = ({ weekData, children }: WeekProviderProps) => {
       quarterlyGoal.children.sort((a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0));
     });
 
+    // Sort daily goals by creation time within each day (oldest first)
+    const dailyGoalsSorted = [...dailyGoalsWithStatus].sort(
+      (a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)
+    );
+
     // Distribute daily goals to their parent weekly goals
     weeklyGoalsWithStatus.forEach((weeklyGoal) => {
-      weeklyGoal.children = dailyGoalsWithStatus.filter(
+      weeklyGoal.children = dailyGoalsSorted.filter(
         (dailyGoal) => dailyGoal.parentId === weeklyGoal._id
       );
     });
@@ -425,11 +432,11 @@ export interface WeekData {
   mondayDate: string;
   year: number;
   quarter: number;
-  days: Array<{
+  days: {
     dayOfWeek: DayOfWeek;
     date: string;
     dateTimestamp: number;
-  }>;
+  }[];
   tree: WeekGoalsTree;
 }
 

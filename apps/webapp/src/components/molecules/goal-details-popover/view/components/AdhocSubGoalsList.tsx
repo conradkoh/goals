@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { Edit2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
@@ -70,8 +71,10 @@ export function AdhocSubGoalsList({
   /** Whether we've reached the maximum nesting depth. */
   const isAtMaxDepth = currentDepth >= MAX_ADHOC_GOAL_DEPTH;
 
-  /** Combined list of real and optimistic sub-goals for display. */
-  const allSubGoals: _OptimisticSubGoal[] = [...subGoals, ...optimisticSubGoals];
+  /** Combined list of real and optimistic sub-goals for display. Sorted by creation time (oldest first). */
+  const allSubGoals: _OptimisticSubGoal[] = [...subGoals, ...optimisticSubGoals].sort(
+    (a, b) => (a._creationTime ?? 0) - (b._creationTime ?? 0)
+  );
 
   /** Creates a new sub-goal with optimistic UI update. */
   const handleCreateSubGoal = useCallback(async () => {
@@ -158,7 +161,7 @@ export function AdhocSubGoalsList({
         {allSubGoals.length > 0 && (
           <div className="space-y-1">
             {allSubGoals.map((subGoal) => (
-              <_SubGoalItem
+              <SubGoalItem
                 key={subGoal._id}
                 goal={subGoal}
                 onCompleteChange={handleCompleteChange}
@@ -201,7 +204,7 @@ export function AdhocSubGoalsList({
 /**
  * Props for the internal SubGoalItem component.
  */
-interface _SubGoalItemProps {
+interface SubGoalItemProps {
   goal: _OptimisticSubGoal;
   onCompleteChange?: (goalId: Id<'goals'>, checked: boolean | 'indeterminate') => void;
   onUpdate?: (
@@ -219,14 +222,14 @@ interface _SubGoalItemProps {
 /**
  * Renders an individual sub-goal item with checkbox and recursive children.
  */
-function _SubGoalItem({
+function SubGoalItem({
   goal,
   onCompleteChange,
   onUpdate,
   onDelete,
   onCreateChild,
   depth,
-}: _SubGoalItemProps) {
+}: SubGoalItemProps) {
   const isOptimistic = goal.isOptimistic;
 
   /** Handles goal update from edit popover. */
@@ -352,7 +355,7 @@ function _SubGoalItem({
         {goal.children && goal.children.length > 0 && (
           <div className="ml-6 border-l border-border/50 pl-2 space-y-1">
             {goal.children.map((child) => (
-              <_SubGoalItem
+              <SubGoalItem
                 key={child._id}
                 goal={child}
                 onCompleteChange={onCompleteChange}
