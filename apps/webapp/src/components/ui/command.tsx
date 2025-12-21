@@ -2,7 +2,8 @@
 
 import { Command as CommandPrimitive } from 'cmdk';
 import { SearchIcon } from 'lucide-react';
-import type * as React from 'react';
+import * as React from 'react';
+
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,24 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
+/**
+ * Root command menu component that provides a styled container for command palette UIs.
+ * Wraps the cmdk Command primitive with consistent styling.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <Command>
+ *   <CommandInput placeholder="Type a command..." />
+ *   <CommandList>
+ *     <CommandGroup heading="Actions">
+ *       <CommandItem>Create new goal</CommandItem>
+ *     </CommandGroup>
+ *   </CommandList>
+ * </Command>
+ * ```
+ */
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
     <CommandPrimitive
@@ -25,6 +44,24 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   );
 }
 
+/**
+ * Dialog wrapper for command palettes. Provides a modal dialog with command menu inside.
+ * Includes screen reader accessible title and description.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandDialog open={isOpen} onOpenChange={setIsOpen}>
+ *   <CommandInput placeholder="Search..." />
+ *   <CommandList>
+ *     <CommandGroup heading="Suggestions">
+ *       <CommandItem>Calendar</CommandItem>
+ *     </CommandGroup>
+ *   </CommandList>
+ * </CommandDialog>
+ * ```
+ */
 function CommandDialog({
   title = 'Command Palette',
   description = 'Search for a command to run...',
@@ -51,14 +88,33 @@ function CommandDialog({
   );
 }
 
-function CommandInput({
-  className,
-  ...props
-}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+/**
+ * Text input component for command palette search.
+ * Supports ref forwarding for programmatic focus control.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * const inputRef = useRef<HTMLInputElement>(null);
+ *
+ * <CommandInput
+ *   ref={inputRef}
+ *   placeholder="Type to search..."
+ *   value={searchValue}
+ *   onValueChange={setSearchValue}
+ * />
+ * ```
+ */
+const CommandInput = React.forwardRef<
+  React.ElementRef<typeof CommandPrimitive.Input>,
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
+>(({ className, ...props }, ref) => {
   return (
     <div data-slot="command-input-wrapper" className="flex h-9 items-center gap-2 border-b px-3">
       <SearchIcon className="size-4 shrink-0 opacity-50" />
       <CommandPrimitive.Input
+        ref={ref}
         data-slot="command-input"
         className={cn(
           'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
@@ -68,8 +124,25 @@ function CommandInput({
       />
     </div>
   );
-}
+});
+CommandInput.displayName = CommandPrimitive.Input.displayName;
 
+/**
+ * Scrollable container for command items. Automatically manages overflow.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandList>
+ *   <CommandEmpty>No results found.</CommandEmpty>
+ *   <CommandGroup heading="Suggestions">
+ *     <CommandItem>Item 1</CommandItem>
+ *     <CommandItem>Item 2</CommandItem>
+ *   </CommandGroup>
+ * </CommandList>
+ * ```
+ */
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
   return (
     <CommandPrimitive.List
@@ -80,6 +153,21 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
+/**
+ * Empty state component shown when no command items match the search.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandList>
+ *   <CommandEmpty>
+ *     <p>No results found for "{searchQuery}"</p>
+ *   </CommandEmpty>
+ *   <CommandGroup>...</CommandGroup>
+ * </CommandList>
+ * ```
+ */
 function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
     <CommandPrimitive.Empty
@@ -90,6 +178,22 @@ function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive
   );
 }
 
+/**
+ * Groups related command items together under an optional heading.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandGroup heading="Navigation">
+ *   <CommandItem>Go to Dashboard</CommandItem>
+ *   <CommandItem>Go to Settings</CommandItem>
+ * </CommandGroup>
+ * <CommandGroup heading="Actions">
+ *   <CommandItem>Create Goal</CommandItem>
+ * </CommandGroup>
+ * ```
+ */
 function CommandGroup({
   className,
   ...props
@@ -106,6 +210,22 @@ function CommandGroup({
   );
 }
 
+/**
+ * Visual separator between command groups.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandGroup heading="Recent">
+ *   <CommandItem>Recent Goal 1</CommandItem>
+ * </CommandGroup>
+ * <CommandSeparator />
+ * <CommandGroup heading="All Goals">
+ *   <CommandItem>Goal A</CommandItem>
+ * </CommandGroup>
+ * ```
+ */
 function CommandSeparator({
   className,
   ...props
@@ -119,6 +239,21 @@ function CommandSeparator({
   );
 }
 
+/**
+ * Individual selectable item within a command palette.
+ * Supports keyboard navigation and click interaction.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandItem onSelect={() => handleAction('create')}>
+ *   <Plus className="mr-2" />
+ *   Create new goal
+ *   <CommandShortcut>⌘N</CommandShortcut>
+ * </CommandItem>
+ * ```
+ */
 function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
   return (
     <CommandPrimitive.Item
@@ -132,6 +267,20 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
+/**
+ * Displays keyboard shortcut hints for command items.
+ * Automatically positioned at the right edge of items.
+ *
+ * @public
+ *
+ * @example
+ * ```tsx
+ * <CommandItem>
+ *   Save document
+ *   <CommandShortcut>⌘S</CommandShortcut>
+ * </CommandItem>
+ * ```
+ */
 function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span

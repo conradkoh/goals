@@ -1,7 +1,8 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Calendar, Folder, Plus, Target } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Calendar, CheckSquare, Folder, Plus, Target } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   CommandDialog,
@@ -42,8 +43,12 @@ export interface GoalSearchDialogProps {
   quarterlyGoals: GoalWithDetailsAndChildren[];
   /** Available domains to search through */
   domains?: Doc<'domains'>[];
+  /** Adhoc goals to search through */
+  adhocGoals?: AdhocGoalWithChildren[];
   /** Callback when a goal is selected */
   onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
+  /** Callback when an adhoc goal is selected */
+  onAdhocGoalSelect?: (goalId: Id<'goals'>, goal: AdhocGoalWithChildren) => void;
   /** Callback when a domain is selected */
   onDomainSelect?: (domain: Doc<'domains'> | null) => void;
   /** Callback when "Jump to quarter" is selected */
@@ -62,18 +67,22 @@ export interface GoalSearchDialogProps {
 interface _SearchItem {
   /** The goal object (for goal items) */
   goal?: GoalWithDetailsAndChildren;
+  /** The adhoc goal object (for adhoc items) */
+  adhocGoal?: AdhocGoalWithChildren;
   /** The domain object (for domain items) */
   domain?: Doc<'domains'> | null;
   /** Display label for the item */
   label: string;
   /** Type of item */
-  type: 'weekly' | 'daily' | 'quarterly' | 'domain';
+  type: 'weekly' | 'daily' | 'quarterly' | 'domain' | 'adhoc';
   /** Parent goal title for context */
   parentTitle?: string;
   /** Quarterly parent title for daily goals */
   quarterlyTitle?: string;
   /** Day of week for daily goals */
   dayOfWeek?: string;
+  /** Domain name for adhoc goals */
+  domainName?: string;
 }
 
 /**
@@ -108,13 +117,27 @@ export function GoalSearchDialog({
   dailyGoals,
   quarterlyGoals,
   domains = [],
+  adhocGoals = [],
   onGoalSelect,
+  onAdhocGoalSelect,
   onDomainSelect,
   onJumpToQuarter,
   onNewAdhocGoal,
   isGoalModalOpen = false,
 }: GoalSearchDialogProps) {
   const [searchValue, setSearchValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Refocus search input when modal closes
+  useEffect(() => {
+    if (open && !isGoalModalOpen) {
+      // Small delay to ensure the dialog is fully visible
+      const timeoutId = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [open, isGoalModalOpen]);
 
   /**
    * Builds searchable items from weekly and daily goals with parent context.
@@ -169,6 +192,45 @@ export function GoalSearchDialog({
       });
     }
 
+    // Helper function to recursively flatten adhoc goals and build parent context
+    const flattenAdhocGoals = (
+      goals: AdhocGoalWithChildren[],
+      parentContext?: { domainName?: string; parentTitle?: string }
+    ): void => {
+      for (const adhocGoal of goals) {
+        const domainName = adhocGoal.domain?.name ?? 'Uncategorized';
+        // Build context: show domain and parent adhoc goal if exists
+        const contextParts: string[] = [];
+        if (parentContext?.parentTitle) {
+          // Child of another adhoc goal - show domain + parent
+          contextParts.push(`[${parentContext.domainName ?? domainName}]`);
+          contextParts.push(parentContext.parentTitle);
+        } else {
+          // Root level adhoc goal - just show domain
+          contextParts.push(`[${domainName}]`);
+        }
+
+        items.push({
+          adhocGoal,
+          label: adhocGoal.title,
+          type: 'adhoc',
+          domainName,
+          parentTitle: parentContext?.parentTitle,
+        });
+
+        // Recursively add children with updated parent context
+        if (adhocGoal.children && adhocGoal.children.length > 0) {
+          flattenAdhocGoals(adhocGoal.children, {
+            domainName,
+            parentTitle: adhocGoal.title,
+          });
+        }
+      }
+    };
+
+    // Add adhoc goals (flattened with parent context)
+    flattenAdhocGoals(adhocGoals);
+
     // Add domains
     for (const domain of domains) {
       items.push({
@@ -186,7 +248,7 @@ export function GoalSearchDialog({
     });
 
     return items;
-  }, [weeklyGoals, dailyGoals, quarterlyGoals, domains]);
+  }, [weeklyGoals, dailyGoals, quarterlyGoals, domains, adhocGoals]);
 
   /**
    * Filters items based on search input value.
@@ -204,25 +266,28 @@ export function GoalSearchDialog({
       const parentMatch = item.parentTitle?.toLowerCase().includes(searchLower);
       const quarterlyMatch = item.quarterlyTitle?.toLowerCase().includes(searchLower);
       const dayMatch = item.dayOfWeek?.toLowerCase().includes(searchLower);
-      return titleMatch || parentMatch || quarterlyMatch || dayMatch;
+      const domainMatch = item.domainName?.toLowerCase().includes(searchLower);
+      return titleMatch || parentMatch || quarterlyMatch || dayMatch || domainMatch;
     });
   }, [searchItems, searchValue]);
 
   /**
-   * Groups filtered items by their type (domains, quarterly, weekly, and daily).
+   * Groups filtered items by their type (domains, quarterly, weekly, daily, and adhoc).
    *
    * @internal
    */
-  const { domainItems, quarterlyItems, weeklyItems, dailyItems } = useMemo(() => {
+  const { domainItems, quarterlyItems, weeklyItems, dailyItems, adhocItems } = useMemo(() => {
     const domains = filteredItems.filter((item) => item.type === 'domain');
     const quarterly = filteredItems.filter((item) => item.type === 'quarterly');
     const weekly = filteredItems.filter((item) => item.type === 'weekly');
     const daily = filteredItems.filter((item) => item.type === 'daily');
+    const adhoc = filteredItems.filter((item) => item.type === 'adhoc');
     return {
       domainItems: domains,
       quarterlyItems: quarterly,
       weeklyItems: weekly,
       dailyItems: daily,
+      adhocItems: adhoc,
     };
   }, [filteredItems]);
 
@@ -234,15 +299,18 @@ export function GoalSearchDialog({
   const handleSelect = useCallback(
     (item: _SearchItem) => {
       if (item.type === 'domain') {
-        // Close dialog and trigger domain selection
-        onOpenChange(false);
+        // Keep dialog open and trigger domain selection (consistent with goals)
         onDomainSelect?.(item.domain ?? null);
+      } else if (item.type === 'adhoc' && item.adhocGoal) {
+        // Handle adhoc goal selection
+        onAdhocGoalSelect?.(item.adhocGoal._id, item.adhocGoal);
+        // Keep the search dialog open to allow browsing multiple goals
       } else if (item.goal) {
         onGoalSelect(item.goal._id, item.goal);
         // Keep the search dialog open to allow browsing multiple goals
       }
     },
-    [onGoalSelect, onDomainSelect, onOpenChange]
+    [onGoalSelect, onAdhocGoalSelect, onDomainSelect]
   );
 
   /**
@@ -281,6 +349,7 @@ export function GoalSearchDialog({
       className={isGoalModalOpen ? 'opacity-50 pointer-events-auto' : ''}
     >
       <CommandInput
+        ref={inputRef}
         placeholder="Search goals or jump to quarter..."
         value={searchValue}
         onValueChange={handleSearchChange}
@@ -408,6 +477,36 @@ export function GoalSearchDialog({
                   </div>
                 </div>
                 {item.goal?.isComplete && (
+                  <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
+                )}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        {/* Adhoc Goals */}
+        {adhocItems.length > 0 && (
+          <CommandGroup heading="Adhoc Goals">
+            {adhocItems.map((item) => (
+              <CommandItem
+                key={`adhoc-${item.adhocGoal?._id}`}
+                value={`adhoc-${item.label}-${item.domainName}-${item.parentTitle ?? ''}`}
+                onSelect={() => handleSelect(item)}
+                className="flex items-center gap-2"
+              >
+                <CheckSquare className="h-4 w-4" />
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="truncate">{item.label}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground">[{item.domainName}]</span>
+                    {item.parentTitle && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {item.parentTitle}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {item.adhocGoal?.isComplete && (
                   <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
                 )}
               </CommandItem>
