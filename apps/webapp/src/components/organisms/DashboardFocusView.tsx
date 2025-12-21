@@ -1,8 +1,11 @@
-import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import { api } from '@workspace/backend/convex/_generated/api';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
+import { useQuery } from 'convex/react';
 import { Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { DomainPopover } from '@/components/molecules/DomainPopover';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { CreateAdhocGoalDialog } from '@/components/molecules/focus/CreateAdhocGoalDialog';
 import { FocusMenuBar } from '@/components/molecules/focus/FocusMenuBar';
@@ -21,6 +24,7 @@ import { usePullGoals } from '@/hooks/usePullGoals';
 import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
 import { useWeek as useWeekContext, useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
+import { useSession } from '@/modules/auth/useSession';
 
 /**
  * Props for the DashboardFocusView component.
@@ -74,6 +78,8 @@ interface GoalSearchDialogWrapperProps {
   onOpenChange: (open: boolean) => void;
   /** Callback fired when a goal is selected from search results */
   onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
+  /** Callback fired when a domain is selected */
+  onDomainSelect: (domain: Doc<'domains'> | null) => void;
   /** Callback fired when "Jump to Quarter" is selected */
   onJumpToQuarter: () => void;
   /** Callback fired when "New Adhoc Goal" is selected */
@@ -112,6 +118,8 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   const [isCreateAdhocGoalOpen, setIsCreateAdhocGoalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<GoalWithDetailsAndChildren | null>(null);
   const [isGoalQuickViewOpen, setIsGoalQuickViewOpen] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<Doc<'domains'> | null>(null);
+  const [isDomainPopoverOpen, setIsDomainPopoverOpen] = useState(false);
 
   /**
    * Hook for managing "Pull from previous quarter" functionality.
@@ -244,6 +252,15 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   }, []);
 
   /**
+   * Handler for domain selection from the goal search dialog.
+   * @internal
+   */
+  const handleDomainSelect = useCallback((domain: Doc<'domains'> | null) => {
+    setSelectedDomain(domain);
+    setIsDomainPopoverOpen(true);
+  }, []);
+
+  /**
    * Handles quarter selection from the jump dialog.
    * @internal
    */
@@ -300,6 +317,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               open={isGoalSearchOpen}
               onOpenChange={handleGoalSearchOpenChange}
               onGoalSelect={handleGoalSelect}
+              onDomainSelect={handleDomainSelect}
               onJumpToQuarter={handleJumpToQuarter}
               onNewAdhocGoal={handleNewAdhocGoal}
               isGoalModalOpen={isGoalQuickViewOpen}
@@ -315,6 +333,15 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               onOpenChange={handleGoalQuickViewOpenChange}
               goal={selectedGoal}
             />
+            {/* Render DomainPopover when a domain is selected */}
+            {isDomainPopoverOpen && selectedDomain !== undefined && (
+              <DomainPopover
+                domain={selectedDomain}
+                trigger={<div />}
+                year={selectedYear}
+                weekNumber={selectedWeekNumber}
+              />
+            )}
           </WeekProvider>
         )}
 
@@ -407,11 +434,16 @@ function GoalSearchDialogWrapper({
   open,
   onOpenChange,
   onGoalSelect,
+  onDomainSelect,
   onJumpToQuarter,
   onNewAdhocGoal,
   isGoalModalOpen,
 }: GoalSearchDialogWrapperProps) {
   const { weeklyGoals, dailyGoals, quarterlyGoals } = useWeekContext();
+
+  // Fetch domains
+  const { sessionId } = useSession();
+  const domains = useQuery(api.domain.getDomains, { sessionId }) ?? [];
 
   return (
     <GoalSearchDialog
@@ -420,7 +452,9 @@ function GoalSearchDialogWrapper({
       weeklyGoals={weeklyGoals}
       dailyGoals={dailyGoals}
       quarterlyGoals={quarterlyGoals}
+      domains={domains}
       onGoalSelect={onGoalSelect}
+      onDomainSelect={onDomainSelect}
       onJumpToQuarter={onJumpToQuarter}
       onNewAdhocGoal={onNewAdhocGoal}
       isGoalModalOpen={isGoalModalOpen}

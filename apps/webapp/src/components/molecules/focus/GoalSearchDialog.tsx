@@ -1,6 +1,6 @@
-import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Calendar, Plus, Target } from 'lucide-react';
+import { Calendar, Folder, Plus, Target } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import {
@@ -40,8 +40,12 @@ export interface GoalSearchDialogProps {
   dailyGoals: GoalWithDetailsAndChildren[];
   /** Quarterly goals for reference (to show parent context) */
   quarterlyGoals: GoalWithDetailsAndChildren[];
+  /** Available domains to search through */
+  domains?: Doc<'domains'>[];
   /** Callback when a goal is selected */
   onGoalSelect: (goalId: Id<'goals'>, goal: GoalWithDetailsAndChildren) => void;
+  /** Callback when a domain is selected */
+  onDomainSelect?: (domain: Doc<'domains'> | null) => void;
   /** Callback when "Jump to quarter" is selected */
   onJumpToQuarter?: () => void;
   /** Callback when "New Adhoc Goal" is selected */
@@ -51,17 +55,19 @@ export interface GoalSearchDialogProps {
 }
 
 /**
- * Internal type for a searchable goal item.
+ * Internal type for a searchable item (goal or domain).
  *
  * @internal
  */
-interface _GoalSearchItem {
-  /** The goal object */
-  goal: GoalWithDetailsAndChildren;
-  /** Display label for the goal */
+interface _SearchItem {
+  /** The goal object (for goal items) */
+  goal?: GoalWithDetailsAndChildren;
+  /** The domain object (for domain items) */
+  domain?: Doc<'domains'> | null;
+  /** Display label for the item */
   label: string;
-  /** Type of goal (weekly, daily, or quarterly) */
-  type: 'weekly' | 'daily' | 'quarterly';
+  /** Type of item */
+  type: 'weekly' | 'daily' | 'quarterly' | 'domain';
   /** Parent goal title for context */
   parentTitle?: string;
   /** Quarterly parent title for daily goals */
@@ -101,7 +107,9 @@ export function GoalSearchDialog({
   weeklyGoals,
   dailyGoals,
   quarterlyGoals,
+  domains = [],
   onGoalSelect,
+  onDomainSelect,
   onJumpToQuarter,
   onNewAdhocGoal,
   isGoalModalOpen = false,
@@ -113,8 +121,8 @@ export function GoalSearchDialog({
    *
    * @internal
    */
-  const searchItems = useMemo((): _GoalSearchItem[] => {
-    const items: _GoalSearchItem[] = [];
+  const searchItems = useMemo((): _SearchItem[] => {
+    const items: _SearchItem[] = [];
 
     // Create a map of quarterly goals for quick lookup
     const quarterlyMap = new Map(quarterlyGoals.map((q) => [q._id, q]));
@@ -161,8 +169,24 @@ export function GoalSearchDialog({
       });
     }
 
+    // Add domains
+    for (const domain of domains) {
+      items.push({
+        domain,
+        label: domain.name,
+        type: 'domain',
+      });
+    }
+
+    // Add "Uncategorized" domain
+    items.push({
+      domain: null,
+      label: 'Uncategorized',
+      type: 'domain',
+    });
+
     return items;
-  }, [weeklyGoals, dailyGoals, quarterlyGoals]);
+  }, [weeklyGoals, dailyGoals, quarterlyGoals, domains]);
 
   /**
    * Filters items based on search input value.
@@ -185,28 +209,40 @@ export function GoalSearchDialog({
   }, [searchItems, searchValue]);
 
   /**
-   * Groups filtered items by their goal type (quarterly, weekly, and daily).
+   * Groups filtered items by their type (domains, quarterly, weekly, and daily).
    *
    * @internal
    */
-  const { quarterlyItems, weeklyItems, dailyItems } = useMemo(() => {
+  const { domainItems, quarterlyItems, weeklyItems, dailyItems } = useMemo(() => {
+    const domains = filteredItems.filter((item) => item.type === 'domain');
     const quarterly = filteredItems.filter((item) => item.type === 'quarterly');
     const weekly = filteredItems.filter((item) => item.type === 'weekly');
     const daily = filteredItems.filter((item) => item.type === 'daily');
-    return { quarterlyItems: quarterly, weeklyItems: weekly, dailyItems: daily };
+    return {
+      domainItems: domains,
+      quarterlyItems: quarterly,
+      weeklyItems: weekly,
+      dailyItems: daily,
+    };
   }, [filteredItems]);
 
   /**
-   * Handles selecting a goal from the search results.
+   * Handles selecting an item from the search results.
    *
    * @internal
    */
   const handleSelect = useCallback(
-    (item: _GoalSearchItem) => {
-      onGoalSelect(item.goal._id, item.goal);
-      // Keep the search dialog open to allow browsing multiple goals
+    (item: _SearchItem) => {
+      if (item.type === 'domain') {
+        // Close dialog and trigger domain selection
+        onOpenChange(false);
+        onDomainSelect?.(item.domain ?? null);
+      } else if (item.goal) {
+        onGoalSelect(item.goal._id, item.goal);
+        // Keep the search dialog open to allow browsing multiple goals
+      }
     },
-    [onGoalSelect]
+    [onGoalSelect, onDomainSelect, onOpenChange]
   );
 
   /**
@@ -278,12 +314,32 @@ export function GoalSearchDialog({
           </CommandGroup>
         )}
 
+        {/* Domains */}
+        {domainItems.length > 0 && (
+          <CommandGroup heading="Domains">
+            {domainItems.map((item) => {
+              const domainId = item.domain?._id ?? 'uncategorized';
+              return (
+                <CommandItem
+                  key={`domain-${domainId}`}
+                  value={`domain-${item.label}`}
+                  onSelect={() => handleSelect(item)}
+                  className="flex items-center gap-2"
+                >
+                  <Folder className="h-4 w-4" />
+                  <span className="truncate">{item.label}</span>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        )}
+
         {/* Quarterly Goals */}
         {quarterlyItems.length > 0 && (
           <CommandGroup heading="Quarterly Goals">
             {quarterlyItems.map((item) => (
               <CommandItem
-                key={`quarterly-${item.goal._id}`}
+                key={`quarterly-${item.goal?._id}`}
                 value={`quarterly-${item.label}`}
                 onSelect={() => handleSelect(item)}
                 className="flex items-center gap-2"
@@ -292,7 +348,7 @@ export function GoalSearchDialog({
                 <div className="flex flex-col flex-1 min-w-0">
                   <span className="truncate">{item.label}</span>
                 </div>
-                {item.goal.isComplete && (
+                {item.goal?.isComplete && (
                   <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
                 )}
               </CommandItem>
@@ -305,7 +361,7 @@ export function GoalSearchDialog({
           <CommandGroup heading="Weekly Goals">
             {weeklyItems.map((item) => (
               <CommandItem
-                key={`weekly-${item.goal._id}`}
+                key={`weekly-${item.goal?._id}`}
                 value={`weekly-${item.label}`}
                 onSelect={() => handleSelect(item)}
                 className="flex items-center gap-2"
@@ -319,7 +375,7 @@ export function GoalSearchDialog({
                     </span>
                   )}
                 </div>
-                {item.goal.isComplete && (
+                {item.goal?.isComplete && (
                   <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
                 )}
               </CommandItem>
@@ -332,7 +388,7 @@ export function GoalSearchDialog({
           <CommandGroup heading="Daily Goals">
             {dailyItems.map((item) => (
               <CommandItem
-                key={`daily-${item.goal._id}`}
+                key={`daily-${item.goal?._id}`}
                 value={`daily-${item.label}`}
                 onSelect={() => handleSelect(item)}
                 className="flex items-center gap-2"
@@ -351,7 +407,7 @@ export function GoalSearchDialog({
                     )}
                   </div>
                 </div>
-                {item.goal.isComplete && (
+                {item.goal?.isComplete && (
                   <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
                 )}
               </CommandItem>
