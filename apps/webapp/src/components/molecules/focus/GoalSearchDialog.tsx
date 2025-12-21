@@ -119,6 +119,15 @@ export function GoalSearchDialog({
     // Create a map of quarterly goals for quick lookup
     const quarterlyMap = new Map(quarterlyGoals.map((q) => [q._id, q]));
 
+    // Add quarterly goals
+    for (const quarterlyGoal of quarterlyGoals) {
+      items.push({
+        goal: quarterlyGoal,
+        label: quarterlyGoal.title,
+        type: 'quarterly',
+      });
+    }
+
     // Add weekly goals
     for (const weeklyGoal of weeklyGoals) {
       const parentGoal = weeklyGoal.parentId ? quarterlyMap.get(weeklyGoal.parentId) : undefined;
@@ -176,14 +185,15 @@ export function GoalSearchDialog({
   }, [searchItems, searchValue]);
 
   /**
-   * Groups filtered items by their goal type (weekly vs daily).
+   * Groups filtered items by their goal type (quarterly, weekly, and daily).
    *
    * @internal
    */
-  const { weeklyItems, dailyItems } = useMemo(() => {
+  const { quarterlyItems, weeklyItems, dailyItems } = useMemo(() => {
+    const quarterly = filteredItems.filter((item) => item.type === 'quarterly');
     const weekly = filteredItems.filter((item) => item.type === 'weekly');
     const daily = filteredItems.filter((item) => item.type === 'daily');
-    return { weeklyItems: weekly, dailyItems: daily };
+    return { quarterlyItems: quarterly, weeklyItems: weekly, dailyItems: daily };
   }, [filteredItems]);
 
   /**
@@ -265,6 +275,28 @@ export function GoalSearchDialog({
                 <span>Jump to quarter...</span>
               </CommandItem>
             )}
+          </CommandGroup>
+        )}
+
+        {/* Quarterly Goals */}
+        {quarterlyItems.length > 0 && (
+          <CommandGroup heading="Quarterly Goals">
+            {quarterlyItems.map((item) => (
+              <CommandItem
+                key={`quarterly-${item.goal._id}`}
+                value={`quarterly-${item.label}`}
+                onSelect={() => handleSelect(item)}
+                className="flex items-center gap-2"
+              >
+                <Target className="h-4 w-4" />
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {item.goal.isComplete && (
+                  <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓</span>
+                )}
+              </CommandItem>
+            ))}
           </CommandGroup>
         )}
 
