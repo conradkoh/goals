@@ -7,7 +7,6 @@ import { useState } from 'react';
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
@@ -289,18 +288,24 @@ export function DomainPopover({
     );
   }
 
+  // Desktop: Use a modal dialog instead of popover
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-0" align="start">
-        {/* Header for popover mode */}
-        <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b">
-          <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          <h3 className="font-semibold text-sm">{domainName}</h3>
-          <span className="text-xs text-muted-foreground">({allGoals.length})</span>
-        </div>
-        {content}
-      </PopoverContent>
-    </Popover>
+    <>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
+      <span className="contents" onClick={() => setIsOpen(true)}>
+        {trigger}
+      </span>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="flex-row items-center gap-2 px-4 pt-4 pb-3 border-b space-y-0">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            <DialogTitle className="font-semibold text-sm">{domainName}</DialogTitle>
+            <span className="text-xs text-muted-foreground">({allGoals.length})</span>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">{content}</div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
