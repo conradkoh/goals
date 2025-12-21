@@ -7,6 +7,8 @@ export interface FireIconButtonProps {
   goalId: Id<'goals'>;
   /** Additional class names to apply to the button */
   className?: string;
+  /** Group name for hover interactions (defaults to 'title') */
+  groupName?: string;
 }
 
 /**
@@ -18,6 +20,6 @@ export interface FireIconButtonProps {
  * <FireIconButton goalId={goal._id} />
  * ```
  */
-export function FireIconButton({ goalId, className }: FireIconButtonProps) {
-  return <FireIcon goalId={goalId} className={className} />;
+export function FireIconButton({ goalId, className, groupName = 'title' }: FireIconButtonProps) {
+  return <FireIcon goalId={goalId} className={className} groupName={groupName} />;
 }

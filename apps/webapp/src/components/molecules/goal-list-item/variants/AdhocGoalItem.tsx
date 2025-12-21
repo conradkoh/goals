@@ -153,7 +153,7 @@ export function AdhocGoalItem({
         {/* Main goal item */}
         <div
           className={cn(
-            'flex items-start gap-2 group/task rounded-sm hover:bg-accent/50 transition-colors py-1',
+            'flex items-start gap-2 group/goal-item rounded-sm hover:bg-accent/50 transition-colors py-1',
             goal.isComplete && 'opacity-60',
             className
           )}
@@ -165,7 +165,7 @@ export function AdhocGoalItem({
             disabled={isOptimistic}
           />
 
-          <div className="flex-1 min-w-0 flex items-center justify-between group/title">
+          <div className="flex-1 min-w-0 flex items-center justify-between">
             {onUpdate ? (
               <AdhocGoalPopover
                 onSave={handleUpdate}

@@ -22,6 +22,8 @@ export interface EditIconButtonProps {
   onUpdatePending?: GoalUpdatePendingHandler;
   /** Custom trigger button (optional) */
   trigger?: ReactNode;
+  /** Group name for hover interactions (defaults to 'title') */
+  groupName?: string;
 }
 
 /**
@@ -46,6 +48,7 @@ export function EditIconButton({
   onSave,
   onUpdatePending,
   trigger,
+  groupName = 'title',
 }: EditIconButtonProps) {
   return (
     <GoalEditPopover
@@ -60,7 +63,7 @@ export function EditIconButton({
         trigger || (
           <button
             type="button"
-            className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
+            className={`text-muted-foreground opacity-0 group-hover/${groupName}:opacity-100 pointer-events-none group-hover/${groupName}:pointer-events-auto transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0`}
           >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
