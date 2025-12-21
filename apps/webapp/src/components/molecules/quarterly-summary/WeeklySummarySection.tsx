@@ -1,14 +1,16 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
+
+import { DailySummaryItem } from './DailySummaryItem';
+
+import { SummaryGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { DailySummaryItem } from './DailySummaryItem';
 
 /**
  * Props for the WeeklySummarySection component.
@@ -155,32 +157,13 @@ export function WeeklySummarySection({
           {/* Action Buttons */}
           <div className="flex items-center gap-1">
             {goalActions && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <GoalEditPopover
-                  title={weeklyGoal.title}
-                  details={weeklyGoal.details}
-                  initialDueDate={weeklyGoal.dueDate}
-                  onSave={handleEdit}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </Button>
-                  }
-                />
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              <SummaryGoalActionIcons
+                title={weeklyGoal.title}
+                details={weeklyGoal.details}
+                initialDueDate={weeklyGoal.dueDate}
+                onSave={handleEdit}
+                onDelete={handleDelete}
+              />
             )}
 
             {hasDailyGoals && (

@@ -1,15 +1,13 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { format } from 'date-fns';
-import { Calendar, Edit2, Trash2 } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useCallback, useState } from 'react';
+
 import { DomainBadge } from '@/components/atoms/DomainBadge';
-import { FireIcon } from '@/components/atoms/FireIcon';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { cn } from '@/lib/utils';
 
@@ -209,42 +207,22 @@ export function AdhocGoalItem({
             )}
 
             <div className="flex items-center gap-1 flex-shrink-0">
-              {showSpinner ? (
-                <Spinner className="h-3.5 w-3.5" />
-              ) : (
-                <>
-                  <FireIcon goalId={goal._id} />
-                  <PendingIcon goalId={goal._id} />
-                  {onUpdate && (
-                    <GoalEditPopover
-                      title={goal.title}
-                      details={goal.details}
-                      initialDueDate={goal.adhoc?.dueDate}
-                      initialDomainId={effectiveDomainId}
-                      showDomainSelector={true}
-                      onSave={handleUpdate}
-                      onUpdatePending={handleUpdatePending}
-                      trigger={
-                        <button
-                          type="button"
-                          className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
-                      }
-                    />
-                  )}
-                  {onDelete && (
-                    <button
-                      type="button"
-                      onClick={handleDelete}
-                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600 dark:hover:text-red-400"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </>
-              )}
+              <AdhocGoalActionIcons
+                goalId={goal._id}
+                title={goal.title}
+                details={goal.details}
+                initialDueDate={goal.adhoc?.dueDate}
+                initialDomainId={effectiveDomainId}
+                showSpinner={showSpinner}
+                showFire
+                showPending
+                showEdit={!!onUpdate}
+                showDelete={!!onDelete}
+                showDomainSelector
+                onSave={onUpdate ? handleUpdate : undefined}
+                onUpdatePending={handleUpdatePending}
+                onDelete={onDelete ? handleDelete : undefined}
+              />
             </div>
           </div>
         </div>

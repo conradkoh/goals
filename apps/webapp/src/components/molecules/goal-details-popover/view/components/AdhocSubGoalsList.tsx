@@ -1,12 +1,9 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
-import { Edit2, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { CreateInputView } from '@/components/atoms/CreateInput';
-import { FireIcon } from '@/components/atoms/FireIcon';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -297,37 +294,20 @@ function SubGoalItem({
 
           {/* Action buttons - shown on hover */}
           {!isOptimistic && (
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <FireIcon goalId={goal._id} />
-              <PendingIcon goalId={goal._id} />
-              {onUpdate && (
-                <GoalEditPopover
-                  title={goal.title}
-                  details={goal.details}
-                  initialDueDate={goal.adhoc?.dueDate}
-                  initialDomainId={effectiveDomainId}
-                  showDomainSelector={true}
-                  onSave={handleUpdate}
-                  trigger={
-                    <button
-                      type="button"
-                      className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground focus:outline-none focus-visible:ring-0"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </button>
-                  }
-                />
-              )}
-              {onDelete && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-red-600"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+            <AdhocGoalActionIcons
+              goalId={goal._id}
+              title={goal.title}
+              details={goal.details}
+              initialDueDate={goal.adhoc?.dueDate}
+              initialDomainId={effectiveDomainId}
+              showFire
+              showPending
+              showEdit={!!onUpdate}
+              showDelete={!!onDelete}
+              showDomainSelector
+              onSave={onUpdate ? handleUpdate : undefined}
+              onDelete={onDelete ? handleDelete : undefined}
+            />
           )}
         </div>
 

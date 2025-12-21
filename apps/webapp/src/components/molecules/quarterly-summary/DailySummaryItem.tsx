@@ -1,9 +1,8 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Edit2, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React from 'react';
-import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
-import { Button } from '@/components/ui/button';
+
+import { SummaryGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { type DayOfWeek, getDayName } from '@/lib/constants';
@@ -139,32 +138,13 @@ export function DailySummaryItem({
 
       {/* Action Buttons */}
       {goalActions && (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <GoalEditPopover
-            title={dailyGoal.title}
-            details={dailyGoal.details}
-            initialDueDate={dailyGoal.dueDate}
-            onSave={handleEdit}
-            trigger={
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-              </Button>
-            }
-          />
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <SummaryGoalActionIcons
+          title={dailyGoal.title}
+          details={dailyGoal.details}
+          initialDueDate={dailyGoal.dueDate}
+          onSave={handleEdit}
+          onDelete={handleDelete}
+        />
       )}
     </div>
   );
