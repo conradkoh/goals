@@ -334,12 +334,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
               goal={selectedGoal}
             />
             {/* Render DomainPopover when a domain is selected */}
-            {isDomainPopoverOpen && selectedDomain !== undefined && (
+            {selectedDomain !== undefined && (
               <DomainPopover
                 domain={selectedDomain}
                 trigger={<div />}
                 year={selectedYear}
                 weekNumber={selectedWeekNumber}
+                open={isDomainPopoverOpen}
+                onOpenChange={setIsDomainPopoverOpen}
               />
             )}
           </WeekProvider>

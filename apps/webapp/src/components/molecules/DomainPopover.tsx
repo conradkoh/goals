@@ -27,6 +27,10 @@ export interface DomainPopoverProps {
   year: number;
   /** ISO week number for creating new tasks */
   weekNumber: number;
+  /** Optional controlled open state */
+  open?: boolean;
+  /** Optional callback when open state changes */
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -41,13 +45,24 @@ type _OptimisticAdhocGoal = Doc<'goals'> & {
  * Popover component that displays all adhoc tasks for a specific domain
  * and allows creating new tasks with the domain pre-set.
  */
-export function DomainPopover({ domain, trigger, year, weekNumber }: DomainPopoverProps) {
+export function DomainPopover({
+  domain,
+  trigger,
+  year,
+  weekNumber,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: DomainPopoverProps) {
   const { sessionId } = useSession();
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [optimisticGoals, setOptimisticGoals] = useState<_OptimisticAdhocGoal[]>([]);
+
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = controlledOnOpenChange || setInternalOpen;
 
   // Query adhoc goals for this domain
   const domainGoals =
