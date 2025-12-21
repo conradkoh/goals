@@ -60,10 +60,12 @@ interface _GoalSearchItem {
   goal: GoalWithDetailsAndChildren;
   /** Display label for the goal */
   label: string;
-  /** Type of goal (weekly or daily) */
-  type: 'weekly' | 'daily';
+  /** Type of goal (weekly, daily, or quarterly) */
+  type: 'weekly' | 'daily' | 'quarterly';
   /** Parent goal title for context */
   parentTitle?: string;
+  /** Quarterly parent title for daily goals */
+  quarterlyTitle?: string;
   /** Day of week for daily goals */
   dayOfWeek?: string;
 }
@@ -131,6 +133,9 @@ export function GoalSearchDialog({
     // Add daily goals
     for (const dailyGoal of dailyGoals) {
       const parentWeeklyGoal = weeklyGoals.find((w) => w._id === dailyGoal.parentId);
+      const quarterlyParentGoal = parentWeeklyGoal?.parentId
+        ? quarterlyMap.get(parentWeeklyGoal.parentId)
+        : undefined;
       const dayOfWeekNum = dailyGoal.state?.daily?.dayOfWeek;
       const dayOfWeekName =
         dayOfWeekNum !== undefined && dayOfWeekNum >= 0 && dayOfWeekNum <= 6
@@ -142,6 +147,7 @@ export function GoalSearchDialog({
         label: dailyGoal.title,
         type: 'daily',
         parentTitle: parentWeeklyGoal?.title,
+        quarterlyTitle: quarterlyParentGoal?.title,
         dayOfWeek: dayOfWeekName,
       });
     }
@@ -163,8 +169,9 @@ export function GoalSearchDialog({
     return searchItems.filter((item) => {
       const titleMatch = item.label.toLowerCase().includes(searchLower);
       const parentMatch = item.parentTitle?.toLowerCase().includes(searchLower);
+      const quarterlyMatch = item.quarterlyTitle?.toLowerCase().includes(searchLower);
       const dayMatch = item.dayOfWeek?.toLowerCase().includes(searchLower);
-      return titleMatch || parentMatch || dayMatch;
+      return titleMatch || parentMatch || quarterlyMatch || dayMatch;
     });
   }, [searchItems, searchValue]);
 
