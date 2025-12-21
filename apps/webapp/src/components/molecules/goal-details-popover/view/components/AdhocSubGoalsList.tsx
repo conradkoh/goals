@@ -1,14 +1,14 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
-import { Edit2, Plus, Trash2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
+import { CreateInputView } from '@/components/atoms/CreateInput';
 import { FireIcon } from '@/components/atoms/FireIcon';
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { PendingIcon } from '@/components/atoms/PendingIcon';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
@@ -114,21 +114,6 @@ export function AdhocSubGoalsList({
     }
   }, [newSubGoalTitle, onCreateChild, parentId]);
 
-  /** Handles keyboard events for the create input (Enter to submit, Escape to clear). */
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleCreateSubGoal();
-      } else if (e.key === 'Escape') {
-        setNewSubGoalTitle('');
-        // Blur the input
-        (e.target as HTMLInputElement).blur();
-      }
-    },
-    [handleCreateSubGoal]
-  );
-
   /** Handles checkbox state change for sub-goal completion. */
   const handleCompleteChange = useCallback(
     (goalId: Id<'goals'>, checked: boolean | 'indeterminate') => {
@@ -176,18 +161,13 @@ export function AdhocSubGoalsList({
 
         {/* Create input - always visible when allowed */}
         {canAddSubGoal && (
-          <div className="relative">
-            <Input
-              value={newSubGoalTitle}
-              onChange={(e) => setNewSubGoalTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Add a new sub-task..."
-              className="h-7 text-sm pl-8 bg-transparent border-none hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm focus-visible:ring-1 focus-visible:ring-ring"
-            />
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">
-              <Plus className="h-3.5 w-3.5 text-muted-foreground/60" />
-            </div>
-          </div>
+          <CreateInputView
+            placeholder="Add a new sub-task..."
+            value={newSubGoalTitle}
+            onChange={setNewSubGoalTitle}
+            onSubmit={handleCreateSubGoal}
+            onEscape={() => setNewSubGoalTitle('')}
+          />
         )}
 
         {/* Depth limit message - shown when at max depth and can't add more */}
