@@ -1,4 +1,5 @@
 import { History, Pin, Star } from 'lucide-react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -140,69 +141,71 @@ export const TaskMovePreview = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
+      <AlertDialogContent className="max-h-[90vh] flex flex-col">
+        <AlertDialogHeader className="flex-shrink-0">
           <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-4">
+            <div>
               <p>
                 {!preview?.tasks.length
                   ? `There are no incomplete goals to pull forward to ${preview?.targetDay}.`
                   : `The following incomplete goals from ${preview?.previousDay} will be moved to ${preview?.targetDay}. Note that goals will be moved, not copied.`}
               </p>
-              {!preview?.tasks.length ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>All previous goals are complete!</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {Object.values(groupedTasks || {}).map((quarterlyGroup) => (
-                    <div key={quarterlyGroup.quarterlyGoal.id} className="space-y-2">
-                      <h4 className="font-medium text-sm flex items-center gap-1.5">
-                        {quarterlyGroup.quarterlyGoal.isStarred && (
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                        )}
-                        {quarterlyGroup.quarterlyGoal.isPinned && (
-                          <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
-                        )}
-                        <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
-                          {quarterlyGroup.quarterlyGoal.title}
-                        </div>
-                      </h4>
-                      <div
-                        className={cn(
-                          'rounded-md overflow-hidden',
-                          quarterlyGroup.quarterlyGoal.isStarred
-                            ? 'bg-yellow-50 border border-yellow-200'
-                            : quarterlyGroup.quarterlyGoal.isPinned
-                              ? 'bg-blue-50 border border-blue-200'
-                              : ''
-                        )}
-                      >
-                        {Object.values(quarterlyGroup.weeklyGoals).map((weeklyGroup) => (
-                          <div key={weeklyGroup.weeklyGoal.id} className="pl-4 space-y-1 py-2">
-                            <h5 className="text-sm text-muted-foreground">
-                              <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
-                                {weeklyGroup.weeklyGoal.title}
-                              </div>
-                            </h5>
-                            <ul className="space-y-1">
-                              {weeklyGroup.tasks.map((task) => (
-                                <_TaskPreviewItem key={task.id} task={task} />
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
+        <div className="flex-1 overflow-y-auto min-h-0 pr-2 -mr-2">
+          {!preview?.tasks.length ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>All previous goals are complete!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {Object.values(groupedTasks || {}).map((quarterlyGroup) => (
+                <div key={quarterlyGroup.quarterlyGoal.id} className="space-y-2">
+                  <h4 className="font-medium text-sm flex items-center gap-1.5">
+                    {quarterlyGroup.quarterlyGoal.isStarred && (
+                      <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    )}
+                    {quarterlyGroup.quarterlyGoal.isPinned && (
+                      <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />
+                    )}
+                    <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
+                      {quarterlyGroup.quarterlyGoal.title}
+                    </div>
+                  </h4>
+                  <div
+                    className={cn(
+                      'rounded-md overflow-hidden',
+                      quarterlyGroup.quarterlyGoal.isStarred
+                        ? 'bg-yellow-50 border border-yellow-200'
+                        : quarterlyGroup.quarterlyGoal.isPinned
+                          ? 'bg-blue-50 border border-blue-200'
+                          : ''
+                    )}
+                  >
+                    {Object.values(quarterlyGroup.weeklyGoals).map((weeklyGroup) => (
+                      <div key={weeklyGroup.weeklyGoal.id} className="pl-4 space-y-1 py-2">
+                        <h5 className="text-sm text-muted-foreground">
+                          <div className="font-semibold text-sm text-foreground px-2 py-1 rounded-md break-words">
+                            {weeklyGroup.weeklyGoal.title}
+                          </div>
+                        </h5>
+                        <ul className="space-y-1">
+                          {weeklyGroup.tasks.map((task) => (
+                            <_TaskPreviewItem key={task.id} task={task} />
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <AlertDialogFooter className="flex-shrink-0">
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           {preview && preview.tasks.length > 0 && (
             <AlertDialogAction onClick={onConfirm}>Pull Goals</AlertDialogAction>
