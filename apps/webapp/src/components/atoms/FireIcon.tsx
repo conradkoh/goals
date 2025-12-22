@@ -12,14 +12,12 @@ import { cn } from '@/lib/utils';
 export interface FireIconProps {
   goalId: Id<'goals'>;
   className?: string;
-  /** Group name for hover interactions (defaults to 'title') */
-  groupName?: string;
 }
 
 /**
  * Displays a clickable fire icon that toggles the urgent status of a goal.
  */
-export const FireIcon: React.FC<FireIconProps> = ({ goalId, className, groupName = 'title' }) => {
+export const FireIcon: React.FC<FireIconProps> = ({ goalId, className }) => {
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goalId);
 
   /**
@@ -38,8 +36,8 @@ export const FireIcon: React.FC<FireIconProps> = ({ goalId, className, groupName
       type="button"
       onClick={_handleClick}
       className={cn(
-        `text-muted-foreground opacity-0 group-hover/${groupName}:opacity-100 pointer-events-none group-hover/${groupName}:pointer-events-auto transition-opacity`,
-        isOnFire ? 'text-red-500 opacity-100 pointer-events-auto' : 'hover:text-red-500',
+        'text-muted-foreground opacity-0 group-hover/goal-item:opacity-100 group-hover/title:opacity-100 transition-opacity',
+        isOnFire ? 'text-red-500 opacity-100' : 'hover:text-red-500',
         className
       )}
       title={isOnFire ? 'Remove from urgent' : 'Mark as urgent'}

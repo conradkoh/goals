@@ -7,8 +7,6 @@ export interface PendingIconButtonProps {
   goalId: Id<'goals'>;
   /** Additional class names to apply to the button */
   className?: string;
-  /** Group name for hover interactions (defaults to 'title') */
-  groupName?: string;
 }
 
 /**
@@ -20,10 +18,6 @@ export interface PendingIconButtonProps {
  * <PendingIconButton goalId={goal._id} />
  * ```
  */
-export function PendingIconButton({
-  goalId,
-  className,
-  groupName = 'title',
-}: PendingIconButtonProps) {
-  return <PendingIcon goalId={goalId} className={className} groupName={groupName} />;
+export function PendingIconButton({ goalId, className }: PendingIconButtonProps) {
+  return <PendingIcon goalId={goalId} className={className} />;
 }

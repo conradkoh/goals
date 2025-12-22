@@ -75,7 +75,8 @@
  * The component uses consistent styling across all implementations:
  * - Container: `flex items-center gap-1 flex-shrink-0`
  * - Icons: `h-3.5 w-3.5` (uniform sizing)
- * - Hover behavior: `opacity-0 group-hover/title:opacity-100` for edit/delete
+ * - Hover behavior: `opacity-0 group-hover/goal-item:opacity-100 group-hover/title:opacity-100` for edit/delete
+ * - Supports both `group/goal-item` (adhoc goals) and `group/title` (daily/weekly/quarterly goals)
  * - Fire/Pending icons manage their own visibility based on status
  *
  * ## Loading States

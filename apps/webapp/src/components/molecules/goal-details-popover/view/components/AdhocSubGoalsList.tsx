@@ -249,7 +249,7 @@ function SubGoalItem({
       <div className="space-y-1">
         <div
           className={cn(
-            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent/50 transition-colors group/title',
+            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent/50 transition-colors group/goal-item',
             goal.isComplete && 'opacity-60',
             isOptimistic && 'opacity-70'
           )}

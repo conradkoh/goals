@@ -14,8 +14,6 @@ export interface PendingIconProps {
   goalId: Id<'goals'>;
   /** Additional CSS classes to apply to the button */
   className?: string;
-  /** Group name for hover interactions (defaults to 'title') */
-  groupName?: string;
 }
 
 /**
@@ -27,11 +25,7 @@ export interface PendingIconProps {
  * <PendingIcon goalId={goal._id} className="ml-2" />
  * ```
  */
-export const PendingIcon: React.FC<PendingIconProps> = ({
-  goalId,
-  className,
-  groupName = 'title',
-}) => {
+export const PendingIcon: React.FC<PendingIconProps> = ({ goalId, className }) => {
   const { isPending } = usePendingGoalStatus(goalId);
 
   return (
@@ -39,9 +33,9 @@ export const PendingIcon: React.FC<PendingIconProps> = ({
       <button
         type="button"
         className={cn(
-          `text-muted-foreground opacity-0 group-hover/${groupName}:opacity-100 pointer-events-none group-hover/${groupName}:pointer-events-auto transition-opacity`,
+          'text-muted-foreground opacity-0 group-hover/goal-item:opacity-100 group-hover/title:opacity-100 transition-opacity',
           isPending
-            ? 'text-orange-600 dark:text-orange-400 opacity-100 pointer-events-auto'
+            ? 'text-orange-600 dark:text-orange-400 opacity-100'
             : 'hover:text-orange-600 dark:hover:text-orange-400',
           className
         )}

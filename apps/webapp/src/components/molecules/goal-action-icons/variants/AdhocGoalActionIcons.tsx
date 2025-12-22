@@ -44,8 +44,6 @@ export interface AdhocGoalActionIconsProps {
   editTrigger?: ReactNode;
   /** Additional class names */
   className?: string;
-  /** Group name for hover interactions */
-  groupName?: string;
 }
 
 /**
@@ -86,14 +84,13 @@ export function AdhocGoalActionIcons({
   onDelete,
   editTrigger,
   className,
-  groupName = 'goal-item',
 }: AdhocGoalActionIconsProps) {
   return (
     <GoalActionIconsView className={className} showSpinner={showSpinner}>
       {!showSpinner && (
         <>
-          {showFire && <FireIconButton goalId={goalId} groupName={groupName} />}
-          {showPending && <PendingIconButton goalId={goalId} groupName={groupName} />}
+          {showFire && <FireIconButton goalId={goalId} />}
+          {showPending && <PendingIconButton goalId={goalId} />}
           {showEdit && onSave && title !== undefined && (
             <EditIconButton
               title={title}
@@ -104,10 +101,9 @@ export function AdhocGoalActionIcons({
               onSave={onSave}
               onUpdatePending={onUpdatePending}
               trigger={editTrigger}
-              groupName={groupName}
             />
           )}
-          {showDelete && onDelete && <DeleteIconButton onDelete={onDelete} groupName={groupName} />}
+          {showDelete && onDelete && <DeleteIconButton onDelete={onDelete} />}
         </>
       )}
     </GoalActionIconsView>
