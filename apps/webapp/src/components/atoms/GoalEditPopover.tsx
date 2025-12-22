@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { CalendarIcon, Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -322,12 +323,23 @@ export function GoalEditPopover({
     );
   }
 
+  // Desktop: Use Dialog instead of Popover to avoid Safari issues with nested portals
+  // When a Popover is inside a Dialog, Safari's focus trap closes the Popover immediately
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>{trigger || defaultTrigger}</PopoverTrigger>
-      <PopoverContent className="w-[400px] max-w-[calc(100vw-32px)] p-4">
-        {formContent}
-      </PopoverContent>
-    </Popover>
+    <>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
+      <span className="contents" onClick={() => setIsOpen(true)}>
+        {trigger || defaultTrigger}
+      </span>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <DialogContent className="w-[400px] max-w-[calc(100vw-32px)] p-4">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">Edit Goal</DialogTitle>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

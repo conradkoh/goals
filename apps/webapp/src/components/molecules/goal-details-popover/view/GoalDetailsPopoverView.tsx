@@ -1,7 +1,7 @@
 import { forwardRef, type ReactNode, useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +55,7 @@ export interface GoalDetailsPopoverViewProps {
  * ```
  */
 export function GoalDetailsPopoverView({
-  popoverKey,
+  popoverKey: _popoverKey,
   trigger,
   children,
   contentClassName,
@@ -127,16 +127,27 @@ export function GoalDetailsPopoverView({
     );
   }
 
+  // Desktop: Use Dialog instead of Popover to avoid Safari issues with nested portals
+  // When a Popover is inside a Dialog, Safari's focus trap closes the Popover immediately
   return (
-    <Popover key={`goal-details-${popoverKey}`}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent
-        className={cn(`w-[${width}] max-w-[calc(100vw-32px)] p-5`, contentClassName)}
-        style={{ width }}
-      >
-        <div className="space-y-3">{children}</div>
-      </PopoverContent>
-    </Popover>
+    <>
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
+      <span className="contents" onClick={() => handleDialogOpenChange?.(true)}>
+        {trigger}
+      </span>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+        <DialogContent
+          className={cn(`w-[${width}] max-w-[calc(100vw-32px)] p-5`, contentClassName)}
+          style={{ width }}
+        >
+          <DialogHeader>
+            <DialogTitle className="sr-only">Goal Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">{children}</div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
