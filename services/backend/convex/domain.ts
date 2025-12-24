@@ -1,8 +1,9 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
-import { requireLogin } from '../src/usecase/requireLogin';
+
 import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
+import { requireLogin } from '../src/usecase/requireLogin';
 
 /**
  * Creates a new domain for the authenticated user.
@@ -87,7 +88,7 @@ export const updateDomain = mutation({
     const userId = user._id;
 
     // Find the domain and verify ownership
-    const domain = await ctx.db.get(domainId);
+    const domain = await ctx.db.get('domains', domainId);
     if (!domain) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -131,7 +132,7 @@ export const updateDomain = mutation({
     if (description !== undefined) updates.description = description?.trim();
     if (color !== undefined) updates.color = color;
 
-    await ctx.db.patch(domainId, updates);
+    await ctx.db.patch('domains', domainId, updates);
   },
 });
 
@@ -153,7 +154,7 @@ export const deleteDomain = mutation({
     const userId = user._id;
 
     // Find the domain and verify ownership
-    const domain = await ctx.db.get(domainId);
+    const domain = await ctx.db.get('domains', domainId);
     if (!domain) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -186,7 +187,7 @@ export const deleteDomain = mutation({
     }
 
     // Delete the domain
-    await ctx.db.delete(domainId);
+    await ctx.db.delete('domains', domainId);
   },
 });
 
@@ -238,7 +239,7 @@ export const getDomain = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const domain = await ctx.db.get(domainId);
+    const domain = await ctx.db.get('domains', domainId);
     if (!domain || domain.userId !== userId) {
       return null;
     }

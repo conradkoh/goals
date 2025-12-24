@@ -1,9 +1,10 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
+
 import { DayOfWeek } from '../src/constants';
-import { requireLogin } from '../src/usecase/requireLogin';
 import type { Doc, Id } from './_generated/dataModel';
 import { type MutationCtx, mutation, type QueryCtx, query } from './_generated/server';
+import { requireLogin } from '../src/usecase/requireLogin';
 
 /**
  * Maximum nesting depth for adhoc goals.
@@ -24,11 +25,11 @@ async function getAdhocGoalDepth(
   goalId: Id<'goals'>
 ): Promise<number> {
   let depth = 0;
-  let currentGoal = await ctx.db.get(goalId);
+  let currentGoal = await ctx.db.get('goals', goalId);
 
   while (currentGoal?.parentId) {
     depth++;
-    currentGoal = await ctx.db.get(currentGoal.parentId);
+    currentGoal = await ctx.db.get('goals', currentGoal.parentId);
     // Safety check to prevent infinite loops in case of data corruption
     if (depth > 10) break;
   }
@@ -150,7 +151,7 @@ export const createAdhocGoal = mutation({
     // Validate parent if provided and check nesting depth
     let effectiveDomainId = domainId;
     if (parentId) {
-      const parent = await ctx.db.get(parentId);
+      const parent = await ctx.db.get('goals', parentId);
       if (!parent || parent.userId !== userId || !parent.adhoc) {
         throw new ConvexError({
           code: 'INVALID_ARGUMENT',
@@ -186,7 +187,7 @@ export const createAdhocGoal = mutation({
 
     // Validate domain if provided
     if (effectiveDomainId) {
-      const domain = await ctx.db.get(effectiveDomainId);
+      const domain = await ctx.db.get('domains', effectiveDomainId);
       if (!domain || domain.userId !== userId) {
         throw new ConvexError({
           code: 'NOT_FOUND',
@@ -273,7 +274,7 @@ export const updateAdhocGoal = mutation({
     const userId = user._id;
 
     // Find goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -308,7 +309,7 @@ export const updateAdhocGoal = mutation({
       if (domainId === null) {
         // Allow setting to null (uncategorized)
       } else {
-        const domain = await ctx.db.get(domainId);
+        const domain = await ctx.db.get('domains', domainId);
         if (!domain || domain.userId !== userId) {
           throw new ConvexError({
             code: 'NOT_FOUND',
@@ -348,7 +349,7 @@ export const updateAdhocGoal = mutation({
       goalUpdates.adhoc = adhocUpdates;
     }
 
-    await ctx.db.patch(goalId, goalUpdates);
+    await ctx.db.patch('goals', goalId, goalUpdates);
 
     // Update adhoc goal state if completion status changed
     if (isComplete !== undefined) {
@@ -358,7 +359,7 @@ export const updateAdhocGoal = mutation({
         .first();
 
       if (existingState) {
-        await ctx.db.patch(existingState._id, {
+        await ctx.db.patch('adhocGoalStates', existingState._id, {
           isComplete,
           completedAt: isComplete ? Date.now() : undefined,
         });
@@ -371,7 +372,7 @@ export const updateAdhocGoal = mutation({
           .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
           .first();
         if (existingFireGoal) {
-          await ctx.db.delete(existingFireGoal._id);
+          await ctx.db.delete('fireGoals', existingFireGoal._id);
         }
       }
     }
@@ -388,7 +389,7 @@ export const updateAdhocGoal = mutation({
         if (weekNumber !== undefined) stateUpdates.weekNumber = weekNumber;
         // dayOfWeek removed - adhoc tasks are week-level only
 
-        await ctx.db.patch(existingState._id, stateUpdates);
+        await ctx.db.patch('adhocGoalStates', existingState._id, stateUpdates);
       }
     }
   },
@@ -412,7 +413,7 @@ export const deleteAdhocGoal = mutation({
     const userId = user._id;
 
     // Find goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -432,10 +433,10 @@ export const deleteAdhocGoal = mutation({
       .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))
       .collect();
 
-    await Promise.all(goalStates.map((state) => ctx.db.delete(state._id)));
+    await Promise.all(goalStates.map((state) => ctx.db.delete('adhocGoalStates', state._id)));
 
     // Delete the goal
-    await ctx.db.delete(goalId);
+    await ctx.db.delete('goals', goalId);
   },
 });
 
@@ -470,7 +471,7 @@ export const getAdhocGoalsForWeek = query({
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -515,7 +516,7 @@ export const getAdhocGoalsForWeekFlat = query({
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -572,7 +573,7 @@ export const getAdhocGoalsForDay = query({
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -619,7 +620,7 @@ export const getAllAdhocGoals = query({
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -674,7 +675,7 @@ export const getAdhocGoalsByDomain = query({
     const domainIds = [
       ...new Set(adhocGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -748,7 +749,7 @@ export const moveAdhocGoalsFromWeek = mutation({
     const domainIds = [
       ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -774,7 +775,7 @@ export const moveAdhocGoalsFromWeek = mutation({
       incompleteGoals.map(async (goal) => {
         if (!goal.adhoc) return;
 
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
@@ -789,7 +790,7 @@ export const moveAdhocGoalsFromWeek = mutation({
           .first();
 
         if (state) {
-          await ctx.db.patch(state._id, {
+          await ctx.db.patch('adhocGoalStates', state._id, {
             year: to.year,
             weekNumber: to.weekNumber,
           });
@@ -884,7 +885,7 @@ export const moveAdhocGoalsFromDay = mutation({
     const domainIds = [
       ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -910,7 +911,7 @@ export const moveAdhocGoalsFromDay = mutation({
       incompleteGoals.map(async (goal) => {
         if (!goal.adhoc) return;
 
-        await ctx.db.patch(goal._id, {
+        await ctx.db.patch('goals', goal._id, {
           year: to.year, // Update root year field
           adhoc: {
             ...goal.adhoc,
@@ -926,7 +927,7 @@ export const moveAdhocGoalsFromDay = mutation({
           .first();
 
         if (state) {
-          await ctx.db.patch(state._id, {
+          await ctx.db.patch('adhocGoalStates', state._id, {
             year: to.year,
             weekNumber: to.weekNumber,
             // dayOfWeek removed - adhoc tasks are week-level only

@@ -21,7 +21,7 @@ export const requireLogin = async (
   // Fall back to legacy pattern: direct document lookup
   if (!session && sessionId) {
     try {
-      session = await ctx.db.get(sessionId as Id<'sessions'>);
+      session = await ctx.db.get('sessions', sessionId as Id<'sessions'>);
     } catch {
       // Invalid ID format, session stays null
     }
@@ -30,7 +30,7 @@ export const requireLogin = async (
   if (!session) {
     throw new Error('Login required');
   }
-  const user = await ctx.db.get(session.userId);
+  const user = await ctx.db.get('users', session.userId);
   if (!user) {
     throw new Error('User not found');
   }

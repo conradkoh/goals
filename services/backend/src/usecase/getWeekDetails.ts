@@ -40,13 +40,11 @@ export type QuarterlyGoalSummary = {
   };
   weeklyGoalsByWeek: Record<
     number,
-    Array<
-      GoalWithDetailsAndChildren & {
-        weekNumber: number;
-        weekStartTimestamp: number;
-        weekEndTimestamp: number;
-      }
-    >
+    (GoalWithDetailsAndChildren & {
+      weekNumber: number;
+      weekStartTimestamp: number;
+      weekEndTimestamp: number;
+    })[]
   >;
   quarter: number;
   year: number;
@@ -111,7 +109,7 @@ export const getWeekGoalsTree = async (
 
   // Get the associated goal details
   const goalIds = weekStates.map((ws) => ws.goalId);
-  const goals = (await Promise.all(goalIds.map((goalId) => ctx.db.get(goalId)))).filter(
+  const goals = (await Promise.all(goalIds.map((goalId) => ctx.db.get('goals', goalId)))).filter(
     (goal) => goal !== null
   );
 

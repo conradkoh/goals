@@ -1,7 +1,8 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
-import { requireLogin } from '../src/usecase/requireLogin';
+
 import { mutation, query } from './_generated/server';
+import { requireLogin } from '../src/usecase/requireLogin';
 
 /**
  * Toggles the fire status of a goal for the authenticated user.
@@ -16,7 +17,7 @@ export const toggleFireStatus = mutation({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -36,7 +37,7 @@ export const toggleFireStatus = mutation({
       .first();
 
     if (existingFireGoal) {
-      await ctx.db.delete(existingFireGoal._id);
+      await ctx.db.delete('fireGoals', existingFireGoal._id);
       return false;
     }
     await ctx.db.insert('fireGoals', {

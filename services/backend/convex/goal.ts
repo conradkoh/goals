@@ -1,7 +1,11 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DateTime } from 'luxon';
+
 import { DayOfWeek, getDayName } from '../src/constants';
+import { api, internal } from './_generated/api';
+import type { Doc, Id } from './_generated/dataModel';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import {
   moveGoalsFromLastNonEmptyWeekUsecase,
   moveGoalsFromWeekUsecase,
@@ -14,9 +18,6 @@ import {
 } from '../src/usecase/quarter';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { getNextPath, joinPath, validateGoalPath } from '../src/util/path';
-import { api, internal } from './_generated/api';
-import type { Doc, Id } from './_generated/dataModel';
-import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 
 export const moveGoalsFromWeek = mutation({
   args: {
@@ -229,7 +230,7 @@ export const moveGoalsFromDay = mutation({
     // Get goal objects for all the goal states
     const goalObjects = await Promise.all(
       allGoalStates.map(async (weeklyGoal) => {
-        const goal = await ctx.db.get(weeklyGoal.goalId);
+        const goal = await ctx.db.get('goals', weeklyGoal.goalId);
         return { weeklyGoal, goal };
       })
     );
@@ -244,13 +245,13 @@ export const moveGoalsFromDay = mutation({
     // Get full details for each goal
     const tasksWithFullDetails = await Promise.all(
       filteredGoalStates.map(async (weeklyGoal) => {
-        const dailyGoal = await ctx.db.get(weeklyGoal.goalId);
+        const dailyGoal = await ctx.db.get('goals', weeklyGoal.goalId);
         if (!dailyGoal || dailyGoal.userId !== userId) return null;
 
-        const weeklyParent = await ctx.db.get(dailyGoal?.parentId as Id<'goals'>);
+        const weeklyParent = await ctx.db.get('goals', dailyGoal?.parentId as Id<'goals'>);
         if (!weeklyParent || weeklyParent.userId !== userId) return null;
 
-        const quarterlyParent = await ctx.db.get(weeklyParent?.parentId as Id<'goals'>);
+        const quarterlyParent = await ctx.db.get('goals', weeklyParent?.parentId as Id<'goals'>);
         if (!quarterlyParent || quarterlyParent.userId !== userId) return null;
 
         // Get the quarterly goal's weekly state for starred/pinned status
@@ -319,7 +320,7 @@ export const moveGoalsFromDay = mutation({
       // Moving within the same week, just update the day
       await Promise.all(
         validTasks.map(async (task) => {
-          await ctx.db.patch(task.weeklyGoalState._id, {
+          await ctx.db.patch('goalStateByWeek', task.weeklyGoalState._id, {
             daily: {
               ...task.weeklyGoalState.daily,
               dayOfWeek: to.dayOfWeek,
@@ -331,7 +332,7 @@ export const moveGoalsFromDay = mutation({
       // Moving to a different week, need to update both weekNumber and dayOfWeek
       await Promise.all(
         validTasks.map(async (task) => {
-          await ctx.db.patch(task.weeklyGoalState._id, {
+          await ctx.db.patch('goalStateByWeek', task.weeklyGoalState._id, {
             year: to.year,
             quarter: to.quarter,
             weekNumber: to.weekNumber,
@@ -387,7 +388,7 @@ export const deleteGoal = mutation({
     const userId = user._id;
 
     // Find the goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -462,10 +463,10 @@ export const deleteGoal = mutation({
       .collect();
 
     // Delete all goal states
-    await Promise.all(goalStates.map((state) => ctx.db.delete(state._id)));
+    await Promise.all(goalStates.map((state) => ctx.db.delete('goalStateByWeek', state._id)));
 
     // Then delete the goals themselves
-    await Promise.all(goalIds.map((id) => ctx.db.delete(id)));
+    await Promise.all(goalIds.map((id) => ctx.db.delete('goals', id)));
 
     return goalId;
   },
@@ -569,7 +570,7 @@ export const cleanupOrphanedGoalStatesForUser = internalMutation({
     const uniqueGoalIds = [...new Set(goalStates.map((state) => state.goalId))];
 
     // Get all existing goals for these IDs
-    const existingGoals = await Promise.all(uniqueGoalIds.map((id) => ctx.db.get(id)));
+    const existingGoals = await Promise.all(uniqueGoalIds.map((id) => ctx.db.get('goals', id)));
 
     // Create a set of existing goal IDs for quick lookup
     const existingGoalIds = new Set(existingGoals.filter(Boolean).map((goal) => goal?._id));
@@ -593,7 +594,7 @@ export const cleanupOrphanedGoalStatesForUser = internalMutation({
     }
 
     // Otherwise, delete the orphaned states
-    await Promise.all(orphanedStates.map((state) => ctx.db.delete(state._id)));
+    await Promise.all(orphanedStates.map((state) => ctx.db.delete('goalStateByWeek', state._id)));
 
     return {
       isDryRun: false,
@@ -879,7 +880,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
           .filter(Boolean) as Id<'domains'>[]
       ),
     ];
-    const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+    const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
     const domainMap = new Map(
       domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
     );
@@ -919,10 +920,10 @@ export const moveAdhocGoalsToQuarter = internalMutation({
     // Update each adhoc goal to the first week of the target quarter
     await Promise.all(
       goalIds.map(async (goalId) => {
-        const goal = await ctx.db.get(goalId);
+        const goal = await ctx.db.get('goals', goalId);
         if (!goal || goal.userId !== userId || !goal.adhoc) return;
 
-        await ctx.db.patch(goalId, {
+        await ctx.db.patch('goals', goalId, {
           year: firstWeekInfo.year, // Use the ISO week year for the first week
           quarter: to.quarter,
           adhoc: {
@@ -938,7 +939,7 @@ export const moveAdhocGoalsToQuarter = internalMutation({
           .first();
 
         if (state) {
-          await ctx.db.patch(state._id, {
+          await ctx.db.patch('adhocGoalStates', state._id, {
             year: firstWeekInfo.year,
             weekNumber: firstWeekInfo.weekNumber,
           });
@@ -972,7 +973,7 @@ export const moveQuarterlyGoal = mutation({
     const userId = user._id;
 
     // Find the quarterly goal and verify ownership
-    const quarterlyGoal = await ctx.db.get(goalId);
+    const quarterlyGoal = await ctx.db.get('goals', goalId);
     if (!quarterlyGoal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -1324,7 +1325,7 @@ export const moveWeeklyGoalToWeek = mutation({
     const userId = user._id;
 
     // Get the goal
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -1379,7 +1380,7 @@ export const moveWeeklyGoalToWeek = mutation({
     // If moving to a different quarter, we need to handle the parent
     if (targetQuarter !== goal.quarter || targetYear !== goal.year) {
       if (goal.parentId) {
-        const parentGoal = await ctx.db.get(goal.parentId);
+        const parentGoal = await ctx.db.get('goals', goal.parentId);
         if (parentGoal) {
           // Check if parent exists in target quarter
           const existingParentInTargetQuarter = await ctx.db
@@ -1511,7 +1512,7 @@ export const moveWeeklyGoalToWeek = mutation({
         });
       }
 
-      await ctx.db.patch(childGoal._id, {
+      await ctx.db.patch('goals', childGoal._id, {
         parentId: destinationGoalId,
         year: targetYear,
         quarter: targetQuarter,
@@ -1519,7 +1520,7 @@ export const moveWeeklyGoalToWeek = mutation({
       });
 
       if (childState) {
-        await ctx.db.patch(childState._id, {
+        await ctx.db.patch('goalStateByWeek', childState._id, {
           year: targetYear,
           quarter: targetQuarter,
           weekNumber: targetWeekNumber,
@@ -1558,12 +1559,12 @@ export const moveWeeklyGoalToWeek = mutation({
           q.eq('userId', userId).eq('goalId', goal._id)
         )
         .collect();
-      await Promise.all(originalStates.map((state) => ctx.db.delete(state._id)));
+      await Promise.all(originalStates.map((state) => ctx.db.delete('goalStateByWeek', state._id)));
 
-      await ctx.db.delete(goal._id);
+      await ctx.db.delete('goals', goal._id);
     } else {
       const incompleteChildGoals = childGoals.filter((child) => !child.isComplete);
-      await ctx.db.patch(goal._id, {
+      await ctx.db.patch('goals', goal._id, {
         isComplete: false,
         year: currentWeek.year,
         quarter: currentWeek.quarter,
@@ -1606,6 +1607,6 @@ export const getSessionBySessionId = internalQuery({
 export const getUserById = internalQuery({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.userId);
+    return await ctx.db.get('users', args.userId);
   },
 });

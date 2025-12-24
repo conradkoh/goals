@@ -1,5 +1,3 @@
-import type { Doc, Id } from '../../../convex/_generated/dataModel';
-import type { MutationCtx } from '../../../convex/_generated/server';
 import {
   type AdhocGoalToMove,
   type CarryOver,
@@ -15,6 +13,8 @@ import {
   type WeeklyGoalWithState,
   type WeekStateToCopy,
 } from './types';
+import type { Doc, Id } from '../../../convex/_generated/dataModel';
+import type { MutationCtx } from '../../../convex/_generated/server';
 
 /**
  * Move goals from one week to another
@@ -33,7 +33,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
 
   // Pre-fetch all goal documents using Promise.all instead of getAll
   const goalIds = previousWeekGoals.map((state) => state.goalId);
-  const goalPromises = goalIds.map((id) => ctx.db.get(id));
+  const goalPromises = goalIds.map((id) => ctx.db.get('goals', id));
   const goals = await Promise.all(goalPromises);
 
   // Create a map for quick access
@@ -58,7 +58,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     .map((goal) => goal?.parentId)
     .filter((id): id is Id<'goals'> => id !== undefined);
   const uniqueParentIds = [...new Set(parentIds)];
-  const parentGoalPromises = uniqueParentIds.map((id) => ctx.db.get(id));
+  const parentGoalPromises = uniqueParentIds.map((id) => ctx.db.get('goals', id));
   const parentGoals = await Promise.all(parentGoalPromises);
 
   // Create a map of parent goals
@@ -437,7 +437,7 @@ export async function processGoal(
         if (parentGoalsMap?.has(goal.parentId)) {
           quarterlyGoal = parentGoalsMap.get(goal.parentId) || null;
         } else {
-          quarterlyGoal = await ctx.db.get(goal.parentId);
+          quarterlyGoal = await ctx.db.get('goals', goal.parentId);
         }
       }
 
@@ -653,7 +653,7 @@ export async function updateQuarterlyGoals(
             isPinned: item.isPinned,
           };
         }
-        await ctx.db.patch(existingState._id, newState);
+        await ctx.db.patch('goalStateByWeek', existingState._id, newState);
       } else {
         // If no existing state, simply apply the states from the source
         newState = {
@@ -780,7 +780,7 @@ export async function copyWeeklyGoals(
   const allGoalIds = goalInsertions.map((item) => item.targetWeekGoalId);
 
   // Batch fetch all the newly created goals
-  const allGoals = await Promise.all(allGoalIds.map((id) => ctx.db.get(id)));
+  const allGoals = await Promise.all(allGoalIds.map((id) => ctx.db.get('goals', id)));
 
   // Create a map for efficient lookup
   const goalsMap = new Map<Id<'goals'>, Doc<'goals'>>();
@@ -821,7 +821,7 @@ export async function copyWeeklyGoals(
           });
 
           // Remove fire goal status from the original goal since it's been carried over
-          await ctx.db.delete(existingFireGoal._id);
+          await ctx.db.delete('fireGoals', existingFireGoal._id);
         }
       })
   );
@@ -840,7 +840,7 @@ export async function migrateDailyGoals(
   await Promise.all(
     dailyGoalsToMove.map(async (dailyGoal) => {
       // Update the daily goal's parent and path
-      await ctx.db.patch(dailyGoal.goal._id, {
+      await ctx.db.patch('goals', dailyGoal.goal._id, {
         parentId: toWeeklyGoal._id,
         inPath: toWeeklyGoal.parentId
           ? `/${toWeeklyGoal.parentId}/${toWeeklyGoal._id}`
@@ -848,7 +848,7 @@ export async function migrateDailyGoals(
       });
 
       // Delete the goal state from the previous week
-      await ctx.db.delete(dailyGoal.weekState._id);
+      await ctx.db.delete('goalStateByWeek', dailyGoal.weekState._id);
 
       // Reuse an existing daily goal state in the target week if present; otherwise insert
       const existingDailyState = targetWeek.existingGoals.find(
@@ -868,7 +868,7 @@ export async function migrateDailyGoals(
           : dailyGoal.weekState.daily;
 
       if (existingDailyState) {
-        await ctx.db.patch(existingDailyState._id, {
+        await ctx.db.patch('goalStateByWeek', existingDailyState._id, {
           daily: nextDaily,
         });
       } else {
@@ -912,7 +912,7 @@ async function getAdhocGoalsForWeek(
   const domainIds = [
     ...new Set(incompleteGoals.map((goal) => goal.domainId).filter(Boolean) as Id<'domains'>[]),
   ];
-  const domains = await Promise.all(domainIds.map((id) => ctx.db.get(id)));
+  const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
   const domainMap = new Map(
     domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
   );
@@ -947,7 +947,7 @@ async function moveAdhocGoals(
       const { goal } = item;
       if (!goal.adhoc) return;
 
-      await ctx.db.patch(goal._id, {
+      await ctx.db.patch('goals', goal._id, {
         year: to.year, // Update root year field
         adhoc: {
           ...goal.adhoc,
@@ -962,7 +962,7 @@ async function moveAdhocGoals(
         .first();
 
       if (state) {
-        await ctx.db.patch(state._id, {
+        await ctx.db.patch('adhocGoalStates', state._id, {
           year: to.year,
           weekNumber: to.weekNumber,
         });

@@ -1,7 +1,7 @@
-import type { Id } from '../../../convex/_generated/dataModel';
-import type { MutationCtx } from '../../../convex/_generated/server';
 import { getGoalsForWeek } from './moveGoalsFromWeek';
 import { GoalDepth, type TimePeriod } from './types';
+import type { Id } from '../../../convex/_generated/dataModel';
+import type { MutationCtx } from '../../../convex/_generated/server';
 
 /**
  * Find the last non-empty week before the given week that has moveable (incomplete) goals
@@ -85,7 +85,7 @@ async function hasIncompleteGoalsInWeek(
 
   // Get all goal documents
   const goalIds = weekStates.map((state) => state.goalId);
-  const goalPromises = goalIds.map((id) => ctx.db.get(id));
+  const goalPromises = goalIds.map((id) => ctx.db.get('goals', id));
   const goals = await Promise.all(goalPromises);
 
   // Check each goal to see if it's moveable
