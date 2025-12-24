@@ -1,8 +1,9 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { useQuery } from 'convex/react';
 import { ClipboardList } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
@@ -33,11 +34,12 @@ export interface DomainPopoverProps {
 }
 
 /**
- * Adhoc goal with optimistic update tracking.
+ * Adhoc goal with optimistic update tracking and children.
  */
 type _OptimisticAdhocGoal = Doc<'goals'> & {
   domain?: Doc<'domains'>;
   isOptimistic?: boolean;
+  children?: AdhocGoalWithChildren[];
 };
 
 /**
@@ -63,9 +65,9 @@ export function DomainPopover({
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
 
-  // Query adhoc goals for this domain
+  // Query adhoc goals for this domain with hierarchical structure
   const domainGoals =
-    useQuery(api.adhocGoal.getAdhocGoalsByDomain, {
+    useQuery(api.adhocGoal.getAdhocGoalsByDomainHierarchical, {
       sessionId,
       domainId: domain?._id ?? null,
     }) || [];
@@ -98,6 +100,7 @@ export function DomainPopover({
         weekNumber,
       },
       domain: domain || undefined,
+      children: [], // Add empty children array
     };
 
     // Add optimistic goal immediately (append to end for correct ordering)
@@ -161,6 +164,23 @@ export function DomainPopover({
     }
   };
 
+  /** Handles creating a child adhoc goal. */
+  const handleCreateChild = useCallback(
+    async (parentId: Id<'goals'>, title: string) => {
+      await createAdhocGoal(
+        title,
+        undefined, // details
+        domain?._id, // domainId - inherit from parent's domain
+        year,
+        weekNumber,
+        undefined, // dayOfWeek
+        undefined, // dueDate
+        parentId // parent goal ID
+      );
+    },
+    [createAdhocGoal, domain?._id, year, weekNumber]
+  );
+
   const domainName = domain?.name || 'Uncategorized';
 
   // Separate incomplete and completed goals (oldest first)
@@ -203,6 +223,7 @@ export function DomainPopover({
                   onCompleteChange={handleCompleteChange}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
+                  onCreateChild={handleCreateChild}
                   showDueDate={true}
                   showDomain={false}
                 />
@@ -242,6 +263,7 @@ export function DomainPopover({
                   onCompleteChange={handleCompleteChange}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
+                  onCreateChild={handleCreateChild}
                   showDueDate={true}
                   showDomain={false}
                 />
