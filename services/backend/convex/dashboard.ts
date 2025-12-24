@@ -1,13 +1,14 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DateTime } from 'luxon';
+
 import { DayOfWeek } from '../src/constants';
+import type { Doc } from './_generated/dataModel';
+import { mutation, query } from './_generated/server';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { joinPath, validateGoalPath } from '../src/util/path';
-import type { Doc } from './_generated/dataModel';
-import { mutation, query } from './_generated/server';
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -165,7 +166,7 @@ export const updateQuarterlyGoalStatus = mutation({
     }
 
     // Update the status
-    await ctx.db.patch(weeklyGoal._id, {
+    await ctx.db.patch('goalStateByWeek', weeklyGoal._id, {
       isStarred,
       isPinned,
     });
@@ -200,7 +201,7 @@ export const updateQuarterlyGoalTitle = mutation({
     const userId = user._id;
 
     // Find the goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new Error('Goal not found');
     }
@@ -225,7 +226,7 @@ export const updateQuarterlyGoalTitle = mutation({
       hasDomainId: 'domainId' in patchData,
       domainIdValue: patchData.domainId,
     });
-    await ctx.db.patch(goalId, patchData);
+    await ctx.db.patch('goals', goalId, patchData);
     console.log('[Backend] updateQuarterlyGoalTitle completed:', goalId);
 
     return goalId;
@@ -256,7 +257,7 @@ export const updateGoalTitle = mutation({
     const userId = user._id;
 
     // Find the goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new Error('Goal not found');
     }
@@ -274,7 +275,7 @@ export const updateGoalTitle = mutation({
       ...(domainId !== undefined ? { domainId } : {}),
     };
     console.log('[Backend] updateGoalTitle patching with:', patchData);
-    await ctx.db.patch(goalId, patchData);
+    await ctx.db.patch('goals', goalId, patchData);
     console.log('[Backend] updateGoalTitle completed:', goalId);
 
     return goalId;
@@ -304,7 +305,7 @@ export const createWeeklyGoal = mutation({
     const userId = user._id;
 
     // Get the parent goal to get year and quarter
-    const parentGoal = await ctx.db.get(parentId);
+    const parentGoal = await ctx.db.get('goals', parentId);
     if (!parentGoal) {
       throw new ConvexError('Parent goal not found');
     }
@@ -390,7 +391,7 @@ export const createDailyGoal = mutation({
     const userId = user._id;
 
     // Get the weekly parent goal
-    const weeklyParent = await ctx.db.get(args.parentId);
+    const weeklyParent = await ctx.db.get('goals', args.parentId);
     if (!weeklyParent) {
       throw new Error('Parent goal not found');
     }
@@ -463,6 +464,9 @@ export const toggleGoalCompletion = mutation({
     weekNumber: v.number(),
     isComplete: v.boolean(),
     updateChildren: v.optional(v.boolean()),
+    // Optional parameters for client-side optimistic updates
+    year: v.optional(v.number()),
+    quarter: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { sessionId, goalId, weekNumber, isComplete, updateChildren } = args;
@@ -470,7 +474,7 @@ export const toggleGoalCompletion = mutation({
     const userId = user._id;
 
     // Find the goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -505,12 +509,12 @@ export const toggleGoalCompletion = mutation({
     }
 
     // Update the completion status in goalStateByWeek (for backward compatibility)
-    await ctx.db.patch(weeklyGoal._id, {
+    await ctx.db.patch('goalStateByWeek', weeklyGoal._id, {
       // Remove isComplete and completedAt fields as they've been migrated to the goals table
     });
 
     // Also update the goal table directly
-    await ctx.db.patch(goalId, {
+    await ctx.db.patch('goals', goalId, {
       isComplete,
       completedAt: isComplete ? Date.now() : undefined,
     });
@@ -542,13 +546,13 @@ export const toggleGoalCompletion = mutation({
             .first();
 
           if (childWeeklyGoal) {
-            await ctx.db.patch(childWeeklyGoal._id, {
+            await ctx.db.patch('goalStateByWeek', childWeeklyGoal._id, {
               // Remove isComplete and completedAt fields as they've been migrated to the goals table
             });
           }
 
           // Update the child goal record directly as well
-          await ctx.db.patch(childGoal._id, {
+          await ctx.db.patch('goals', childGoal._id, {
             isComplete,
             completedAt: isComplete ? Date.now() : undefined,
           });
@@ -581,7 +585,7 @@ export const updateDailyGoalDay = mutation({
     const userId = user._id;
 
     // Find the goal and verify ownership
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -616,7 +620,7 @@ export const updateDailyGoalDay = mutation({
     }
 
     // Update the day of week
-    await ctx.db.patch(weeklyGoal._id, {
+    await ctx.db.patch('goalStateByWeek', weeklyGoal._id, {
       daily: {
         ...weeklyGoal.daily,
         dayOfWeek: newDayOfWeek,
@@ -648,7 +652,7 @@ export const useDailyGoal = query({
     const userId = user._id;
 
     // Get the goal details
-    const goal = await ctx.db.get(goalId);
+    const goal = await ctx.db.get('goals', goalId);
     if (!goal || goal.userId !== userId) {
       return null;
     }
@@ -737,7 +741,7 @@ export const getQuarterlyGoalSummary = query({
     const userId = user._id;
 
     // Verify the quarterly goal exists and belongs to the user
-    const quarterlyGoal = await ctx.db.get(quarterlyGoalId);
+    const quarterlyGoal = await ctx.db.get('goals', quarterlyGoalId);
     if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
       throw new ConvexError({
         code: 'NOT_FOUND',
@@ -896,7 +900,7 @@ export const getQuarterSummary = query({
     // Get summaries for each quarterly goal
     const summaryPromises = quarterlyGoalIds.map(async (goalId) => {
       // Verify the quarterly goal exists and belongs to the user
-      const quarterlyGoal = await ctx.db.get(goalId);
+      const quarterlyGoal = await ctx.db.get('goals', goalId);
       if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
         throw new ConvexError({
           code: 'NOT_FOUND',

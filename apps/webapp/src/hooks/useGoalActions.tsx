@@ -4,11 +4,327 @@ import { errorTitles } from '@workspace/backend/errors';
 import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
+
 import { toast } from '@/components/ui/use-toast';
 import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
 
-export const useGoalActions = () => {
+/**
+ * Parameters for creating a quarterly goal.
+ *
+ * @public
+ */
+export interface CreateQuarterlyGoalParams {
+  /** Title of the quarterly goal */
+  title: string;
+  /** Optional detailed description */
+  details?: string;
+  /** Optional due date timestamp in milliseconds */
+  dueDate?: number;
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+  /** Whether the goal should be pinned to the top */
+  isPinned?: boolean;
+  /** Whether the goal is marked as starred/important */
+  isStarred?: boolean;
+  /** Year of the goal (e.g., 2025) */
+  year: number;
+  /** Quarter number (1-4) */
+  quarter: number;
+}
+
+/**
+ * Parameters for creating a weekly goal.
+ *
+ * @public
+ */
+export interface CreateWeeklyGoalParams {
+  /** Title of the weekly goal */
+  title: string;
+  /** Optional detailed description */
+  details?: string;
+  /** Optional due date timestamp in milliseconds */
+  dueDate?: number;
+  /** ID of the parent quarterly goal */
+  parentId: Id<'goals'>;
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+}
+
+/**
+ * Parameters for creating a daily goal.
+ *
+ * @public
+ */
+export interface CreateDailyGoalParams {
+  /** Title of the daily goal */
+  title: string;
+  /** Optional detailed description */
+  details?: string;
+  /** Optional due date timestamp in milliseconds */
+  dueDate?: number;
+  /** ID of the parent weekly goal */
+  parentId: Id<'goals'>;
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+  /** Day of week (1=Monday, 7=Sunday) */
+  dayOfWeek: DayOfWeek;
+  /** Optional timestamp representing the specific date */
+  dateTimestamp?: number;
+}
+
+/**
+ * Parameters for updating quarterly goal status flags.
+ *
+ * @public
+ */
+export interface UpdateQuarterlyGoalStatusParams {
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+  /** ID of the goal to update */
+  goalId: Id<'goals'>;
+  /** Whether the goal is starred/important */
+  isStarred: boolean;
+  /** Whether the goal is pinned to the top */
+  isPinned: boolean;
+  /** Year of the goal (e.g., 2025) */
+  year: number;
+  /** Quarter number (1-4) */
+  quarter: number;
+}
+
+/**
+ * Parameters for updating quarterly goal content.
+ *
+ * @public
+ */
+export interface UpdateQuarterlyGoalTitleParams {
+  /** ID of the goal to update */
+  goalId: Id<'goals'>;
+  /** New title for the goal */
+  title: string;
+  /** Optional updated description */
+  details?: string;
+  /** Optional updated due date timestamp */
+  dueDate?: number;
+  /** Optional domain/category ID for the goal. Null removes the domain assignment. */
+  domainId?: Id<'domains'> | null;
+}
+
+/**
+ * Parameters for deleting a goal.
+ *
+ * @public
+ */
+export interface DeleteGoalParams {
+  /** ID of the goal to delete */
+  goalId: Id<'goals'>;
+}
+
+/**
+ * Parameters for toggling goal completion status.
+ *
+ * @public
+ */
+export interface ToggleGoalCompletionParams {
+  /** ID of the goal to toggle */
+  goalId: Id<'goals'>;
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+  /** New completion status */
+  isComplete: boolean;
+  /** Whether to also update child goals with the same completion status */
+  updateChildren?: boolean;
+  /** Year for optimistic updates. Required for optimistic UI updates. */
+  year?: number;
+  /** Quarter for optimistic updates. Required for optimistic UI updates. */
+  quarter?: number;
+}
+
+/**
+ * Parameters for updating a daily goal's assigned day.
+ *
+ * @public
+ */
+export interface UpdateDailyGoalDayParams {
+  /** ID of the goal to update */
+  goalId: Id<'goals'>;
+  /** Week number within the quarter (1-13) */
+  weekNumber: number;
+  /** New day of week assignment (1=Monday, 7=Sunday) */
+  newDayOfWeek: DayOfWeek;
+}
+
+/**
+ * Day information with name and date details.
+ *
+ * @public
+ */
+export interface DayInfo {
+  /** Human-readable day name (e.g., "Monday") */
+  name: string;
+  /** Year of the day */
+  year: number;
+  /** Quarter (1-4) */
+  quarter: number;
+  /** Week number (1-13) */
+  weekNumber: number;
+  /** Day of week (1=Monday, 7=Sunday) */
+  dayOfWeek: DayOfWeek;
+}
+
+/**
+ * Task information for move preview.
+ *
+ * @public
+ */
+export interface TaskInfo {
+  /** Goal state ID */
+  id: Id<'goalStateByWeek'>;
+  /** Task title */
+  title: string;
+  /** Task details/description */
+  details?: string;
+  /** Weekly goal information */
+  weeklyGoal: {
+    /** Weekly goal ID */
+    id: Id<'goals'>;
+    /** Weekly goal title */
+    title: string;
+  };
+  /** Quarterly goal information */
+  quarterlyGoal: {
+    /** Quarterly goal ID */
+    id: Id<'goals'>;
+    /** Quarterly goal title */
+    title: string;
+    /** Whether quarterly goal is starred */
+    isStarred: boolean;
+    /** Whether quarterly goal is pinned */
+    isPinned: boolean;
+  };
+}
+
+/**
+ * Result of a dry-run move operation showing what would be moved.
+ *
+ * @public
+ */
+export interface MoveGoalsPreviewResult {
+  /** Whether the move is allowed */
+  canMove: true;
+  /** Source day information */
+  sourceDay: DayInfo;
+  /** Target day information */
+  targetDay: DayInfo;
+  /** List of tasks that would be moved */
+  tasks: TaskInfo[];
+}
+
+/**
+ * Result of an actual move operation.
+ *
+ * @public
+ */
+export interface MoveGoalsActualResult {
+  /** Number of tasks successfully moved */
+  tasksMoved: number;
+}
+
+/**
+ * Parameters for moving goals from one day to another.
+ *
+ * @public
+ */
+export interface MoveGoalsFromDayParams {
+  /** Source date specification */
+  from: {
+    /** Source year */
+    year: number;
+    /** Source quarter (1-4) */
+    quarter: number;
+    /** Source week number (1-13) */
+    weekNumber: number;
+    /** Source day of week (1=Monday, 7=Sunday) */
+    dayOfWeek: DayOfWeek;
+  };
+  /** Destination date specification */
+  to: {
+    /** Destination year */
+    year: number;
+    /** Destination quarter (1-4) */
+    quarter: number;
+    /** Destination week number (1-13) */
+    weekNumber: number;
+    /** Destination day of week (1=Monday, 7=Sunday) */
+    dayOfWeek: DayOfWeek;
+  };
+  /** If true, returns what would be moved without actually moving. Defaults to false. */
+  dryRun?: boolean;
+  /** If true, only moves incomplete goals. Defaults to true. */
+  moveOnlyIncomplete?: boolean;
+}
+
+/**
+ * Return type of useGoalActions hook providing all goal mutation operations.
+ *
+ * @public
+ */
+export interface GoalActions {
+  /** Creates a new quarterly goal */
+  createQuarterlyGoal: (params: CreateQuarterlyGoalParams) => Promise<void>;
+  /** Creates a new weekly goal under a quarterly goal */
+  createWeeklyGoal: (params: CreateWeeklyGoalParams) => Promise<void>;
+  /** Creates a new daily goal under a weekly goal */
+  createDailyGoal: (params: CreateDailyGoalParams) => Promise<void>;
+  /** Updates status flags (starred, pinned) for a quarterly goal */
+  updateQuarterlyGoalStatus: (params: UpdateQuarterlyGoalStatusParams) => Promise<void>;
+  /** Updates title, details, and metadata for a quarterly goal */
+  updateQuarterlyGoalTitle: (params: UpdateQuarterlyGoalTitleParams) => Promise<void>;
+  /** Deletes a goal and all its children */
+  deleteGoal: (params: DeleteGoalParams) => Promise<void>;
+  /** Toggles completion status of a goal with optimistic updates */
+  toggleGoalCompletion: (params: ToggleGoalCompletionParams) => Promise<void>;
+  /** Updates which day a daily goal is assigned to */
+  updateDailyGoalDay: (params: UpdateDailyGoalDayParams) => Promise<void>;
+  /** Moves all goals from one day to another day */
+  moveGoalsFromDay: (
+    params: MoveGoalsFromDayParams
+  ) => Promise<MoveGoalsPreviewResult | MoveGoalsActualResult>;
+}
+
+/**
+ * Provides CRUD operations for goals with optimistic updates.
+ * All mutations automatically include the user's session ID.
+ *
+ * @public
+ *
+ * @returns Object containing all goal mutation functions
+ *
+ * @example
+ * ```typescript
+ * const { createQuarterlyGoal, toggleGoalCompletion } = useGoalActions();
+ *
+ * // Create a new quarterly goal
+ * await createQuarterlyGoal({
+ *   title: 'Launch new feature',
+ *   year: 2025,
+ *   quarter: 1,
+ *   weekNumber: 1,
+ *   isPinned: true
+ * });
+ *
+ * // Toggle completion with optimistic updates
+ * await toggleGoalCompletion({
+ *   goalId: 'abc123',
+ *   weekNumber: 1,
+ *   isComplete: true,
+ *   year: 2025,
+ *   quarter: 1
+ * });
+ * ```
+ */
+export const useGoalActions = (): GoalActions => {
   const { sessionId } = useSession();
   const createQuarterlyGoalMutation = useMutation(api.dashboard.createQuarterlyGoal);
   const createWeeklyGoalMutation = useMutation(api.dashboard.createWeeklyGoal);
@@ -16,41 +332,125 @@ export const useGoalActions = () => {
   const updateQuarterlyGoalStatusMutation = useMutation(api.dashboard.updateQuarterlyGoalStatus);
   const updateQuarterlyGoalTitleMutation = useMutation(api.dashboard.updateQuarterlyGoalTitle);
   const deleteGoalMutation = useMutation(api.goal.deleteGoal);
-  const toggleGoalCompletionMutation = useMutation(api.dashboard.toggleGoalCompletion);
+  const toggleGoalCompletionMutation = useMutation(
+    api.dashboard.toggleGoalCompletion
+  ).withOptimisticUpdate((localStore, args) => {
+    const {
+      goalId,
+      isComplete,
+      updateChildren,
+      weekNumber,
+      sessionId: argsSessionId,
+      year,
+      quarter,
+    } = args;
+
+    // Skip optimistic update if year/quarter not provided
+    if (year === undefined || quarter === undefined) {
+      return;
+    }
+
+    // Get the week query from local store
+    const weekQuery = localStore.getQuery(api.dashboard.getWeek, {
+      sessionId: argsSessionId,
+      year,
+      quarter,
+      weekNumber,
+    });
+
+    if (!weekQuery) {
+      return;
+    }
+
+    /**
+     * Recursively updates goal completion status in the hierarchical tree.
+     *
+     * @internal
+     * @param goal - Goal node to update
+     * @returns Updated goal node with new completion status
+     */
+    const updateGoalInHierarchy = (
+      goal: (typeof weekQuery.tree.quarterlyGoals)[0]
+    ): typeof goal => {
+      let updated = { ...goal };
+
+      // Update if this is the target goal
+      if (goal._id === goalId) {
+        updated = {
+          ...updated,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+
+      // Update if this is a child and we should update children
+      if (updateChildren && goal.parentId === goalId) {
+        updated = {
+          ...updated,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+
+      // Recursively update children
+      if (goal.children && goal.children.length > 0) {
+        updated = {
+          ...updated,
+          children: goal.children.map(updateGoalInHierarchy),
+        };
+      }
+
+      return updated;
+    };
+
+    // Update allGoals flat array
+    const updatedAllGoals = weekQuery.tree.allGoals.map((g) => {
+      if (g._id === goalId) {
+        return {
+          ...g,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+      if (updateChildren && g.parentId === goalId) {
+        return {
+          ...g,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+      return g;
+    });
+
+    // Update hierarchical quarterly goals tree
+    const updatedQuarterlyGoals = weekQuery.tree.quarterlyGoals.map(updateGoalInHierarchy);
+
+    // Write updated query back to Convex local store for optimistic UI
+    localStore.setQuery(
+      api.dashboard.getWeek,
+      {
+        sessionId: argsSessionId,
+        year,
+        quarter,
+        weekNumber,
+      },
+      {
+        ...weekQuery,
+        tree: {
+          ...weekQuery.tree,
+          allGoals: updatedAllGoals,
+          quarterlyGoals: updatedQuarterlyGoals,
+        },
+      }
+    );
+  });
   const updateDailyGoalDayMutation = useMutation(api.dashboard.updateDailyGoalDay);
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
 
   return useMemo(
     () => ({
-      createQuarterlyGoal: async ({
-        title,
-        details,
-        dueDate,
-        weekNumber,
-        isPinned,
-        isStarred,
-        year,
-        quarter,
-      }: {
-        title: string;
-        details?: string;
-        dueDate?: number;
-        weekNumber: number;
-        isPinned?: boolean;
-        isStarred?: boolean;
-        year: number;
-        quarter: number;
-      }) => {
-        console.log('[useGoalActions] createQuarterlyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          weekNumber,
-          year,
-          quarter,
-        });
+      createQuarterlyGoal: async (params: CreateQuarterlyGoalParams) => {
+        const { title, details, dueDate, weekNumber, isPinned, isStarred, year, quarter } = params;
         await createQuarterlyGoalMutation({
           sessionId,
           year,
@@ -61,33 +461,11 @@ export const useGoalActions = () => {
           dueDate,
           isPinned,
           isStarred,
-          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
-        } as any);
-        console.log('[useGoalActions] createQuarterlyGoal completed');
+        });
       },
 
-      createWeeklyGoal: async ({
-        title,
-        details,
-        dueDate,
-        parentId,
-        weekNumber,
-      }: {
-        title: string;
-        details?: string;
-        dueDate?: number;
-        parentId: Id<'goals'>;
-        weekNumber: number;
-      }) => {
-        console.log('[useGoalActions] createWeeklyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          parentId,
-          weekNumber,
-        });
+      createWeeklyGoal: async (params: CreateWeeklyGoalParams) => {
+        const { title, details, dueDate, parentId, weekNumber } = params;
         await createWeeklyGoalMutation({
           sessionId,
           title,
@@ -95,38 +473,11 @@ export const useGoalActions = () => {
           dueDate,
           parentId,
           weekNumber,
-          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
-        } as any);
-        console.log('[useGoalActions] createWeeklyGoal completed');
+        });
       },
 
-      createDailyGoal: async ({
-        title,
-        details,
-        dueDate,
-        parentId,
-        weekNumber,
-        dayOfWeek,
-        dateTimestamp,
-      }: {
-        title: string;
-        details?: string;
-        dueDate?: number;
-        parentId: Id<'goals'>;
-        weekNumber: number;
-        dayOfWeek: DayOfWeek;
-        dateTimestamp?: number;
-      }) => {
-        console.log('[useGoalActions] createDailyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          parentId,
-          weekNumber,
-          dayOfWeek,
-        });
+      createDailyGoal: async (params: CreateDailyGoalParams) => {
+        const { title, details, dueDate, parentId, weekNumber, dayOfWeek, dateTimestamp } = params;
         await createDailyGoalMutation({
           sessionId,
           title,
@@ -136,26 +487,11 @@ export const useGoalActions = () => {
           weekNumber,
           dayOfWeek,
           dateTimestamp,
-          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
-        } as any);
-        console.log('[useGoalActions] createDailyGoal completed');
+        });
       },
 
-      updateQuarterlyGoalStatus: async ({
-        weekNumber,
-        goalId,
-        isStarred,
-        isPinned,
-        year,
-        quarter,
-      }: {
-        weekNumber: number;
-        goalId: Id<'goals'>;
-        isStarred: boolean;
-        isPinned: boolean;
-        year: number;
-        quarter: number;
-      }) => {
+      updateQuarterlyGoalStatus: async (params: UpdateQuarterlyGoalStatusParams) => {
+        const { weekNumber, goalId, isStarred, isPinned, year, quarter } = params;
         await updateQuarterlyGoalStatusMutation({
           sessionId,
           year,
@@ -167,43 +503,20 @@ export const useGoalActions = () => {
         });
       },
 
-      updateQuarterlyGoalTitle: async ({
-        goalId,
-        title,
-        details,
-        dueDate,
-        domainId,
-      }: {
-        goalId: Id<'goals'>;
-        title: string;
-        details?: string;
-        dueDate?: number;
-        domainId?: Id<'domains'> | null;
-      }) => {
-        console.log('[useGoalActions] updateQuarterlyGoalTitle called:', {
-          goalId,
-          title,
-          hasDetails: !!details,
-          detailsLength: details?.length,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          hasDomainId: domainId !== undefined,
-          domainId,
-        });
+      updateQuarterlyGoalTitle: async (params: UpdateQuarterlyGoalTitleParams) => {
+        const { goalId, title, details, dueDate, domainId } = params;
         await updateQuarterlyGoalTitleMutation({
           sessionId,
           goalId,
           title,
           details,
           dueDate,
-          domainId,
-          // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
-        } as any);
-        console.log('[useGoalActions] updateQuarterlyGoalTitle completed');
+          domainId: domainId ?? undefined,
+        });
       },
 
-      deleteGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
+      deleteGoal: async (params: DeleteGoalParams) => {
+        const { goalId } = params;
         try {
           await deleteGoalMutation({
             sessionId,
@@ -220,35 +533,21 @@ export const useGoalActions = () => {
         }
       },
 
-      toggleGoalCompletion: async ({
-        goalId,
-        weekNumber,
-        isComplete,
-        updateChildren,
-      }: {
-        goalId: Id<'goals'>;
-        weekNumber: number;
-        isComplete: boolean;
-        updateChildren?: boolean;
-      }) => {
+      toggleGoalCompletion: async (params: ToggleGoalCompletionParams) => {
+        const { goalId, weekNumber, isComplete, updateChildren, year, quarter } = params;
         await toggleGoalCompletionMutation({
           sessionId,
           goalId,
           weekNumber,
           isComplete,
           updateChildren,
+          year,
+          quarter,
         });
       },
 
-      updateDailyGoalDay: async ({
-        goalId,
-        weekNumber,
-        newDayOfWeek,
-      }: {
-        goalId: Id<'goals'>;
-        weekNumber: number;
-        newDayOfWeek: DayOfWeek;
-      }) => {
+      updateDailyGoalDay: async (params: UpdateDailyGoalDayParams) => {
+        const { goalId, weekNumber, newDayOfWeek } = params;
         await updateDailyGoalDayMutation({
           sessionId,
           goalId,
@@ -257,27 +556,8 @@ export const useGoalActions = () => {
         });
       },
 
-      moveGoalsFromDay: async ({
-        from,
-        to,
-        dryRun,
-        moveOnlyIncomplete = true,
-      }: {
-        from: {
-          year: number;
-          quarter: number;
-          weekNumber: number;
-          dayOfWeek: DayOfWeek;
-        };
-        to: {
-          year: number;
-          quarter: number;
-          weekNumber: number;
-          dayOfWeek: DayOfWeek;
-        };
-        dryRun?: boolean;
-        moveOnlyIncomplete?: boolean;
-      }) => {
+      moveGoalsFromDay: async (params: MoveGoalsFromDayParams) => {
+        const { from, to, dryRun, moveOnlyIncomplete = true } = params;
         const result = await moveGoalsFromDayMutation({
           sessionId,
           from,
