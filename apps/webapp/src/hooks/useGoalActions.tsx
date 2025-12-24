@@ -4,6 +4,7 @@ import { errorTitles } from '@workspace/backend/errors';
 import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
+
 import { toast } from '@/components/ui/use-toast';
 import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
