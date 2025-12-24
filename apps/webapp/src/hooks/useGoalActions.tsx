@@ -17,7 +17,110 @@ export const useGoalActions = () => {
   const updateQuarterlyGoalStatusMutation = useMutation(api.dashboard.updateQuarterlyGoalStatus);
   const updateQuarterlyGoalTitleMutation = useMutation(api.dashboard.updateQuarterlyGoalTitle);
   const deleteGoalMutation = useMutation(api.goal.deleteGoal);
-  const toggleGoalCompletionMutation = useMutation(api.dashboard.toggleGoalCompletion);
+  const toggleGoalCompletionMutation = useMutation(
+    api.dashboard.toggleGoalCompletion
+  ).withOptimisticUpdate((localStore, args) => {
+    const { goalId, isComplete, updateChildren, weekNumber, sessionId: argsSessionId } = args;
+    // Type assertion for new optional params until types regenerate
+    // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+    const year = (args as any).year as number | undefined;
+    // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
+    const quarter = (args as any).quarter as number | undefined;
+
+    // Skip optimistic update if year/quarter not provided
+    if (year === undefined || quarter === undefined) {
+      return;
+    }
+
+    // Get the week query from local store
+    const weekQuery = localStore.getQuery(api.dashboard.getWeek, {
+      sessionId: argsSessionId,
+      year,
+      quarter,
+      weekNumber,
+    });
+
+    if (!weekQuery) {
+      // Query not in cache, skip optimistic update
+      return;
+    }
+
+    // Helper to recursively update goals in the hierarchy
+    const updateGoalInHierarchy = (
+      goal: (typeof weekQuery.tree.quarterlyGoals)[0]
+    ): typeof goal => {
+      let updated = { ...goal };
+
+      // Update if this is the target goal
+      if (goal._id === goalId) {
+        updated = {
+          ...updated,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+
+      // Update if this is a child and we should update children
+      if (updateChildren && goal.parentId === goalId) {
+        updated = {
+          ...updated,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+
+      // Recursively update children
+      if (goal.children && goal.children.length > 0) {
+        updated = {
+          ...updated,
+          children: goal.children.map(updateGoalInHierarchy),
+        };
+      }
+
+      return updated;
+    };
+
+    // Update allGoals array
+    const updatedAllGoals = weekQuery.tree.allGoals.map((g) => {
+      if (g._id === goalId) {
+        return {
+          ...g,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+      if (updateChildren && g.parentId === goalId) {
+        return {
+          ...g,
+          isComplete,
+          completedAt: isComplete ? Date.now() : undefined,
+        };
+      }
+      return g;
+    });
+
+    // Update hierarchical quarterly goals
+    const updatedQuarterlyGoals = weekQuery.tree.quarterlyGoals.map(updateGoalInHierarchy);
+
+    // Write updated query back to store
+    localStore.setQuery(
+      api.dashboard.getWeek,
+      {
+        sessionId: argsSessionId,
+        year,
+        quarter,
+        weekNumber,
+      },
+      {
+        ...weekQuery,
+        tree: {
+          ...weekQuery.tree,
+          allGoals: updatedAllGoals,
+          quarterlyGoals: updatedQuarterlyGoals,
+        },
+      }
+    );
+  });
   const updateDailyGoalDayMutation = useMutation(api.dashboard.updateDailyGoalDay);
   const moveGoalsFromDayMutation = useMutation(api.goal.moveGoalsFromDay);
 
