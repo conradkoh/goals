@@ -427,8 +427,7 @@ export const useWeek = () => {
           ...args,
           year: context.year,
           quarter: context.quarter,
-          // biome-ignore lint/suspicious/noExplicitAny: Type assertion needed until Convex types regenerate
-        } as any);
+        });
       },
     }),
     [context, goalActions]

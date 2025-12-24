@@ -41,7 +41,6 @@ export const useGoalActions = () => {
     });
 
     if (!weekQuery) {
-      // Query not in cache, skip optimistic update
       return;
     }
 
@@ -145,16 +144,6 @@ export const useGoalActions = () => {
         year: number;
         quarter: number;
       }) => {
-        console.log('[useGoalActions] createQuarterlyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          weekNumber,
-          year,
-          quarter,
-        });
         await createQuarterlyGoalMutation({
           sessionId,
           year,
@@ -167,7 +156,6 @@ export const useGoalActions = () => {
           isStarred,
           // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
         } as any);
-        console.log('[useGoalActions] createQuarterlyGoal completed');
       },
 
       createWeeklyGoal: async ({
@@ -183,15 +171,6 @@ export const useGoalActions = () => {
         parentId: Id<'goals'>;
         weekNumber: number;
       }) => {
-        console.log('[useGoalActions] createWeeklyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          parentId,
-          weekNumber,
-        });
         await createWeeklyGoalMutation({
           sessionId,
           title,
@@ -201,7 +180,6 @@ export const useGoalActions = () => {
           weekNumber,
           // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
         } as any);
-        console.log('[useGoalActions] createWeeklyGoal completed');
       },
 
       createDailyGoal: async ({
@@ -221,16 +199,6 @@ export const useGoalActions = () => {
         dayOfWeek: DayOfWeek;
         dateTimestamp?: number;
       }) => {
-        console.log('[useGoalActions] createDailyGoal called:', {
-          title,
-          hasDetails: !!details,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          parentId,
-          weekNumber,
-          dayOfWeek,
-        });
         await createDailyGoalMutation({
           sessionId,
           title,
@@ -242,7 +210,6 @@ export const useGoalActions = () => {
           dateTimestamp,
           // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
         } as any);
-        console.log('[useGoalActions] createDailyGoal completed');
       },
 
       updateQuarterlyGoalStatus: async ({
@@ -284,17 +251,6 @@ export const useGoalActions = () => {
         dueDate?: number;
         domainId?: Id<'domains'> | null;
       }) => {
-        console.log('[useGoalActions] updateQuarterlyGoalTitle called:', {
-          goalId,
-          title,
-          hasDetails: !!details,
-          detailsLength: details?.length,
-          hasDueDate: dueDate !== undefined,
-          dueDate,
-          dueDateFormatted: dueDate ? new Date(dueDate).toISOString() : undefined,
-          hasDomainId: domainId !== undefined,
-          domainId,
-        });
         await updateQuarterlyGoalTitleMutation({
           sessionId,
           goalId,
@@ -304,7 +260,6 @@ export const useGoalActions = () => {
           domainId,
           // biome-ignore lint/suspicious/noExplicitAny: Convex types need regeneration after schema update
         } as any);
-        console.log('[useGoalActions] updateQuarterlyGoalTitle completed');
       },
 
       deleteGoal: async ({ goalId }: { goalId: Id<'goals'> }) => {
@@ -329,11 +284,15 @@ export const useGoalActions = () => {
         weekNumber,
         isComplete,
         updateChildren,
+        year,
+        quarter,
       }: {
         goalId: Id<'goals'>;
         weekNumber: number;
         isComplete: boolean;
         updateChildren?: boolean;
+        year?: number;
+        quarter?: number;
       }) => {
         await toggleGoalCompletionMutation({
           sessionId,
@@ -341,6 +300,8 @@ export const useGoalActions = () => {
           weekNumber,
           isComplete,
           updateChildren,
+          year,
+          quarter,
         });
       },
 

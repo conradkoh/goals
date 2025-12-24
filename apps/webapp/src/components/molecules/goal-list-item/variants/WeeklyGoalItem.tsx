@@ -1,12 +1,5 @@
 import { useCallback } from 'react';
-import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
-import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
-import { useGoalContext } from '@/contexts/GoalContext';
-import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
-import { isOptimisticId } from '@/hooks/useOptimistic';
-import { useWeek } from '@/hooks/useWeek';
-import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
-import { cn } from '@/lib/utils';
+
 import {
   GoalActionButtons,
   GoalCheckbox,
@@ -15,6 +8,15 @@ import {
   GoalStatusIcons,
   useGoalListItemContext,
 } from '../view/components';
+
+import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
+import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
+import { useGoalContext } from '@/contexts/GoalContext';
+import { useFireGoalStatus } from '@/contexts/GoalStatusContext';
+import { isOptimisticId } from '@/hooks/useOptimistic';
+import { useWeek } from '@/hooks/useWeek';
+import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
+import { cn } from '@/lib/utils';
 
 export interface WeeklyGoalItemProps {
   /** Additional class names */
@@ -37,16 +39,16 @@ export interface WeeklyGoalItemProps {
 export function WeeklyGoalItem({ className }: WeeklyGoalItemProps) {
   return (
     <GoalListItemProvider>
-      <_WeeklyGoalItemContent className={className} />
+      <WeeklyGoalItemContent className={className} />
     </GoalListItemProvider>
   );
 }
 
-interface _WeeklyGoalItemContentProps {
+interface WeeklyGoalItemContentProps {
   className?: string;
 }
 
-function _WeeklyGoalItemContent({ className }: _WeeklyGoalItemContentProps) {
+function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
   const { goal } = useGoalContext();
   const { onUpdateGoal } = useGoalActionsContext();
   const { setPendingUpdate } = useGoalListItemContext();
