@@ -414,11 +414,22 @@ export const useWeek = () => {
   // Call useGoalActions to get its functionality
   const goalActions = useGoalActions();
 
-  // Combine the context with goalActions
+  // Combine the context with goalActions, overriding toggleGoalCompletion to inject year/quarter
   return useMemo(
     () => ({
       ...context,
       ...goalActions,
+      // Override toggleGoalCompletion to inject year/quarter for optimistic updates
+      toggleGoalCompletion: async (
+        args: Parameters<typeof goalActions.toggleGoalCompletion>[0]
+      ) => {
+        return goalActions.toggleGoalCompletion({
+          ...args,
+          year: context.year,
+          quarter: context.quarter,
+          // biome-ignore lint/suspicious/noExplicitAny: Type assertion needed until Convex types regenerate
+        } as any);
+      },
     }),
     [context, goalActions]
   );
