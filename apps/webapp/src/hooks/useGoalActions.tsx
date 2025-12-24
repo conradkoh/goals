@@ -156,6 +156,82 @@ export interface UpdateDailyGoalDayParams {
 }
 
 /**
+ * Day information with name and date details.
+ *
+ * @public
+ */
+export interface DayInfo {
+  /** Human-readable day name (e.g., "Monday") */
+  name: string;
+  /** Year of the day */
+  year: number;
+  /** Quarter (1-4) */
+  quarter: number;
+  /** Week number (1-13) */
+  weekNumber: number;
+  /** Day of week (1=Monday, 7=Sunday) */
+  dayOfWeek: DayOfWeek;
+}
+
+/**
+ * Task information for move preview.
+ *
+ * @public
+ */
+export interface TaskInfo {
+  /** Goal state ID */
+  id: Id<'goalStateByWeek'>;
+  /** Task title */
+  title: string;
+  /** Task details/description */
+  details?: string;
+  /** Weekly goal information */
+  weeklyGoal: {
+    /** Weekly goal ID */
+    id: Id<'goals'>;
+    /** Weekly goal title */
+    title: string;
+  };
+  /** Quarterly goal information */
+  quarterlyGoal: {
+    /** Quarterly goal ID */
+    id: Id<'goals'>;
+    /** Quarterly goal title */
+    title: string;
+    /** Whether quarterly goal is starred */
+    isStarred: boolean;
+    /** Whether quarterly goal is pinned */
+    isPinned: boolean;
+  };
+}
+
+/**
+ * Result of a dry-run move operation showing what would be moved.
+ *
+ * @public
+ */
+export interface MoveGoalsPreviewResult {
+  /** Whether the move is allowed */
+  canMove: true;
+  /** Source day information */
+  sourceDay: DayInfo;
+  /** Target day information */
+  targetDay: DayInfo;
+  /** List of tasks that would be moved */
+  tasks: TaskInfo[];
+}
+
+/**
+ * Result of an actual move operation.
+ *
+ * @public
+ */
+export interface MoveGoalsActualResult {
+  /** Number of tasks successfully moved */
+  tasksMoved: number;
+}
+
+/**
  * Parameters for moving goals from one day to another.
  *
  * @public
@@ -212,7 +288,9 @@ export interface GoalActions {
   /** Updates which day a daily goal is assigned to */
   updateDailyGoalDay: (params: UpdateDailyGoalDayParams) => Promise<void>;
   /** Moves all goals from one day to another day */
-  moveGoalsFromDay: (params: MoveGoalsFromDayParams) => Promise<unknown>;
+  moveGoalsFromDay: (
+    params: MoveGoalsFromDayParams
+  ) => Promise<MoveGoalsPreviewResult | MoveGoalsActualResult>;
 }
 
 /**
