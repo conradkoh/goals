@@ -56,13 +56,12 @@ export function getISOWeekInfo(date: Date): ISOWeekInfo {
   // Convert to Luxon DateTime which implements ISO week date calculations
   const dateTime = DateTime.fromJSDate(date);
 
-  // Get the Thursday of this week (add days if before Thursday, subtract if after)
-  const thursday = dateTime.startOf('week').plus({ days: 3 });
-
   return {
     weekNumber: dateTime.weekNumber,
-    year: thursday.year,
-    quarter: Math.ceil(thursday.month / 3),
+    // Use ISO week year for the year
+    year: dateTime.weekYear,
+    // Use week-based quarter for consistency
+    quarter: getQuarterFromWeek(dateTime.weekNumber),
   };
 }
 
@@ -88,13 +87,15 @@ export function generateISOWeeks(startDate: Date, endDate: Date): ISOWeekInfo[] 
   const endDateTime = DateTime.fromJSDate(endDate).endOf('week');
 
   while (currentDateTime <= endDateTime) {
-    // Get the Thursday of this week to determine the ISO year and quarter
-    const thursday = currentDateTime.plus({ days: 3 });
+    const weekNumber = currentDateTime.weekNumber;
+    // Use ISO week year (weekYear) for the year
+    const weekYear = currentDateTime.weekYear;
 
     weeks.push({
-      weekNumber: currentDateTime.weekNumber,
-      year: thursday.year,
-      quarter: Math.ceil(thursday.month / 3),
+      weekNumber,
+      year: weekYear,
+      // Use week-based quarter for consistency
+      quarter: getQuarterFromWeek(weekNumber),
     });
 
     // Move to the next week
@@ -133,4 +134,44 @@ export function hasLongYear(year: number): boolean {
  */
 export function getWeeksInYear(year: number): 52 | 53 {
   return hasLongYear(year) ? 53 : 52;
+}
+
+/**
+ * Get the quarter that an ISO week belongs to
+ *
+ * Quarters are defined by week ranges:
+ * - Q1: Weeks 1-13
+ * - Q2: Weeks 14-26
+ * - Q3: Weeks 27-39
+ * - Q4: Weeks 40-52/53
+ *
+ * @param weekNumber - The ISO week number (1-53)
+ * @returns The quarter (1-4)
+ */
+export function getQuarterFromWeek(weekNumber: number): 1 | 2 | 3 | 4 {
+  if (weekNumber <= 13) return 1;
+  if (weekNumber <= 26) return 2;
+  if (weekNumber <= 39) return 3;
+  return 4;
+}
+
+/**
+ * Get ISO week-based date information for a given DateTime
+ *
+ * This returns the ISO week year, week number, and ISO-based quarter.
+ * The quarter is determined by the week number, not the calendar month.
+ *
+ * @param dateTime - Luxon DateTime object
+ * @returns Object with weekYear, weekNumber, and quarter
+ */
+export function getISOWeekDateInfo(dateTime: DateTime): {
+  weekYear: number;
+  weekNumber: number;
+  quarter: 1 | 2 | 3 | 4;
+} {
+  return {
+    weekYear: dateTime.weekYear,
+    weekNumber: dateTime.weekNumber,
+    quarter: getQuarterFromWeek(dateTime.weekNumber),
+  };
 }

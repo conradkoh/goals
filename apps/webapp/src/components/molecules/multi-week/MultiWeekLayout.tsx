@@ -2,15 +2,17 @@ import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { DateTime } from 'luxon';
 import type React from 'react';
 import { memo, useMemo } from 'react';
+
+import { useMultiWeek } from './MultiWeekContext';
+import { MultiWeekGrid } from './MultiWeekGrid';
+import { WeekCard } from '../week/WeekCard';
+
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { useWeekData, type WeekData } from '@/hooks/useWeek';
-import { WeekCard } from '../week/WeekCard';
-import { useMultiWeek } from './MultiWeekContext';
-import { MultiWeekGrid } from './MultiWeekGrid';
 
 // Week card content component
 const WeekCardContent = ({
@@ -111,13 +113,15 @@ export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
 
   // Get the current week/year/quarter info using our optimized hook
+  // Use ISO week year and week-based quarter for consistency
   const {
-    year: currentYear,
-    quarter: currentQuarter,
+    weekYear: currentYear,
+    weekQuarter: currentQuarter,
     weekNumber: currentWeekNumber,
   } = useCurrentDateInfo();
 
   // Find the index of the current week in our weeks array
+  // Compare using ISO week year and week-based quarter
   const currentIndex = useMemo(() => {
     const index = weeks.findIndex(
       (week) =>
@@ -143,6 +147,7 @@ export const MultiWeekLayout = memo(() => {
       <DndContext sensors={sensors}>
         <MultiWeekGrid currentIndex={currentIndex} numItems={weeks.length}>
           {weeks.map((week) => {
+            // Compare using ISO week year and week-based quarter
             const isCurrentWeek =
               week.weekNumber === currentWeekNumber &&
               week.year === currentYear &&

@@ -1,6 +1,9 @@
 import { CalendarDays, History } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
+
+import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from '@/components/ui/use-toast';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
-import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
+import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
 interface DayHeaderProps {
   dayOfWeek: DayOfWeek;
@@ -73,8 +76,10 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
     setIsPullingFromAllPastDays(fromAllPastDays);
 
     try {
-      const year = DateTime.fromMillis(dateTimestamp).year;
-      const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
+      const dt = DateTime.fromMillis(dateTimestamp);
+      // Use ISO week year and week-based quarter for consistency
+      const year = dt.weekYear;
+      const quarter = getQuarterFromWeek(dt.weekNumber);
 
       if (fromAllPastDays) {
         // Get all past days in the week
@@ -161,8 +166,10 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
     if (isMonday) return;
     try {
       setIsMovingTasks(true);
-      const year = DateTime.fromMillis(dateTimestamp).year;
-      const quarter = Math.ceil(DateTime.fromMillis(dateTimestamp).month / 3);
+      const dt = DateTime.fromMillis(dateTimestamp);
+      // Use ISO week year and week-based quarter for consistency
+      const year = dt.weekYear;
+      const quarter = getQuarterFromWeek(dt.weekNumber);
 
       if (isPullingFromAllPastDays) {
         // Handle pulling from all past days

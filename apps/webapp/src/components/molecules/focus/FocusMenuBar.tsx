@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import type { ReactElement } from 'react';
+
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { DailyWeeklyActionMenu } from '@/components/molecules/focus/DailyWeeklyActionMenu';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { type DayOfWeek, getDayName } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
 export type FocusMenuBarProps = {
   viewMode?: ViewMode;
@@ -25,7 +26,11 @@ export type FocusMenuBarProps = {
   onNext?: () => void;
   selectedYear: number;
   selectedQuarter: 1 | 2 | 3 | 4;
+  /** The ISO week year for weekly/daily views (may differ from selectedYear at year boundaries) */
+  selectedWeekYear?: number;
   onYearQuarterChange?: (year: number, quarter: number) => void;
+  /** Handler for changing the week year in weekly/daily views */
+  onWeekYearChange?: (weekYear: number) => void;
   // Props for QuarterActionMenu
   isFirstQuarter?: boolean;
   isMovingGoals?: boolean;
@@ -46,13 +51,15 @@ export const FocusMenuBar = ({
   onViewModeChange,
   selectedWeek,
   selectedDay,
-  isAtMinBound = false,
-  isAtMaxBound = false,
+  // isAtMinBound and isAtMaxBound are kept in props for backwards compatibility
+  // but not used since weekly/daily views have no navigation bounds
   onPrevious,
   onNext,
   selectedYear,
   selectedQuarter,
+  selectedWeekYear,
   onYearQuarterChange,
+  onWeekYearChange,
   // QuarterActionMenu props
   isFirstQuarter,
   isMovingGoals,
@@ -63,14 +70,25 @@ export const FocusMenuBar = ({
   onPullGoals,
   pullGoalsDialog,
 }: FocusMenuBarProps) => {
-  // Generate years (current year - 1 to current year + 2)
+  // Use the week year if provided, otherwise fall back to selected year
+  const effectiveWeekYear = selectedWeekYear ?? selectedYear;
+
+  // Generate years for the quarterly view (current year - 1 to current year + 2)
   const years = selectedYear ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i) : [];
+
+  // Generate years for weekly/daily view centered around effective week year
+  const weekYears = effectiveWeekYear
+    ? Array.from({ length: 5 }, (_, i) => effectiveWeekYear - 2 + i)
+    : [];
 
   // Generate quarters
   const quarters = [1, 2, 3, 4];
 
   // Only show year and quarter selectors in quarterly view
   const showYearQuarterSelectors = viewMode === 'quarterly';
+
+  // Show year selector in weekly/daily views
+  const showWeekYearSelector = (viewMode === 'weekly' || viewMode === 'daily') && onWeekYearChange;
 
   // Show navigation controls for daily and weekly views
   const showNavigationControls = viewMode === 'daily' || viewMode === 'weekly';
@@ -137,36 +155,46 @@ export const FocusMenuBar = ({
               </>
             )}
 
+            {showWeekYearSelector && (
+              <Select
+                value={effectiveWeekYear.toString()}
+                onValueChange={(value) => onWeekYearChange(Number.parseInt(value))}
+              >
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {weekYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
             {showNavigationControls && onPrevious && onNext && (
               <div className="flex items-center gap-2 mr-2">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onPrevious}
-                  disabled={isAtMinBound}
-                  className={cn(
-                    'h-8 w-8 text-muted-foreground hover:text-foreground',
-                    isAtMinBound && 'opacity-50 cursor-not-allowed'
-                  )}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-[100px] text-center">
-                  {viewMode === 'daily' && selectedDay
-                    ? `${getDayName(selectedDay)}`
+                <span className="text-sm font-medium min-w-[100px] md:min-w-[140px] text-center">
+                  {viewMode === 'daily' && selectedDay && selectedWeek
+                    ? `Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek} · ${getDayName(selectedDay)}`
                     : viewMode === 'weekly' && selectedWeek
-                      ? `Week ${selectedWeek}`
+                      ? `Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek}`
                       : ''}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onNext}
-                  disabled={isAtMaxBound}
-                  className={cn(
-                    'h-8 w-8 text-muted-foreground hover:text-foreground',
-                    isAtMaxBound && 'opacity-50 cursor-not-allowed'
-                  )}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

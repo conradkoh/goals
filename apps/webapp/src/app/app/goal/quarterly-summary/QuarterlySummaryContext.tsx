@@ -6,9 +6,11 @@ import type { QuarterlyGoalOption } from '@workspace/backend/src/usecase/getWeek
 import { useQuery } from 'convex/react';
 import { DateTime } from 'luxon';
 import React from 'react';
+
 import { useDomains } from '@/hooks/useDomains';
 import { useQuarterlyGoalsList } from '@/hooks/useQuarterlyGoalsList';
 import { useQuarterSummary } from '@/hooks/useQuarterSummary';
+import { getQuarterFromWeek } from '@/lib/date/iso-week';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -108,8 +110,9 @@ export function QuarterlySummaryProvider({
   initialQuarter,
 }: QuarterlySummaryProviderProps) {
   const now = DateTime.now();
-  const defaultYear = initialYear ?? now.year;
-  const defaultQuarter = initialQuarter ?? (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
+  // Use ISO week year and week-based quarter for consistency
+  const defaultYear = initialYear ?? now.weekYear;
+  const defaultQuarter = initialQuarter ?? getQuarterFromWeek(now.weekNumber);
 
   const [year, setYear] = React.useState(defaultYear);
   const [quarter, setQuarter] = React.useState<1 | 2 | 3 | 4>(defaultQuarter);
@@ -212,14 +215,15 @@ export function QuarterlySummaryProvider({
     }
   }, [year, quarter]);
 
-  const currentYear = DateTime.now().year;
+  // Use ISO week year for year options generation
+  const currentWeekYear = DateTime.now().weekYear;
   const yearOptions = React.useMemo(() => {
     const years: number[] = [];
-    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+    for (let y = currentWeekYear - 5; y <= currentWeekYear + 1; y++) {
       years.push(y);
     }
     return years;
-  }, [currentYear]);
+  }, [currentWeekYear]);
 
   const hasSelection = selectedGoalIds.length > 0 || includeAdhocGoals;
 

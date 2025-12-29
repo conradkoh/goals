@@ -5,6 +5,7 @@ import { ArrowLeft, Eye, FileText, Home } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
+
 import {
   QuarterlyGoalSummaryView,
   QuarterlySummaryMarkdownView,
@@ -12,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
 import { useSummaryGoalActions } from '@/hooks/useSummaryGoalActions';
+import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
 /**
  * Renders the quarterly summary page for a specific goal.
@@ -26,16 +28,17 @@ export default function QuarterlySummaryPage() {
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = React.useState<'summary' | 'markdown'>('summary');
 
-  // Get year and quarter from URL params, fallback to current date
+  // Get year and quarter from URL params, fallback to current ISO week-based values
   const { year, quarter } = React.useMemo(() => {
     const now = DateTime.now();
     const yearParam = searchParams.get('year');
     const quarterParam = searchParams.get('quarter');
 
-    const year = yearParam ? Number.parseInt(yearParam) : now.year;
+    // Use ISO week year and week-based quarter for consistency
+    const year = yearParam ? Number.parseInt(yearParam) : now.weekYear;
     const quarter = quarterParam
       ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
-      : (Math.ceil(now.month / 3) as 1 | 2 | 3 | 4);
+      : getQuarterFromWeek(now.weekNumber);
     return { year, quarter };
   }, [searchParams]);
 
