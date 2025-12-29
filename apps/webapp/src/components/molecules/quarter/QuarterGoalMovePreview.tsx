@@ -9,6 +9,7 @@
  */
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
 import {
   ArrowRightLeft,
   Calendar,
@@ -22,7 +23,6 @@ import {
 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { StandaloneGoalPopover } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalPopover';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,7 +92,7 @@ interface AdhocGoalsByDomain {
  * Allows users to:
  * - Select which quarterly goals to pull
  * - Select which adhoc tasks to pull (grouped by domain)
- * - View goal details and mark as complete before moving
+ * - Navigate to the previous quarter to view goals in their full context
  *
  * @public
  * @param props - Component props
@@ -110,10 +110,6 @@ export function QuarterGoalMovePreview({
   const [selectedQuarterlyIds, setSelectedQuarterlyIds] = useState<Set<string>>(new Set());
   const [selectedAdhocIds, setSelectedAdhocIds] = useState<Set<string>>(new Set());
   const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
-  const [completedGoalIds, setCompletedGoalIds] = useState<Set<string>>(new Set());
-  const [viewingGoalId, setViewingGoalId] = useState<Id<'goals'> | null>(null);
-  const [viewingGoalType, setViewingGoalType] = useState<'quarterly' | 'adhoc'>('quarterly');
-  const [goalDetailDialogOpen, setGoalDetailDialogOpen] = useState(false);
 
   const hasQuarterlyGoals = Boolean(preview?.quarterlyGoals && preview.quarterlyGoals.length > 0);
   const hasWeeklyGoals = Boolean(preview?.weeklyGoals && preview.weeklyGoals.length > 0);
@@ -124,21 +120,13 @@ export function QuarterGoalMovePreview({
   // Initialize selection when preview changes
   useMemo(() => {
     if (preview) {
-      const quarterlyIds = new Set(
-        preview.quarterlyGoals
-          .filter((g) => !completedGoalIds.has(g.id.toString()))
-          .map((g) => g.id.toString())
-      );
+      const quarterlyIds = new Set(preview.quarterlyGoals.map((g) => g.id.toString()));
       setSelectedQuarterlyIds(quarterlyIds);
 
-      const adhocIds = new Set(
-        (preview.adhocGoals ?? [])
-          .filter((g) => !completedGoalIds.has(g.id.toString()))
-          .map((g) => g.id.toString())
-      );
+      const adhocIds = new Set((preview.adhocGoals ?? []).map((g) => g.id.toString()));
       setSelectedAdhocIds(adhocIds);
     }
-  }, [preview, completedGoalIds]);
+  }, [preview]);
 
   const adhocGoalsByDomain = useMemo((): AdhocGoalsByDomain[] => {
     if (!preview?.adhocGoals) return [];
@@ -146,8 +134,6 @@ export function QuarterGoalMovePreview({
     const grouped = new Map<string | null, AdhocGoalToCopy[]>();
 
     for (const goal of preview.adhocGoals) {
-      if (completedGoalIds.has(goal.id.toString())) continue;
-
       const key = goal.domainId?.toString() ?? null;
       if (!grouped.has(key)) {
         grouped.set(key, []);
@@ -169,12 +155,12 @@ export function QuarterGoalMovePreview({
       if (b.domainId === null) return -1;
       return a.domainName.localeCompare(b.domainName);
     });
-  }, [preview?.adhocGoals, completedGoalIds]);
+  }, [preview?.adhocGoals]);
 
   const activeQuarterlyGoals = useMemo(() => {
     if (!preview?.quarterlyGoals) return [];
-    return preview.quarterlyGoals.filter((g) => !completedGoalIds.has(g.id.toString()));
-  }, [preview?.quarterlyGoals, completedGoalIds]);
+    return preview.quarterlyGoals;
+  }, [preview?.quarterlyGoals]);
 
   const handleQuarterlyToggle = useCallback((goalId: string, checked: boolean) => {
     setSelectedQuarterlyIds((prev) => {
@@ -252,28 +238,29 @@ export function QuarterGoalMovePreview({
     });
   }, []);
 
-  const handleViewGoal = useCallback((goalId: Id<'goals'>, type: 'quarterly' | 'adhoc') => {
-    setViewingGoalId(goalId);
-    setViewingGoalType(type);
-    setGoalDetailDialogOpen(true);
-  }, []);
+  /**
+   * Opens the goal's dedicated page in a new tab with the source quarter context.
+   * Allows the user to see all details and interact with the goal
+   * without leaving the current dialog.
+   */
+  const handleViewGoal = useCallback(
+    (goalId: Id<'goals'>, _type: 'quarterly' | 'adhoc') => {
+      if (sourceYear === undefined || sourceQuarter === undefined) return;
 
-  const handleMarkCompleteFromDialog = useCallback(() => {
-    if (viewingGoalId) {
-      const goalIdStr = viewingGoalId.toString();
-      setCompletedGoalIds((prev) => new Set([...prev, goalIdStr]));
-      setSelectedQuarterlyIds((prev) => {
-        const next = new Set(prev);
-        next.delete(goalIdStr);
-        return next;
-      });
-      setSelectedAdhocIds((prev) => {
-        const next = new Set(prev);
-        next.delete(goalIdStr);
-        return next;
-      });
-    }
-  }, [viewingGoalId]);
+      // Get the last week of the source quarter for context
+      const { endWeek } = getQuarterWeeks(sourceYear, sourceQuarter);
+
+      // Build the URL for the goal's dedicated page
+      const params = new URLSearchParams();
+      params.set('year', sourceYear.toString());
+      params.set('quarter', sourceQuarter.toString());
+      params.set('week', endWeek.toString());
+
+      // Open in a new tab
+      window.open(`/app/goals/${goalId}?${params.toString()}`, '_blank');
+    },
+    [sourceYear, sourceQuarter]
+  );
 
   const handleConfirm = useCallback(() => {
     const selectedQuarterly = Array.from(selectedQuarterlyIds).map((id) => id as Id<'goals'>);
@@ -325,73 +312,59 @@ export function QuarterGoalMovePreview({
   }
 
   return (
-    <>
-      <AlertDialog open={open} onOpenChange={onOpenChange}>
-        <AlertDialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-6">
-                <ExplanationSection hasAdhocGoals={hasAdhocGoals} />
-                <InstructionsSection />
-                <QuarterlyGoalsSection
-                  goals={activeQuarterlyGoals}
-                  selectedIds={selectedQuarterlyIds}
-                  allSelected={allQuarterlySelected}
-                  someSelected={someQuarterlySelected}
-                  onToggle={handleQuarterlyToggle}
-                  onSelectAll={handleSelectAllQuarterly}
-                  onViewGoal={handleViewGoal}
-                />
-                <AdhocGoalsSection
-                  goalsByDomain={adhocGoalsByDomain}
-                  selectedIds={selectedAdhocIds}
-                  collapsedDomains={collapsedDomains}
-                  totalGoals={totalAdhocGoals}
-                  allSelected={allAdhocSelected}
-                  someSelected={someAdhocSelected}
-                  onToggle={handleAdhocToggle}
-                  onSelectAll={handleSelectAllAdhoc}
-                  onDomainToggle={handleDomainGroupToggle}
-                  onCollapseToggle={toggleDomainCollapse}
-                  onViewGoal={handleViewGoal}
-                />
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-6">
+              <ExplanationSection hasAdhocGoals={hasAdhocGoals} />
+              <InstructionsSection />
+              <QuarterlyGoalsSection
+                goals={activeQuarterlyGoals}
+                selectedIds={selectedQuarterlyIds}
+                allSelected={allQuarterlySelected}
+                someSelected={someQuarterlySelected}
+                onToggle={handleQuarterlyToggle}
+                onSelectAll={handleSelectAllQuarterly}
+                onViewGoal={handleViewGoal}
+              />
+              <AdhocGoalsSection
+                goalsByDomain={adhocGoalsByDomain}
+                selectedIds={selectedAdhocIds}
+                collapsedDomains={collapsedDomains}
+                totalGoals={totalAdhocGoals}
+                allSelected={allAdhocSelected}
+                someSelected={someAdhocSelected}
+                onToggle={handleAdhocToggle}
+                onSelectAll={handleSelectAllAdhoc}
+                onDomainToggle={handleDomainGroupToggle}
+                onCollapseToggle={toggleDomainCollapse}
+                onViewGoal={handleViewGoal}
+              />
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-          <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel disabled={isConfirming}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirm}
-              disabled={!hasSelection || isConfirming}
-              className="min-w-[140px]"
-            >
-              {isConfirming ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Moving...
-                </>
-              ) : (
-                `Pull ${selectedQuarterlyIds.size + selectedAdhocIds.size} Goals`
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {sourceYear !== undefined && sourceQuarter !== undefined && (
-        <StandaloneGoalPopover
-          open={goalDetailDialogOpen}
-          onOpenChange={setGoalDetailDialogOpen}
-          goalId={viewingGoalId}
-          goalType={viewingGoalType}
-          year={sourceYear}
-          quarter={sourceQuarter}
-          onComplete={handleMarkCompleteFromDialog}
-        />
-      )}
-    </>
+        <AlertDialogFooter className="gap-2 sm:gap-0">
+          <AlertDialogCancel disabled={isConfirming}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirm}
+            disabled={!hasSelection || isConfirming}
+            className="min-w-[140px]"
+          >
+            {isConfirming ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Moving...
+              </>
+            ) : (
+              `Pull ${selectedQuarterlyIds.size + selectedAdhocIds.size} Goals`
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -456,8 +429,8 @@ function InstructionsSection() {
     <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-3">
       <p className="text-sm text-muted-foreground">
         <span className="font-medium text-foreground">Select goals to pull:</span> Check the goals
-        you want to move to this quarter. Click &quot;View&quot; to see goal details and optionally
-        mark it as complete.
+        you want to move to this quarter. Click &quot;View&quot; to open the previous quarter and
+        see the goal in its full context.
       </p>
     </div>
   );
