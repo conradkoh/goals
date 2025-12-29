@@ -1,17 +1,22 @@
 import { ConvexError, v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
-import { DateTime } from 'luxon';
 
 import { DayOfWeek, getDayName } from '../src/constants';
 import { api, internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
-import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+  type QueryCtx,
+} from './_generated/server';
 import {
   moveGoalsFromLastNonEmptyWeekUsecase,
   moveGoalsFromWeekUsecase,
 } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
 import {
-  debugQuarterCalculations,
   getFinalWeeksOfQuarter,
   getFirstWeekOfQuarter,
   getQuarterWeeks,
@@ -612,13 +617,65 @@ type QuarterlyGoalPreview = {
   isPinned: boolean;
 };
 
-type MoveQuarterlyGoalResult = {
+/**
+ * Result of moving a quarterly goal to a new quarter.
+ *
+ * @internal
+ */
+interface MoveQuarterlyGoalResultSuccess {
+  /** ID of the new goal created in the target quarter */
   newGoalId: Id<'goals'>;
+  /** Number of weekly goals migrated with the quarterly goal */
   weeklyGoalsMigrated: number;
-  error?: string;
-};
+}
 
-// Replace the existing moveGoalsFromQuarter mutation with an action
+/**
+ * Error result when a quarterly goal migration fails.
+ *
+ * @internal
+ */
+interface MoveQuarterlyGoalResultError {
+  /** Error message describing the failure */
+  error: string;
+}
+
+/**
+ * Combined result type for quarterly goal migration.
+ *
+ * @internal
+ */
+type MoveQuarterlyGoalMigrationResult =
+  | MoveQuarterlyGoalResultSuccess
+  | MoveQuarterlyGoalResultError;
+
+/**
+ * Result returned from the moveGoalsFromQuarter action.
+ *
+ * @public
+ */
+export interface MoveGoalsFromQuarterResult {
+  /** Number of quarterly goals successfully copied */
+  quarterlyGoalsCopied: number;
+  /** Number of adhoc goals successfully moved */
+  adhocGoalsMoved: number;
+  /** Individual results for each goal migration attempt */
+  results: MoveQuarterlyGoalMigrationResult[];
+}
+
+/**
+ * Moves incomplete goals from one quarter to another.
+ * Use the `getQuarterGoalsMovePreview` query to preview goals before calling this action.
+ *
+ * @public
+ *
+ * @param sessionId - User session ID for authentication
+ * @param from - Source quarter to move goals from
+ * @param to - Target quarter to move goals to
+ * @param selectedQuarterlyGoalIds - Optional list of specific quarterly goal IDs to move
+ * @param selectedAdhocGoalIds - Optional list of specific adhoc goal IDs to move
+ * @returns Promise resolving to migration results
+ * @throws {ConvexError} When user is not authenticated or quarters are the same
+ */
 export const moveGoalsFromQuarter = action({
   args: {
     ...SessionIdArg,
@@ -630,24 +687,13 @@ export const moveGoalsFromQuarter = action({
       year: v.number(),
       quarter: v.number(),
     }),
-    dryRun: v.optional(v.boolean()),
-    debug: v.optional(v.boolean()),
-    // Optional: specify which goals to move (if not provided, all incomplete goals are moved)
+    // Specify which goals to move (if not provided, moves all incomplete goals)
     selectedQuarterlyGoalIds: v.optional(v.array(v.id('goals'))),
     selectedAdhocGoalIds: v.optional(v.array(v.id('goals'))),
   },
-  // biome-ignore lint/suspicious/noExplicitAny: Complex return type varies based on dryRun flag
-  handler: async (ctx, args): Promise<any> => {
-    const {
-      sessionId,
-      from,
-      to,
-      dryRun = false,
-      debug = false,
-      selectedQuarterlyGoalIds,
-      selectedAdhocGoalIds,
-    } = args;
-    // Auth check
+  handler: async (ctx, args): Promise<MoveGoalsFromQuarterResult> => {
+    const { sessionId, from, to, selectedQuarterlyGoalIds, selectedAdhocGoalIds } = args;
+
     // Auth check - look up session by sessionId field
     const session = await ctx.runQuery(internal.goal.getSessionBySessionId, { sessionId });
     if (!session) {
@@ -670,24 +716,8 @@ export const moveGoalsFromQuarter = action({
       throw new ConvexError('Cannot move goals to the same quarter');
     }
 
-    // Debug log information about the quarters and weeks if debug flag is set
-    if (debug) {
-      const fromDateInfo = debugQuarterCalculations(
-        DateTime.local(from.year, (from.quarter - 1) * 3 + 1, 1)
-      );
-      const toDateInfo = debugQuarterCalculations(
-        DateTime.local(to.year, (to.quarter - 1) * 3 + 1, 1)
-      );
-
-      console.log('FROM QUARTER:', fromDateInfo.calendarInfo);
-      console.log('FROM QUARTER FINAL WEEKS:', fromDateInfo.currentQuarter.finalWeeks);
-      console.log('TO QUARTER:', toDateInfo.calendarInfo);
-      console.log('TO QUARTER FIRST WEEK:', getFirstWeekOfQuarter(to.year, to.quarter));
-    }
-
-    // === STAGE 1: Query only for incomplete quarterly goals from the previous quarter ===
     console.log(
-      `[moveGoalsFromQuarter] Moving from Q${from.quarter} ${from.year} to Q${to.quarter} ${to.year}, dryRun: ${dryRun}`
+      `[moveGoalsFromQuarter] Moving from Q${from.quarter} ${from.year} to Q${to.quarter} ${to.year}`
     );
 
     // Get all quarterly goals from the source quarter
@@ -706,29 +736,21 @@ export const moveGoalsFromQuarter = action({
     });
     console.log(`[moveGoalsFromQuarter] Found ${allAdhocGoals.length} adhoc goals`);
 
-    if (dryRun) {
-      return {
-        quarterlyGoalsToCopy: allQuarterlyGoals,
-        adhocGoalsToCopy: allAdhocGoals,
-        isDryRun: true,
-      };
-    }
-
     // Filter goals based on selection (if provided)
     const quarterlyGoals = selectedQuarterlyGoalIds
       ? allQuarterlyGoals.filter((g) => selectedQuarterlyGoalIds.includes(g.id))
       : allQuarterlyGoals;
 
     const adhocGoals = selectedAdhocGoalIds
-      ? allAdhocGoals.filter((g: { id: Id<'goals'> }) => selectedAdhocGoalIds.includes(g.id))
+      ? allAdhocGoals.filter((g) => selectedAdhocGoalIds.includes(g.id))
       : allAdhocGoals;
 
     console.log(
       `[moveGoalsFromQuarter] After selection filter: ${quarterlyGoals.length} quarterly, ${adhocGoals.length} adhoc`
     );
 
-    // === STAGE 2: If not a dry run, migrate each goal SEQUENTIALLY ===
-    const migrationResults = [];
+    // Migrate each quarterly goal sequentially
+    const migrationResults: MoveQuarterlyGoalMigrationResult[] = [];
     for (const goal of quarterlyGoals) {
       try {
         const result = await ctx.runMutation(api.goal.moveQuarterlyGoal, {
@@ -750,7 +772,7 @@ export const moveGoalsFromQuarter = action({
       try {
         const adhocResult = await ctx.runMutation(internal.goal.moveAdhocGoalsToQuarter, {
           userId,
-          adhocGoals: adhocGoals.map((g: { id: Id<'goals'> }) => g.id),
+          adhocGoals: adhocGoals.map((g) => g.id),
           to,
         });
         adhocGoalsMoved = adhocResult.goalsMoved;
@@ -760,16 +782,240 @@ export const moveGoalsFromQuarter = action({
     }
 
     return {
-      quarterlyGoalsToCopy: quarterlyGoals,
-      adhocGoalsToCopy: adhocGoals,
       results: migrationResults,
-      quarterlyGoalsCopied: migrationResults.filter(
-        (r: MoveQuarterlyGoalResult | { error: string }) => !('error' in r)
-      ).length,
+      quarterlyGoalsCopied: migrationResults.filter((r) => !('error' in r)).length,
       adhocGoalsMoved,
     };
   },
 });
+
+/**
+ * Preview data for adhoc goals that can be moved to a new quarter.
+ *
+ * @public
+ */
+export interface AdhocGoalPreview {
+  /** Goal ID */
+  id: Id<'goals'>;
+  /** Goal title */
+  title: string;
+  /** Optional goal details/description */
+  details?: string;
+  /** Associated domain ID */
+  domainId?: Id<'domains'>;
+  /** Associated domain name for display */
+  domainName?: string;
+  /** Due date timestamp */
+  dueDate?: number;
+}
+
+/**
+ * Result from the getQuarterGoalsMovePreview query.
+ *
+ * @public
+ */
+export interface QuarterGoalsMovePreviewResult {
+  /** Quarterly goals available to copy to the target quarter */
+  quarterlyGoalsToCopy: QuarterlyGoalPreview[];
+  /** Adhoc goals available to copy to the target quarter */
+  adhocGoalsToCopy: AdhocGoalPreview[];
+  /** Source quarter information */
+  from: { year: number; quarter: number };
+  /** Target quarter information */
+  to: { year: number; quarter: number };
+}
+
+/**
+ * Retrieves a preview of goals that can be moved from a previous quarter.
+ * This is a reactive query that the frontend can subscribe to for live updates.
+ *
+ * @public
+ *
+ * @param sessionId - User session ID for authentication
+ * @param from - Source quarter to preview goals from
+ * @param to - Target quarter to move goals to
+ * @returns Preview data containing incomplete quarterly and adhoc goals
+ * @throws {ConvexError} When user is not authenticated or quarters are the same
+ */
+export const getQuarterGoalsMovePreview = query({
+  args: {
+    ...SessionIdArg,
+    from: v.object({
+      year: v.number(),
+      quarter: v.number(),
+    }),
+    to: v.object({
+      year: v.number(),
+      quarter: v.number(),
+    }),
+  },
+  handler: async (ctx, args): Promise<QuarterGoalsMovePreviewResult> => {
+    const { sessionId, from, to } = args;
+
+    // Auth check
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Validate that we're not moving goals to the same quarter
+    if (from.year === to.year && from.quarter === to.quarter) {
+      throw new ConvexError('Cannot move goals to the same quarter');
+    }
+
+    // Get all incomplete quarterly goals from the source quarter
+    const allQuarterlyGoals = await getIncompleteQuarterlyGoalsInternal(ctx, {
+      userId,
+      year: from.year,
+      quarter: from.quarter,
+    });
+
+    // Get incomplete adhoc goals from the source quarter
+    const allAdhocGoals = await getIncompleteAdhocGoalsForQuarterInternal(ctx, {
+      userId,
+      year: from.year,
+      quarter: from.quarter,
+    });
+
+    return {
+      quarterlyGoalsToCopy: allQuarterlyGoals,
+      adhocGoalsToCopy: allAdhocGoals,
+      from,
+      to,
+    };
+  },
+});
+
+/**
+ * Fetches incomplete quarterly goals from a source quarter.
+ * Shared helper function used by both the public query and internal queries.
+ *
+ * @internal
+ *
+ * @param ctx - Query context for database access
+ * @param args - Query parameters including userId, year, and quarter
+ * @returns Array of quarterly goal previews with starred/pinned status
+ */
+async function getIncompleteQuarterlyGoalsInternal(
+  ctx: QueryCtx,
+  args: { userId: Id<'users'>; year: number; quarter: number }
+): Promise<QuarterlyGoalPreview[]> {
+  const { userId, year, quarter } = args;
+
+  // Get all quarterly goals from the source quarter using index
+  const quarterlyGoals = await ctx.db
+    .query('goals')
+    .withIndex('by_user_and_year_and_quarter', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+    )
+    .filter((q) => q.eq(q.field('depth'), 0)) // Quarterly goals have depth 0
+    .collect();
+
+  // Get the final weeks of the source quarter
+  const finalWeeksOfSourceQuarter = getFinalWeeksOfQuarter(year, quarter);
+
+  // Find the latest week number from final weeks
+  const latestWeek = finalWeeksOfSourceQuarter.reduce(
+    (latest, week) => Math.max(latest, week.weekNumber),
+    0
+  );
+
+  // Get the goal states for these quarterly goals to check starred/pinned status
+  const quarterlyGoalIds = quarterlyGoals.map((goal) => goal._id);
+  const quarterlyGoalStates = await ctx.db
+    .query('goalStateByWeek')
+    .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', latestWeek)
+    )
+    .filter((q) =>
+      q.and(
+        q.or(...quarterlyGoalIds.map((id) => q.eq(q.field('goalId'), id))),
+        q.eq(q.field('year'), year)
+      )
+    )
+    .collect();
+
+  // Create a map of goalId -> latest state to handle duplicates
+  const latestStateByGoalId = new Map<Id<'goals'>, Doc<'goalStateByWeek'>>();
+  for (const state of quarterlyGoalStates) {
+    const existing = latestStateByGoalId.get(state.goalId);
+    if (!existing || existing._creationTime < state._creationTime) {
+      latestStateByGoalId.set(state.goalId, state);
+    }
+  }
+
+  // Filter goals to only include incomplete ones
+  const incompleteQuarterlyGoals = quarterlyGoals.filter((goal) => !goal.isComplete);
+
+  // Format response data
+  return incompleteQuarterlyGoals.map((goal) => {
+    const latestState = latestStateByGoalId.get(goal._id);
+    return {
+      id: goal._id,
+      title: goal.title,
+      details: goal.details,
+      isStarred: latestState?.isStarred || false,
+      isPinned: latestState?.isPinned || false,
+    };
+  });
+}
+
+/**
+ * Fetches incomplete adhoc goals from a source quarter.
+ * Shared helper function used by both the public query and internal queries.
+ *
+ * @internal
+ *
+ * @param ctx - Query context for database access
+ * @param args - Query parameters including userId, year, and quarter
+ * @returns Array of adhoc goal previews with domain information
+ */
+async function getIncompleteAdhocGoalsForQuarterInternal(
+  ctx: QueryCtx,
+  args: { userId: Id<'users'>; year: number; quarter: number }
+): Promise<AdhocGoalPreview[]> {
+  const { userId, year, quarter } = args;
+
+  // Get all weeks in the source quarter
+  const quarterWeeksInfo = getQuarterWeeks(year, quarter);
+  const weekNumbers = quarterWeeksInfo.weeks;
+
+  // Query adhoc goals for each week in the quarter using index
+  const adhocGoalPromises = weekNumbers.map((weekNumber) =>
+    ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_week', (q) =>
+        q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
+      )
+      .filter((q) => q.eq(q.field('isComplete'), false))
+      .collect()
+  );
+
+  const adhocGoalArrays = await Promise.all(adhocGoalPromises);
+  const incompleteAdhocGoals = adhocGoalArrays.flat();
+
+  // Get domain information for these goals
+  const domainIds = [
+    ...new Set(
+      incompleteAdhocGoals.map((goal) => goal.domainId).filter((id): id is Id<'domains'> => !!id)
+    ),
+  ];
+  const domains = await Promise.all(domainIds.map((id) => ctx.db.get('domains', id)));
+  const domainMap = new Map(
+    domains.filter((d): d is Doc<'domains'> => d !== null).map((domain) => [domain._id, domain])
+  );
+
+  // Format response data
+  return incompleteAdhocGoals.map((goal) => {
+    const effectiveDomainId = goal.domainId;
+    return {
+      id: goal._id,
+      title: goal.title,
+      details: goal.details,
+      domainId: effectiveDomainId,
+      domainName: effectiveDomainId ? domainMap.get(effectiveDomainId)?.name : undefined,
+      dueDate: goal.adhoc?.dueDate,
+    };
+  });
+}
 
 // Add a helper internal query to get incomplete quarterly goals
 export const getIncompleteQuarterlyGoals = internalQuery({
@@ -991,7 +1237,7 @@ export const moveQuarterlyGoal = mutation({
       quarter: v.number(),
     }),
   },
-  handler: async (ctx, args): Promise<MoveQuarterlyGoalResult> => {
+  handler: async (ctx, args): Promise<MoveQuarterlyGoalResultSuccess> => {
     const { sessionId, goalId, from, to } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;

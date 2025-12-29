@@ -21,7 +21,7 @@ import {
   Pin,
   Star,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   AlertDialog,
@@ -71,6 +71,8 @@ export interface QuarterGoalMovePreviewProps {
   sourceYear?: number;
   /** Quarter number of the source quarter */
   sourceQuarter?: number;
+  /** Whether preview data is loading */
+  isLoading?: boolean;
 }
 
 /**
@@ -106,10 +108,12 @@ export function QuarterGoalMovePreview({
   isConfirming = false,
   sourceYear,
   sourceQuarter,
+  isLoading = false,
 }: QuarterGoalMovePreviewProps) {
   const [selectedQuarterlyIds, setSelectedQuarterlyIds] = useState<Set<string>>(new Set());
   const [selectedAdhocIds, setSelectedAdhocIds] = useState<Set<string>>(new Set());
   const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
+  const [hasInitializedSelections, setHasInitializedSelections] = useState(false);
 
   const hasQuarterlyGoals = Boolean(preview?.quarterlyGoals && preview.quarterlyGoals.length > 0);
   const hasWeeklyGoals = Boolean(preview?.weeklyGoals && preview.weeklyGoals.length > 0);
@@ -117,16 +121,47 @@ export function QuarterGoalMovePreview({
   const hasAdhocGoals = Boolean(preview?.adhocGoals && preview.adhocGoals.length > 0);
   const hasContent = hasQuarterlyGoals || hasWeeklyGoals || hasDailyGoals || hasAdhocGoals;
 
-  // Initialize selection when preview changes
-  useMemo(() => {
+  // Initialize selection when preview first loads, or update to remove stale selections
+  useEffect(() => {
     if (preview) {
-      const quarterlyIds = new Set(preview.quarterlyGoals.map((g) => g.id.toString()));
-      setSelectedQuarterlyIds(quarterlyIds);
+      const availableQuarterlyIds = new Set(preview.quarterlyGoals.map((g) => g.id.toString()));
+      const availableAdhocIds = new Set((preview.adhocGoals ?? []).map((g) => g.id.toString()));
 
-      const adhocIds = new Set((preview.adhocGoals ?? []).map((g) => g.id.toString()));
-      setSelectedAdhocIds(adhocIds);
+      if (!hasInitializedSelections) {
+        // First time loading - select all by default
+        setSelectedQuarterlyIds(availableQuarterlyIds);
+        setSelectedAdhocIds(availableAdhocIds);
+        setHasInitializedSelections(true);
+      } else {
+        // Subsequent updates - remove selections for goals that no longer exist
+        setSelectedQuarterlyIds((prev) => {
+          const next = new Set<string>();
+          for (const id of prev) {
+            if (availableQuarterlyIds.has(id)) {
+              next.add(id);
+            }
+          }
+          return next;
+        });
+        setSelectedAdhocIds((prev) => {
+          const next = new Set<string>();
+          for (const id of prev) {
+            if (availableAdhocIds.has(id)) {
+              next.add(id);
+            }
+          }
+          return next;
+        });
+      }
     }
-  }, [preview]);
+  }, [preview, hasInitializedSelections]);
+
+  // Reset initialization state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setHasInitializedSelections(false);
+    }
+  }, [open]);
 
   const adhocGoalsByDomain = useMemo((): AdhocGoalsByDomain[] => {
     if (!preview?.adhocGoals) return [];
@@ -284,6 +319,30 @@ export function QuarterGoalMovePreview({
   const someAdhocSelected =
     adhocGoalsByDomain.some((d) => d.goals.some((g) => selectedAdhocIds.has(g.id.toString()))) &&
     !allAdhocSelected;
+
+  // Show loading state while preview data is being fetched
+  if (isLoading) {
+    return (
+      <AlertDialog open={open} onOpenChange={onOpenChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
+                <span className="text-muted-foreground">
+                  Loading goals from previous quarter...
+                </span>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
 
   if (!hasContent) {
     return (

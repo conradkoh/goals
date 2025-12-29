@@ -10,8 +10,9 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useAction } from 'convex/react';
+import { useSessionQuery } from 'convex-helpers/react/sessions';
 import type React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
 import { toast } from '@/components/ui/use-toast';
@@ -183,7 +184,6 @@ export function useMoveGoalsForQuarter({
   const { sessionId } = useSession();
   const [isMovingGoals, setIsMovingGoals] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [preview, setPreview] = useState<GoalMovePreview | null>(null);
 
   const moveGoalsAction = useAction(api.goal.moveGoalsFromQuarter);
 
@@ -197,45 +197,55 @@ export function useMoveGoalsForQuarter({
     return { year, quarter: (quarter - 1) as 1 | 2 | 3 | 4 };
   }, [year, quarter]);
 
+  const prevQuarter = useMemo(() => getPreviousQuarter(), [getPreviousQuarter]);
+
+  // Subscribe to the preview query for reactive updates
+  // Only query when the dialog is open to avoid unnecessary data fetching
+  const previewData = useSessionQuery(
+    showConfirmDialog ? api.goal.getQuarterGoalsMovePreview : 'skip',
+    showConfirmDialog
+      ? {
+          from: {
+            year: prevQuarter.year,
+            quarter: prevQuarter.quarter,
+          },
+          to: {
+            year,
+            quarter,
+          },
+        }
+      : 'skip'
+  );
+
+  // Determine loading state: dialog is open but data hasn't arrived yet
+  const isPreviewLoading = showConfirmDialog && previewData === undefined;
+
+  // Transform the query data into the preview format
+  const preview: GoalMovePreview | null = useMemo(() => {
+    if (!previewData) return null;
+    return {
+      quarterlyGoals: previewData.quarterlyGoalsToCopy || [],
+      weeklyGoals: [],
+      dailyGoals: [],
+      adhocGoals: previewData.adhocGoalsToCopy || [],
+    };
+  }, [previewData]);
+
   const handlePreviewGoals = useCallback(async () => {
     if (isFirstQuarter) return;
 
-    try {
-      const prevQuarter = getPreviousQuarter();
-
-      if (!sessionId) {
-        throw new Error('User not authenticated');
-      }
-
-      const previewData = await moveGoalsAction({
-        sessionId,
-        from: {
-          year: prevQuarter.year,
-          quarter: prevQuarter.quarter,
-        },
-        to: {
-          year,
-          quarter,
-        },
-        dryRun: true,
-      });
-
-      setPreview({
-        quarterlyGoals: previewData.quarterlyGoalsToCopy || [],
-        weeklyGoals: [],
-        dailyGoals: [],
-        adhocGoals: previewData.adhocGoalsToCopy || [],
-      });
-      setShowConfirmDialog(true);
-    } catch (error) {
-      console.error('Failed to preview goals from previous quarter:', error);
+    if (!sessionId) {
       toast({
         title: 'Error',
-        description: 'Failed to preview goals from previous quarter.',
+        description: 'User not authenticated.',
         variant: 'destructive',
       });
+      return;
     }
-  }, [isFirstQuarter, getPreviousQuarter, sessionId, moveGoalsAction, year, quarter]);
+
+    // Simply open the dialog - the query will handle fetching the preview data
+    setShowConfirmDialog(true);
+  }, [isFirstQuarter, sessionId]);
 
   const handleMoveGoals = useCallback(
     async (selectedQuarterlyGoalIds?: Id<'goals'>[], selectedAdhocGoalIds?: Id<'goals'>[]) => {
@@ -243,7 +253,6 @@ export function useMoveGoalsForQuarter({
 
       try {
         setIsMovingGoals(true);
-        const prevQuarter = getPreviousQuarter();
 
         if (!sessionId) {
           throw new Error('User not authenticated');
@@ -259,7 +268,6 @@ export function useMoveGoalsForQuarter({
             year,
             quarter,
           },
-          dryRun: false,
           selectedQuarterlyGoalIds,
           selectedAdhocGoalIds,
         });
@@ -280,7 +288,7 @@ export function useMoveGoalsForQuarter({
         setIsMovingGoals(false);
       }
     },
-    [isFirstQuarter, getPreviousQuarter, sessionId, moveGoalsAction, year, quarter]
+    [isFirstQuarter, prevQuarter, sessionId, moveGoalsAction, year, quarter]
   );
 
   const dialog = (
@@ -290,8 +298,9 @@ export function useMoveGoalsForQuarter({
       preview={preview}
       onConfirm={handleMoveGoals}
       isConfirming={isMovingGoals}
-      sourceYear={getPreviousQuarter().year}
-      sourceQuarter={getPreviousQuarter().quarter}
+      isLoading={isPreviewLoading}
+      sourceYear={prevQuarter.year}
+      sourceQuarter={prevQuarter.quarter}
     />
   );
 
