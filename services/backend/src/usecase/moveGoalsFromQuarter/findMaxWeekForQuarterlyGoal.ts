@@ -1,5 +1,5 @@
-import type { Id } from '../../../../convex/_generated/dataModel';
-import type { QueryCtx } from '../../../../convex/_generated/server';
+import type { Id } from '../../../convex/_generated/dataModel';
+import type { QueryCtx } from '../../../convex/_generated/server';
 
 /**
  * Result of finding the max week for a quarterly goal's children.
@@ -19,6 +19,9 @@ export interface FindMaxWeekResult {
 /**
  * Finds the maximum week number where a quarterly goal's weekly children have states.
  * This represents the "last non-empty week" for a specific quarterly goal.
+ *
+ * This is used by the "pull goals from quarter" use case to determine which week's
+ * goals should be pulled when migrating goals to a new quarter.
  *
  * This is distinct from `findLastNonEmptyWeek` in `moveGoalsFromWeek/` which:
  * - Searches backwards from a given week

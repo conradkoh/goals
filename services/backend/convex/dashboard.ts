@@ -6,7 +6,7 @@ import { DayOfWeek } from '../src/constants';
 import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
-import { findMaxWeekForQuarterlyGoal } from '../src/usecase/goal';
+import { findMaxWeekForQuarterlyGoal } from '../src/usecase/moveGoalsFromQuarter';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { joinPath, validateGoalPath } from '../src/util/path';

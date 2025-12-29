@@ -16,9 +16,9 @@ import {
   createGoalState,
   createGoalWithCarryOver,
   deduplicateByRootGoalId,
-  findMaxWeekForQuarterlyGoal,
   GoalDepth,
 } from '../src/usecase/goal';
+import { findMaxWeekForQuarterlyGoal } from '../src/usecase/moveGoalsFromQuarter';
 import {
   moveGoalsFromLastNonEmptyWeekUsecase,
   moveGoalsFromWeekUsecase,

@@ -183,7 +183,7 @@ services/backend/src/usecase/goal/
 
 ```
 services/backend/src/usecase/
-├── goal/                                    # NEW - Goal-related helpers
+├── goal/                                    # Generic goal helpers (reusable across use cases)
 │   ├── index.ts                             # Re-exports all helpers
 │   │
 │   ├── create-goal/                         # Goal creation helpers
@@ -193,25 +193,22 @@ services/backend/src/usecase/
 │   │   ├── createGoalState.ts               # Create goalStateByWeek entry
 │   │   └── createGoalState.spec.ts
 │   │
-│   ├── find-week/                           # Week-finding helpers
-│   │   ├── index.ts
-│   │   ├── findMaxWeekForQuarterlyGoal.ts   # Find max week for a quarterly goal's children
-│   │   └── findMaxWeekForQuarterlyGoal.spec.ts
-│   │
-│   ├── filter/                              # Filtering and deduplication helpers
-│   │   ├── index.ts
-│   │   ├── deduplicateByRootGoalId.ts       # Deduplicate goals by root ID
-│   │   └── deduplicateByRootGoalId.spec.ts
-│   │
-│   └── types.ts                             # Shared types for goal operations
+│   └── filter/                              # Filtering and deduplication helpers
+│       ├── index.ts
+│       ├── deduplicateByRootGoalId.ts       # Deduplicate goals by root ID
+│       └── deduplicateByRootGoalId.spec.ts
 │
-├── moveGoalsFromWeek/                       # Existing - Week-to-week move logic
+├── moveGoalsFromWeek/                       # Use case: Week-to-week goal migration
 │   ├── index.ts
-│   ├── findLastNonEmptyWeek.ts              # Keep separate - searches backwards across ALL goals
+│   ├── findLastNonEmptyWeek.ts              # Find last non-empty week (searches backwards across ALL goals)
 │   ├── moveGoalsFromWeek.ts
 │   └── ...
 │
-└── quarter/                                 # Existing - Quarter utilities
+├── moveGoalsFromQuarter/                    # Use case: Quarter-to-quarter goal migration (pull goals)
+│   ├── index.ts
+│   └── findMaxWeekForQuarterlyGoal.ts       # Find max week for a specific quarterly goal's children
+│
+└── quarter/                                 # Quarter date/week calculations
     ├── index.ts
     ├── getQuarterWeeks.ts
     ├── getFinalWeeksOfQuarter.ts
@@ -220,13 +217,14 @@ services/backend/src/usecase/
 
 ### Folder Organization Rationale
 
-| Folder               | Purpose                                               | Examples                                     |
-| -------------------- | ----------------------------------------------------- | -------------------------------------------- |
-| `goal/create-goal/`  | Helpers for creating goals and goal states            | `createGoalWithCarryOver`, `createGoalState` |
-| `goal/find-week/`    | Helpers for finding/calculating week numbers          | `findMaxWeekForQuarterlyGoal`                |
-| `goal/filter/`       | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId`                    |
-| `moveGoalsFromWeek/` | Existing - orchestrates moving goals between weeks    | `moveGoalsFromWeekUsecase`                   |
-| `quarter/`           | Existing - quarter date/week calculations             | `getQuarterWeeks`                            |
+| Folder                   | Purpose                                               | Examples                                     |
+| ------------------------ | ----------------------------------------------------- | -------------------------------------------- |
+| `goal/`                  | Generic reusable goal helpers                         | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/create-goal/`      | Goal and state creation helpers                       | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/filter/`           | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId`                    |
+| `moveGoalsFromWeek/`     | Use case: moving goals between weeks                  | `moveGoalsFromWeekUsecase`                   |
+| `moveGoalsFromQuarter/`  | Use case: pulling goals from previous quarter         | `findMaxWeekForQuarterlyGoal`                |
+| `quarter/`               | Quarter date/week calculations                        | `getQuarterWeeks`                            |
 
 ## Benefits
 
@@ -250,12 +248,12 @@ services/backend/src/usecase/
 
    - [x] `services/backend/src/usecase/goal/`
    - [x] `services/backend/src/usecase/goal/create-goal/`
-   - [x] `services/backend/src/usecase/goal/find-week/`
    - [x] `services/backend/src/usecase/goal/filter/`
+   - [x] `services/backend/src/usecase/moveGoalsFromQuarter/`
 
 2. [x] Implement `filter/deduplicateByRootGoalId.ts` (simplest, pure function - no DB access)
 
-3. [x] Implement `find-week/findMaxWeekForQuarterlyGoal.ts`
+3. [x] Implement `moveGoalsFromQuarter/findMaxWeekForQuarterlyGoal.ts`
 
 4. [x] Implement `create-goal/createGoalState.ts`
 
@@ -265,8 +263,8 @@ services/backend/src/usecase/
 
    - [x] `goal/index.ts`
    - [x] `goal/create-goal/index.ts`
-   - [x] `goal/find-week/index.ts`
    - [x] `goal/filter/index.ts`
+   - [x] `moveGoalsFromQuarter/index.ts`
 
 7. [x] Update `dashboard.ts` to use new helpers
 
