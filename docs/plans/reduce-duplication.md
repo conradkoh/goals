@@ -174,23 +174,50 @@ services/backend/src/usecase/goal/
 
 ```
 services/backend/src/usecase/
-├── goal/                                    # NEW
+├── goal/                                    # NEW - Goal-related helpers
 │   ├── index.ts                             # Re-exports all helpers
-│   ├── findMaxWeekForQuarterlyGoal.ts
-│   ├── findMaxWeekForQuarterlyGoal.spec.ts
-│   ├── createGoalWithCarryOver.ts
-│   ├── createGoalWithCarryOver.spec.ts
-│   ├── deduplicateByRootGoalId.ts
-│   ├── deduplicateByRootGoalId.spec.ts
-│   ├── createGoalState.ts
-│   ├── createGoalState.spec.ts
-│   └── types.ts                             # Shared types
-├── moveGoalsFromWeek/                       # Existing
-│   ├── findLastNonEmptyWeek.ts              # Keep separate - different use case
+│   │
+│   ├── create-goal/                         # Goal creation helpers
+│   │   ├── index.ts
+│   │   ├── createGoalWithCarryOver.ts       # Create goal with carry-over metadata
+│   │   ├── createGoalWithCarryOver.spec.ts
+│   │   ├── createGoalState.ts               # Create goalStateByWeek entry
+│   │   └── createGoalState.spec.ts
+│   │
+│   ├── find-week/                           # Week-finding helpers
+│   │   ├── index.ts
+│   │   ├── findMaxWeekForQuarterlyGoal.ts   # Find max week for a quarterly goal's children
+│   │   └── findMaxWeekForQuarterlyGoal.spec.ts
+│   │
+│   ├── filter/                              # Filtering and deduplication helpers
+│   │   ├── index.ts
+│   │   ├── deduplicateByRootGoalId.ts       # Deduplicate goals by root ID
+│   │   └── deduplicateByRootGoalId.spec.ts
+│   │
+│   └── types.ts                             # Shared types for goal operations
+│
+├── moveGoalsFromWeek/                       # Existing - Week-to-week move logic
+│   ├── index.ts
+│   ├── findLastNonEmptyWeek.ts              # Keep separate - searches backwards across ALL goals
+│   ├── moveGoalsFromWeek.ts
 │   └── ...
-└── quarter/                                 # Existing
+│
+└── quarter/                                 # Existing - Quarter utilities
+    ├── index.ts
+    ├── getQuarterWeeks.ts
+    ├── getFinalWeeksOfQuarter.ts
     └── ...
 ```
+
+### Folder Organization Rationale
+
+| Folder | Purpose | Examples |
+|--------|---------|----------|
+| `goal/create-goal/` | Helpers for creating goals and goal states | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/find-week/` | Helpers for finding/calculating week numbers | `findMaxWeekForQuarterlyGoal` |
+| `goal/filter/` | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId` |
+| `moveGoalsFromWeek/` | Existing - orchestrates moving goals between weeks | `moveGoalsFromWeekUsecase` |
+| `quarter/` | Existing - quarter date/week calculations | `getQuarterWeeks` |
 
 ## Benefits
 
@@ -210,15 +237,33 @@ services/backend/src/usecase/
 
 ## Implementation Order
 
-1. [ ] Create `services/backend/src/usecase/goal/` folder structure
-2. [ ] Implement `deduplicateByRootGoalId.ts` (simplest, pure function)
-3. [ ] Implement `findMaxWeekForQuarterlyGoal.ts`
-4. [ ] Implement `createGoalState.ts`
-5. [ ] Implement `createGoalWithCarryOver.ts`
-6. [ ] Update `dashboard.ts` to use new helpers
-7. [ ] Update `goal.ts` to use new helpers
-8. [ ] Add comprehensive tests
-9. [ ] Clean up any remaining duplication
+1. [ ] Create folder structure:
+   - [ ] `services/backend/src/usecase/goal/`
+   - [ ] `services/backend/src/usecase/goal/create-goal/`
+   - [ ] `services/backend/src/usecase/goal/find-week/`
+   - [ ] `services/backend/src/usecase/goal/filter/`
+
+2. [ ] Implement `filter/deduplicateByRootGoalId.ts` (simplest, pure function - no DB access)
+
+3. [ ] Implement `find-week/findMaxWeekForQuarterlyGoal.ts`
+
+4. [ ] Implement `create-goal/createGoalState.ts`
+
+5. [ ] Implement `create-goal/createGoalWithCarryOver.ts`
+
+6. [ ] Create index files for re-exports:
+   - [ ] `goal/index.ts`
+   - [ ] `goal/create-goal/index.ts`
+   - [ ] `goal/find-week/index.ts`
+   - [ ] `goal/filter/index.ts`
+
+7. [ ] Update `dashboard.ts` to use new helpers
+
+8. [ ] Update `goal.ts` to use new helpers
+
+9. [ ] Add comprehensive tests for each helper
+
+10. [ ] Clean up any remaining duplication
 
 ## Notes
 
