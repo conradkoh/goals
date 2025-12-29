@@ -24,18 +24,20 @@ Create a new folder: `services/backend/src/usecase/goal/`
 **Purpose:** Find the maximum week number where a quarterly goal's children have states.
 
 **Current locations:**
+
 - `dashboard.ts` lines 1272-1298 (`getGoalPullPreviewDetails`)
 - `goal.ts` lines 1277-1300 (`moveQuarterlyGoal`)
 
 **Proposed interface:**
+
 ```typescript
-import type { QueryCtx } from '../../convex/_generated/server';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { QueryCtx } from "../../convex/_generated/server";
+import type { Id } from "../../convex/_generated/dataModel";
 
 /**
  * Finds the maximum week number where a quarterly goal's weekly children have states.
  * This represents the "last non-empty week" for a specific quarterly goal.
- * 
+ *
  * @param ctx - Query context for database access
  * @param userId - The user ID
  * @param quarterlyGoalId - The quarterly goal to find max week for
@@ -45,14 +47,15 @@ import type { Id } from '../../convex/_generated/dataModel';
  */
 export async function findMaxWeekForQuarterlyGoal(
   ctx: QueryCtx,
-  userId: Id<'users'>,
-  quarterlyGoalId: Id<'goals'>,
+  userId: Id<"users">,
+  quarterlyGoalId: Id<"goals">,
   year: number,
   quarter: number
-): Promise<number | null>
+): Promise<number | null>;
 ```
 
 **Note:** This is distinct from `findLastNonEmptyWeek` in `moveGoalsFromWeek/` which:
+
 - Searches backwards from a given week
 - Checks ALL goals, not specific to one quarterly goal
 - Crosses quarter boundaries
@@ -62,24 +65,26 @@ export async function findMaxWeekForQuarterlyGoal(
 **Purpose:** Create a goal with proper carry-over metadata, preserving the root goal chain.
 
 **Current locations:**
+
 - `goal.ts` lines 1339-1357 (quarterly goal creation)
 - `goal.ts` lines 1418-1437 (weekly goal creation)
 - `goal.ts` lines 1535-1554 (daily goal creation)
 
 **Proposed interface:**
+
 ```typescript
-import type { MutationCtx } from '../../convex/_generated/server';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
+import type { MutationCtx } from "../../convex/_generated/server";
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 interface CreateGoalWithCarryOverParams {
   ctx: MutationCtx;
-  userId: Id<'users'>;
-  sourceGoal: Doc<'goals'>;
+  userId: Id<"users">;
+  sourceGoal: Doc<"goals">;
   target: {
     year: number;
     quarter: number;
   };
-  parentId?: Id<'goals'>;
+  parentId?: Id<"goals">;
   depth: 0 | 1 | 2; // quarterly, weekly, daily
   inPath: string;
 }
@@ -87,12 +92,12 @@ interface CreateGoalWithCarryOverParams {
 /**
  * Creates a new goal with proper carry-over metadata.
  * Preserves the rootGoalId chain for tracking goal lineage.
- * 
+ *
  * @returns The ID of the newly created goal
  */
 export async function createGoalWithCarryOver(
   params: CreateGoalWithCarryOverParams
-): Promise<Id<'goals'>>
+): Promise<Id<"goals">>;
 ```
 
 #### 1.3 `deduplicateByRootGoalId.ts`
@@ -100,23 +105,25 @@ export async function createGoalWithCarryOver(
 **Purpose:** Filter a list of goals to remove duplicates based on their root goal ID.
 
 **Current locations:**
+
 - `goal.ts` lines 1392-1401 (weekly goals)
 - `goal.ts` lines 1511-1520 (daily goals)
 
 **Proposed interface:**
+
 ```typescript
-import type { Doc, Id } from '../../convex/_generated/dataModel';
+import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 /**
  * Deduplicates goals by their rootGoalId.
  * When a goal has been carried over multiple times, only keep one instance.
- * 
+ *
  * @param goals - Array of goals to deduplicate
  * @returns Deduplicated array, keeping the first occurrence of each root goal
  */
-export function deduplicateByRootGoalId<T extends Doc<'goals'>>(
+export function deduplicateByRootGoalId<T extends Doc<"goals">>(
   goals: T[]
-): T[]
+): T[];
 ```
 
 #### 1.4 `createGoalState.ts`
@@ -124,14 +131,15 @@ export function deduplicateByRootGoalId<T extends Doc<'goals'>>(
 **Purpose:** Create a goalStateByWeek entry with consistent defaults.
 
 **Proposed interface:**
+
 ```typescript
-import type { MutationCtx } from '../../convex/_generated/server';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { MutationCtx } from "../../convex/_generated/server";
+import type { Id } from "../../convex/_generated/dataModel";
 
 interface CreateGoalStateParams {
   ctx: MutationCtx;
-  userId: Id<'users'>;
-  goalId: Id<'goals'>;
+  userId: Id<"users">;
+  goalId: Id<"goals">;
   year: number;
   quarter: number;
   weekNumber: number;
@@ -145,7 +153,7 @@ interface CreateGoalStateParams {
  */
 export async function createGoalState(
   params: CreateGoalStateParams
-): Promise<Id<'goalStateByWeek'>>
+): Promise<Id<"goalStateByWeek">>;
 ```
 
 ### Phase 2: Update Consumers
@@ -153,6 +161,7 @@ export async function createGoalState(
 After creating the helpers, update the following files to use them:
 
 1. **`services/backend/convex/goal.ts`**
+
    - `moveQuarterlyGoal` mutation
 
 2. **`services/backend/convex/dashboard.ts`**
@@ -211,13 +220,13 @@ services/backend/src/usecase/
 
 ### Folder Organization Rationale
 
-| Folder | Purpose | Examples |
-|--------|---------|----------|
-| `goal/create-goal/` | Helpers for creating goals and goal states | `createGoalWithCarryOver`, `createGoalState` |
-| `goal/find-week/` | Helpers for finding/calculating week numbers | `findMaxWeekForQuarterlyGoal` |
-| `goal/filter/` | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId` |
-| `moveGoalsFromWeek/` | Existing - orchestrates moving goals between weeks | `moveGoalsFromWeekUsecase` |
-| `quarter/` | Existing - quarter date/week calculations | `getQuarterWeeks` |
+| Folder               | Purpose                                               | Examples                                     |
+| -------------------- | ----------------------------------------------------- | -------------------------------------------- |
+| `goal/create-goal/`  | Helpers for creating goals and goal states            | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/find-week/`    | Helpers for finding/calculating week numbers          | `findMaxWeekForQuarterlyGoal`                |
+| `goal/filter/`       | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId`                    |
+| `moveGoalsFromWeek/` | Existing - orchestrates moving goals between weeks    | `moveGoalsFromWeekUsecase`                   |
+| `quarter/`           | Existing - quarter date/week calculations             | `getQuarterWeeks`                            |
 
 ## Benefits
 
@@ -229,15 +238,16 @@ services/backend/src/usecase/
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Regression in existing behavior | Comprehensive test coverage before refactoring |
-| Over-abstraction | Keep helpers focused and single-purpose |
-| Breaking changes to API | Internal refactoring only, no public API changes |
+| Risk                            | Mitigation                                       |
+| ------------------------------- | ------------------------------------------------ |
+| Regression in existing behavior | Comprehensive test coverage before refactoring   |
+| Over-abstraction                | Keep helpers focused and single-purpose          |
+| Breaking changes to API         | Internal refactoring only, no public API changes |
 
 ## Implementation Order
 
 1. [ ] Create folder structure:
+
    - [ ] `services/backend/src/usecase/goal/`
    - [ ] `services/backend/src/usecase/goal/create-goal/`
    - [ ] `services/backend/src/usecase/goal/find-week/`
@@ -252,6 +262,7 @@ services/backend/src/usecase/
 5. [ ] Implement `create-goal/createGoalWithCarryOver.ts`
 
 6. [ ] Create index files for re-exports:
+
    - [ ] `goal/index.ts`
    - [ ] `goal/create-goal/index.ts`
    - [ ] `goal/find-week/index.ts`
@@ -269,4 +280,3 @@ services/backend/src/usecase/
 
 - The existing `findLastNonEmptyWeek` in `moveGoalsFromWeek/` serves a different purpose (searching backwards from a given week across all goals) and should remain separate.
 - All helpers should use `QueryCtx` where possible (since `MutationCtx` extends `QueryCtx`) to maximize reusability.
-
