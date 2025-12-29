@@ -217,14 +217,14 @@ services/backend/src/usecase/
 
 ### Folder Organization Rationale
 
-| Folder                   | Purpose                                               | Examples                                     |
-| ------------------------ | ----------------------------------------------------- | -------------------------------------------- |
-| `goal/`                  | Generic reusable goal helpers                         | `createGoalWithCarryOver`, `createGoalState` |
-| `goal/create-goal/`      | Goal and state creation helpers                       | `createGoalWithCarryOver`, `createGoalState` |
-| `goal/filter/`           | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId`                    |
-| `moveGoalsFromWeek/`     | Use case: moving goals between weeks                  | `moveGoalsFromWeekUsecase`                   |
-| `moveGoalsFromQuarter/`  | Use case: pulling goals from previous quarter         | `findMaxWeekForQuarterlyGoal`                |
-| `quarter/`               | Quarter date/week calculations                        | `getQuarterWeeks`                            |
+| Folder                  | Purpose                                               | Examples                                     |
+| ----------------------- | ----------------------------------------------------- | -------------------------------------------- |
+| `goal/`                 | Generic reusable goal helpers                         | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/create-goal/`     | Goal and state creation helpers                       | `createGoalWithCarryOver`, `createGoalState` |
+| `goal/filter/`          | Pure functions for filtering/transforming goal arrays | `deduplicateByRootGoalId`                    |
+| `moveGoalsFromWeek/`    | Use case: moving goals between weeks                  | `moveGoalsFromWeekUsecase`                   |
+| `moveGoalsFromQuarter/` | Use case: pulling goals from previous quarter         | `findMaxWeekForQuarterlyGoal`                |
+| `quarter/`              | Quarter date/week calculations                        | `getQuarterWeeks`                            |
 
 ## Benefits
 
