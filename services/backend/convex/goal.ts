@@ -13,6 +13,13 @@ import {
   query,
 } from './_generated/server';
 import {
+  createGoalState,
+  createGoalWithCarryOver,
+  deduplicateByRootGoalId,
+  findMaxWeekForQuarterlyGoal,
+  GoalDepth,
+} from '../src/usecase/goal';
+import {
   moveGoalsFromLastNonEmptyWeekUsecase,
   moveGoalsFromWeekUsecase,
 } from '../src/usecase/moveGoalsFromWeek/moveGoalsFromWeek';
@@ -1273,36 +1280,19 @@ export const moveQuarterlyGoal = mutation({
     // Get all weeks in the source quarter
     const { weeks: sourceQuarterWeeks } = getQuarterWeeks(from.year, from.quarter);
 
-    // First, get ALL weekly goals (depth 1) that belong to this quarterly goal
-    const allWeeklyGoalsForQuarterly = await ctx.db
-      .query('goals')
-      .withIndex('by_user_and_year_and_quarter', (q) =>
-        q.eq('userId', userId).eq('year', from.year).eq('quarter', from.quarter)
-      )
-      .filter((q) => q.and(q.eq(q.field('depth'), 1), q.eq(q.field('parentId'), goalId)))
-      .collect();
-
-    const weeklyGoalIds = allWeeklyGoalsForQuarterly.map((g) => g._id);
-
-    // Get all goal states for these weekly goals to find the max week
-    const allWeeklyGoalStates = await ctx.db
-      .query('goalStateByWeek')
-      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q.eq('userId', userId).eq('year', from.year).eq('quarter', from.quarter)
-      )
-      .filter((q) => q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
-      .collect();
-
-    // Find the max week number from the weekly goal states
-    const maxWeekForThisQuarterlyGoal = allWeeklyGoalStates.reduce(
-      (max, state) => Math.max(max, state.weekNumber),
-      0
+    // Find the max week for this quarterly goal's children using the shared helper
+    const maxWeekResult = await findMaxWeekForQuarterlyGoal(
+      ctx,
+      userId,
+      goalId,
+      from.year,
+      from.quarter
     );
 
     // If no weekly goal states found, use the last week of the quarter as fallback
     const lastNonEmptyWeek =
-      maxWeekForThisQuarterlyGoal > 0
-        ? maxWeekForThisQuarterlyGoal
+      maxWeekResult.maxWeek !== null
+        ? maxWeekResult.maxWeek
         : (sourceQuarterWeeks[sourceQuarterWeeks.length - 1] ?? 1);
 
     // Get quarterly goal states to check starred/pinned status from the last non-empty week
@@ -1332,73 +1322,70 @@ export const moveQuarterlyGoal = mutation({
     // Get all week numbers in the target quarter using the proper utility
     const { weeks, startWeek } = getQuarterWeeks(to.year, to.quarter);
 
-    // Preserve the original rootGoalId from carry-over chains, or use the goal's own ID if it's the original
-    const quarterlyRootGoalId = quarterlyGoal.carryOver?.fromGoal.rootGoalId ?? quarterlyGoal._id;
-
-    // Create a new quarterly goal in the target quarter
-    const newQuarterlyGoalId = await ctx.db.insert('goals', {
+    // Create a new quarterly goal in the target quarter using the shared helper
+    const newQuarterlyGoalId = await createGoalWithCarryOver({
+      ctx,
       userId,
-      year: to.year,
-      quarter: to.quarter,
-      title: quarterlyGoal.title,
-      details: quarterlyGoal.details,
+      sourceGoal: quarterlyGoal,
+      target: to,
+      depth: GoalDepth.QUARTERLY,
       inPath: '/',
-      depth: 0, // Quarterly goals have depth 0
-      isComplete: false,
-      // Add a reference to the original goal, preserving the root goal ID
-      carryOver: {
-        type: 'week',
-        numWeeks: (quarterlyGoal.carryOver?.numWeeks ?? 0) + 1,
-        fromGoal: {
-          previousGoalId: quarterlyGoal._id,
-          rootGoalId: quarterlyRootGoalId,
-        },
-      },
     });
 
-    // Create goal states for all weeks in the new quarter
-    const weekStatePromises = [];
-    for (const weekNum of weeks) {
-      weekStatePromises.push(
-        ctx.db.insert('goalStateByWeek', {
-          userId,
-          year: to.year,
-          quarter: to.quarter,
-          goalId: newQuarterlyGoalId,
-          weekNumber: weekNum,
-          // Keep the original starred/pinned status on the first state
-          isStarred: weekNum === startWeek ? firstState?.isStarred || false : false,
-          isPinned: weekNum === startWeek ? firstState?.isPinned || false : false,
-        })
-      );
-    }
+    // Create goal states for all weeks in the new quarter using the shared helper
+    const weekStatePromises = weeks.map((weekNum) =>
+      createGoalState({
+        ctx,
+        userId,
+        goalId: newQuarterlyGoalId,
+        year: to.year,
+        quarter: to.quarter,
+        weekNumber: weekNum,
+        // Keep the original starred/pinned status on the first state
+        isStarred: weekNum === startWeek ? firstState?.isStarred || false : false,
+        isPinned: weekNum === startWeek ? firstState?.isPinned || false : false,
+      })
+    );
 
     await Promise.all(weekStatePromises);
 
-    // Filter the weekly goal states to only those in the max week (lastNonEmptyWeek)
-    const weeklyGoalStatesInMaxWeek = allWeeklyGoalStates.filter(
-      (state) => state.weekNumber === lastNonEmptyWeek
-    );
-
-    // Get the goal IDs from states in the max week only
-    const weeklyGoalIdsInMaxWeek = new Set(weeklyGoalStatesInMaxWeek.map((state) => state.goalId));
+    // Get all weekly goals for this quarterly goal
+    const allWeeklyGoalsForQuarterly = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', from.year)
+          .eq('quarter', from.quarter)
+          .eq('parentId', goalId)
+      )
+      .collect();
 
     // Filter weekly goals to only those that have a state in the max week
     const weeklyGoalsInMaxWeek = allWeeklyGoalsForQuarterly.filter(
-      (goal) => weeklyGoalIdsInMaxWeek.has(goal._id) && !goal.isComplete
+      (goal) => maxWeekResult.weeklyGoalIdsInMaxWeek.has(goal._id) && !goal.isComplete
     );
 
-    // Deduplicate by rootGoalId to ensure we only pull each conceptual goal once
-    const seenRootGoalIds = new Set<string>();
-    const deduplicatedWeeklyGoals = weeklyGoalsInMaxWeek.filter((goal) => {
-      const rootGoalId = goal.carryOver?.fromGoal.rootGoalId ?? goal._id;
-      const rootIdStr = rootGoalId.toString();
-      if (seenRootGoalIds.has(rootIdStr)) {
-        return false;
-      }
-      seenRootGoalIds.add(rootIdStr);
-      return true;
-    });
+    // Deduplicate by rootGoalId using the shared helper
+    const deduplicatedWeeklyGoals = deduplicateByRootGoalId(weeklyGoalsInMaxWeek);
+
+    // Get goal states in the max week for these weekly goals to get starred/pinned info
+    const weeklyGoalStatesInMaxWeek =
+      deduplicatedWeeklyGoals.length > 0
+        ? await ctx.db
+            .query('goalStateByWeek')
+            .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+              q
+                .eq('userId', userId)
+                .eq('year', from.year)
+                .eq('quarter', from.quarter)
+                .eq('weekNumber', lastNonEmptyWeek)
+            )
+            .filter((q) =>
+              q.or(...deduplicatedWeeklyGoals.map((g) => q.eq(q.field('goalId'), g._id)))
+            )
+            .collect()
+        : [];
 
     // Create a map of state by goalId for getting day of week info (for weekly and daily goals)
     const weeklyStateByGoalId = new Map<Id<'goals'>, Doc<'goalStateByWeek'>>();
@@ -1411,43 +1398,28 @@ export const moveQuarterlyGoal = mutation({
 
     // Copy each incomplete weekly goal in parallel
     const weeklyGoalPromises = deduplicatedWeeklyGoals.map(async (weeklyGoal) => {
-      // Preserve the original rootGoalId from carry-over chains, or use the goal's own ID if it's the original
-      const rootGoalId = weeklyGoal.carryOver?.fromGoal.rootGoalId ?? weeklyGoal._id;
-
-      // Create the new weekly goal
-      const newWeeklyGoalId = await ctx.db.insert('goals', {
+      // Create the new weekly goal using the shared helper
+      const newWeeklyGoalId = await createGoalWithCarryOver({
+        ctx,
         userId,
-        year: to.year,
-        quarter: to.quarter,
-        title: weeklyGoal.title,
-        details: weeklyGoal.details,
-        inPath: `/${newQuarterlyGoalId}`,
+        sourceGoal: weeklyGoal,
+        target: to,
         parentId: newQuarterlyGoalId,
-        depth: 1, // Weekly goals have depth 1
-        isComplete: false,
-        // Add a reference to the original goal, preserving the root goal ID
-        carryOver: {
-          type: 'week',
-          numWeeks: (weeklyGoal.carryOver?.numWeeks ?? 0) + 1,
-          fromGoal: {
-            previousGoalId: weeklyGoal._id,
-            rootGoalId: rootGoalId,
-          },
-        },
+        depth: GoalDepth.WEEKLY,
+        inPath: `/${newQuarterlyGoalId}`,
       });
 
       // Store the mapping from old ID to new ID
       weeklyGoalIdMap.set(weeklyGoal._id, newWeeklyGoalId);
 
-      // Create a goal state for the first week
-      await ctx.db.insert('goalStateByWeek', {
+      // Create a goal state for the first week using the shared helper
+      await createGoalState({
+        ctx,
         userId,
+        goalId: newWeeklyGoalId,
         year: to.year,
         quarter: to.quarter,
-        goalId: newWeeklyGoalId,
-        weekNumber: startWeek, // Use the first week of the quarter
-        isStarred: false,
-        isPinned: false,
+        weekNumber: startWeek,
       });
 
       return { originalId: weeklyGoal._id, newId: newWeeklyGoalId };
@@ -1507,17 +1479,8 @@ export const moveQuarterlyGoal = mutation({
       dailyStateByGoalId.set(state.goalId, state);
     });
 
-    // Deduplicate daily goals by rootGoalId
-    const seenDailyRootGoalIds = new Set<string>();
-    const deduplicatedDailyGoals = dailyGoalsInMaxWeek.filter((goal) => {
-      const rootGoalId = goal.carryOver?.fromGoal.rootGoalId ?? goal._id;
-      const rootIdStr = rootGoalId.toString();
-      if (seenDailyRootGoalIds.has(rootIdStr)) {
-        return false;
-      }
-      seenDailyRootGoalIds.add(rootIdStr);
-      return true;
-    });
+    // Deduplicate daily goals by rootGoalId using the shared helper
+    const deduplicatedDailyGoals = deduplicateByRootGoalId(dailyGoalsInMaxWeek);
 
     // Process all daily goals in parallel
     const dailyGoalPromises = deduplicatedDailyGoals.map(async (dailyGoal) => {
@@ -1528,40 +1491,25 @@ export const moveQuarterlyGoal = mutation({
       // Get the state for this daily goal to get day of week
       const dailyState = dailyStateByGoalId.get(dailyGoal._id);
 
-      // Preserve the original rootGoalId from carry-over chains, or use the goal's own ID if it's the original
-      const dailyRootGoalId = dailyGoal.carryOver?.fromGoal.rootGoalId ?? dailyGoal._id;
-
-      // Create the new daily goal
-      const newDailyGoalId = await ctx.db.insert('goals', {
+      // Create the new daily goal using the shared helper
+      const newDailyGoalId = await createGoalWithCarryOver({
+        ctx,
         userId,
-        year: to.year,
-        quarter: to.quarter,
-        title: dailyGoal.title,
-        details: dailyGoal.details,
-        inPath: `/${newQuarterlyGoalId}/${newWeeklyGoalId}`,
+        sourceGoal: dailyGoal,
+        target: to,
         parentId: newWeeklyGoalId,
-        depth: 2, // Daily goals have depth 2
-        isComplete: false,
-        // Add a reference to the original goal, preserving the root goal ID
-        carryOver: {
-          type: 'week',
-          numWeeks: (dailyGoal.carryOver?.numWeeks ?? 0) + 1,
-          fromGoal: {
-            previousGoalId: dailyGoal._id,
-            rootGoalId: dailyRootGoalId,
-          },
-        },
+        depth: GoalDepth.DAILY,
+        inPath: `/${newQuarterlyGoalId}/${newWeeklyGoalId}`,
       });
 
-      // Create a goal state for this daily goal
-      await ctx.db.insert('goalStateByWeek', {
+      // Create a goal state for this daily goal using the shared helper
+      await createGoalState({
+        ctx,
         userId,
+        goalId: newDailyGoalId,
         year: to.year,
         quarter: to.quarter,
-        goalId: newDailyGoalId,
-        weekNumber: startWeek, // Use the first week of the quarter
-        isStarred: false,
-        isPinned: false,
+        weekNumber: startWeek,
         // Preserve the day of week if available
         daily: dailyState?.daily || { dayOfWeek: 1 }, // Default to Monday if not specified
       });

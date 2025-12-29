@@ -6,6 +6,7 @@ import { DayOfWeek } from '../src/constants';
 import type { Doc } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
+import { findMaxWeekForQuarterlyGoal } from '../src/usecase/goal';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { joinPath, validateGoalPath } from '../src/util/path';
@@ -1268,46 +1269,29 @@ export const getGoalPullPreviewDetails = query({
 
     if (goal.depth === 0) {
       // For quarterly goals, only show weekly goals from the last non-empty week
-      // First, get all weekly goals for this quarterly goal
-      const allWeeklyGoals = await ctx.db
-        .query('goals')
-        .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
-          q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
-        )
-        .collect();
+      // Use the shared helper to find the max week for this quarterly goal
+      const maxWeekResult = await findMaxWeekForQuarterlyGoal(ctx, userId, goalId, year, quarter);
 
-      if (allWeeklyGoals.length > 0) {
-        const weeklyGoalIds = allWeeklyGoals.map((g) => g._id);
+      if (maxWeekResult.maxWeek !== null) {
+        lastNonEmptyWeek = maxWeekResult.maxWeek;
 
-        // Get all goal states for these weekly goals to find the max week
-        const allWeeklyGoalStates = await ctx.db
-          .query('goalStateByWeek')
-          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-            q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+        // Get only the weekly goals that exist in the max week
+        const allWeeklyGoals = await ctx.db
+          .query('goals')
+          .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+            q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
           )
-          .filter((q) => q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
           .collect();
 
-        // Find the max week number from the weekly goal states
-        const maxWeek = allWeeklyGoalStates.reduce(
-          (max, state) => Math.max(max, state.weekNumber),
-          0
-        );
-
-        if (maxWeek > 0) {
-          lastNonEmptyWeek = maxWeek;
-          // Filter to only weekly goals that have states in the max week
-          const weeklyGoalIdsInMaxWeek = new Set(
-            allWeeklyGoalStates
-              .filter((state) => state.weekNumber === maxWeek)
-              .map((state) => state.goalId)
-          );
-
-          children = allWeeklyGoals.filter((g) => weeklyGoalIdsInMaxWeek.has(g._id));
-        } else {
-          // No states found, return all weekly goals as fallback
-          children = allWeeklyGoals;
-        }
+        children = allWeeklyGoals.filter((g) => maxWeekResult.weeklyGoalIdsInMaxWeek.has(g._id));
+      } else {
+        // No states found, return all weekly goals as fallback
+        children = await ctx.db
+          .query('goals')
+          .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+            q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
+          )
+          .collect();
       }
     } else {
       // For non-quarterly goals, get all children normally

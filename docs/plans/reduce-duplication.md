@@ -246,31 +246,31 @@ services/backend/src/usecase/
 
 ## Implementation Order
 
-1. [ ] Create folder structure:
+1. [x] Create folder structure:
 
-   - [ ] `services/backend/src/usecase/goal/`
-   - [ ] `services/backend/src/usecase/goal/create-goal/`
-   - [ ] `services/backend/src/usecase/goal/find-week/`
-   - [ ] `services/backend/src/usecase/goal/filter/`
+   - [x] `services/backend/src/usecase/goal/`
+   - [x] `services/backend/src/usecase/goal/create-goal/`
+   - [x] `services/backend/src/usecase/goal/find-week/`
+   - [x] `services/backend/src/usecase/goal/filter/`
 
-2. [ ] Implement `filter/deduplicateByRootGoalId.ts` (simplest, pure function - no DB access)
+2. [x] Implement `filter/deduplicateByRootGoalId.ts` (simplest, pure function - no DB access)
 
-3. [ ] Implement `find-week/findMaxWeekForQuarterlyGoal.ts`
+3. [x] Implement `find-week/findMaxWeekForQuarterlyGoal.ts`
 
-4. [ ] Implement `create-goal/createGoalState.ts`
+4. [x] Implement `create-goal/createGoalState.ts`
 
-5. [ ] Implement `create-goal/createGoalWithCarryOver.ts`
+5. [x] Implement `create-goal/createGoalWithCarryOver.ts`
 
-6. [ ] Create index files for re-exports:
+6. [x] Create index files for re-exports:
 
-   - [ ] `goal/index.ts`
-   - [ ] `goal/create-goal/index.ts`
-   - [ ] `goal/find-week/index.ts`
-   - [ ] `goal/filter/index.ts`
+   - [x] `goal/index.ts`
+   - [x] `goal/create-goal/index.ts`
+   - [x] `goal/find-week/index.ts`
+   - [x] `goal/filter/index.ts`
 
-7. [ ] Update `dashboard.ts` to use new helpers
+7. [x] Update `dashboard.ts` to use new helpers
 
-8. [ ] Update `goal.ts` to use new helpers
+8. [x] Update `goal.ts` to use new helpers
 
 9. [ ] Add comprehensive tests for each helper
 
