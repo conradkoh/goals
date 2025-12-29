@@ -1,9 +1,6 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
-import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { useGoalContext } from '@/contexts/GoalContext';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
+
 import {
   AdhocSubGoalsList,
   GoalActionMenuNew,
@@ -19,6 +16,11 @@ import {
   useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
+
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { useGoalContext } from '@/contexts/GoalContext';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface AdhocGoalPopoverProps {
   /** Callback when goal is saved */
@@ -81,7 +83,7 @@ export function AdhocGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <_AdhocGoalPopoverContent
+        <AdhocGoalPopoverContentInner
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -104,7 +106,7 @@ export function AdhocGoalPopover({
 /**
  * Internal props for the content component, extending the public props.
  */
-interface _AdhocGoalPopoverContentProps extends AdhocGoalPopoverProps {
+interface AdhocGoalPopoverContentInnerProps extends AdhocGoalPopoverProps {
   /** Whether the goal is currently marked as complete */
   isComplete: boolean;
 }
@@ -113,7 +115,7 @@ interface _AdhocGoalPopoverContentProps extends AdhocGoalPopoverProps {
  * Internal content component that renders the actual popover/dialog content.
  * Separated to access contexts that are provided by the parent component.
  */
-function _AdhocGoalPopoverContent({
+function AdhocGoalPopoverContentInner({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -127,7 +129,7 @@ function _AdhocGoalPopoverContent({
   onChildUpdate,
   onChildDelete,
   onCreateChild,
-}: _AdhocGoalPopoverContentProps) {
+}: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

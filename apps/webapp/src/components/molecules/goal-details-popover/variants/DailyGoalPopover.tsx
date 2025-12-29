@@ -1,10 +1,6 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
-import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { Separator } from '@/components/ui/separator';
-import { useGoalContext } from '@/contexts/GoalContext';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
+
 import {
   GoalActionMenuNew,
   GoalCompletionDate,
@@ -19,6 +15,12 @@ import {
   useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
+
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { Separator } from '@/components/ui/separator';
+import { useGoalContext } from '@/contexts/GoalContext';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface DailyGoalPopoverProps {
   /** Callback when goal is saved */
@@ -60,7 +62,7 @@ export function DailyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <_DailyGoalPopoverContent
+        <DailyGoalPopoverContentInner
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -78,7 +80,7 @@ export function DailyGoalPopover({
 /**
  * Internal props for the content component, extending the public props.
  */
-interface _DailyGoalPopoverContentProps extends DailyGoalPopoverProps {
+interface DailyGoalPopoverContentInnerProps extends DailyGoalPopoverProps {
   /** Whether the goal is currently marked as complete */
   isComplete: boolean;
 }
@@ -87,7 +89,7 @@ interface _DailyGoalPopoverContentProps extends DailyGoalPopoverProps {
  * Internal content component that renders the actual popover/dialog content.
  * Separated to access contexts that are provided by the parent component.
  */
-function _DailyGoalPopoverContent({
+function DailyGoalPopoverContentInner({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -96,7 +98,7 @@ function _DailyGoalPopoverContent({
   additionalContent,
   domain,
   weekNumber,
-}: _DailyGoalPopoverContentProps) {
+}: DailyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
