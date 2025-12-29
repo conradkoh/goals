@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
-import { useGoalContext } from '@/contexts/GoalContext';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import { useWeek } from '@/hooks/useWeek';
-import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
+
 import {
   GoalActionMenuNew,
   GoalChildrenSection,
@@ -21,6 +16,13 @@ import {
   useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
+
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { useGoalContext } from '@/contexts/GoalContext';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useWeek } from '@/hooks/useWeek';
+import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface QuarterlyGoalPopoverProps {
   /** Callback when goal is saved */
@@ -93,7 +95,7 @@ export function QuarterlyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <_QuarterlyGoalPopoverContent
+        <QuarterlyGoalPopoverContentInner
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -115,7 +117,7 @@ export function QuarterlyGoalPopover({
 /**
  * Internal props for the quarterly goal content component.
  */
-interface _QuarterlyGoalPopoverContentProps extends QuarterlyGoalPopoverProps {
+interface QuarterlyGoalPopoverContentInnerProps extends QuarterlyGoalPopoverProps {
   /** Whether the goal is marked as complete */
   isComplete: boolean;
   /** Whether the goal is starred for this week */
@@ -138,7 +140,7 @@ interface _QuarterlyGoalPopoverContentProps extends QuarterlyGoalPopoverProps {
  * Internal content component for quarterly goal popover.
  * Separated to access contexts provided by parent.
  */
-function _QuarterlyGoalPopoverContent({
+function QuarterlyGoalPopoverContentInner({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -151,7 +153,7 @@ function _QuarterlyGoalPopoverContent({
   newWeeklyGoalTitle,
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
-}: _QuarterlyGoalPopoverContentProps) {
+}: QuarterlyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

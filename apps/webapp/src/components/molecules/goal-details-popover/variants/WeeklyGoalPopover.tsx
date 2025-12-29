@@ -1,19 +1,6 @@
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
-import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useGoalContext } from '@/contexts/GoalContext';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import { useWeek } from '@/hooks/useWeek';
-import { DayOfWeek, getDayName } from '@/lib/constants';
-import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
+
 import {
   GoalActionMenuNew,
   GoalChildrenSection,
@@ -29,6 +16,21 @@ import {
   useGoalEditContext,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
+
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useGoalContext } from '@/contexts/GoalContext';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, getDayName } from '@/lib/constants';
+import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface WeeklyGoalPopoverProps {
   /** Callback when goal is saved */
@@ -92,7 +94,7 @@ export function WeeklyGoalPopover({
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <_WeeklyGoalPopoverContent
+        <WeeklyGoalPopoverContentInner
           onSave={onSave}
           onToggleComplete={onToggleComplete}
           triggerClassName={triggerClassName}
@@ -112,7 +114,7 @@ export function WeeklyGoalPopover({
 /**
  * Internal props for the weekly goal content component.
  */
-interface _WeeklyGoalPopoverContentProps extends WeeklyGoalPopoverProps {
+interface WeeklyGoalPopoverContentInnerProps extends WeeklyGoalPopoverProps {
   /** Whether the goal is marked as complete */
   isComplete: boolean;
   /** Current value of the new daily goal input */
@@ -131,7 +133,7 @@ interface _WeeklyGoalPopoverContentProps extends WeeklyGoalPopoverProps {
  * Internal content component for weekly goal popover.
  * Separated to access contexts provided by parent.
  */
-function _WeeklyGoalPopoverContent({
+function WeeklyGoalPopoverContentInner({
   onSave,
   onToggleComplete,
   triggerClassName,
@@ -142,7 +144,7 @@ function _WeeklyGoalPopoverContent({
   selectedDayOfWeek,
   setSelectedDayOfWeek,
   handleCreateDailyGoal,
-}: _WeeklyGoalPopoverContentProps) {
+}: WeeklyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();

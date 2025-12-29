@@ -632,10 +632,21 @@ export const moveGoalsFromQuarter = action({
     }),
     dryRun: v.optional(v.boolean()),
     debug: v.optional(v.boolean()),
+    // Optional: specify which goals to move (if not provided, all incomplete goals are moved)
+    selectedQuarterlyGoalIds: v.optional(v.array(v.id('goals'))),
+    selectedAdhocGoalIds: v.optional(v.array(v.id('goals'))),
   },
   // biome-ignore lint/suspicious/noExplicitAny: Complex return type varies based on dryRun flag
   handler: async (ctx, args): Promise<any> => {
-    const { sessionId, from, to, dryRun = false, debug = false } = args;
+    const {
+      sessionId,
+      from,
+      to,
+      dryRun = false,
+      debug = false,
+      selectedQuarterlyGoalIds,
+      selectedAdhocGoalIds,
+    } = args;
     // Auth check
     // Auth check - look up session by sessionId field
     const session = await ctx.runQuery(internal.goal.getSessionBySessionId, { sessionId });
@@ -680,28 +691,41 @@ export const moveGoalsFromQuarter = action({
     );
 
     // Get all quarterly goals from the source quarter
-    const quarterlyGoals = await ctx.runQuery(internal.goal.getIncompleteQuarterlyGoals, {
+    const allQuarterlyGoals = await ctx.runQuery(internal.goal.getIncompleteQuarterlyGoals, {
       userId,
       year: from.year,
       quarter: from.quarter,
     });
-    console.log(`[moveGoalsFromQuarter] Found ${quarterlyGoals.length} quarterly goals`);
+    console.log(`[moveGoalsFromQuarter] Found ${allQuarterlyGoals.length} quarterly goals`);
 
     // Get incomplete adhoc goals from the source quarter
-    const adhocGoals = await ctx.runQuery(internal.goal.getIncompleteAdhocGoalsForQuarter, {
+    const allAdhocGoals = await ctx.runQuery(internal.goal.getIncompleteAdhocGoalsForQuarter, {
       userId,
       year: from.year,
       quarter: from.quarter,
     });
-    console.log(`[moveGoalsFromQuarter] Found ${adhocGoals.length} adhoc goals`);
+    console.log(`[moveGoalsFromQuarter] Found ${allAdhocGoals.length} adhoc goals`);
 
     if (dryRun) {
       return {
-        quarterlyGoalsToCopy: quarterlyGoals,
-        adhocGoalsToCopy: adhocGoals,
+        quarterlyGoalsToCopy: allQuarterlyGoals,
+        adhocGoalsToCopy: allAdhocGoals,
         isDryRun: true,
       };
     }
+
+    // Filter goals based on selection (if provided)
+    const quarterlyGoals = selectedQuarterlyGoalIds
+      ? allQuarterlyGoals.filter((g) => selectedQuarterlyGoalIds.includes(g.id))
+      : allQuarterlyGoals;
+
+    const adhocGoals = selectedAdhocGoalIds
+      ? allAdhocGoals.filter((g: { id: Id<'goals'> }) => selectedAdhocGoalIds.includes(g.id))
+      : allAdhocGoals;
+
+    console.log(
+      `[moveGoalsFromQuarter] After selection filter: ${quarterlyGoals.length} quarterly, ${adhocGoals.length} adhoc`
+    );
 
     // === STAGE 2: If not a dry run, migrate each goal SEQUENTIALLY ===
     const migrationResults = [];

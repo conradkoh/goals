@@ -1099,3 +1099,97 @@ export const getAdhocGoalCountsByDomainForQuarter = query({
     return countsByDomain;
   },
 });
+
+/**
+ * Retrieves detailed information about a single goal.
+ * Used for preview dialogs and standalone goal popovers.
+ *
+ * @public
+ * @param sessionId - Session ID for authentication
+ * @param goalId - ID of the goal to retrieve
+ * @returns Goal details including domain, state, and children, or null if not found
+ */
+export const getGoalDetails = query({
+  args: {
+    ...SessionIdArg,
+    goalId: v.id('goals'),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the goal
+    const goal = await ctx.db.get('goals', goalId);
+    if (!goal) {
+      return null;
+    }
+
+    // Verify ownership
+    if (goal.userId !== userId) {
+      return null;
+    }
+
+    // Get domain if exists
+    let domain: Doc<'domains'> | null = null;
+    if (goal.domainId) {
+      domain = await ctx.db.get('domains', goal.domainId);
+    }
+
+    // Get goal state for the most recent week (for quarterly goals)
+    let state: { isStarred: boolean; isPinned: boolean } | null = null;
+    if (goal.depth === 0) {
+      // Quarterly goal - get latest state
+      const states = await ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
+          q
+            .eq('userId', userId)
+            .eq('goalId', goalId)
+            .eq('year', goal.year)
+            .eq('quarter', goal.quarter)
+        )
+        .order('desc')
+        .take(1);
+
+      if (states.length > 0) {
+        state = {
+          isStarred: states[0].isStarred ?? false,
+          isPinned: states[0].isPinned ?? false,
+        };
+      }
+    }
+
+    // Get children (weekly goals for quarterly, or adhoc children)
+    const children = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('parentId', goalId)
+      )
+      .collect();
+
+    return {
+      _id: goal._id,
+      title: goal.title,
+      details: goal.details,
+      isComplete: goal.isComplete,
+      completedAt: goal.completedAt,
+      dueDate: goal.dueDate,
+      depth: goal.depth,
+      year: goal.year,
+      quarter: goal.quarter,
+      adhoc: goal.adhoc,
+      domain,
+      state,
+      children: children.map((child) => ({
+        _id: child._id,
+        title: child.title,
+        isComplete: child.isComplete,
+      })),
+    };
+  },
+});
