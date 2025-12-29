@@ -202,7 +202,7 @@ export function useMoveGoalsForQuarter({
   // Subscribe to the preview query for reactive updates
   // Only query when the dialog is open to avoid unnecessary data fetching
   const previewData = useSessionQuery(
-    showConfirmDialog ? api.goal.getQuarterGoalsMovePreview : 'skip',
+    api.goal.getQuarterGoalsMovePreview,
     showConfirmDialog
       ? {
           from: {
