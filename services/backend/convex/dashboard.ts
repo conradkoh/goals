@@ -1193,3 +1193,151 @@ export const getGoalDetails = query({
     };
   },
 });
+
+/**
+ * Retrieves detailed information about a goal for the quarterly pull preview.
+ * Shows only children from the last non-empty week of the specified quarter.
+ *
+ * This query is specifically designed for the quarterly goal pull preview, where we need
+ * to show only the goals from the last active week of a quarter to avoid pulling duplicates.
+ *
+ * @public
+ * @param sessionId - Session ID for authentication
+ * @param goalId - ID of the goal to retrieve
+ * @param year - Year of the quarter context
+ * @param quarter - Quarter number (1-4) of the quarter context
+ * @returns Goal details including domain, state, and children from last week, or null if not found
+ */
+export const getGoalPullPreviewDetails = query({
+  args: {
+    ...SessionIdArg,
+    goalId: v.id('goals'),
+    year: v.number(),
+    quarter: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { sessionId, goalId, year, quarter } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the goal
+    const goal = await ctx.db.get('goals', goalId);
+    if (!goal) {
+      return null;
+    }
+
+    // Verify ownership
+    if (goal.userId !== userId) {
+      return null;
+    }
+
+    // Verify the goal belongs to the specified year/quarter
+    if (goal.year !== year || goal.quarter !== quarter) {
+      return null;
+    }
+
+    // Get domain if exists
+    let domain: Doc<'domains'> | null = null;
+    if (goal.domainId) {
+      domain = await ctx.db.get('domains', goal.domainId);
+    }
+
+    // Get goal state for the most recent week (for quarterly goals)
+    let state: { isStarred: boolean; isPinned: boolean } | null = null;
+    if (goal.depth === 0) {
+      // Quarterly goal - get latest state
+      const states = await ctx.db
+        .query('goalStateByWeek')
+        .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
+          q.eq('userId', userId).eq('goalId', goalId).eq('year', year).eq('quarter', quarter)
+        )
+        .order('desc')
+        .take(1);
+
+      if (states.length > 0) {
+        state = {
+          isStarred: states[0].isStarred ?? false,
+          isPinned: states[0].isPinned ?? false,
+        };
+      }
+    }
+
+    // Get children (weekly goals for quarterly, or adhoc children)
+    let children: Doc<'goals'>[] = [];
+    let lastNonEmptyWeek: number | undefined = undefined;
+
+    if (goal.depth === 0) {
+      // For quarterly goals, only show weekly goals from the last non-empty week
+      // First, get all weekly goals for this quarterly goal
+      const allWeeklyGoals = await ctx.db
+        .query('goals')
+        .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+          q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
+        )
+        .collect();
+
+      if (allWeeklyGoals.length > 0) {
+        const weeklyGoalIds = allWeeklyGoals.map((g) => g._id);
+
+        // Get all goal states for these weekly goals to find the max week
+        const allWeeklyGoalStates = await ctx.db
+          .query('goalStateByWeek')
+          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+            q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+          )
+          .filter((q) => q.or(...weeklyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
+          .collect();
+
+        // Find the max week number from the weekly goal states
+        const maxWeek = allWeeklyGoalStates.reduce(
+          (max, state) => Math.max(max, state.weekNumber),
+          0
+        );
+
+        if (maxWeek > 0) {
+          lastNonEmptyWeek = maxWeek;
+          // Filter to only weekly goals that have states in the max week
+          const weeklyGoalIdsInMaxWeek = new Set(
+            allWeeklyGoalStates
+              .filter((state) => state.weekNumber === maxWeek)
+              .map((state) => state.goalId)
+          );
+
+          children = allWeeklyGoals.filter((g) => weeklyGoalIdsInMaxWeek.has(g._id));
+        } else {
+          // No states found, return all weekly goals as fallback
+          children = allWeeklyGoals;
+        }
+      }
+    } else {
+      // For non-quarterly goals, get all children normally
+      children = await ctx.db
+        .query('goals')
+        .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+          q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
+        )
+        .collect();
+    }
+
+    return {
+      _id: goal._id,
+      title: goal.title,
+      details: goal.details,
+      isComplete: goal.isComplete,
+      completedAt: goal.completedAt,
+      dueDate: goal.dueDate,
+      depth: goal.depth,
+      year: goal.year,
+      quarter: goal.quarter,
+      adhoc: goal.adhoc,
+      domain,
+      state,
+      lastNonEmptyWeek, // Include the week number for the frontend
+      children: children.map((child) => ({
+        _id: child._id,
+        title: child.title,
+        isComplete: child.isComplete,
+      })),
+    };
+  },
+});

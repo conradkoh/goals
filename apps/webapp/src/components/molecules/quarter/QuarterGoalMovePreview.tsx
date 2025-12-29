@@ -9,7 +9,6 @@
  */
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
-import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
 import {
   ArrowRightLeft,
   Calendar,
@@ -282,17 +281,14 @@ export function QuarterGoalMovePreview({
     (goalId: Id<'goals'>, _type: 'quarterly' | 'adhoc') => {
       if (sourceYear === undefined || sourceQuarter === undefined) return;
 
-      // Get the last week of the source quarter for context
-      const { endWeek } = getQuarterWeeks(sourceYear, sourceQuarter);
-
-      // Build the URL for the goal's dedicated page
+      // Build the URL for the quarterly pull preview page
+      // This shows only goals from the last non-empty week
       const params = new URLSearchParams();
       params.set('year', sourceYear.toString());
       params.set('quarter', sourceQuarter.toString());
-      params.set('week', endWeek.toString());
 
       // Open in a new tab
-      window.open(`/app/goals/${goalId}?${params.toString()}`, '_blank');
+      window.open(`/app/quarterly-pull-preview/goals/${goalId}?${params.toString()}`, '_blank');
     },
     [sourceYear, sourceQuarter]
   );
