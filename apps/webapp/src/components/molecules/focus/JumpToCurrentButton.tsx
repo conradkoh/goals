@@ -1,7 +1,7 @@
 import { CalendarClock } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
-import { useQuarterWeekInfo } from '@/hooks/useQuarterWeekInfo';
+import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import type { DayOfWeek } from '@/lib/constants';
 
 export interface JumpToCurrentButtonProps {
@@ -26,10 +26,10 @@ export interface JumpToCurrentButtonProps {
   selectedDay: DayOfWeek;
 
   /**
-   * Unified callback function - will be called with current week and day
-   * This updates all views to the current day in the current week
+   * Unified callback function - will be called with current year, quarter, week and day
+   * This updates all views to the current day in the current week of the current quarter
    */
-  onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
+  onJumpToToday: (year: number, quarter: number, weekNumber: number, dayOfWeek: DayOfWeek) => void;
 
   /**
    * Optional CSS class name for additional styling
@@ -50,15 +50,19 @@ export const JumpToCurrentButton = ({
   onJumpToToday,
   className = '',
 }: JumpToCurrentButtonProps) => {
-  // Get current date information
-  const { weekday: currentDay } = useCurrentWeekInfo();
-  const { currentWeekNumber: quarterCurrentWeekNumber } = useQuarterWeekInfo(
-    year,
-    quarter as 1 | 2 | 3 | 4
-  );
+  // Get current date information - includes year, quarter, weekNumber, and weekday
+  const currentDateInfo = useCurrentDateInfo();
+  const currentYear = currentDateInfo.year;
+  const currentQuarter = currentDateInfo.quarter;
+  const currentWeekNumber = currentDateInfo.weekNumber;
+  const currentDay = currentDateInfo.weekday;
 
-  // Check if we're already viewing today (both current week AND current day)
-  const isViewingToday = selectedWeek === quarterCurrentWeekNumber && selectedDay === currentDay;
+  // Check if we're already viewing today (same year, quarter, week, AND day)
+  const isViewingToday =
+    year === currentYear &&
+    quarter === currentQuarter &&
+    selectedWeek === currentWeekNumber &&
+    selectedDay === currentDay;
 
   // Don't show the button if we're already viewing today
   if (isViewingToday) {
@@ -66,7 +70,7 @@ export const JumpToCurrentButton = ({
   }
 
   const handleJumpToToday = () => {
-    onJumpToToday(quarterCurrentWeekNumber, currentDay);
+    onJumpToToday(currentYear, currentQuarter, currentWeekNumber, currentDay);
   };
 
   return (

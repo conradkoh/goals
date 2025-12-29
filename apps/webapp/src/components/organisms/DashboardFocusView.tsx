@@ -112,7 +112,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const { selectedYear, selectedQuarter, handleDayNavigation, isFocusModeEnabled } = useDashboard();
+  const { selectedYear, selectedQuarter, isFocusModeEnabled, updateUrlParams } = useDashboard();
   const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
   const { weekday: currentDay } = useCurrentWeekInfo();
 
@@ -211,13 +211,20 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   /**
    * Unified callback for jumping to the current date across all views.
+   * Updates year, quarter, week, and day to navigate to today in a single URL update.
    * @internal
    */
   const handleJumpToToday = useCallback(
-    (weekNumber: number, dayOfWeek: DayOfWeek) => {
-      handleDayNavigation(weekNumber, dayOfWeek);
+    (year: number, quarter: number, weekNumber: number, dayOfWeek: DayOfWeek) => {
+      // Update all parameters at once to avoid race conditions
+      updateUrlParams({
+        year,
+        quarter,
+        week: weekNumber,
+        day: dayOfWeek,
+      });
     },
-    [handleDayNavigation]
+    [updateUrlParams]
   );
 
   /**

@@ -1,6 +1,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback, useMemo } from 'react';
+
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
@@ -17,7 +18,12 @@ interface FocusModeDailyViewProps {
   weekNumber: number;
   weekData: WeekData;
   selectedDayOfWeek: DayOfWeek;
-  onJumpToCurrent: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
+  onJumpToCurrent: (
+    year: number,
+    quarter: number,
+    weekNumber: number,
+    dayOfWeek: DayOfWeek
+  ) => void;
   isFocusModeEnabled?: boolean;
 }
 

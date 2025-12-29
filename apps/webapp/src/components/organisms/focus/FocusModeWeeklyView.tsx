@@ -1,19 +1,21 @@
-import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMemo } from 'react';
+
+import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
+import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
+import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
+
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { type WeekData, WeekProvider } from '@/hooks/useWeek';
-import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
-import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
-import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
+import type { DayOfWeek } from '@/lib/constants';
 
 interface FocusModeWeeklyViewProps {
   weekNumber: number;
   year: number;
   quarter: number;
   weekData: WeekData;
-  onJumpToToday: (weekNumber: number, dayOfWeek: DayOfWeek) => void;
+  onJumpToToday: (year: number, quarter: number, weekNumber: number, dayOfWeek: DayOfWeek) => void;
 }
 
 /** Props for the inner component - excludes weekData since it uses context */
