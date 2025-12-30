@@ -39,8 +39,6 @@ import { useSession } from '@/modules/auth/useSession';
  *   viewMode="weekly"
  *   selectedWeekNumber={48}
  *   selectedDayOfWeek={1}
- *   isAtMinBound={false}
- *   isAtMaxBound={false}
  *   onViewModeChange={(mode) => console.log('View mode:', mode)}
  *   onPrevious={() => console.log('Previous')}
  *   onNext={() => console.log('Next')}
@@ -54,10 +52,6 @@ export interface DashboardFocusViewProps {
   selectedWeekNumber: number;
   /** Currently selected day of week */
   selectedDayOfWeek: DayOfWeek;
-  /** Whether the view is at the minimum date boundary */
-  isAtMinBound: boolean;
-  /** Whether the view is at the maximum date boundary */
-  isAtMaxBound: boolean;
   /** Callback fired when the view mode changes */
   onViewModeChange: (viewMode: ViewMode) => void;
   /** Callback fired when navigating to the previous period */
@@ -105,8 +99,6 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   viewMode,
   selectedWeekNumber,
   selectedDayOfWeek,
-  isAtMinBound,
-  isAtMaxBound,
   onViewModeChange,
   onPrevious,
   onNext,
@@ -389,8 +381,6 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             viewMode={viewMode}
             selectedWeek={selectedWeekNumber}
             selectedDay={selectedDayOfWeek}
-            isAtMinBound={isAtMinBound}
-            isAtMaxBound={isAtMaxBound}
             onPrevious={onPrevious}
             onNext={onNext}
             selectedYear={selectedYear}

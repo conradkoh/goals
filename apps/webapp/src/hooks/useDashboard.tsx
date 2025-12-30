@@ -54,12 +54,6 @@ interface DashboardContextValue {
   viewMode: ViewMode;
   isFocusModeEnabled: boolean;
 
-  // Navigation bounds (for quarterly view)
-  startWeek: number;
-  endWeek: number;
-  isAtMinBound: boolean;
-  isAtMaxBound: boolean;
-
   // URL update functions
   updateUrlParams: (params: {
     week?: number;
@@ -72,9 +66,6 @@ interface DashboardContextValue {
   }) => void;
   handleViewModeChange: (newViewMode: ViewMode) => void;
   handleYearQuarterChange: (year: number, quarter: number) => void;
-  handleWeekNavigation: (weekNumber: number, weekYear?: number) => void;
-  handleDayNavigation: (weekNumber: number, dayOfWeek: DayOfWeek, weekYear?: number) => void;
-  handleWeekYearChange: (weekYear: number) => void;
   handlePrevious: () => void;
   handleNext: () => void;
   toggleFocusMode: () => void;
@@ -269,31 +260,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     [updateUrlParams]
   );
 
-  // Handle week navigation
-  const handleWeekNavigation = useCallback(
-    (weekNumber: number, weekYear?: number) => {
-      updateUrlParams({ week: weekNumber, weekYear });
-    },
-    [updateUrlParams]
-  );
-
-  // Handle day navigation
-  const handleDayNavigation = useCallback(
-    (weekNumber: number, dayOfWeek: DayOfWeek, weekYear?: number) => {
-      updateUrlParams({ week: weekNumber, day: dayOfWeek, weekYear });
-    },
-    [updateUrlParams]
-  );
-
-  // Handle week year change (for weekly/daily views)
-  const handleWeekYearChange = useCallback(
-    (weekYear: number) => {
-      // When changing year, reset to week 1 of that year
-      updateUrlParams({ weekYear, week: 1 });
-    },
-    [updateUrlParams]
-  );
-
   // Handle previous navigation
   const handlePrevious = useCallback(() => {
     if (isAtMinBound) return;
@@ -440,19 +406,10 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       viewMode,
       isFocusModeEnabled: searchParams.get('focusMode') === 'true',
 
-      // Navigation bounds
-      startWeek,
-      endWeek,
-      isAtMinBound,
-      isAtMaxBound,
-
       // URL update functions
       updateUrlParams,
       handleViewModeChange,
       handleYearQuarterChange,
-      handleWeekNavigation,
-      handleDayNavigation,
-      handleWeekYearChange,
       handlePrevious,
       handleNext,
       toggleFocusMode,
@@ -473,16 +430,9 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       selectedDayOfWeek,
       viewMode,
       searchParams,
-      startWeek,
-      endWeek,
-      isAtMinBound,
-      isAtMaxBound,
       updateUrlParams,
       handleViewModeChange,
       handleYearQuarterChange,
-      handleWeekNavigation,
-      handleDayNavigation,
-      handleWeekYearChange,
       handlePrevious,
       handleNext,
       toggleFocusMode,

@@ -28,8 +28,6 @@ export type FocusMenuBarProps = {
   onViewModeChange?: (viewMode: ViewMode) => void;
   selectedWeek?: number;
   selectedDay?: DayOfWeek;
-  isAtMinBound?: boolean;
-  isAtMaxBound?: boolean;
   onPrevious?: () => void;
   onNext?: () => void;
   selectedYear: number;
@@ -58,8 +56,6 @@ export const FocusMenuBar = ({
   onViewModeChange,
   selectedWeek,
   selectedDay,
-  // isAtMinBound and isAtMaxBound are kept in props for backwards compatibility
-  // but not used since weekly/daily views have no navigation bounds
   onPrevious,
   onNext,
   selectedYear,

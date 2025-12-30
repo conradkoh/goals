@@ -18,8 +18,6 @@ const DashboardPage = () => {
     selectedWeek,
     selectedDayOfWeek,
     viewMode,
-    isAtMinBound,
-    isAtMaxBound,
     handleViewModeChange,
     handleYearQuarterChange,
     handlePrevious,
@@ -62,8 +60,6 @@ const DashboardPage = () => {
           viewMode={viewMode}
           selectedWeekNumber={selectedWeek}
           selectedDayOfWeek={selectedDayOfWeek}
-          isAtMinBound={isAtMinBound}
-          isAtMaxBound={isAtMaxBound}
           onViewModeChange={handleViewModeChange}
           onPrevious={handlePrevious}
           onNext={handleNext}
