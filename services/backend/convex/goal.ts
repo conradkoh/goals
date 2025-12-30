@@ -1433,6 +1433,10 @@ export const moveQuarterlyGoal = mutation({
     const weeklyGoalIdSet = new Set(deduplicatedWeeklyGoals.map((g) => g._id));
 
     // Get all daily goals that are children of our weekly goals
+    // Note: We filter by depth=2 after the index scan. This is acceptable because:
+    // 1. Convex runs in the database, making N+1 queries efficient
+    // 2. Goal counts per quarter are typically < 1000, so full scan is fast
+    // 3. Adding a by_user_year_quarter_depth index is an option if this becomes a bottleneck
     const allDailyGoalsForWeeklyGoals = await ctx.db
       .query('goals')
       .withIndex('by_user_and_year_and_quarter', (q) =>
@@ -1446,12 +1450,13 @@ export const moveQuarterlyGoal = mutation({
       (goal) => goal.parentId !== undefined && weeklyGoalIdSet.has(goal.parentId)
     );
 
-    // Get the daily goal IDs
-    const dailyGoalIds = dailyGoalsForOurWeeklyGoals.map((g) => g._id);
+    // Get the daily goal IDs as a Set for O(1) lookup
+    const dailyGoalIdsSet = new Set(dailyGoalsForOurWeeklyGoals.map((g) => g._id));
 
-    // Get goal states for these daily goals in the max week only
-    const dailyGoalStatesInMaxWeek =
-      dailyGoalIds.length > 0
+    // Get all goal states for the max week, then filter in-memory
+    // This avoids the potential performance issue with large .or() chains
+    const allStatesInMaxWeek =
+      dailyGoalsForOurWeeklyGoals.length > 0
         ? await ctx.db
             .query('goalStateByWeek')
             .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
@@ -1461,9 +1466,13 @@ export const moveQuarterlyGoal = mutation({
                 .eq('quarter', from.quarter)
                 .eq('weekNumber', lastNonEmptyWeek)
             )
-            .filter((q) => q.or(...dailyGoalIds.map((id) => q.eq(q.field('goalId'), id))))
             .collect()
         : [];
+
+    // Filter in-memory to only include states for our daily goals
+    const dailyGoalStatesInMaxWeek = allStatesInMaxWeek.filter((state) =>
+      dailyGoalIdsSet.has(state.goalId)
+    );
 
     // Get the set of daily goal IDs that have states in the max week
     const dailyGoalIdsInMaxWeek = new Set(dailyGoalStatesInMaxWeek.map((state) => state.goalId));
@@ -1486,7 +1495,14 @@ export const moveQuarterlyGoal = mutation({
     const dailyGoalPromises = deduplicatedDailyGoals.map(async (dailyGoal) => {
       // Get the parent weekly goal's new ID
       const newWeeklyGoalId = weeklyGoalIdMap.get(dailyGoal.parentId!);
-      if (!newWeeklyGoalId) return;
+      if (!newWeeklyGoalId) {
+        // This should not happen if the data is consistent, but log for debugging
+        console.warn(
+          `[moveQuarterlyGoal] Skipping daily goal ${dailyGoal._id}: parent weekly goal ${dailyGoal.parentId} not found in mapping. ` +
+            `This may indicate the parent weekly goal was filtered out (e.g., already complete).`
+        );
+        return;
+      }
 
       // Get the state for this daily goal to get day of week
       const dailyState = dailyStateByGoalId.get(dailyGoal._id);
@@ -1503,6 +1519,10 @@ export const moveQuarterlyGoal = mutation({
       });
 
       // Create a goal state for this daily goal using the shared helper
+      // Note: Default to Monday (day 1) if no day info exists. This is acceptable because:
+      // 1. Most users start their week on Monday
+      // 2. User can reassign the day after migration if needed
+      // 3. Having a day assignment is required for the goal to appear in the UI
       await createGoalState({
         ctx,
         userId,
@@ -1510,8 +1530,7 @@ export const moveQuarterlyGoal = mutation({
         year: to.year,
         quarter: to.quarter,
         weekNumber: startWeek,
-        // Preserve the day of week if available
-        daily: dailyState?.daily || { dayOfWeek: 1 }, // Default to Monday if not specified
+        daily: dailyState?.daily || { dayOfWeek: 1 },
       });
     });
 

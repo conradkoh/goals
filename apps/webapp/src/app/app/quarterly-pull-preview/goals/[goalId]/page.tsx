@@ -34,14 +34,15 @@ export default function QuarterlyGoalPullPreviewPage() {
       throw new Error('Year and quarter are required query parameters');
     }
 
-    const year = Number.parseInt(yearParam);
-    const quarter = Number.parseInt(quarterParam) as 1 | 2 | 3 | 4;
+    const yearNum = Number.parseInt(yearParam);
+    const quarterNum = Number.parseInt(quarterParam);
 
-    if (isNaN(year) || isNaN(quarter) || quarter < 1 || quarter > 4) {
+    if (isNaN(yearNum) || isNaN(quarterNum) || quarterNum < 1 || quarterNum > 4) {
       throw new Error('Invalid year or quarter parameter');
     }
 
-    return { year, quarter };
+    // Safe to cast after validation
+    return { year: yearNum, quarter: quarterNum as 1 | 2 | 3 | 4 };
   }, [searchParams]);
 
   // Set page title

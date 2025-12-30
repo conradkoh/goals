@@ -9,11 +9,6 @@ export interface FindMaxWeekResult {
   maxWeek: number | null;
   /** All weekly goal IDs that have states in the max week */
   weeklyGoalIdsInMaxWeek: Set<Id<'goals'>>;
-  /** All weekly goal states in the max week */
-  weeklyGoalStatesInMaxWeek: {
-    goalId: Id<'goals'>;
-    weekNumber: number;
-  }[];
 }
 
 /**
@@ -54,7 +49,6 @@ export async function findMaxWeekForQuarterlyGoal(
     return {
       maxWeek: null,
       weeklyGoalIdsInMaxWeek: new Set(),
-      weeklyGoalStatesInMaxWeek: [],
     };
   }
 
@@ -73,7 +67,6 @@ export async function findMaxWeekForQuarterlyGoal(
     return {
       maxWeek: null,
       weeklyGoalIdsInMaxWeek: new Set(),
-      weeklyGoalStatesInMaxWeek: [],
     };
   }
 
@@ -89,9 +82,5 @@ export async function findMaxWeekForQuarterlyGoal(
   return {
     maxWeek,
     weeklyGoalIdsInMaxWeek,
-    weeklyGoalStatesInMaxWeek: statesInMaxWeek.map((s) => ({
-      goalId: s.goalId,
-      weekNumber: s.weekNumber,
-    })),
   };
 }

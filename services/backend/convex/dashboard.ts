@@ -1275,7 +1275,7 @@ export const getGoalPullPreviewDetails = query({
       if (maxWeekResult.maxWeek !== null) {
         lastNonEmptyWeek = maxWeekResult.maxWeek;
 
-        // Get only the weekly goals that exist in the max week
+        // Get only the weekly goals that exist in the max week and are incomplete
         const allWeeklyGoals = await ctx.db
           .query('goals')
           .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
@@ -1283,15 +1283,14 @@ export const getGoalPullPreviewDetails = query({
           )
           .collect();
 
-        children = allWeeklyGoals.filter((g) => maxWeekResult.weeklyGoalIdsInMaxWeek.has(g._id));
+        // Filter to only incomplete goals in the max week (matches what will actually be migrated)
+        children = allWeeklyGoals.filter(
+          (g) => maxWeekResult.weeklyGoalIdsInMaxWeek.has(g._id) && !g.isComplete
+        );
       } else {
-        // No states found, return all weekly goals as fallback
-        children = await ctx.db
-          .query('goals')
-          .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
-            q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
-          )
-          .collect();
+        // No states found - return empty array instead of all goals
+        // This indicates no active weekly goals exist for this quarterly goal
+        children = [];
       }
     } else {
       // For non-quarterly goals, get all children normally
