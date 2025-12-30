@@ -54,7 +54,7 @@ export function QuarterlyGoalPullPreviewContent({
 
   // Fetch goal details with year and quarter context
   const goalDetails = useSessionQuery(
-    api.dashboard.getGoalPullPreviewDetails,
+    api.goal.getGoalPullPreviewDetails,
     goalId ? { goalId, year, quarter } : 'skip'
   );
 
