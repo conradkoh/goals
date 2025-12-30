@@ -971,7 +971,7 @@ export const getGoalPullPreviewDetails = query({
     }
 
     // Get children (weekly goals for quarterly, or adhoc children)
-    let children: Doc<'goals'>[] = [];
+    let weeklyGoals: Doc<'goals'>[] = [];
     let lastNonEmptyWeek: number | undefined = undefined;
 
     if (goal.depth === 0) {
@@ -991,23 +991,103 @@ export const getGoalPullPreviewDetails = query({
           .collect();
 
         // Filter to only incomplete goals in the max week (matches what will actually be migrated)
-        children = allWeeklyGoals.filter(
+        weeklyGoals = allWeeklyGoals.filter(
           (g) => maxWeekResult.weeklyGoalIdsInMaxWeek.has(g._id) && !g.isComplete
         );
       } else {
         // No states found - return empty array instead of all goals
         // This indicates no active weekly goals exist for this quarterly goal
-        children = [];
+        weeklyGoals = [];
       }
-    } else {
-      // For non-quarterly goals, get all children normally
-      children = await ctx.db
+
+      // For each weekly goal, fetch its daily goal children from the last non-empty week
+      const weeklyGoalIds = new Set(weeklyGoals.map((g) => g._id));
+
+      // Get all daily goals that are children of our weekly goals
+      const allDailyGoals = await ctx.db
         .query('goals')
-        .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
-          q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
+        .withIndex('by_user_and_year_and_quarter', (q) =>
+          q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
         )
+        .filter((q) => q.eq(q.field('depth'), 2))
         .collect();
+
+      // Filter to only daily goals belonging to our weekly goals
+      const dailyGoalsForWeeklyGoals = allDailyGoals.filter(
+        (g) => g.parentId && weeklyGoalIds.has(g.parentId)
+      );
+
+      // If we have a lastNonEmptyWeek, filter daily goals to only those with states in that week
+      let dailyGoalsToShow: Doc<'goals'>[] = [];
+      // Use const to narrow the type for use in the query callback
+      const maxWeek = lastNonEmptyWeek;
+      if (maxWeek !== undefined && dailyGoalsForWeeklyGoals.length > 0) {
+        const dailyGoalStatesInMaxWeek = await ctx.db
+          .query('goalStateByWeek')
+          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+            q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', maxWeek)
+          )
+          .collect();
+
+        const dailyGoalIdsWithState = new Set(dailyGoalStatesInMaxWeek.map((s) => s.goalId));
+
+        // Filter to only incomplete daily goals that have states in the max week
+        dailyGoalsToShow = dailyGoalsForWeeklyGoals.filter(
+          (g) => dailyGoalIdsWithState.has(g._id) && !g.isComplete
+        );
+      }
+
+      // Group daily goals by their parent weekly goal ID
+      const dailyGoalsByParent = new Map<Id<'goals'>, Doc<'goals'>[]>();
+      for (const daily of dailyGoalsToShow) {
+        if (daily.parentId) {
+          const existing = dailyGoalsByParent.get(daily.parentId) || [];
+          existing.push(daily);
+          dailyGoalsByParent.set(daily.parentId, existing);
+        }
+      }
+
+      return {
+        _id: goal._id,
+        title: goal.title,
+        details: goal.details,
+        isComplete: goal.isComplete,
+        completedAt: goal.completedAt,
+        dueDate: goal.dueDate,
+        depth: goal.depth,
+        year: goal.year,
+        quarter: goal.quarter,
+        adhoc: goal.adhoc,
+        domain,
+        state,
+        lastNonEmptyWeek, // Include the week number for the frontend
+        children: weeklyGoals.map((weeklyGoal) => {
+          const dailyChildren = dailyGoalsByParent.get(weeklyGoal._id) || [];
+          return {
+            _id: weeklyGoal._id,
+            title: weeklyGoal.title,
+            details: weeklyGoal.details,
+            isComplete: weeklyGoal.isComplete,
+            depth: weeklyGoal.depth,
+            // Include daily goals as children of weekly goals
+            children: dailyChildren.map((daily) => ({
+              _id: daily._id,
+              title: daily.title,
+              isComplete: daily.isComplete,
+              depth: daily.depth,
+            })),
+          };
+        }),
+      };
     }
+
+    // For non-quarterly goals, get all children normally (no grandchildren)
+    const children = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('parentId', goalId)
+      )
+      .collect();
 
     return {
       _id: goal._id,
@@ -1255,12 +1335,6 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
     const quarterWeeksInfo = getQuarterWeeks(year, quarter);
     const weekNumbers = quarterWeeksInfo.weeks;
 
-    console.log(`[getIncompleteAdhocGoalsForQuarter] Querying Q${quarter} ${year}`);
-    console.log(
-      `[getIncompleteAdhocGoalsForQuarter] Week range: ${quarterWeeksInfo.startWeek} to ${quarterWeeksInfo.endWeek}`
-    );
-    console.log('[getIncompleteAdhocGoalsForQuarter] Weeks to query:', weekNumbers);
-
     // Query adhoc goals for each week in the quarter
     // We need to do this because adhoc goals are indexed by week, not quarter
     const adhocGoalPromises = weekNumbers.map((weekNumber: number) =>
@@ -1275,20 +1349,7 @@ export const getIncompleteAdhocGoalsForQuarter = internalQuery({
 
     const adhocGoalArrays = await Promise.all(adhocGoalPromises);
 
-    // Log results per week
-    adhocGoalArrays.forEach((goals, index) => {
-      if (goals.length > 0) {
-        console.log(
-          `[getIncompleteAdhocGoalsForQuarter] Week ${weekNumbers[index]}: found ${goals.length} goals`
-        );
-      }
-    });
-
     const incompleteAdhocGoals = adhocGoalArrays.flat();
-
-    console.log(
-      `[getIncompleteAdhocGoalsForQuarter] Total: ${incompleteAdhocGoals.length} incomplete adhoc goals`
-    );
 
     // Get domain information for these goals
     const domainIds = [
