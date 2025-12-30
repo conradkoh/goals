@@ -18,8 +18,6 @@ const DashboardPage = () => {
     selectedWeek,
     selectedDayOfWeek,
     viewMode,
-    isAtMinBound,
-    isAtMaxBound,
     handleViewModeChange,
     handleYearQuarterChange,
     handlePrevious,
@@ -33,7 +31,7 @@ const DashboardPage = () => {
     let shouldUpdateUrl = false;
 
     // Set default view mode if not present
-    if (!searchParams.get('viewMode')) {
+    if (!searchParams.get('view-mode')) {
       params.viewMode = isMobile ? 'daily' : 'quarterly';
       shouldUpdateUrl = true;
     }
@@ -62,8 +60,6 @@ const DashboardPage = () => {
           viewMode={viewMode}
           selectedWeekNumber={selectedWeek}
           selectedDayOfWeek={selectedDayOfWeek}
-          isAtMinBound={isAtMinBound}
-          isAtMaxBound={isAtMaxBound}
           onViewModeChange={handleViewModeChange}
           onPrevious={handlePrevious}
           onNext={handleNext}
