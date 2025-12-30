@@ -18,7 +18,6 @@ import { getQuarterFromWeek } from '@/lib/date/iso-week';
 export type NavigationParams = {
   year?: number;
   quarter?: number;
-  weekYear?: number;
   week?: number;
   day?: DayOfWeek;
 };
@@ -30,10 +29,9 @@ export type FocusMenuBarProps = {
   selectedDay?: DayOfWeek;
   onPrevious?: () => void;
   onNext?: () => void;
+  /** ISO week year (unified year param for all views) */
   selectedYear: number;
   selectedQuarter: 1 | 2 | 3 | 4;
-  /** The ISO week year for weekly/daily views (may differ from selectedYear at year boundaries) */
-  selectedWeekYear?: number;
   /** Single callback to update navigation params atomically (URL is source of truth) */
   onNavigate?: (params: NavigationParams) => void;
   /** Props for QuarterActionMenu */
@@ -60,7 +58,6 @@ export const FocusMenuBar = ({
   onNext,
   selectedYear,
   selectedQuarter,
-  selectedWeekYear,
   onNavigate,
   /** QuarterActionMenu props */
   isFirstQuarter,
@@ -72,9 +69,6 @@ export const FocusMenuBar = ({
   onPullGoals,
   pullGoalsDialog,
 }: FocusMenuBarProps) => {
-  // Use the week year if provided, otherwise fall back to selected year
-  const effectiveWeekYear = selectedWeekYear ?? selectedYear;
-
   // State for selector dialogs
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
@@ -98,10 +92,10 @@ export const FocusMenuBar = ({
   // Build the navigation label based on view mode
   const getNavigationLabel = () => {
     if (viewMode === 'daily' && selectedDay && selectedWeek) {
-      return `${effectiveWeekYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek} · ${getDayNameShort(selectedDay)}`;
+      return `${selectedYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek} · ${getDayNameShort(selectedDay)}`;
     }
     if (viewMode === 'weekly' && selectedWeek) {
-      return `${effectiveWeekYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek}`;
+      return `${selectedYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek}`;
     }
     if (viewMode === 'quarterly') {
       return `${selectedYear} · Q${selectedQuarter}`;
@@ -119,8 +113,7 @@ export const FocusMenuBar = ({
   };
 
   const handleWeeklyApply = (year: number, _quarter: 1 | 2 | 3 | 4, week: number) => {
-    // For weekly view, update weekYear (ISO week year) and week
-    onNavigate?.({ weekYear: year, week });
+    onNavigate?.({ year, week });
     setIsSelectorOpen(false);
   };
 
@@ -130,8 +123,7 @@ export const FocusMenuBar = ({
     week: number,
     day: DayOfWeek
   ) => {
-    // For daily view, update weekYear (ISO week year), week, and day
-    onNavigate?.({ weekYear: year, week, day });
+    onNavigate?.({ year, week, day });
     setIsSelectorOpen(false);
   };
 
@@ -224,7 +216,7 @@ export const FocusMenuBar = ({
         <WeeklySelector
           open={isSelectorOpen}
           onOpenChange={setIsSelectorOpen}
-          year={effectiveWeekYear}
+          year={selectedYear}
           quarter={selectedQuarter}
           week={selectedWeek}
           onApply={handleWeeklyApply}
@@ -234,7 +226,7 @@ export const FocusMenuBar = ({
         <DailySelector
           open={isSelectorOpen}
           onOpenChange={setIsSelectorOpen}
-          year={effectiveWeekYear}
+          year={selectedYear}
           quarter={selectedQuarter}
           week={selectedWeek}
           day={selectedDay}

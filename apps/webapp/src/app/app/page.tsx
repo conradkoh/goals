@@ -31,7 +31,7 @@ const DashboardPage = () => {
     let shouldUpdateUrl = false;
 
     // Set default view mode if not present
-    if (!searchParams.get('viewMode')) {
+    if (!searchParams.get('view-mode')) {
       params.viewMode = isMobile ? 'daily' : 'quarterly';
       shouldUpdateUrl = true;
     }

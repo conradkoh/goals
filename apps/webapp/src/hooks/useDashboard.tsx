@@ -44,12 +44,10 @@ interface DashboardContextValue {
   currentDayOfMonth: number;
   currentDayName: string;
 
-  // Selected values from URL
+  // Selected values from URL (year is always ISO week year)
   selectedYear: number;
   selectedQuarter: 1 | 2 | 3 | 4;
   selectedWeek: number;
-  /** The ISO week year for weekly/daily views (may differ from selectedYear at year boundaries) */
-  selectedWeekYear: number;
   selectedDayOfWeek: DayOfWeek;
   viewMode: ViewMode;
   isFocusModeEnabled: boolean;
@@ -57,7 +55,6 @@ interface DashboardContextValue {
   // URL update functions
   updateUrlParams: (params: {
     week?: number;
-    weekYear?: number;
     day?: DayOfWeek;
     viewMode?: ViewMode;
     year?: number;
@@ -92,15 +89,9 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
 
   const yearParam = searchParams.get('year');
   const quarterParam = searchParams.get('quarter');
-  const weekYearParam = searchParams.get('weekYear');
 
-  // For quarterly view, use ISO week year as the default year
-  // If year param is not set but weekYear is, use weekYear as fallback for cross-view consistency
-  const selectedYear = yearParam
-    ? Number.parseInt(yearParam)
-    : weekYearParam
-      ? Number.parseInt(weekYearParam)
-      : currentYear;
+  // Single year parameter - always represents ISO week year
+  const selectedYear = yearParam ? Number.parseInt(yearParam) : currentYear;
   const selectedQuarter = quarterParam
     ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
     : currentQuarter;
@@ -112,17 +103,8 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   );
 
   // Get view mode from URL or use default based on screen size
-  const viewModeFromUrl = searchParams.get('viewMode') as ViewMode | null;
+  const viewModeFromUrl = searchParams.get('view-mode') as ViewMode | null;
   const viewMode = viewModeFromUrl || (isMobile ? 'daily' : 'quarterly');
-
-  // Get selected week year (ISO week year, used for weekly/daily views)
-  // This defaults to the current ISO week year which may differ from calendar year at year boundaries
-  // If weekYear param is not set but year is, use year as fallback for cross-view consistency
-  const selectedWeekYear = weekYearParam
-    ? Number.parseInt(weekYearParam)
-    : yearParam
-      ? Number.parseInt(yearParam)
-      : currentDate.weekYear;
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');
@@ -153,7 +135,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   const updateUrlParams = useCallback(
     (params: {
       week?: number;
-      weekYear?: number;
       day?: DayOfWeek;
       viewMode?: ViewMode;
       year?: number;
@@ -166,16 +147,12 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         newParams.set('week', params.week.toString());
       }
 
-      if (params.weekYear !== undefined) {
-        newParams.set('weekYear', params.weekYear.toString());
-      }
-
       if (params.day !== undefined) {
         newParams.set('day', params.day.toString());
       }
 
       if (params.viewMode !== undefined) {
-        newParams.set('viewMode', params.viewMode);
+        newParams.set('view-mode', params.viewMode);
       }
 
       if (params.year !== undefined) {
@@ -187,7 +164,7 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       }
 
       if (params.focusMode !== undefined) {
-        newParams.set('focusMode', params.focusMode.toString());
+        newParams.set('focus-mode', params.focusMode.toString());
       }
 
       router.push(`/app?${newParams.toString()}`);
@@ -202,7 +179,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       const params: {
         viewMode: ViewMode;
         week?: number;
-        weekYear?: number;
         day?: DayOfWeek;
         year?: number;
         quarter?: number;
@@ -210,14 +186,15 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         viewMode: newViewMode,
       };
 
-      // If changing to weekly or daily view, ensure week and weekYear parameters are set
+      // Ensure year is always set when switching views
+      if (!searchParams.has('year')) {
+        params.year = currentYear;
+      }
+
+      // If changing to weekly or daily view, ensure week parameter is set
       if (newViewMode === 'weekly' || newViewMode === 'daily') {
         if (!searchParams.has('week')) {
           params.week = currentWeekNumber;
-        }
-        if (!searchParams.has('weekYear')) {
-          // If weekYear not set, use year param if available, otherwise current week year
-          params.weekYear = selectedYear || currentDate.weekYear;
         }
       }
 
@@ -226,15 +203,9 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         params.day = currentDate.weekday as DayOfWeek;
       }
 
-      // If changing to quarterly view, ensure year and quarter parameters are set
-      if (newViewMode === 'quarterly') {
-        if (!searchParams.has('year')) {
-          // If year not set, use weekYear param if available, otherwise current year
-          params.year = selectedWeekYear || currentYear;
-        }
-        if (!searchParams.has('quarter')) {
-          params.quarter = currentQuarter;
-        }
+      // If changing to quarterly view, ensure quarter parameter is set
+      if (newViewMode === 'quarterly' && !searchParams.has('quarter')) {
+        params.quarter = currentQuarter;
       }
 
       updateUrlParams(params);
@@ -244,9 +215,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       searchParams,
       currentWeekNumber,
       currentDate.weekday,
-      currentDate.weekYear,
-      selectedYear,
-      selectedWeekYear,
       currentYear,
       currentQuarter,
     ]
@@ -277,9 +245,9 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     if (viewMode === 'weekly') {
       // Check if we need to go to previous year
       if (selectedWeek === 1) {
-        const prevYear = selectedWeekYear - 1;
+        const prevYear = selectedYear - 1;
         const weeksInPrevYear = getWeeksInYear(prevYear);
-        updateUrlParams({ week: weeksInPrevYear, weekYear: prevYear });
+        updateUrlParams({ week: weeksInPrevYear, year: prevYear });
       } else {
         updateUrlParams({ week: selectedWeek - 1 });
       }
@@ -290,11 +258,11 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       if (selectedDayOfWeek === DayOfWeek.MONDAY) {
         // If we're on Monday, go to previous week's Sunday
         if (selectedWeek === 1) {
-          const prevYear = selectedWeekYear - 1;
+          const prevYear = selectedYear - 1;
           const weeksInPrevYear = getWeeksInYear(prevYear);
           updateUrlParams({
             week: weeksInPrevYear,
-            weekYear: prevYear,
+            year: prevYear,
             day: DayOfWeek.SUNDAY,
           });
         } else {
@@ -316,7 +284,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     selectedYear,
     selectedQuarter,
     selectedWeek,
-    selectedWeekYear,
     selectedDayOfWeek,
     updateUrlParams,
   ]);
@@ -325,7 +292,7 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   const handleNext = useCallback(() => {
     if (isAtMaxBound) return;
 
-    const weeksInCurrentYear = getWeeksInYear(selectedWeekYear);
+    const weeksInCurrentYear = getWeeksInYear(selectedYear);
 
     if (viewMode === 'quarterly') {
       // Navigate to next quarter
@@ -340,7 +307,7 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     if (viewMode === 'weekly') {
       // Check if we need to go to next year
       if (selectedWeek >= weeksInCurrentYear) {
-        updateUrlParams({ week: 1, weekYear: selectedWeekYear + 1 });
+        updateUrlParams({ week: 1, year: selectedYear + 1 });
       } else {
         updateUrlParams({ week: selectedWeek + 1 });
       }
@@ -353,7 +320,7 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         if (selectedWeek >= weeksInCurrentYear) {
           updateUrlParams({
             week: 1,
-            weekYear: selectedWeekYear + 1,
+            year: selectedYear + 1,
             day: DayOfWeek.MONDAY,
           });
         } else {
@@ -375,14 +342,13 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     selectedYear,
     selectedQuarter,
     selectedWeek,
-    selectedWeekYear,
     selectedDayOfWeek,
     updateUrlParams,
   ]);
 
   // Handle toggle focus mode
   const toggleFocusMode = useCallback(() => {
-    updateUrlParams({ focusMode: !(searchParams.get('focusMode') === 'true') });
+    updateUrlParams({ focusMode: !(searchParams.get('focus-mode') === 'true') });
   }, [updateUrlParams, searchParams]);
 
   const value = useMemo(
@@ -397,14 +363,13 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       currentDayOfMonth,
       currentDayName,
 
-      // Selected values from URL
+      // Selected values from URL (year is always ISO week year)
       selectedYear,
       selectedQuarter,
       selectedWeek,
-      selectedWeekYear,
       selectedDayOfWeek,
       viewMode,
-      isFocusModeEnabled: searchParams.get('focusMode') === 'true',
+      isFocusModeEnabled: searchParams.get('focus-mode') === 'true',
 
       // URL update functions
       updateUrlParams,
@@ -426,7 +391,6 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
       selectedYear,
       selectedQuarter,
       selectedWeek,
-      selectedWeekYear,
       selectedDayOfWeek,
       viewMode,
       searchParams,
