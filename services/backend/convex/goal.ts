@@ -1584,8 +1584,38 @@ export const moveQuarterlyGoal = mutation({
 
       if (existingWeeklyGoal && existingWeeklyGoal.parentId === newQuarterlyGoalId) {
         // Reuse the existing weekly goal (only if it has the correct parent)
+        // We check parentId to handle the case where a goal with the same rootGoalId
+        // exists under a different parent (e.g., migrated to a different quarterly goal).
+        // In that case, we create a new goal with the correct parent relationship.
         newWeeklyGoalId = existingWeeklyGoal._id;
         weeklyGoalsReused++;
+      } else if (existingWeeklyGoal && existingWeeklyGoal.parentId !== newQuarterlyGoalId) {
+        // Goal exists but under a different parent - log for debugging and create new
+        console.warn(
+          `[moveQuarterlyGoal] Weekly goal with rootGoalId ${weeklyRootGoalId} exists ` +
+            `but has different parent (existing: ${existingWeeklyGoal.parentId}, expected: ${newQuarterlyGoalId}). ` +
+            `Creating new goal with correct parent.`
+        );
+        newWeeklyGoalId = await createGoalWithCarryOver({
+          ctx,
+          userId,
+          sourceGoal: weeklyGoal,
+          target: to,
+          parentId: newQuarterlyGoalId,
+          depth: GoalDepth.WEEKLY,
+          inPath: `/${newQuarterlyGoalId}`,
+        });
+        weeklyGoalsCreated++;
+
+        // Create a goal state for the first week using the shared helper
+        await createGoalState({
+          ctx,
+          userId,
+          goalId: newWeeklyGoalId,
+          year: to.year,
+          quarter: to.quarter,
+          weekNumber: startWeek,
+        });
       } else {
         // Create the new weekly goal using the shared helper
         newWeeklyGoalId = await createGoalWithCarryOver({
@@ -1724,8 +1754,20 @@ export const moveQuarterlyGoal = mutation({
 
       if (existingDailyGoal && existingDailyGoal.parentId === newWeeklyGoalId) {
         // Reuse the existing daily goal (only if it has the correct parent)
+        // We check parentId to handle the case where a goal with the same rootGoalId
+        // exists under a different parent (e.g., migrated to a different weekly goal).
+        // In that case, we create a new goal with the correct parent relationship.
         dailyGoalsReused++;
         return;
+      }
+
+      if (existingDailyGoal && existingDailyGoal.parentId !== newWeeklyGoalId) {
+        // Goal exists but under a different parent - log for debugging
+        console.warn(
+          `[moveQuarterlyGoal] Daily goal with rootGoalId ${dailyRootGoalId} exists ` +
+            `but has different parent (existing: ${existingDailyGoal.parentId}, expected: ${newWeeklyGoalId}). ` +
+            `Creating new goal with correct parent.`
+        );
       }
 
       // Get the state for this daily goal to get day of week
