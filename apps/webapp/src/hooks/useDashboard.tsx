@@ -104,7 +104,12 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   const weekYearParam = searchParams.get('weekYear');
 
   // For quarterly view, use ISO week year as the default year
-  const selectedYear = yearParam ? Number.parseInt(yearParam) : currentYear;
+  // If year param is not set but weekYear is, use weekYear as fallback for cross-view consistency
+  const selectedYear = yearParam
+    ? Number.parseInt(yearParam)
+    : weekYearParam
+      ? Number.parseInt(weekYearParam)
+      : currentYear;
   const selectedQuarter = quarterParam
     ? (Number.parseInt(quarterParam) as 1 | 2 | 3 | 4)
     : currentQuarter;
@@ -121,7 +126,12 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
 
   // Get selected week year (ISO week year, used for weekly/daily views)
   // This defaults to the current ISO week year which may differ from calendar year at year boundaries
-  const selectedWeekYear = weekYearParam ? Number.parseInt(weekYearParam) : currentDate.weekYear;
+  // If weekYear param is not set but year is, use year as fallback for cross-view consistency
+  const selectedWeekYear = weekYearParam
+    ? Number.parseInt(weekYearParam)
+    : yearParam
+      ? Number.parseInt(yearParam)
+      : currentDate.weekYear;
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');
@@ -198,14 +208,26 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   const handleViewModeChange = useCallback(
     (newViewMode: ViewMode) => {
       // Update URL with new view mode
-      const params: { viewMode: ViewMode; week?: number; weekYear?: number; day?: DayOfWeek } = {
+      const params: {
+        viewMode: ViewMode;
+        week?: number;
+        weekYear?: number;
+        day?: DayOfWeek;
+        year?: number;
+        quarter?: number;
+      } = {
         viewMode: newViewMode,
       };
 
       // If changing to weekly or daily view, ensure week and weekYear parameters are set
-      if ((newViewMode === 'weekly' || newViewMode === 'daily') && !searchParams.has('week')) {
-        params.week = currentWeekNumber;
-        params.weekYear = currentDate.weekYear;
+      if (newViewMode === 'weekly' || newViewMode === 'daily') {
+        if (!searchParams.has('week')) {
+          params.week = currentWeekNumber;
+        }
+        if (!searchParams.has('weekYear')) {
+          // If weekYear not set, use year param if available, otherwise current week year
+          params.weekYear = selectedYear || currentDate.weekYear;
+        }
       }
 
       // If changing to daily view, ensure day parameter is set
@@ -213,9 +235,30 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         params.day = currentDate.weekday as DayOfWeek;
       }
 
+      // If changing to quarterly view, ensure year and quarter parameters are set
+      if (newViewMode === 'quarterly') {
+        if (!searchParams.has('year')) {
+          // If year not set, use weekYear param if available, otherwise current year
+          params.year = selectedWeekYear || currentYear;
+        }
+        if (!searchParams.has('quarter')) {
+          params.quarter = currentQuarter;
+        }
+      }
+
       updateUrlParams(params);
     },
-    [updateUrlParams, searchParams, currentWeekNumber, currentDate.weekday, currentDate.weekYear]
+    [
+      updateUrlParams,
+      searchParams,
+      currentWeekNumber,
+      currentDate.weekday,
+      currentDate.weekYear,
+      selectedYear,
+      selectedWeekYear,
+      currentYear,
+      currentQuarter,
+    ]
   );
 
   // Handle year and quarter changes

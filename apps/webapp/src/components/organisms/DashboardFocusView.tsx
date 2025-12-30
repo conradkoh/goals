@@ -112,14 +112,8 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const {
-    selectedYear,
-    selectedQuarter,
-    selectedWeekYear,
-    isFocusModeEnabled,
-    updateUrlParams,
-    handleWeekYearChange,
-  } = useDashboard();
+  const { selectedYear, selectedQuarter, selectedWeekYear, isFocusModeEnabled, updateUrlParams } =
+    useDashboard();
   const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
   const { weekday: currentDay } = useCurrentWeekInfo();
 
@@ -403,8 +397,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             selectedQuarter={selectedQuarter}
             selectedWeekYear={selectedWeekYear}
             onViewModeChange={onViewModeChange}
-            onYearQuarterChange={onYearQuarterChange}
-            onWeekYearChange={handleWeekYearChange}
+            onNavigate={updateUrlParams}
             isFirstQuarter={isFirstQuarter}
             isMovingGoals={isMovingGoals}
             handlePreviewGoals={handlePreviewGoals}
