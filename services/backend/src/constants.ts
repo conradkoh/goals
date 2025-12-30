@@ -22,3 +22,16 @@ export function getDayName(dayOfWeek: DayOfWeek): string {
   };
   return dayNames[dayOfWeek];
 }
+
+export function getDayNameShort(dayOfWeek: DayOfWeek): string {
+  const dayNames: Record<DayOfWeek, string> = {
+    [DayOfWeek.MONDAY]: 'Mon',
+    [DayOfWeek.TUESDAY]: 'Tue',
+    [DayOfWeek.WEDNESDAY]: 'Wed',
+    [DayOfWeek.THURSDAY]: 'Thu',
+    [DayOfWeek.FRIDAY]: 'Fri',
+    [DayOfWeek.SATURDAY]: 'Sat',
+    [DayOfWeek.SUNDAY]: 'Sun',
+  };
+  return dayNames[dayOfWeek];
+}

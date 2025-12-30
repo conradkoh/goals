@@ -5,14 +5,7 @@ import type { ViewMode } from '@/components/molecules/focus/constants';
 import { DailyWeeklyActionMenu } from '@/components/molecules/focus/DailyWeeklyActionMenu';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { type DayOfWeek, getDayName } from '@/lib/constants';
+import { type DayOfWeek, getDayNameShort } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
 export type FocusMenuBarProps = {
@@ -28,9 +21,6 @@ export type FocusMenuBarProps = {
   selectedQuarter: 1 | 2 | 3 | 4;
   /** The ISO week year for weekly/daily views (may differ from selectedYear at year boundaries) */
   selectedWeekYear?: number;
-  onYearQuarterChange?: (year: number, quarter: number) => void;
-  /** Handler for changing the week year in weekly/daily views */
-  onWeekYearChange?: (weekYear: number) => void;
   // Props for QuarterActionMenu
   isFirstQuarter?: boolean;
   isMovingGoals?: boolean;
@@ -58,8 +48,6 @@ export const FocusMenuBar = ({
   selectedYear,
   selectedQuarter,
   selectedWeekYear,
-  onYearQuarterChange,
-  onWeekYearChange,
   // QuarterActionMenu props
   isFirstQuarter,
   isMovingGoals,
@@ -72,26 +60,6 @@ export const FocusMenuBar = ({
 }: FocusMenuBarProps) => {
   // Use the week year if provided, otherwise fall back to selected year
   const effectiveWeekYear = selectedWeekYear ?? selectedYear;
-
-  // Generate years for the quarterly view (current year - 1 to current year + 2)
-  const years = selectedYear ? Array.from({ length: 4 }, (_, i) => selectedYear - 1 + i) : [];
-
-  // Generate years for weekly/daily view centered around effective week year
-  const weekYears = effectiveWeekYear
-    ? Array.from({ length: 5 }, (_, i) => effectiveWeekYear - 2 + i)
-    : [];
-
-  // Generate quarters
-  const quarters = [1, 2, 3, 4];
-
-  // Only show year and quarter selectors in quarterly view
-  const showYearQuarterSelectors = viewMode === 'quarterly';
-
-  // Show year selector in weekly/daily views
-  const showWeekYearSelector = (viewMode === 'weekly' || viewMode === 'daily') && onWeekYearChange;
-
-  // Show navigation controls for daily and weekly views
-  const showNavigationControls = viewMode === 'daily' || viewMode === 'weekly';
 
   // Only show the QuarterActionMenu in quarterly view
   const showQuarterActionMenu = viewMode === 'quarterly' && handlePreviewGoals;
@@ -110,114 +78,54 @@ export const FocusMenuBar = ({
       ? 'Moving goals...'
       : "Can't pull from previous quarter";
 
+  // Build the navigation label based on view mode
+  const getNavigationLabel = () => {
+    if (viewMode === 'daily' && selectedDay && selectedWeek) {
+      return `${effectiveWeekYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek} · ${getDayNameShort(selectedDay)}`;
+    }
+    if (viewMode === 'weekly' && selectedWeek) {
+      return `${effectiveWeekYear} · Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek}`;
+    }
+    if (viewMode === 'quarterly') {
+      return `${selectedYear} · Q${selectedQuarter}`;
+    }
+    return '';
+  };
+
+  // Show navigation controls for all views
+  const showNavigation = onPrevious && onNext;
+
   return (
     <div className="bg-background p-3 border-b">
-      <div className="max-w-screen-2xl mx-auto px-4 flex justify-center">
+      <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 flex justify-center">
         <div id="focus-menu-bar" className="flex items-center justify-center w-full">
-          <div className="flex items-center gap-4">
-            {showYearQuarterSelectors && selectedYear && selectedQuarter && onYearQuarterChange && (
-              <>
-                <Select
-                  value={selectedYear.toString()}
-                  onValueChange={(value) =>
-                    onYearQuarterChange(Number.parseInt(value), selectedQuarter)
-                  }
-                >
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={selectedQuarter.toString()}
-                  onValueChange={(value) =>
-                    onYearQuarterChange(selectedYear, Number.parseInt(value) as 1 | 2 | 3 | 4)
-                  }
-                >
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue placeholder="Quarter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {quarters.map((quarter) => (
-                      <SelectItem key={quarter} value={quarter.toString()}>
-                        Q{quarter}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </>
-            )}
-
-            {showWeekYearSelector && (
-              <Select
-                value={effectiveWeekYear.toString()}
-                onValueChange={(value) => onWeekYearChange(Number.parseInt(value))}
-              >
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {weekYears.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            {showNavigationControls && onPrevious && onNext && (
-              <div className="flex items-center gap-2 mr-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Navigation with unified indicator */}
+            {showNavigation && (
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onPrevious}
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-[100px] md:min-w-[140px] text-center">
-                  {viewMode === 'daily' && selectedDay && selectedWeek
-                    ? `Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek} · ${getDayName(selectedDay)}`
-                    : viewMode === 'weekly' && selectedWeek
-                      ? `Q${getQuarterFromWeek(selectedWeek)} · W${selectedWeek}`
-                      : ''}
+                <span className="text-xs sm:text-sm font-medium text-center truncate px-1 sm:px-2 max-w-[120px] sm:max-w-[160px]">
+                  {getNavigationLabel()}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={onNext}
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             )}
 
-            <Select
-              value={viewMode}
-              onValueChange={
-                onViewModeChange ? (value) => onViewModeChange(value as ViewMode) : undefined
-              }
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Select view" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="quarterly">Quarterly View</SelectItem>
-                <SelectItem value="weekly">Weekly View</SelectItem>
-                <SelectItem value="daily">Daily View</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Quarter Action Menu - with vertical dots icon */}
+            {/* Quarter Action Menu - with vertical dots icon and view mode options */}
             {showQuarterActionMenu && (
               <QuarterActionMenu
                 isDisabled={isActionMenuDisabled}
@@ -231,10 +139,12 @@ export const FocusMenuBar = ({
                 menuIcon={<MoreVertical className="h-4 w-4" />}
                 year={selectedYear}
                 quarter={selectedQuarter}
+                viewMode={viewMode}
+                onViewModeChange={onViewModeChange}
               />
             )}
 
-            {/* Daily/Weekly Action Menu - with vertical dots icon */}
+            {/* Daily/Weekly Action Menu - with vertical dots icon and view mode options */}
             {showDailyWeeklyActionMenu && (
               <DailyWeeklyActionMenu
                 isPulling={isPullingGoals}
@@ -245,6 +155,8 @@ export const FocusMenuBar = ({
                 buttonSize="icon"
                 buttonVariant="ghost"
                 menuIcon={<MoreVertical className="h-4 w-4" />}
+                viewMode={viewMode}
+                onViewModeChange={onViewModeChange}
               />
             )}
           </div>

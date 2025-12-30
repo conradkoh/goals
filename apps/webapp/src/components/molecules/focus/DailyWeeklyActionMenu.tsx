@@ -1,5 +1,7 @@
-import { ArrowDownToLine, MoreVertical } from 'lucide-react';
+import { ArrowDownToLine, Calendar, CalendarDays, LayoutGrid, MoreVertical } from 'lucide-react';
 import React, { type ReactElement } from 'react';
+
+import type { ViewMode } from '@/components/molecules/focus/constants';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,6 +37,10 @@ export interface DailyWeeklyActionMenuProps {
   className?: string;
   /** Custom menu icon */
   menuIcon?: React.ReactNode;
+  /** Current view mode */
+  viewMode?: ViewMode;
+  /** Handler for view mode change */
+  onViewModeChange?: (viewMode: ViewMode) => void;
 }
 
 export const DailyWeeklyActionMenu = React.memo(
@@ -50,9 +56,15 @@ export const DailyWeeklyActionMenu = React.memo(
     align = 'end',
     className,
     menuIcon,
+    viewMode,
+    onViewModeChange,
   }: DailyWeeklyActionMenuProps) => {
     // Determine if the menu trigger should be disabled
     const isMenuDisabled = isDisabled || isPulling;
+
+    const handleViewModeChange = (newViewMode: ViewMode) => {
+      onViewModeChange?.(newViewMode);
+    };
 
     return (
       <>
@@ -72,8 +84,39 @@ export const DailyWeeklyActionMenu = React.memo(
             sideOffset={5}
             className="z-50 max-h-[70vh] overflow-y-auto"
           >
+            {/* View Mode Section */}
+            {onViewModeChange && (
+              <>
+                <DropdownMenuLabel className="font-semibold px-3 py-2">View</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('quarterly')}
+                  className={cn('flex items-center', viewMode === 'quarterly' && 'bg-accent')}
+                >
+                  <LayoutGrid className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Quarterly</span>
+                  <span className="ml-auto text-xs text-muted-foreground">Q</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('weekly')}
+                  className={cn('flex items-center', viewMode === 'weekly' && 'bg-accent')}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Weekly</span>
+                  <span className="ml-auto text-xs text-muted-foreground">W</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('daily')}
+                  className={cn('flex items-center', viewMode === 'daily' && 'bg-accent')}
+                >
+                  <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Daily</span>
+                  <span className="ml-auto text-xs text-muted-foreground">D</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
             <DropdownMenuLabel className="font-semibold px-3 py-2">Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
 
             {showPullGoals ? (
               <DropdownMenuItem

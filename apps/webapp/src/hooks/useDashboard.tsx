@@ -255,6 +255,16 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   const handlePrevious = useCallback(() => {
     if (isAtMinBound) return;
 
+    if (viewMode === 'quarterly') {
+      // Navigate to previous quarter
+      if (selectedQuarter === 1) {
+        updateUrlParams({ year: selectedYear - 1, quarter: 4 });
+      } else {
+        updateUrlParams({ quarter: selectedQuarter - 1 });
+      }
+      return;
+    }
+
     if (viewMode === 'weekly') {
       // Check if we need to go to previous year
       if (selectedWeek === 1) {
@@ -291,13 +301,32 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         });
       }
     }
-  }, [isAtMinBound, viewMode, selectedWeek, selectedWeekYear, selectedDayOfWeek, updateUrlParams]);
+  }, [
+    isAtMinBound,
+    viewMode,
+    selectedYear,
+    selectedQuarter,
+    selectedWeek,
+    selectedWeekYear,
+    selectedDayOfWeek,
+    updateUrlParams,
+  ]);
 
   // Handle next navigation
   const handleNext = useCallback(() => {
     if (isAtMaxBound) return;
 
     const weeksInCurrentYear = getWeeksInYear(selectedWeekYear);
+
+    if (viewMode === 'quarterly') {
+      // Navigate to next quarter
+      if (selectedQuarter === 4) {
+        updateUrlParams({ year: selectedYear + 1, quarter: 1 });
+      } else {
+        updateUrlParams({ quarter: selectedQuarter + 1 });
+      }
+      return;
+    }
 
     if (viewMode === 'weekly') {
       // Check if we need to go to next year
@@ -331,7 +360,16 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         });
       }
     }
-  }, [isAtMaxBound, viewMode, selectedWeek, selectedWeekYear, selectedDayOfWeek, updateUrlParams]);
+  }, [
+    isAtMaxBound,
+    viewMode,
+    selectedYear,
+    selectedQuarter,
+    selectedWeek,
+    selectedWeekYear,
+    selectedDayOfWeek,
+    updateUrlParams,
+  ]);
 
   // Handle toggle focus mode
   const toggleFocusMode = useCallback(() => {
