@@ -9,3 +9,8 @@ export {
   findMaxWeekForQuarterlyGoal,
   type FindMaxWeekResult,
 } from './findMaxWeekForQuarterlyGoal';
+
+export {
+  findExistingGoalByRootId,
+  buildExistingGoalsMap,
+} from './findExistingGoalByRootId';

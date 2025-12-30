@@ -18,7 +18,10 @@ import {
   deduplicateByRootGoalId,
   GoalDepth,
 } from '../src/usecase/goal';
-import { findMaxWeekForQuarterlyGoal } from '../src/usecase/moveGoalsFromQuarter';
+import {
+  buildExistingGoalsMap,
+  findMaxWeekForQuarterlyGoal,
+} from '../src/usecase/moveGoalsFromQuarter';
 import {
   moveGoalsFromLastNonEmptyWeekUsecase,
   moveGoalsFromWeekUsecase,
@@ -630,10 +633,18 @@ type QuarterlyGoalPreview = {
  * @internal
  */
 interface MoveQuarterlyGoalResultSuccess {
-  /** ID of the new goal created in the target quarter */
+  /** ID of the goal in the target quarter (created or reused) */
   newGoalId: Id<'goals'>;
-  /** Number of weekly goals migrated with the quarterly goal */
+  /** Number of weekly goals created (newly migrated) */
   weeklyGoalsMigrated: number;
+  /** Number of weekly goals that were reused (already existed) */
+  weeklyGoalsReused: number;
+  /** Number of daily goals created (newly migrated) */
+  dailyGoalsMigrated: number;
+  /** Number of daily goals that were reused (already existed) */
+  dailyGoalsReused: number;
+  /** Whether the quarterly goal was created (false if reused existing) */
+  quarterlyGoalWasCreated: boolean;
 }
 
 /**
@@ -1452,32 +1463,56 @@ export const moveQuarterlyGoal = mutation({
     // Get all week numbers in the target quarter using the proper utility
     const { weeks, startWeek } = getQuarterWeeks(to.year, to.quarter);
 
-    // Create a new quarterly goal in the target quarter using the shared helper
-    const newQuarterlyGoalId = await createGoalWithCarryOver({
+    // Check if a quarterly goal with the same rootGoalId already exists in the target quarter
+    const quarterlyRootGoalId = quarterlyGoal.carryOver?.fromGoal?.rootGoalId ?? quarterlyGoal._id;
+    const existingQuarterlyGoalsMap = await buildExistingGoalsMap(
       ctx,
       userId,
-      sourceGoal: quarterlyGoal,
-      target: to,
-      depth: GoalDepth.QUARTERLY,
-      inPath: '/',
-    });
+      to.year,
+      to.quarter,
+      0 // depth 0 = quarterly
+    );
+    const existingQuarterlyGoal = existingQuarterlyGoalsMap.get(quarterlyRootGoalId.toString());
 
-    // Create goal states for all weeks in the new quarter using the shared helper
-    const weekStatePromises = weeks.map((weekNum) =>
-      createGoalState({
+    let newQuarterlyGoalId: Id<'goals'>;
+    let quarterlyGoalWasCreated = false;
+
+    if (existingQuarterlyGoal) {
+      // Reuse the existing quarterly goal
+      newQuarterlyGoalId = existingQuarterlyGoal._id;
+      console.log(
+        `[moveQuarterlyGoal] Reusing existing quarterly goal ${newQuarterlyGoalId} ` +
+          `(rootGoalId: ${quarterlyRootGoalId})`
+      );
+    } else {
+      // Create a new quarterly goal in the target quarter using the shared helper
+      newQuarterlyGoalId = await createGoalWithCarryOver({
         ctx,
         userId,
-        goalId: newQuarterlyGoalId,
-        year: to.year,
-        quarter: to.quarter,
-        weekNumber: weekNum,
-        // Keep the original starred/pinned status on the first state
-        isStarred: weekNum === startWeek ? firstState?.isStarred || false : false,
-        isPinned: weekNum === startWeek ? firstState?.isPinned || false : false,
-      })
-    );
+        sourceGoal: quarterlyGoal,
+        target: to,
+        depth: GoalDepth.QUARTERLY,
+        inPath: '/',
+      });
+      quarterlyGoalWasCreated = true;
 
-    await Promise.all(weekStatePromises);
+      // Create goal states for all weeks in the new quarter using the shared helper
+      const weekStatePromises = weeks.map((weekNum) =>
+        createGoalState({
+          ctx,
+          userId,
+          goalId: newQuarterlyGoalId,
+          year: to.year,
+          quarter: to.quarter,
+          weekNumber: weekNum,
+          // Keep the original starred/pinned status on the first state
+          isStarred: weekNum === startWeek ? firstState?.isStarred || false : false,
+          isPinned: weekNum === startWeek ? firstState?.isPinned || false : false,
+        })
+      );
+
+      await Promise.all(weekStatePromises);
+    }
 
     // Get all weekly goals for this quarterly goal
     const allWeeklyGoalsForQuarterly = await ctx.db
@@ -1523,40 +1558,76 @@ export const moveQuarterlyGoal = mutation({
       weeklyStateByGoalId.set(state.goalId, state);
     });
 
-    // Create map to track new weekly goal IDs
+    // Build a map of existing weekly goals in the target quarter (for idempotent migration)
+    const existingWeeklyGoalsMap = await buildExistingGoalsMap(
+      ctx,
+      userId,
+      to.year,
+      to.quarter,
+      1 // depth 1 = weekly
+    );
+
+    // Create map to track new weekly goal IDs (source ID -> target ID)
     const weeklyGoalIdMap = new Map<Id<'goals'>, Id<'goals'>>();
+
+    // Track how many weekly goals were created vs reused
+    let weeklyGoalsCreated = 0;
+    let weeklyGoalsReused = 0;
 
     // Copy each incomplete weekly goal in parallel
     const weeklyGoalPromises = deduplicatedWeeklyGoals.map(async (weeklyGoal) => {
-      // Create the new weekly goal using the shared helper
-      const newWeeklyGoalId = await createGoalWithCarryOver({
-        ctx,
-        userId,
-        sourceGoal: weeklyGoal,
-        target: to,
-        parentId: newQuarterlyGoalId,
-        depth: GoalDepth.WEEKLY,
-        inPath: `/${newQuarterlyGoalId}`,
-      });
+      // Check if this weekly goal already exists in the target quarter
+      const weeklyRootGoalId = weeklyGoal.carryOver?.fromGoal?.rootGoalId ?? weeklyGoal._id;
+      const existingWeeklyGoal = existingWeeklyGoalsMap.get(weeklyRootGoalId.toString());
+
+      let newWeeklyGoalId: Id<'goals'>;
+
+      if (existingWeeklyGoal && existingWeeklyGoal.parentId === newQuarterlyGoalId) {
+        // Reuse the existing weekly goal (only if it has the correct parent)
+        newWeeklyGoalId = existingWeeklyGoal._id;
+        weeklyGoalsReused++;
+      } else {
+        // Create the new weekly goal using the shared helper
+        newWeeklyGoalId = await createGoalWithCarryOver({
+          ctx,
+          userId,
+          sourceGoal: weeklyGoal,
+          target: to,
+          parentId: newQuarterlyGoalId,
+          depth: GoalDepth.WEEKLY,
+          inPath: `/${newQuarterlyGoalId}`,
+        });
+        weeklyGoalsCreated++;
+
+        // Create a goal state for the first week using the shared helper
+        await createGoalState({
+          ctx,
+          userId,
+          goalId: newWeeklyGoalId,
+          year: to.year,
+          quarter: to.quarter,
+          weekNumber: startWeek,
+        });
+      }
 
       // Store the mapping from old ID to new ID
       weeklyGoalIdMap.set(weeklyGoal._id, newWeeklyGoalId);
 
-      // Create a goal state for the first week using the shared helper
-      await createGoalState({
-        ctx,
-        userId,
-        goalId: newWeeklyGoalId,
-        year: to.year,
-        quarter: to.quarter,
-        weekNumber: startWeek,
-      });
-
-      return { originalId: weeklyGoal._id, newId: newWeeklyGoalId };
+      return {
+        originalId: weeklyGoal._id,
+        newId: newWeeklyGoalId,
+        wasReused: !!existingWeeklyGoal,
+      };
     });
 
     // Wait for all weekly goals to be created
     await Promise.all(weeklyGoalPromises);
+
+    if (weeklyGoalsReused > 0) {
+      console.log(
+        `[moveQuarterlyGoal] Weekly goals: ${weeklyGoalsCreated} created, ${weeklyGoalsReused} reused`
+      );
+    }
 
     // Get daily goals from the max week that belong to our weekly goals
     // Query daily goals (depth 2) that are children of our weekly goals
@@ -1621,6 +1692,19 @@ export const moveQuarterlyGoal = mutation({
     // Deduplicate daily goals by rootGoalId using the shared helper
     const deduplicatedDailyGoals = deduplicateByRootGoalId(dailyGoalsInMaxWeek);
 
+    // Build a map of existing daily goals in the target quarter (for idempotent migration)
+    const existingDailyGoalsMap = await buildExistingGoalsMap(
+      ctx,
+      userId,
+      to.year,
+      to.quarter,
+      2 // depth 2 = daily
+    );
+
+    // Track how many daily goals were created vs reused
+    let dailyGoalsCreated = 0;
+    let dailyGoalsReused = 0;
+
     // Process all daily goals in parallel
     const dailyGoalPromises = deduplicatedDailyGoals.map(async (dailyGoal) => {
       // Get the parent weekly goal's new ID
@@ -1631,6 +1715,16 @@ export const moveQuarterlyGoal = mutation({
           `[moveQuarterlyGoal] Skipping daily goal ${dailyGoal._id}: parent weekly goal ${dailyGoal.parentId} not found in mapping. ` +
             `This may indicate the parent weekly goal was filtered out (e.g., already complete).`
         );
+        return;
+      }
+
+      // Check if this daily goal already exists in the target quarter
+      const dailyRootGoalId = dailyGoal.carryOver?.fromGoal?.rootGoalId ?? dailyGoal._id;
+      const existingDailyGoal = existingDailyGoalsMap.get(dailyRootGoalId.toString());
+
+      if (existingDailyGoal && existingDailyGoal.parentId === newWeeklyGoalId) {
+        // Reuse the existing daily goal (only if it has the correct parent)
+        dailyGoalsReused++;
         return;
       }
 
@@ -1647,6 +1741,7 @@ export const moveQuarterlyGoal = mutation({
         depth: GoalDepth.DAILY,
         inPath: `/${newQuarterlyGoalId}/${newWeeklyGoalId}`,
       });
+      dailyGoalsCreated++;
 
       // Create a goal state for this daily goal using the shared helper
       // Note: Default to Monday (day 1) if no day info exists. This is acceptable because:
@@ -1667,9 +1762,19 @@ export const moveQuarterlyGoal = mutation({
     // Wait for all daily goal processing to complete
     await Promise.all(dailyGoalPromises);
 
+    if (dailyGoalsReused > 0) {
+      console.log(
+        `[moveQuarterlyGoal] Daily goals: ${dailyGoalsCreated} created, ${dailyGoalsReused} reused`
+      );
+    }
+
     return {
       newGoalId: newQuarterlyGoalId,
-      weeklyGoalsMigrated: deduplicatedWeeklyGoals.length,
+      weeklyGoalsMigrated: weeklyGoalsCreated,
+      weeklyGoalsReused,
+      dailyGoalsMigrated: dailyGoalsCreated,
+      dailyGoalsReused,
+      quarterlyGoalWasCreated,
     };
   },
 });
