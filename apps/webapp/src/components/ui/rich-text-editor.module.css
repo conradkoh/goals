@@ -430,6 +430,9 @@
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
   transition: opacity 0.15s ease !important;
+  /* Allow long URLs to wrap naturally */
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
 }
 
 .prose :global(a:hover) {
