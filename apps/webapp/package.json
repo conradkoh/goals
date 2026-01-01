@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "generate:icons": "bun run scripts/generate-icons.ts"
+    "generate:icons": "bun run scripts/generate-icons.ts",
+    "generate:icons:all": "bun run scripts/generate-icons.ts --favicon"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
