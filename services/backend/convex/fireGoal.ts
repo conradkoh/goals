@@ -45,6 +45,13 @@ export const toggleFireStatus = mutation({
       goalId,
       createdAt: Date.now(),
     });
+
+    // Business rule: If marking an adhoc backlog goal as fire, auto-activate it
+    // Fire goals need immediate attention - contradicts backlog intent
+    if (goal.adhoc && goal.isBacklog) {
+      await ctx.db.patch('goals', goalId, { isBacklog: false });
+    }
+
     return true;
   },
 });

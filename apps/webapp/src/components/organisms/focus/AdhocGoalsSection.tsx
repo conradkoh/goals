@@ -1,6 +1,7 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { ClipboardList, Info } from 'lucide-react';
 import { useCallback, useState } from 'react';
+
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { DomainPill } from '@/components/atoms/DomainPill';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
@@ -51,21 +52,7 @@ function _countGoalsRecursively(goals: _OptimisticAdhocGoal[]): number {
   }, 0);
 }
 
-/**
- * Filters goals by completion status.
- * Only filters root level - children are displayed under their parent.
- *
- * @param goals - Array of goals to filter
- * @param isComplete - Completion status to filter by
- * @returns Filtered array of root goals
- */
-function _filterGoalsByCompletion(
-  goals: _OptimisticAdhocGoal[],
-  isComplete: boolean
-): _OptimisticAdhocGoal[] {
-  // Only filter at root level - children are displayed under their parent
-  return goals.filter((goal) => goal.isComplete === isComplete);
-}
+// Goal filtering is now done inline for active/backlog/completed separation
 
 export function AdhocGoalsSection({
   year,
@@ -79,6 +66,10 @@ export function AdhocGoalsSection({
   const [selectedDomainId, setSelectedDomainId] = useState<Id<'domains'> | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [optimisticGoals, setOptimisticGoals] = useState<_OptimisticAdhocGoal[]>([]);
+  // Track pending backlog changes for optimistic updates (goalId -> new isBacklog value)
+  const [pendingBacklogChanges, setPendingBacklogChanges] = useState<Map<Id<'goals'>, boolean>>(
+    new Map()
+  );
 
   // Use useAdhocGoals for mutations only
   const { createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
@@ -97,10 +88,24 @@ export function AdhocGoalsSection({
   // Combine real and optimistic goals (optimistic at end for correct ordering)
   const allGoals: _OptimisticAdhocGoal[] = [...filteredAdhocGoals, ...optimisticGoals];
 
-  // Separate incomplete and completed root goals for this week
+  // Apply pending backlog changes for optimistic UI updates
+  const goalsWithOptimisticBacklog = allGoals.map((goal) => {
+    const pendingBacklog = pendingBacklogChanges.get(goal._id);
+    if (pendingBacklog !== undefined) {
+      return { ...goal, isBacklog: pendingBacklog };
+    }
+    return goal;
+  });
+
+  // Separate goals into three categories: active, backlog, and completed
   // Note: Children are displayed under their parent, not filtered separately
-  const incompleteGoals = _filterGoalsByCompletion(allGoals, false);
-  const completedGoals = _filterGoalsByCompletion(allGoals, true);
+  const activeGoals = goalsWithOptimisticBacklog.filter(
+    (goal) => !goal.isComplete && !goal.isBacklog
+  );
+  const backlogGoals = goalsWithOptimisticBacklog.filter(
+    (goal) => !goal.isComplete && goal.isBacklog
+  );
+  const completedGoals = goalsWithOptimisticBacklog.filter((goal) => goal.isComplete);
 
   /**
    * Groups goals by their domain ID.
@@ -123,7 +128,8 @@ export function AdhocGoalsSection({
   };
 
   // Group goals by domain for tabs
-  const incompleteGroupedGoals = groupGoalsByDomain(incompleteGoals);
+  const activeGroupedGoals = groupGoalsByDomain(activeGoals);
+  const backlogGroupedGoals = groupGoalsByDomain(backlogGoals);
   const completedGroupedGoals = groupGoalsByDomain(completedGoals);
 
   const handleSubmit = async () => {
@@ -221,6 +227,33 @@ export function AdhocGoalsSection({
     }
   };
 
+  const handleBacklogChange = async (goalId: Id<'goals'>, isBacklog: boolean) => {
+    // Apply optimistic update immediately
+    setPendingBacklogChanges((prev) => {
+      const next = new Map(prev);
+      next.set(goalId, isBacklog);
+      return next;
+    });
+
+    try {
+      await updateAdhocGoal(goalId, { isBacklog });
+      // On success, remove from pending (real data will reflect the change)
+      setPendingBacklogChanges((prev) => {
+        const next = new Map(prev);
+        next.delete(goalId);
+        return next;
+      });
+    } catch (error) {
+      console.error('Failed to update backlog status:', error);
+      // On error, revert optimistic update
+      setPendingBacklogChanges((prev) => {
+        const next = new Map(prev);
+        next.delete(goalId);
+        return next;
+      });
+    }
+  };
+
   const handleDomainCreate = async (name: string, description?: string, color?: string) => {
     try {
       const newDomainId = await createDomain(name, description, color);
@@ -284,7 +317,8 @@ export function AdhocGoalsSection({
     });
   };
 
-  const incompleteGroups = _sortGroups(incompleteGroupedGoals);
+  const activeGroups = _sortGroups(activeGroupedGoals);
+  const backlogGroups = _sortGroups(backlogGroupedGoals);
   const completedGroups = _sortGroups(completedGroupedGoals);
 
   /**
@@ -313,6 +347,7 @@ export function AdhocGoalsSection({
                     goal={goal}
                     onCompleteChange={handleCompleteChange}
                     onUpdate={handleUpdate}
+                    onBacklogChange={handleBacklogChange}
                     onDelete={handleDelete}
                     onCreateChild={handleCreateChild}
                     showDueDate={!dayOfWeek} // Only show due date in weekly view
@@ -364,12 +399,15 @@ export function AdhocGoalsSection({
     </div>
   );
 
-  // Tabs content with Active and Completed sections
+  // Tabs content with Active, Backlog, and Completed sections
   const tabsContent = (
     <Tabs defaultValue="active" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
+      <TabsList className="grid w-full grid-cols-3 rounded-none border-b">
         <TabsTrigger value="active" className="rounded-none">
-          Active ({incompleteGoals.length})
+          Active ({activeGoals.length})
+        </TabsTrigger>
+        <TabsTrigger value="backlog" className="rounded-none">
+          Backlog ({backlogGoals.length})
         </TabsTrigger>
         <TabsTrigger value="completed" className="rounded-none">
           Completed ({completedGoals.length})
@@ -377,8 +415,12 @@ export function AdhocGoalsSection({
       </TabsList>
 
       <TabsContent value="active" className="mt-3 space-y-3">
-        {renderGoalsList(incompleteGroups, 'No active tasks')}
+        {renderGoalsList(activeGroups, 'No active tasks')}
         {createInput}
+      </TabsContent>
+
+      <TabsContent value="backlog" className="mt-3 space-y-3">
+        {renderGoalsList(backlogGroups, 'No backlog tasks. Move tasks here for later.')}
       </TabsContent>
 
       <TabsContent value="completed" className="mt-3">

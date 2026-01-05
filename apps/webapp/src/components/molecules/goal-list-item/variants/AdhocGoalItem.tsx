@@ -29,6 +29,8 @@ export interface AdhocGoalItemProps {
     dueDate?: number,
     domainId?: Id<'domains'> | null
   ) => void;
+  /** Callback fired when the goal's backlog status changes */
+  onBacklogChange?: (goalId: Id<'goals'>, isBacklog: boolean) => void;
   /** Callback fired when the goal is deleted */
   onDelete?: (goalId: Id<'goals'>) => void;
   /** Callback fired when a child goal is created */
@@ -68,6 +70,7 @@ export function AdhocGoalItem({
   goal,
   onCompleteChange,
   onUpdate,
+  onBacklogChange,
   onDelete,
   onCreateChild,
   showDueDate = true,
@@ -130,6 +133,14 @@ export function AdhocGoalItem({
   const handleDelete = useCallback(() => {
     onDelete?.(goal._id);
   }, [goal._id, onDelete]);
+
+  /** Handles backlog status toggle. */
+  const handleToggleBacklog = useCallback(
+    (isBacklog: boolean) => {
+      onBacklogChange?.(goal._id, isBacklog);
+    },
+    [goal._id, onBacklogChange]
+  );
 
   const effectiveDomainId = goal.domainId || null;
   const isOptimistic = 'isOptimistic' in goal && goal.isOptimistic;
@@ -213,14 +224,18 @@ export function AdhocGoalItem({
                 details={goal.details}
                 initialDueDate={goal.adhoc?.dueDate}
                 initialDomainId={effectiveDomainId}
+                isComplete={goal.isComplete}
+                isBacklog={goal.isBacklog}
                 showSpinner={showSpinner}
                 showFire
                 showPending
+                showBacklog={!!onBacklogChange}
                 showEdit={!!onUpdate}
                 showDelete={!!onDelete}
                 showDomainSelector
                 onSave={onUpdate ? handleUpdate : undefined}
                 onUpdatePending={handleUpdatePending}
+                onToggleBacklog={onBacklogChange ? handleToggleBacklog : undefined}
                 onDelete={onDelete ? handleDelete : undefined}
               />
             </div>
@@ -236,6 +251,7 @@ export function AdhocGoalItem({
                 goal={child}
                 onCompleteChange={onCompleteChange}
                 onUpdate={onUpdate}
+                onBacklogChange={onBacklogChange}
                 onDelete={onDelete}
                 onCreateChild={onCreateChild}
                 showDueDate={showDueDate}

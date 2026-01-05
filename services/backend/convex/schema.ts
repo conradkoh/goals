@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+
 import { DayOfWeek } from '../src/constants';
 
 const carryOverSchema = v.object({
@@ -284,6 +285,9 @@ export default defineSchema({
     carryOver: v.optional(carryOverSchema),
     isComplete: v.boolean(),
     completedAt: v.optional(v.number()),
+
+    // Backlog field for adhoc goals (true = in backlog, undefined/false = active)
+    isBacklog: v.optional(v.boolean()),
 
     // Adhoc goal fields
     adhoc: v.optional(

@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
 
 import {
+  BacklogIconButton,
   DeleteIconButton,
   EditIconButton,
   FireIconButton,
@@ -24,10 +25,16 @@ export interface AdhocGoalActionIconsProps {
   initialDueDate?: number;
   /** Initial domain ID for edit popover */
   initialDomainId?: Id<'domains'> | null;
+  /** Whether the goal is completed (used to hide backlog button for completed goals) */
+  isComplete?: boolean;
+  /** Whether the goal is in backlog */
+  isBacklog?: boolean;
   /** Whether to show fire icon */
   showFire?: boolean;
   /** Whether to show pending icon */
   showPending?: boolean;
+  /** Whether to show backlog icon */
+  showBacklog?: boolean;
   /** Whether to show edit button */
   showEdit?: boolean;
   /** Whether to show delete button */
@@ -38,6 +45,8 @@ export interface AdhocGoalActionIconsProps {
   onSave?: GoalSaveHandler;
   /** Handler for tracking pending updates */
   onUpdatePending?: GoalUpdatePendingHandler;
+  /** Handler for toggling backlog status */
+  onToggleBacklog?: (isBacklog: boolean) => void;
   /** Handler for delete action */
   onDelete?: () => void;
   /** Custom edit trigger button */
@@ -74,13 +83,17 @@ export function AdhocGoalActionIcons({
   details,
   initialDueDate,
   initialDomainId,
+  isComplete = false,
+  isBacklog = false,
   showFire = true,
   showPending = true,
+  showBacklog = true,
   showEdit = false,
   showDelete = false,
   showDomainSelector = true,
   onSave,
   onUpdatePending,
+  onToggleBacklog,
   onDelete,
   editTrigger,
   className,
@@ -91,6 +104,10 @@ export function AdhocGoalActionIcons({
         <>
           {showFire && <FireIconButton goalId={goalId} />}
           {showPending && <PendingIconButton goalId={goalId} />}
+          {/* Only show backlog button for incomplete goals */}
+          {showBacklog && !isComplete && onToggleBacklog && (
+            <BacklogIconButton isBacklog={isBacklog} onToggleBacklog={onToggleBacklog} />
+          )}
           {showEdit && onSave && title !== undefined && (
             <EditIconButton
               title={title}

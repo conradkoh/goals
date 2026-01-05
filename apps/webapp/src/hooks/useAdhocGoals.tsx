@@ -1,5 +1,5 @@
 /**
- * @fileoverview Hooks for managing adhoc goals.
+ * @file Hooks for managing adhoc goals.
  * Provides CRUD operations and queries for adhoc goals with session-based authentication.
  */
 
@@ -85,6 +85,7 @@ export function useAdhocGoals(sessionId: SessionId) {
       dayOfWeek?: DayOfWeek;
       dueDate?: number;
       isComplete?: boolean;
+      isBacklog?: boolean;
     }
   ): Promise<void> => {
     setIsUpdating(true);

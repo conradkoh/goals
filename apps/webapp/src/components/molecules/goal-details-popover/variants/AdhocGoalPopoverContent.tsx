@@ -51,6 +51,8 @@ export interface AdhocGoalPopoverContentProps {
 interface AdhocGoalPopoverContentInnerProps {
   /** Whether the goal is currently marked as complete */
   isComplete: boolean;
+  /** Whether the goal is in backlog */
+  isBacklog: boolean;
   /** Domain associated with the goal, if any */
   domain: Doc<'domains'> | null;
   /** Week number for domain popover context */
@@ -59,6 +61,8 @@ interface AdhocGoalPopoverContentInnerProps {
   subGoals: AdhocGoalWithChildren[];
   /** Handler for toggling goal completion status */
   onToggleComplete: () => Promise<void>;
+  /** Handler for toggling backlog status */
+  onToggleBacklog: (isBacklog: boolean) => Promise<void>;
   /** Handler for saving goal updates */
   onSave: (
     title: string,
@@ -123,6 +127,17 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
     }
   }, [goal._id, isComplete, updateAdhocGoal, onComplete]);
 
+  const handleToggleBacklog = useCallback(
+    async (newIsBacklog: boolean) => {
+      await updateAdhocGoal(goal._id, {
+        isBacklog: newIsBacklog,
+      });
+    },
+    [goal._id, updateAdhocGoal]
+  );
+
+  const isBacklog = (goal as unknown as { isBacklog?: boolean }).isBacklog || false;
+
   const handleDetailsChange = useCallback(
     (newDetails: string) => {
       handleSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
@@ -183,10 +198,12 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
       <GoalDisplayProvider>
         <AdhocGoalPopoverContentInner
           isComplete={isComplete}
+          isBacklog={isBacklog}
           domain={domain}
           weekNumber={weekNumber}
           subGoals={subGoals}
           onToggleComplete={handleToggleComplete}
+          onToggleBacklog={handleToggleBacklog}
           onSave={handleSave}
           onDetailsChange={handleDetailsChange}
           onChildCompleteChange={handleChildCompleteChange}
@@ -209,10 +226,12 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
  */
 function AdhocGoalPopoverContentInner({
   isComplete,
+  isBacklog,
   domain,
   weekNumber,
   subGoals,
   onToggleComplete,
+  onToggleBacklog,
   onSave,
   onDetailsChange,
   onChildCompleteChange,
@@ -231,7 +250,14 @@ function AdhocGoalPopoverContentInner({
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
           actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
-          statusControls={<GoalStatusIcons goalId={goal._id} />}
+          statusControls={
+            <GoalStatusIcons
+              goalId={goal._id}
+              showBacklog
+              isBacklog={isBacklog}
+              onToggleBacklog={onToggleBacklog}
+            />
+          }
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}

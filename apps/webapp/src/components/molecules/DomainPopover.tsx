@@ -64,6 +64,10 @@ export function DomainPopover({
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
+  // Track pending backlog changes for optimistic updates (goalId -> new isBacklog value)
+  const [pendingBacklogChanges, setPendingBacklogChanges] = useState<Map<Id<'goals'>, boolean>>(
+    new Map()
+  );
 
   // Query adhoc goals for this domain with hierarchical structure
   const domainGoals =
@@ -75,7 +79,16 @@ export function DomainPopover({
   const { createAdhocGoal, updateAdhocGoal, deleteAdhocGoal } = useAdhocGoals(sessionId);
 
   // Combine real and optimistic goals (optimistic at end for correct ordering)
-  const allGoals = [...domainGoals, ...optimisticGoals];
+  const combinedGoals = [...domainGoals, ...optimisticGoals];
+
+  // Apply pending backlog changes for optimistic UI updates
+  const allGoals = combinedGoals.map((goal) => {
+    const pendingBacklog = pendingBacklogChanges.get(goal._id);
+    if (pendingBacklog !== undefined) {
+      return { ...goal, isBacklog: pendingBacklog };
+    }
+    return goal;
+  });
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -164,6 +177,34 @@ export function DomainPopover({
     }
   };
 
+  /** Handles backlog status toggle with optimistic update. */
+  const handleBacklogChange = async (goalId: Id<'goals'>, isBacklog: boolean) => {
+    // Apply optimistic update immediately
+    setPendingBacklogChanges((prev) => {
+      const next = new Map(prev);
+      next.set(goalId, isBacklog);
+      return next;
+    });
+
+    try {
+      await updateAdhocGoal(goalId, { isBacklog });
+      // On success, remove from pending (real data will reflect the change)
+      setPendingBacklogChanges((prev) => {
+        const next = new Map(prev);
+        next.delete(goalId);
+        return next;
+      });
+    } catch (error) {
+      console.error('Failed to update backlog status:', error);
+      // On error, revert optimistic update
+      setPendingBacklogChanges((prev) => {
+        const next = new Map(prev);
+        next.delete(goalId);
+        return next;
+      });
+    }
+  };
+
   /** Handles creating a child adhoc goal. */
   const handleCreateChild = useCallback(
     async (parentId: Id<'goals'>, title: string) => {
@@ -183,9 +224,13 @@ export function DomainPopover({
 
   const domainName = domain?.name || 'Uncategorized';
 
-  // Separate incomplete and completed goals (oldest first)
-  const incompleteGoals = allGoals
-    .filter((goal) => !goal.isComplete)
+  // Separate goals into active, backlog, and completed (oldest first)
+  const activeGoals = allGoals
+    .filter((goal) => !goal.isComplete && !goal.isBacklog)
+    .sort((a, b) => (a._creationTime || 0) - (b._creationTime || 0));
+
+  const backlogGoals = allGoals
+    .filter((goal) => !goal.isComplete && goal.isBacklog)
     .sort((a, b) => (a._creationTime || 0) - (b._creationTime || 0));
 
   const completedGoals = allGoals
@@ -199,9 +244,12 @@ export function DomainPopover({
     <div className="flex flex-col h-full w-full">
       {/* Tabs */}
       <Tabs defaultValue="active" className="flex-1 flex flex-col w-full">
-        <TabsList className="grid w-full grid-cols-2 rounded-none border-b">
+        <TabsList className="grid w-full grid-cols-3 rounded-none border-b">
           <TabsTrigger value="active" className="rounded-none">
-            Active ({incompleteGoals.length})
+            Active ({activeGoals.length})
+          </TabsTrigger>
+          <TabsTrigger value="backlog" className="rounded-none">
+            Backlog ({backlogGoals.length})
           </TabsTrigger>
           <TabsTrigger value="completed" className="rounded-none">
             Completed ({completedGoals.length})
@@ -211,17 +259,18 @@ export function DomainPopover({
         <TabsContent value="active" className="flex-1 mt-0 p-4 space-y-3">
           {/* Goals List */}
           <div className="space-y-1 max-h-[300px] overflow-y-auto">
-            {incompleteGoals.length === 0 ? (
+            {activeGoals.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No active tasks. Create one below!
               </div>
             ) : (
-              incompleteGoals.map((goal) => (
+              activeGoals.map((goal) => (
                 <AdhocGoalItem
                   key={goal._id}
                   goal={goal}
                   onCompleteChange={handleCompleteChange}
                   onUpdate={handleUpdate}
+                  onBacklogChange={handleBacklogChange}
                   onDelete={handleDelete}
                   onCreateChild={handleCreateChild}
                   showDueDate={true}
@@ -249,6 +298,30 @@ export function DomainPopover({
           </div>
         </TabsContent>
 
+        <TabsContent value="backlog" className="flex-1 mt-0 p-4">
+          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+            {backlogGoals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No backlog tasks. Move tasks here for later.
+              </div>
+            ) : (
+              backlogGoals.map((goal) => (
+                <AdhocGoalItem
+                  key={goal._id}
+                  goal={goal}
+                  onCompleteChange={handleCompleteChange}
+                  onUpdate={handleUpdate}
+                  onBacklogChange={handleBacklogChange}
+                  onDelete={handleDelete}
+                  onCreateChild={handleCreateChild}
+                  showDueDate={true}
+                  showDomain={false}
+                />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
         <TabsContent value="completed" className="flex-1 mt-0 p-4">
           <div className="space-y-1 max-h-[400px] overflow-y-auto">
             {completedGoals.length === 0 ? (
@@ -262,6 +335,7 @@ export function DomainPopover({
                   goal={goal}
                   onCompleteChange={handleCompleteChange}
                   onUpdate={handleUpdate}
+                  onBacklogChange={handleBacklogChange}
                   onDelete={handleDelete}
                   onCreateChild={handleCreateChild}
                   showDueDate={true}

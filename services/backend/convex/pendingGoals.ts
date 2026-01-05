@@ -100,9 +100,10 @@ export const clearPendingStatus = mutation({
       await ctx.db.delete('pendingGoals', existingPending._id);
     }
 
-    // Only restore fire status if goal is not complete
-    // When pending is cleared, tag the goal as on fire again (only if incomplete)
-    if (!goal.isComplete) {
+    // Only restore fire status if goal is not complete AND not in backlog
+    // When pending is cleared, tag the goal as on fire again (only if incomplete and active)
+    // Backlog goals should remain in backlog - user made conscious decision to defer
+    if (!goal.isComplete && !goal.isBacklog) {
       const existingFireGoal = await ctx.db
         .query('fireGoals')
         .withIndex('by_user_and_goal', (q) => q.eq('userId', userId).eq('goalId', goalId))

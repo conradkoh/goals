@@ -214,6 +214,19 @@ function AdhocGoalQuickViewContent({
   }, [goal._id, isComplete, updateAdhocGoal]);
 
   /**
+   * Toggles the backlog status of the main adhoc goal.
+   * @internal
+   */
+  const handleToggleBacklog = useCallback(
+    async (newIsBacklog: boolean) => {
+      await updateAdhocGoal(goal._id, {
+        isBacklog: newIsBacklog,
+      });
+    },
+    [goal._id, updateAdhocGoal]
+  );
+
+  /**
    * Updates goal details when task list checkboxes are toggled.
    * @internal
    */
@@ -302,7 +315,14 @@ function AdhocGoalQuickViewContent({
             title={goal.title}
             isComplete={isComplete}
             onToggleComplete={handleToggleComplete}
-            statusControls={<GoalStatusIcons goalId={goal._id} />}
+            statusControls={
+              <GoalStatusIcons
+                goalId={goal._id}
+                showBacklog
+                isBacklog={adhocGoalProp.isBacklog || false}
+                onToggleBacklog={handleToggleBacklog}
+              />
+            }
             actionMenu={<GoalActionMenuNew onSave={handleSave} isQuarterlyGoal={false} />}
           />
 

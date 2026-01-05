@@ -257,6 +257,7 @@ export const updateAdhocGoal = mutation({
     ),
     dueDate: v.optional(v.number()),
     isComplete: v.optional(v.boolean()),
+    isBacklog: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<void> => {
     const {
@@ -269,6 +270,7 @@ export const updateAdhocGoal = mutation({
       dayOfWeek: _dayOfWeek,
       dueDate,
       isComplete,
+      isBacklog,
     } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
@@ -330,6 +332,21 @@ export const updateAdhocGoal = mutation({
     if (isComplete !== undefined) {
       goalUpdates.isComplete = isComplete;
       goalUpdates.completedAt = isComplete ? Date.now() : undefined;
+
+      // Business rule: If marking as complete, clear backlog status
+      if (isComplete === true) {
+        goalUpdates.isBacklog = false;
+      }
+
+      // Business rule: If un-completing a goal, reset to active (not backlog)
+      if (isComplete === false && goal.isComplete === true) {
+        goalUpdates.isBacklog = false;
+      }
+    }
+
+    // Handle backlog status update (only if not already handled by completion logic)
+    if (isBacklog !== undefined && goalUpdates.isBacklog === undefined) {
+      goalUpdates.isBacklog = isBacklog;
     }
 
     // Update adhoc properties
