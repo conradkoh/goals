@@ -7,27 +7,19 @@ import type * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Checkbox component built on top of Radix UI primitives.
- * Provides a styled checkbox input with check icon indicator and accessibility features.
- * Supports all standard checkbox states: unchecked, checked, and indeterminate.
+ * V2 Industrial Design System - Checkbox Component
  *
  * Features:
- * - Accessible keyboard navigation
- * - Focus ring styling
- * - Dark mode support
- * - Disabled state handling
- * - Error state styling
- * - Customizable via className prop
- *
- * @param className - Additional CSS classes to apply to the checkbox
- * @param props - All other props are forwarded to the underlying Radix checkbox primitive
+ * - Sharp corners (no border-radius)
+ * - 2px border
+ * - Square indicator style
  */
 function Checkbox({ className, ...props }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+        'peer border-2 border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       {...props}
