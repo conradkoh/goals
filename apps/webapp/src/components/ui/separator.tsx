@@ -5,6 +5,12 @@ import type * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/**
+ * V2 Industrial Design System - Separator Component
+ *
+ * Features:
+ * - 2px height for horizontal separators (industrial thick dividers)
+ */
 function Separator({
   className,
   orientation = 'horizontal',
@@ -17,7 +23,7 @@ function Separator({
       decorative={decorative}
       orientation={orientation}
       className={cn(
-        'bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px',
+        'bg-border shrink-0 data-[orientation=horizontal]:h-[2px] data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-[2px]',
         className
       )}
       {...props}

@@ -9,8 +9,12 @@ import { UserMenu } from '@/components/UserMenu';
 import { useAuthState } from '@/modules/auth/AuthProvider';
 
 /**
- * Main navigation header component with authentication state handling.
- * Shows login button for unauthenticated users and user menu for authenticated users.
+ * V2 Industrial Design System - Navigation Component
+ *
+ * Features:
+ * - 2px bottom border
+ * - Bold uppercase logo
+ * - Glassmorphism with backdrop-blur
  */
 export function Navigation() {
   const authState = useAuthState();
@@ -25,14 +29,14 @@ export function Navigation() {
   }, [authState]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b-2 border-border/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 sm:px-6">
         <div className="mr-6 flex">
           <Link
             href={authStatus.isAuthenticated ? '/app' : '/'}
             className="flex items-center whitespace-nowrap"
           >
-            <span className="font-bold text-lg">Goals</span>
+            <span className="font-bold text-sm uppercase tracking-wider">Goals</span>
           </Link>
         </div>
         <nav className="flex items-center justify-between w-full">

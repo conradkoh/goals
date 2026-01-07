@@ -6,20 +6,13 @@ import type * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Progress bar component built on top of Radix UI primitives.
- * Displays a horizontal progress indicator with smooth animations.
- * Supports values from 0 to 100 representing completion percentage.
+ * V2 Industrial Design System - Progress Component
  *
  * Features:
+ * - Sharp corners (no border-radius)
+ * - Thin height (1.5px) for industrial look
+ * - Neutral colors only (no color coding)
  * - Smooth transition animations
- * - Accessible progress semantics
- * - Customizable styling via className
- * - Responsive design
- * - Support for indeterminate state (when value is undefined)
- *
- * @param className - Additional CSS classes to apply to the progress container
- * @param value - Progress value between 0 and 100, or undefined for indeterminate state
- * @param props - All other props are forwarded to the underlying Radix progress primitive
  */
 function Progress({
   className,
@@ -29,7 +22,7 @@ function Progress({
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
-      className={cn('bg-primary/20 relative h-2 w-full overflow-hidden rounded-full', className)}
+      className={cn('bg-secondary relative h-[2px] w-full overflow-hidden', className)}
       {...props}
     >
       <ProgressPrimitive.Indicator

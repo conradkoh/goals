@@ -40,10 +40,16 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* V2 Industrial: Status colors */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  /* V2 Industrial: Sharp corners - no radius */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
 }
 
 /* Mobile-responsive spacing and sizing variables */
@@ -150,75 +156,107 @@ input,
   }
 }
 
+/* ============================================
+   V2 INDUSTRIAL DESIGN SYSTEM - Light Mode
+   Theme: Neutral Glass
+   ============================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* V2 Industrial: Sharp corners */
+  --radius: 0;
+  
+  /* V2 Industrial: Neutral Glass theme colors */
+  --background: #f5f5f5;
+  --foreground: #171717;
+  --card: rgba(255, 255, 255, 0.6);
+  --card-foreground: #171717;
+  --popover: rgba(255, 255, 255, 0.8);
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #e5e5e5;
+  --secondary-foreground: #171717;
+  --muted: #e5e5e5;
+  --muted-foreground: #737373;
+  --accent: #e5e5e5;
+  --accent-foreground: #171717;
+  --destructive: #b91c1c;
+  --destructive-foreground: #fafafa;
+  --border: rgba(23, 23, 23, 0.15);
+  --input: rgba(23, 23, 23, 0.1);
+  --ring: #171717;
+  
+  /* V2 Industrial: Status colors (light mode - darker for contrast) */
+  --success: #15803d;
+  --warning: #b45309;
+  --error: #b91c1c;
+  --info: #1d4ed8;
+  
+  /* Chart colors */
+  --chart-1: #ea580c;
+  --chart-2: #0d9488;
+  --chart-3: #1e40af;
+  --chart-4: #ca8a04;
+  --chart-5: #c2410c;
+  
+  /* Sidebar */
+  --sidebar: rgba(255, 255, 255, 0.6);
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #e5e5e5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: rgba(23, 23, 23, 0.1);
+  --sidebar-ring: #171717;
 }
 
+/* ============================================
+   V2 INDUSTRIAL DESIGN SYSTEM - Dark Mode
+   Theme: Dark Steel (Primary)
+   ============================================ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.145 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* V2 Industrial: Dark Steel theme colors */
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: rgba(24, 24, 27, 0.5);
+  --card-foreground: #fafafa;
+  --popover: rgba(24, 24, 27, 0.8);
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #71717a;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #f87171;
+  --destructive-foreground: #09090b;
+  --border: rgba(250, 250, 250, 0.1);
+  --input: rgba(250, 250, 250, 0.15);
+  --ring: #fafafa;
+  
+  /* V2 Industrial: Status colors (dark mode - brighter for visibility) */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
+  
+  /* Chart colors */
+  --chart-1: #6366f1;
+  --chart-2: #22d3ee;
+  --chart-3: #fbbf24;
+  --chart-4: #a855f7;
+  --chart-5: #f43f5e;
+  
+  /* Sidebar */
+  --sidebar: rgba(24, 24, 27, 0.5);
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(250, 250, 250, 0.1);
+  --sidebar-ring: #71717a;
 }
 
 @layer base {
@@ -317,5 +355,95 @@ input,
   /* For Webkit-based browsers (e.g., Chrome, Edge, etc.) */
   .scrollbar-visible::-webkit-scrollbar {
     width: 8px; /* Width of the scrollbar */
+  }
+
+  /* ============================================
+     V2 INDUSTRIAL DESIGN SYSTEM - Utility Classes
+     ============================================ */
+  
+  /* Industrial Typography */
+  .text-industrial-header {
+    @apply text-sm font-bold uppercase tracking-wider;
+  }
+  
+  .text-industrial-label {
+    @apply text-[10px] font-bold uppercase tracking-wider text-muted-foreground;
+  }
+  
+  .text-industrial-metric {
+    @apply text-lg font-bold tracking-tight tabular-nums;
+  }
+  
+  .text-industrial-status {
+    @apply text-[10px] font-bold font-mono;
+  }
+  
+  .text-industrial-title {
+    @apply text-2xl font-bold uppercase tracking-tight;
+  }
+  
+  /* Industrial Borders */
+  .border-industrial {
+    @apply border-2;
+  }
+  
+  .border-b-industrial {
+    @apply border-b-2;
+  }
+  
+  .border-t-industrial {
+    @apply border-t-2;
+  }
+  
+  /* Industrial Indicators (square, not round) */
+  .indicator-industrial {
+    @apply w-1.5 h-1.5;
+  }
+  
+  .indicator-industrial-lg {
+    @apply w-2 h-2;
+  }
+  
+  /* Industrial Status Colors */
+  .text-status-success {
+    color: var(--success);
+  }
+  
+  .text-status-warning {
+    color: var(--warning);
+  }
+  
+  .text-status-error {
+    color: var(--error);
+  }
+  
+  .text-status-info {
+    color: var(--info);
+  }
+  
+  .bg-status-success {
+    background-color: var(--success);
+  }
+  
+  .bg-status-warning {
+    background-color: var(--warning);
+  }
+  
+  .bg-status-error {
+    background-color: var(--error);
+  }
+  
+  .bg-status-info {
+    background-color: var(--info);
+  }
+  
+  /* Industrial Section Header */
+  .section-header-industrial {
+    @apply text-sm font-bold uppercase tracking-wider border-b-2 pb-2 mb-3;
+  }
+  
+  /* Industrial Card with glassmorphism */
+  .card-industrial {
+    @apply bg-card/60 backdrop-blur-sm border-2 border-border/10 p-4;
   }
 }

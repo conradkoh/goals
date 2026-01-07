@@ -79,12 +79,14 @@ const themeScript = `
       switch (nextTheme) {
         case 'dark': {
           document.documentElement.classList.add('dark');
-          document.documentElement.style.backgroundColor = 'rgb(9, 9, 11)';
+          // V2 Industrial: Dark Steel theme background (zinc-950)
+          document.documentElement.style.backgroundColor = '#09090b';
           break;
         }
         case 'light': {
           document.documentElement.classList.remove('dark');
-          document.documentElement.style.backgroundColor = 'rgb(255, 255, 255)';
+          // V2 Industrial: Neutral Glass theme background (neutral-100)
+          document.documentElement.style.backgroundColor = '#f5f5f5';
           break;
         }
       }
