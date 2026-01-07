@@ -148,7 +148,7 @@ export const FocusMenuBar = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => setIsSelectorOpen(true)}
-                    className="text-xs sm:text-sm font-medium text-center truncate px-1 sm:px-2 max-w-[120px] sm:max-w-[160px] hover:bg-accent"
+                    className="text-xs sm:text-sm font-medium text-center px-1 sm:px-2 hover:bg-accent"
                   >
                     {getNavigationLabel()}
                   </Button>
