@@ -1,5 +1,5 @@
 /**
- * @fileoverview Pure UI component for domain pills
+ * @file Pure UI component for domain pills
  *
  * ╔═══════════════════════════════════════════════════════════════════════════╗
  * ║  NOTE: Consider using `DomainPill` instead                                ║
@@ -16,9 +16,11 @@
  */
 
 import { forwardRef } from 'react';
+
+import { getDomainPillColors } from '../lib/colors';
+
 import { cn } from '@/lib/utils';
 import { useIsDarkMode } from '@/modules/theme/ThemeProvider';
-import { getDomainPillColors } from '../lib/colors';
 
 export interface DomainPillViewProps extends React.HTMLAttributes<HTMLDivElement> {
   /** The display name of the domain */

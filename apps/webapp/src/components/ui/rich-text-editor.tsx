@@ -8,8 +8,10 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { cn } from '@/lib/utils';
+
 import styles from './rich-text-editor.module.css';
+
+import { cn } from '@/lib/utils';
 
 /** Helper function to check if HTML content is effectively empty */
 export function isHTMLEmpty(html: string) {
@@ -85,14 +87,14 @@ const MarkdownTaskListPaste = Extension.create({
             type TaskItemNode = {
               type: 'taskItem';
               attrs: { checked: boolean };
-              content: Array<{
+              content: {
                 type: 'paragraph';
-                content?: Array<{ type: 'text'; text: string }>;
-              }>;
+                content?: { type: 'text'; text: string }[];
+              }[];
             };
             type ParagraphNode = {
               type: 'paragraph';
-              content?: Array<{ type: 'text'; text: string }>;
+              content?: { type: 'text'; text: string }[];
             };
             type TaskListNode = {
               type: 'taskList';

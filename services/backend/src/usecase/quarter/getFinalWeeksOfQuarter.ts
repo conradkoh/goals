@@ -11,12 +11,12 @@ import { getQuarterDateRange } from './getQuarterDateRange';
 export function getFinalWeeksOfQuarter(
   year: number,
   quarter: number
-): Array<{
+): {
   weekNumber: number;
   year: number;
-}> {
+}[] {
   const { endDate } = getQuarterDateRange(year, quarter);
-  const result: Array<{ weekNumber: number; year: number }> = [];
+  const result: { weekNumber: number; year: number }[] = [];
 
   // Find the Thursday of the last week
   let lastThursday = endDate.set({ weekday: 4 });
@@ -43,7 +43,7 @@ export function getFinalWeeksOfQuarter(
  */
 export function isInFinalWeeks(
   state: { weekNumber: number; year: number },
-  finalWeeks: Array<{ weekNumber: number; year: number }>
+  finalWeeks: { weekNumber: number; year: number }[]
 ): boolean {
   return finalWeeks.some(
     (finalWeek) => state.weekNumber === finalWeek.weekNumber && state.year === finalWeek.year

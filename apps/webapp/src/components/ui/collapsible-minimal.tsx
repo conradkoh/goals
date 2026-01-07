@@ -2,8 +2,10 @@
 
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import { ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+
 import { Button } from './button';
+
+import { cn } from '@/lib/utils';
 
 const CollapsibleMinimal = CollapsiblePrimitive.Root;
 

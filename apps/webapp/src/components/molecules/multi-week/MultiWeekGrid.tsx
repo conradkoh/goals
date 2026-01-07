@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+
 import { useCalculatedThenMeasured, useCenteredScroll } from '@/lib/scroll';
 import { cn } from '@/lib/utils';
 

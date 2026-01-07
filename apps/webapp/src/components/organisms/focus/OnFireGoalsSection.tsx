@@ -2,6 +2,7 @@ import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Eye, Flame, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
+
 import { DomainPill } from '@/components/atoms/DomainPill';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
@@ -24,10 +25,10 @@ import { useSession } from '@/modules/auth/useSession';
  */
 interface OnFireGoalsSectionProps {
   /** Array of weekly goals with their parent quarterly goals */
-  weeklyGoalsWithQuarterly: Array<{
+  weeklyGoalsWithQuarterly: {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
-  }>;
+  }[];
   /** The currently selected day of the week */
   selectedDayOfWeek: DayOfWeek;
   /** The ISO week year being displayed */
@@ -66,11 +67,11 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
       string,
       {
         quarterlyGoal: GoalWithDetailsAndChildren;
-        weeklyGoals: Array<{
+        weeklyGoals: {
           weeklyGoal: GoalWithDetailsAndChildren;
           dailyGoals: GoalWithDetailsAndChildren[];
           isWeeklyOnFire: boolean;
-        }>;
+        }[];
       }
     >();
 

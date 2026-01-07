@@ -1,5 +1,5 @@
 /**
- * @fileoverview Re-export of AdhocGoalItem for backward compatibility.
+ * @file Re-export of AdhocGoalItem for backward compatibility.
  *
  * This file provides backward compatibility for existing imports of AdhocGoalItem.
  * The actual implementation has been moved to the unified goal-list-item component system.

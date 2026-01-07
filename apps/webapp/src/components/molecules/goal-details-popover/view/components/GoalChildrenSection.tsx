@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+
 import { Separator } from '@/components/ui/separator';
 
 export interface GoalChildrenSectionProps {

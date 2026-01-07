@@ -1,9 +1,11 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useState } from 'react';
+
+import { DailyGoalList } from './DailyGoalList';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { DailyGoalList } from './DailyGoalList';
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];

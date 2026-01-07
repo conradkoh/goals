@@ -1,4 +1,5 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+
 import { DomainPill, DomainPillView } from '@/components/atoms/DomainPill';
 
 export interface GoalDomainDisplayProps {

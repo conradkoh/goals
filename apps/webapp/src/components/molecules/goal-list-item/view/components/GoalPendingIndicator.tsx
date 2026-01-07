@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+
+import { useGoalListItemContextOptional } from './GoalListItemContext';
+
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { useGoalListItemContextOptional } from './GoalListItemContext';
 
 export interface GoalPendingIndicatorProps {
   /** Whether in optimistic state (from goal.isOptimistic) */

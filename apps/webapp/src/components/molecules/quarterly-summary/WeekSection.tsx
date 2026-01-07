@@ -2,10 +2,12 @@ import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
+
+import { WeeklyTaskItem } from './WeeklyTaskItem';
+
 import { Button } from '@/components/ui/button';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { cn } from '@/lib/utils';
-import { WeeklyTaskItem } from './WeeklyTaskItem';
 
 /**
  * Props for the WeekSection component.

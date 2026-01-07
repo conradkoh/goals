@@ -1,6 +1,10 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback, useMemo, useState } from 'react';
+
+import { QuarterlyGoal } from './QuarterlyGoal';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+
 import {
   CollapsibleMinimal,
   CollapsibleMinimalContent,
@@ -9,8 +13,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { QuarterlyGoal } from './QuarterlyGoal';
 
 interface WeekCardQuarterlyGoalsProps {
   weekNumber: number;

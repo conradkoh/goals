@@ -2,6 +2,7 @@
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { DayOfWeek } from '@workspace/backend/src/constants';
+
 import { AdhocGoalList } from '@/components/organisms/AdhocGoalList';
 import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';

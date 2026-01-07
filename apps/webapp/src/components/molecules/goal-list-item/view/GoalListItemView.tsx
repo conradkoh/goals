@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+
 import { GoalListItemProvider } from './components/GoalListItemContext';
+
+import { cn } from '@/lib/utils';
 
 export interface GoalListItemViewProps {
   /** Child components to render inside the list item */

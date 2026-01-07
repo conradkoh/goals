@@ -1,4 +1,14 @@
 import { useCallback } from 'react';
+
+import {
+  GoalActionButtons,
+  GoalCheckbox,
+  GoalListItemProvider,
+  GoalPendingIndicator,
+  GoalStatusIcons,
+  useGoalListItemContext,
+} from '../view/components';
+
 import { DailyGoalPopover } from '@/components/molecules/goal-details-popover';
 import {
   Select,
@@ -16,14 +26,6 @@ import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
-import {
-  GoalActionButtons,
-  GoalCheckbox,
-  GoalListItemProvider,
-  GoalPendingIndicator,
-  GoalStatusIcons,
-  useGoalListItemContext,
-} from '../view/components';
 
 export interface DailyGoalItemProps {
   /** Additional class names */
@@ -47,16 +49,16 @@ export interface DailyGoalItemProps {
 export function DailyGoalItem({ className }: DailyGoalItemProps) {
   return (
     <GoalListItemProvider>
-      <_DailyGoalItemContent className={className} />
+      <DailyGoalItemContentInternal className={className} />
     </GoalListItemProvider>
   );
 }
 
-interface _DailyGoalItemContentProps {
+interface DailyGoalItemContentInternalProps {
   className?: string;
 }
 
-function _DailyGoalItemContent({ className }: _DailyGoalItemContentProps) {
+function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInternalProps) {
   const { goal } = useGoalContext();
   const { onUpdateGoal } = useGoalActionsContext();
   const { setPendingUpdate } = useGoalListItemContext();

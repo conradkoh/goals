@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+
 import { Checkbox } from '@/components/ui/checkbox';
 
 export interface GoalHeaderProps {

@@ -1,5 +1,6 @@
-import { Separator } from '@/components/ui/separator';
 import { GoalDetailsContent } from './GoalDetailsContent';
+
+import { Separator } from '@/components/ui/separator';
 
 export interface GoalDetailsSectionProps {
   /** Goal title (for full view dialog) */

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Domain Pill Components
+ * @file Domain Pill Components
  *
  * ╔═══════════════════════════════════════════════════════════════════════════╗
  * ║  IMPORTANT: Best Practice                                                 ║
@@ -16,8 +16,10 @@
  */
 
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
-import { DomainPopover } from '@/components/molecules/DomainPopover';
+
 import { DomainPillView } from './view/DomainPillView';
+
+import { DomainPopover } from '@/components/molecules/DomainPopover';
 
 export type { DomainPillColors } from './lib/colors';
 // Re-export utilities and view component for direct access

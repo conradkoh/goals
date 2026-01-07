@@ -3,6 +3,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
+
 import {
   DayContainer,
   wasCompletedToday,

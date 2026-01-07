@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalSelector } from '@/components/atoms/GoalSelector';
 import {
@@ -38,10 +39,10 @@ interface DayData {
   date: string;
   dateTimestamp: number;
   dailyGoalsView?: {
-    weeklyGoals: Array<{
+    weeklyGoals: {
       weeklyGoal: GoalWithDetailsAndChildren;
       quarterlyGoal: GoalWithDetailsAndChildren;
-    }>;
+    }[];
   };
 }
 
@@ -303,11 +304,11 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
           if (weeklyGoal.isComplete) {
             // Get the current day's date timestamp
             const currentDayData = (
-              days as Array<{
+              days as {
                 dayOfWeek: DayOfWeekType;
                 date: string;
                 dateTimestamp: number;
-              }>
+              }[]
             ).find((day) => day.dayOfWeek === selectedDayOfWeek);
 
             if (currentDayData && wasCompletedToday(weeklyGoal, currentDayData.dateTimestamp)) {

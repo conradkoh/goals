@@ -1,8 +1,9 @@
 import type { SessionId } from 'convex-helpers/server/sessions';
 import { describe, expect, test } from 'vitest';
-import { convexTest } from '../src/util/test';
+
 import { api } from './_generated/api';
 import schema from './schema';
+import { convexTest } from '../src/util/test';
 
 /**
  * Helper to create a test session using the template's loginAnon pattern.

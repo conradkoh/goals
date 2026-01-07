@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { getPreviousQuarter, getQuarterDateRange } from './getQuarterDateRange';
 
 describe('Quarter Date Range Use Cases', () => {

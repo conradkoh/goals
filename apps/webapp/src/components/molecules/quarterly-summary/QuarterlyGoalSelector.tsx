@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { QuarterlyGoalOption } from '@workspace/backend/src/usecase/getWeekDetails';
 import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } from 'lucide-react';
 import React from 'react';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';

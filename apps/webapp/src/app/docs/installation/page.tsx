@@ -13,8 +13,10 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { DocHeader, DocInfoCard, DocList, DocListItem, DocSection } from '../components/primitives';
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function InstallationGuidePage() {
   const [platform, setPlatform] = useState<'macos' | 'ios'>('macos');

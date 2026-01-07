@@ -3,13 +3,15 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } from 'lucide-react';
 import React from 'react';
+
+import { useQuarterlySummaryContext } from './QuarterlySummaryContext';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useQuarterlySummaryContext } from './QuarterlySummaryContext';
 
 /**
  * Panel component for selecting quarterly goals to include in the summary.

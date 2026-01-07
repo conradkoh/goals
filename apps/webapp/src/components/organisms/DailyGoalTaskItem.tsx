@@ -1,5 +1,5 @@
 /**
- * @fileoverview Re-export of DailyGoalItem as DailyGoalTaskItem for backward compatibility.
+ * @file Re-export of DailyGoalItem as DailyGoalTaskItem for backward compatibility.
  *
  * This file provides backward compatibility for existing imports of DailyGoalTaskItem.
  * The actual implementation has been moved to the unified goal-list-item component system.

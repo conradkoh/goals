@@ -1,6 +1,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
+
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';

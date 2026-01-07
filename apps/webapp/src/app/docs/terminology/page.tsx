@@ -10,6 +10,7 @@ import {
   Target,
 } from 'lucide-react';
 import type { Metadata } from 'next';
+
 import { DocFeatureCard, DocHeader, DocInfoCard, DocSection } from '../components/primitives';
 
 export const metadata: Metadata = {

@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Check, Pin, Star } from 'lucide-react';
 import { useCallback } from 'react';
+
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';

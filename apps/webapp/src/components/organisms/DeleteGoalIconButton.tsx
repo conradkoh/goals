@@ -3,9 +3,11 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
 import { Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+
+import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
+
 import { useWeek } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
-import { GoalDeletePreviewDialog } from './GoalDeletePreviewDialog';
 
 interface GoalPreviewNode {
   _id: Id<'goals'>;

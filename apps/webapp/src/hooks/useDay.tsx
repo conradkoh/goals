@@ -1,17 +1,19 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { createContext, useContext, useMemo } from 'react';
-import type { DayOfWeekType } from '@/lib/constants';
+
 import { useWeek } from './useWeek';
+
+import type { DayOfWeekType } from '@/lib/constants';
 
 type DailyGoalsViewModel = {
   dayOfWeek: DayOfWeekType;
   date: string;
   dateTimestamp: number;
-  weeklyGoals: Array<{
+  weeklyGoals: {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
     dailyGoals: GoalWithDetailsAndChildren[];
-  }>;
+  }[];
 };
 
 interface DayContextValue {

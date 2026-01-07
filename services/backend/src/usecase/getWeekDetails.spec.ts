@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+
+import { buildGoalTree } from './getWeekDetails';
 import type { Id } from '../../convex/_generated/dataModel';
 
 // Import the buildGoalTree function
 // Since it's not exported, we'll need to test through getWeekDetails
 // Let's create a test-only export of buildGoalTree
-import { buildGoalTree } from './getWeekDetails';
 
 describe('buildGoalTree', () => {
   it('should build a tree with quarterly and weekly goals', () => {

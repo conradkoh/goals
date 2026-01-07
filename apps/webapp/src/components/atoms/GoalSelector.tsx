@@ -1,6 +1,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Pin, Star } from 'lucide-react';
+
 import {
   Select,
   SelectContent,

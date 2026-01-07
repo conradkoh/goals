@@ -1,6 +1,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { Edit2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+
 import { GoalEditPopover } from '@/components/atoms/GoalEditPopover';
 import { DeleteGoalIconButton } from '@/components/organisms/DeleteGoalIconButton';
 import { useGoalContext } from '@/contexts/GoalContext';

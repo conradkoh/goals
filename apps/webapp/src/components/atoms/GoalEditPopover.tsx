@@ -6,7 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  FullscreenDialogContent,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -300,8 +306,7 @@ export function GoalEditPopover({
           {trigger || defaultTrigger}
         </span>
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-          <DialogContent
-            fullscreenSafe
+          <FullscreenDialogContent
             className={cn(
               // Width: full width minus small margin
               'w-[calc(100vw-16px)] max-w-none',
@@ -317,7 +322,7 @@ export function GoalEditPopover({
             </DialogHeader>
             {/* Scrollable content with keyboard-friendly padding */}
             <div className="flex-1 overflow-y-auto overscroll-contain pb-4 pr-4">{formContent}</div>
-          </DialogContent>
+          </FullscreenDialogContent>
         </Dialog>
       </>
     );

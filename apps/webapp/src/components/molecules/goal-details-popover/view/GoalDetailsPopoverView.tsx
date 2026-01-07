@@ -1,7 +1,13 @@
 import { forwardRef, type ReactNode, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  FullscreenDialogContent,
+} from '@/components/ui/dialog';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 
@@ -90,38 +96,49 @@ export function GoalDetailsPopoverView({
           {trigger}
         </span>
         <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-          <DialogContent
-            fullscreenSafe={preferFullscreenDialogs}
-            className={cn(
-              // When fullscreen is preferred (touch devices), use safe fullscreen sizing
-              // Uses dvh for iOS Safari dynamic viewport, with vh fallback
-              // Includes safe-area-inset for notch/home indicator
-              preferFullscreenDialogs
-                ? [
-                    // Width: full width minus small margin, respecting safe areas
-                    'w-[calc(100vw-16px)]',
-                    'max-w-none',
-                    // Height: use dvh (dynamic viewport height) for iOS Safari
-                    // Falls back gracefully in browsers that don't support dvh
-                    'h-[calc(100dvh-32px)]',
-                    'max-h-none',
-                    // Safe area padding for notch and home indicator
-                    'pb-[env(safe-area-inset-bottom,0px)]',
-                  ]
-                : 'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
-              'overflow-hidden flex flex-col p-4 sm:p-6',
-              contentClassName
-            )}
-          >
-            <DialogHeader>
-              <DialogTitle className="sr-only">Goal Details</DialogTitle>
-            </DialogHeader>
-            {/* Scrollable content area */}
-            {/* pb-4 ensures content can scroll past keyboard on iOS */}
-            <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
-              {children}
-            </div>
-          </DialogContent>
+          {preferFullscreenDialogs ? (
+            <FullscreenDialogContent
+              className={cn(
+                // Width: full width minus small margin, respecting safe areas
+                'w-[calc(100vw-16px)]',
+                'max-w-none',
+                // Height: use dvh (dynamic viewport height) for iOS Safari
+                // Falls back gracefully in browsers that don't support dvh
+                'h-[calc(100dvh-32px)]',
+                'max-h-none',
+                // Safe area padding for notch and home indicator
+                'pb-[env(safe-area-inset-bottom,0px)]',
+                'overflow-hidden flex flex-col p-4 sm:p-6',
+                contentClassName
+              )}
+            >
+              <DialogHeader>
+                <DialogTitle className="sr-only">Goal Details</DialogTitle>
+              </DialogHeader>
+              {/* Scrollable content area */}
+              {/* pb-4 ensures content can scroll past keyboard on iOS */}
+              <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
+                {children}
+              </div>
+            </FullscreenDialogContent>
+          ) : (
+            <DialogContent
+              className={cn(
+                'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
+                'overflow-hidden flex flex-col p-4 sm:p-6',
+                contentClassName
+              )}
+            >
+              <DialogHeader>
+                <DialogTitle className="sr-only">Goal Details</DialogTitle>
+              </DialogHeader>
+              {/* Scrollable content area */}
+              {/* pb-4 ensures content can scroll past keyboard on iOS */}
+              <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
+                {children}
+              </div>
+            </DialogContent>
+          )}
         </Dialog>
       </>
     );

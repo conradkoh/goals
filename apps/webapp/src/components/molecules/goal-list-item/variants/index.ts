@@ -1,5 +1,5 @@
 /**
- * @fileoverview Pre-composed goal list item variants for different goal types.
+ * @file Pre-composed goal list item variants for different goal types.
  *
  * These variants are ready-to-use components that compose the building blocks
  * from `view/components` with appropriate defaults for each goal type.

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Composable components for building goal details popovers.
+ * @file Composable components for building goal details popovers.
  * These components can be mixed and matched to create different popover variants.
  */
 

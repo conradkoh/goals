@@ -1,8 +1,10 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
-import { toast } from '@/components/ui/use-toast';
+
 import { useGoalActions } from './useGoalActions';
+
+import { toast } from '@/components/ui/use-toast';
 
 export interface SummaryGoalActions {
   handleToggleComplete: (goal: GoalWithDetailsAndChildren, weekNumber: number) => Promise<void>;

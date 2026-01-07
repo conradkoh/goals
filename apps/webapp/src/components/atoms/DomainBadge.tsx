@@ -1,4 +1,5 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+
 import { cn } from '@/lib/utils';
 
 interface DomainBadgeProps {

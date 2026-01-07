@@ -2,6 +2,11 @@ import { CalendarDays, Edit2, FileText, Maximize2, MoreVertical } from 'lucide-r
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useCallback, useState } from 'react';
+
+import { useGoalDisplayContext } from './GoalDisplayContext';
+import { useGoalEditContext } from './GoalEditContext';
+import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
+
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,9 +18,6 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
-import { useGoalDisplayContext } from './GoalDisplayContext';
-import { useGoalEditContext } from './GoalEditContext';
-import { MoveGoalToWeekModal } from './MoveGoalToWeekModal';
 
 /**
  * Props for the GoalActionMenuNew component.

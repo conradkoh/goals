@@ -2,6 +2,11 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
+
+import { DayHeader } from '../components/DayHeader';
+import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
+import { WeeklyGoalTaskItem } from '../components/WeeklyGoalTaskItem';
+
 import { AddTaskInput } from '@/components/atoms/AddTaskInput';
 import { ConditionalRender } from '@/components/atoms/ConditionalRender';
 import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
@@ -9,9 +14,6 @@ import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalProvider } from '@/contexts/GoalContext';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { DayHeader } from '../components/DayHeader';
-import { QuarterlyGoalHeader } from '../components/QuarterlyGoalHeader';
-import { WeeklyGoalTaskItem } from '../components/WeeklyGoalTaskItem';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
@@ -314,10 +316,10 @@ export interface DayContainerProps {
   dayOfWeek: DayOfWeek;
   weekNumber: number;
   dateTimestamp: number;
-  weeklyGoalsWithQuarterly: Array<{
+  weeklyGoalsWithQuarterly: {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
-  }>;
+  }[];
   /**
    * Quarterly goals that should always be displayed, even if they have no weekly tasks.
    * Typically used for starred and pinned quarterly goals to ensure they're always visible.

@@ -1,4 +1,5 @@
 import type { DateTime } from 'luxon';
+
 import { getFinalWeeksOfQuarter } from './';
 
 /**
@@ -17,7 +18,7 @@ export function debugQuarterCalculations(testDate: DateTime): {
     year: number;
   };
   currentQuarter: {
-    finalWeeks: Array<{ weekNumber: number; year: number }>;
+    finalWeeks: { weekNumber: number; year: number }[];
   };
 } {
   const quarter = Math.floor((testDate.month - 1) / 3) + 1;

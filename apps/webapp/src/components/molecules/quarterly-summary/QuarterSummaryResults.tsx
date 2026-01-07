@@ -1,11 +1,13 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { AlertCircle, BarChart3 } from 'lucide-react';
+
+import { WeekSection } from './WeekSection';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuarterSummary } from '@/hooks/useQuarterSummary';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { cn } from '@/lib/utils';
-import { WeekSection } from './WeekSection';
 
 /**
  * Props for the QuarterSummaryResults component.

@@ -2,13 +2,15 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { AlertCircle, Pin, Star } from 'lucide-react';
 import { DateTime } from 'luxon';
 import React from 'react';
+
+import { WeekSection } from './WeekSection';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { cn } from '@/lib/utils';
-import { WeekSection } from './WeekSection';
 
 /**
  * Props for the QuarterlyGoalSummaryView component.
@@ -102,6 +104,7 @@ export function QuarterlyGoalSummaryView({
     if (!weeklyGoalsByWeek) return [];
 
     // biome-ignore lint/suspicious/noExplicitAny: weekly goal shape varies by backend response
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const weekMap: Record<number, any[]> = {};
 
     Object.entries(weeklyGoalsByWeek).forEach(([weekNum, goals]) => {

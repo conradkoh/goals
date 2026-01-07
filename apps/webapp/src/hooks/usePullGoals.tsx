@@ -2,6 +2,9 @@ import { api } from '@workspace/backend/convex/_generated/api';
 import { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { type ReactElement, useCallback, useState } from 'react';
+
+import { useGoalActions } from './useGoalActions';
+
 import {
   type PreviewTask,
   TaskMovePreview,
@@ -11,7 +14,6 @@ import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
-import { useGoalActions } from './useGoalActions';
 
 interface UsePullGoalsProps {
   weekNumber: number;

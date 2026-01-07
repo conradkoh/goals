@@ -1,11 +1,12 @@
 import type { SessionId } from 'convex-helpers/server/sessions';
 import { describe, expect, test } from 'vitest';
+
 import { DayOfWeek } from '../src/constants';
-import type { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
-import { convexTest } from '../src/util/test';
 import { api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import schema from './schema';
+import type { GoalWithDetailsAndChildren } from '../src/usecase/getWeekDetails';
+import { convexTest } from '../src/util/test';
 
 /**
  * Helper to create a test session using the template's loginAnon pattern.
@@ -1115,13 +1116,13 @@ describe('deleteGoal', () => {
       dryRun: true,
     })) as {
       isDryRun: boolean;
-      goalsToDelete: Array<{
+      goalsToDelete: {
         _id: Id<'goals'>;
         title: string;
         depth: number;
         // biome-ignore lint/suspicious/noExplicitAny: Test code with dynamic goal types
         children: any[];
-      }>;
+      }[];
     };
 
     // Verify the result

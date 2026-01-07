@@ -1,5 +1,5 @@
 /**
- * @fileoverview Base view components and composable pieces for goal list items.
+ * @file Base view components and composable pieces for goal list items.
  *
  * ## Usage
  *

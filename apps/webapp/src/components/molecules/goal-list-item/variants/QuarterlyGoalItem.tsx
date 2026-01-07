@@ -1,5 +1,13 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback } from 'react';
+
+import {
+  GoalActionButtons,
+  GoalListItemProvider,
+  GoalPendingIndicator,
+  useGoalListItemContext,
+} from '../view/components';
+
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalContext } from '@/contexts/GoalContext';
@@ -7,12 +15,6 @@ import { useWeek } from '@/hooks/useWeek';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
 import type { GoalUpdateHandler } from '@/models/goal-handlers';
-import {
-  GoalActionButtons,
-  GoalListItemProvider,
-  GoalPendingIndicator,
-  useGoalListItemContext,
-} from '../view/components';
 
 export interface QuarterlyGoalItemProps {
   /** Handler for toggling star/pin status */
@@ -47,7 +49,7 @@ export function QuarterlyGoalItem({
 }: QuarterlyGoalItemProps) {
   return (
     <GoalListItemProvider>
-      <_QuarterlyGoalItemContent
+      <QuarterlyGoalItemContentInternal
         onToggleStatus={onToggleStatus}
         onUpdateGoal={onUpdateGoal}
         className={className}
@@ -56,13 +58,13 @@ export function QuarterlyGoalItem({
   );
 }
 
-interface _QuarterlyGoalItemContentProps extends QuarterlyGoalItemProps {}
+interface QuarterlyGoalItemContentInternalProps extends QuarterlyGoalItemProps {}
 
-function _QuarterlyGoalItemContent({
+function QuarterlyGoalItemContentInternal({
   onToggleStatus,
   onUpdateGoal,
   className,
-}: _QuarterlyGoalItemContentProps) {
+}: QuarterlyGoalItemContentInternalProps) {
   const { goal } = useGoalContext();
   const { setPendingUpdate } = useGoalListItemContext();
   const { toggleGoalCompletion, weekNumber } = useWeek();

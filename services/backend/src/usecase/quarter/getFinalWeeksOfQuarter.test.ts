@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+
 import { getFinalWeeksOfQuarter, isInFinalWeeks } from './getFinalWeeksOfQuarter';
 
 describe('Final Weeks of Quarter Use Cases', () => {

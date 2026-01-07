@@ -1,13 +1,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
-import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
-import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import { useGoalActions } from '@/hooks/useGoalActions';
-import { useWeek } from '@/hooks/useWeek';
+
 import {
   GoalActionMenuNew,
   GoalCompletionDate,
@@ -19,6 +13,14 @@ import {
   GoalHeader,
   useGoalEditContext,
 } from '../goal-details-popover/view/components';
+
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
+import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useGoalActions } from '@/hooks/useGoalActions';
+import { useWeek } from '@/hooks/useWeek';
 
 /**
  * Props for the GoalQuickViewModal component.
@@ -61,7 +63,7 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
         <GoalProvider goal={goal}>
           <GoalEditProvider>
             <GoalDisplayProvider>
-              <_GoalQuickViewContent />
+              <GoalQuickViewContentInternal />
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
@@ -74,7 +76,7 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
  * Internal component that renders the goal content.
  * Separated to access contexts provided by parent.
  */
-function _GoalQuickViewContent() {
+function GoalQuickViewContentInternal() {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
   const { weekNumber } = useWeek();

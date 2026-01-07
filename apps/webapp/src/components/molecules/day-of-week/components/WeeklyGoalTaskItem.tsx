@@ -1,5 +1,5 @@
 /**
- * @fileoverview Re-export of WeeklyGoalItem as WeeklyGoalTaskItem for backward compatibility.
+ * @file Re-export of WeeklyGoalItem as WeeklyGoalTaskItem for backward compatibility.
  *
  * This file provides backward compatibility for existing imports of WeeklyGoalTaskItem.
  * The actual implementation has been moved to the unified goal-list-item component system.

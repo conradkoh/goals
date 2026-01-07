@@ -2,6 +2,11 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
+
+import { DeleteGoalIconButton } from './DeleteGoalIconButton';
+import { CreateGoalInput } from '../atoms/CreateGoalInput';
+import { GoalEditPopover } from '../atoms/GoalEditPopover';
+
 import { FireIcon } from '@/components/atoms/FireIcon';
 import {
   QuarterlyGoalPopover,
@@ -26,9 +31,6 @@ import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
-import { CreateGoalInput } from '../atoms/CreateGoalInput';
-import { GoalEditPopover } from '../atoms/GoalEditPopover';
-import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 
 interface WeekCardWeeklyGoalsProps {
   weekNumber: number;

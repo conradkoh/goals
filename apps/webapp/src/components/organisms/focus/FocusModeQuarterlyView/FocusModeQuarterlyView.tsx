@@ -1,10 +1,12 @@
 import { memo, useMemo } from 'react';
+
+import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
+import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
+
 import {
   MoveGoalsForQuarterProvider,
   useMoveGoalsForQuarterContext,
 } from '@/hooks/useMoveGoalsForQuarterContext';
-import { MultiWeekGenerator } from '../../../molecules/multi-week/MultiWeekContext';
-import { MultiWeekLayout } from '../../../molecules/multi-week/MultiWeekLayout';
 
 export interface FocusModeQuarterlyViewProps {
   year?: number;

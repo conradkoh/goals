@@ -1,5 +1,6 @@
 import { Command, Keyboard, LayoutGrid, MousePointerClick } from 'lucide-react';
 import type { Metadata } from 'next';
+
 import { DocHeader, DocInfoCard, DocSection } from '../components/primitives';
 
 export const metadata: Metadata = {

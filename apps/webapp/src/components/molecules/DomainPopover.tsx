@@ -7,7 +7,13 @@ import { useCallback, useState } from 'react';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  FullscreenDialogContent,
+} from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
@@ -359,8 +365,7 @@ export function DomainPopover({
           {trigger}
         </span>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent
-            fullscreenSafe
+          <FullscreenDialogContent
             className={cn(
               // Width: full width minus small margin
               'w-[calc(100vw-16px)] max-w-none',
@@ -378,7 +383,7 @@ export function DomainPopover({
             </DialogHeader>
             {/* pb-4 ensures content can scroll past keyboard on iOS */}
             <div className="flex-1 overflow-y-auto w-full pb-4 overscroll-contain">{content}</div>
-          </DialogContent>
+          </FullscreenDialogContent>
         </Dialog>
       </>
     );

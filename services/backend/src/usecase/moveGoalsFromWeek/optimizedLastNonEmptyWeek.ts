@@ -1,6 +1,6 @@
+import type { TimePeriod } from './types';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../../convex/_generated/server';
-import type { TimePeriod } from './types';
 
 /**
  * Efficiently find the last non-empty week by querying goal states in batch

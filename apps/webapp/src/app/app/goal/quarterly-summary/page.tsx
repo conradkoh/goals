@@ -3,6 +3,10 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Home, Loader2 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
+
+import { QuarterlySummaryProvider, useQuarterlySummaryContext } from './QuarterlySummaryContext';
+import { AdhocDomainSelectorPanel, QuarterlyGoalSelectorPanel } from './SelectorPanels';
+
 import { MultiQuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QuarterlySummaryProvider, useQuarterlySummaryContext } from './QuarterlySummaryContext';
-import { AdhocDomainSelectorPanel, QuarterlyGoalSelectorPanel } from './SelectorPanels';
 
 /**
  * Inner component that uses the context.

@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Clock, Info, Pin, Star } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
+
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
@@ -22,10 +23,10 @@ import { useSession } from '@/modules/auth/useSession';
  */
 interface PendingGoalsSectionProps {
   /** Array of weekly goals with their parent quarterly goals */
-  weeklyGoalsWithQuarterly: Array<{
+  weeklyGoalsWithQuarterly: {
     weeklyGoal: GoalWithDetailsAndChildren;
     quarterlyGoal: GoalWithDetailsAndChildren;
-  }>;
+  }[];
   /** The currently selected day of the week */
   selectedDayOfWeek: DayOfWeek;
   /** The ISO week number being displayed */
@@ -57,12 +58,12 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       string,
       {
         quarterlyGoal: GoalWithDetailsAndChildren;
-        weeklyGoals: Array<{
+        weeklyGoals: {
           weeklyGoal: GoalWithDetailsAndChildren;
           dailyGoals: GoalWithDetailsAndChildren[];
           isWeeklyPending: boolean;
           pendingDescription?: string;
-        }>;
+        }[];
       }
     >();
 

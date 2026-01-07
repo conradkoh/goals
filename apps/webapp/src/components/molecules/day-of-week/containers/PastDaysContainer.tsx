@@ -1,4 +1,7 @@
 import { Check } from 'lucide-react';
+
+import { DayContainer, type DayContainerProps } from './DayContainer';
+
 import {
   CollapsibleMinimal,
   CollapsibleMinimalContent,
@@ -6,7 +9,6 @@ import {
 } from '@/components/ui/collapsible-minimal';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
-import { DayContainer, type DayContainerProps } from './DayContainer';
 
 /**
  * Props for the past days container component.
