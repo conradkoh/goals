@@ -112,44 +112,44 @@ export function GoalLogEntry({
 
         {/* Log entry content */}
         <div className="relative rounded-md bg-muted/30 p-3">
-          {/* Timestamp and actions row */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-muted-foreground">Added at {formattedTime}</span>
-
-            {/* Action buttons - visible on hover */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {onEdit && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                  onClick={() => onEdit(log)}
-                  title="Edit log entry"
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-              )}
-              {onDelete && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  onClick={handleDeleteClick}
-                  title="Delete log entry"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
+          {/* Action buttons - top right, visible on hover */}
+          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                onClick={() => onEdit(log)}
+                title="Edit log entry"
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                onClick={handleDeleteClick}
+                title="Delete log entry"
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
           </div>
 
           {/* Content */}
           <InteractiveHTML
             html={log.content}
-            className="text-sm prose prose-sm dark:prose-invert max-w-none"
+            className="text-sm prose prose-sm dark:prose-invert max-w-none pr-12"
             onContentChange={onContentChange ? handleContentChange : undefined}
             readOnly={!onContentChange}
           />
+
+          {/* Timestamp - bottom right */}
+          <div className="flex justify-end mt-2">
+            <span className="text-xs text-muted-foreground">{formattedTime}</span>
+          </div>
         </div>
       </div>
 

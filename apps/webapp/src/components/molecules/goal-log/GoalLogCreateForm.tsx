@@ -1,12 +1,13 @@
 /**
  * @file GoalLogCreateForm component for creating new log entries.
  * Features a date picker and rich text editor for content.
+ * Supports keyboard shortcuts: Cmd/Ctrl+Enter to submit, Escape to cancel.
  */
 
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { CalendarIcon, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -78,6 +79,39 @@ export function GoalLogCreateForm({
     setError(null);
   }, []);
 
+  // Handle keyboard shortcuts: Cmd/Ctrl+Enter to submit, Escape to cancel
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isHTMLEmpty(content) && !isSubmitting) {
+          handleSubmit();
+        }
+        return;
+      }
+
+      // Escape to cancel (only if not in a popover or other modal)
+      if (e.key === 'Escape') {
+        // Check if we're inside a popover (calendar picker)
+        const target = e.target as HTMLElement;
+        const isInPopover = target.closest('[data-radix-popper-content-wrapper]');
+        if (!isInPopover) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleCancel();
+        }
+      }
+    };
+
+    // Use capture phase to intercept before other handlers
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [isExpanded, content, isSubmitting, handleSubmit, handleCancel]);
+
   // Collapsed state - show a button to expand
   if (!isExpanded) {
     return (
@@ -146,13 +180,24 @@ export function GoalLogCreateForm({
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={isHTMLEmpty(content) || isSubmitting}>
-          {isSubmitting ? 'Adding...' : 'Add Entry'}
-        </Button>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">⌘</kbd>
+          <span className="mx-0.5">+</span>
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">Enter</kbd>
+          <span className="ml-1">to save</span>
+          <span className="mx-2">·</span>
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">Esc</kbd>
+          <span className="ml-1">to cancel</span>
+        </span>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isHTMLEmpty(content) || isSubmitting}>
+            {isSubmitting ? 'Adding...' : 'Add Entry'}
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -176,6 +221,7 @@ export interface GoalLogEditFormProps {
 
 /**
  * Form component for editing existing goal log entries.
+ * Supports keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel.
  *
  * @example
  * ```tsx
@@ -215,6 +261,37 @@ export function GoalLogEditForm({
       console.error('Failed to update log entry:', err);
     }
   }, [content, logDate, onSave, isSubmitting]);
+
+  // Handle keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+Enter to submit
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isHTMLEmpty(content) && !isSubmitting) {
+          handleSubmit();
+        }
+        return;
+      }
+
+      // Escape to cancel (only if not in a popover or other modal)
+      if (e.key === 'Escape') {
+        // Check if we're inside a popover (calendar picker)
+        const target = e.target as HTMLElement;
+        const isInPopover = target.closest('[data-radix-popper-content-wrapper]');
+        if (!isInPopover) {
+          e.preventDefault();
+          e.stopPropagation();
+          onCancel();
+        }
+      }
+    };
+
+    // Use capture phase to intercept before other handlers
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [content, isSubmitting, handleSubmit, onCancel]);
 
   return (
     <div className={cn('space-y-4 p-4 border rounded-md bg-muted/20', className)}>
@@ -267,13 +344,24 @@ export function GoalLogEditForm({
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={isHTMLEmpty(content) || isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
-        </Button>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">⌘</kbd>
+          <span className="mx-0.5">+</span>
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">Enter</kbd>
+          <span className="ml-1">to save</span>
+          <span className="mx-2">·</span>
+          <kbd className="px-1.5 py-0.5 text-xs font-semibold bg-muted rounded border">Esc</kbd>
+          <span className="ml-1">to cancel</span>
+        </span>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isHTMLEmpty(content) || isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
       </div>
     </div>
   );
