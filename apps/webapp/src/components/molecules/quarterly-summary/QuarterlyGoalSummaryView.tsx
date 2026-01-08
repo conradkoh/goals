@@ -7,6 +7,7 @@ import { WeekSection } from './WeekSection';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SafeHTML } from '@/components/ui/safe-html';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuarterlyGoalSummary } from '@/hooks/useQuarterlyGoalSummary';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
@@ -213,13 +214,12 @@ export function QuarterlyGoalSummaryView({
             )}
 
             {quarterlyGoal?.details && (
-              <div
+              <SafeHTML
+                html={quarterlyGoal.details}
                 className={cn(
                   'text-muted-foreground leading-relaxed',
                   isComplete && 'text-muted-foreground/70'
                 )}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
-                dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
               />
             )}
           </div>

@@ -3,17 +3,81 @@ import type {
   MultipleQuarterlyGoalsSummary,
   QuarterlyGoalSummary,
 } from '@workspace/backend/src/usecase/getWeekDetails';
+import DOMPurify from 'dompurify';
 import { DateTime } from 'luxon';
 
 /**
+ * DOMPurify configuration for sanitizing HTML before text extraction.
+ * Only allows safe formatting tags - no scripts, iframes, etc.
+ */
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: [
+    'p',
+    'b',
+    'i',
+    'u',
+    'strong',
+    'em',
+    'strike',
+    'br',
+    'ul',
+    'ol',
+    'li',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+    'pre',
+    'code',
+    'span',
+    'a',
+    'div',
+  ],
+  ALLOWED_ATTR: ['href', 'class', 'target', 'title'],
+  ALLOWED_URI_REGEXP:
+    /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|xxx):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+};
+
+/**
  * Converts HTML content to plain text for markdown output.
- * Handles common HTML entities, line breaks, and nested tags.
+ * First sanitizes the HTML using DOMPurify to remove any malicious content,
+ * then extracts clean text content.
  *
- * @param html - HTML content string
- * @returns Plain text content
+ * @param html - HTML content string (potentially untrusted)
+ * @returns Sanitized plain text content
  */
 function htmlToPlainText(html: string): string {
-  let text = html;
+  if (!html) return '';
+
+  // First, sanitize the HTML to remove any malicious content
+  const sanitizedHtml = DOMPurify.sanitize(html, SANITIZE_CONFIG);
+
+  // Use DOMParser to safely extract text content
+  // This is safer than regex-based tag stripping as it properly handles
+  // nested tags, malformed HTML, and edge cases
+  if (typeof window !== 'undefined' && window.DOMParser) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
+
+    // Get text content, which automatically strips all HTML tags
+    let text = doc.body.textContent || '';
+
+    // Clean up whitespace
+    text = text
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join(' ');
+
+    return text.trim();
+  }
+
+  // Fallback for SSR/Node.js environments where DOMParser isn't available
+  // This is a simplified extraction - the primary sanitization is already done
+  let text = sanitizedHtml;
 
   // Replace common HTML entities
   text = text
@@ -24,7 +88,7 @@ function htmlToPlainText(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'");
 
-  // Convert <br> and <p> tags to line breaks
+  // Convert block elements to line breaks
   text = text.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n');
 
   // Remove all remaining HTML tags
@@ -32,7 +96,7 @@ function htmlToPlainText(html: string): string {
 
   // Clean up whitespace
   text = text
-    .split('\n')
+    .split(/\n+/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .join(' ');

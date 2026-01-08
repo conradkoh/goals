@@ -5,6 +5,7 @@ import { DailySummaryItem } from './DailySummaryItem';
 
 import { SummaryGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SafeHTML } from '@/components/ui/safe-html';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import type { DayOfWeek } from '@/lib/constants';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
@@ -117,13 +118,12 @@ export function WeeklyTaskItem({
             </h4>
 
             {weeklyGoal.details && (
-              <div
+              <SafeHTML
+                html={weeklyGoal.details}
                 className={cn(
                   'text-sm text-muted-foreground leading-relaxed mb-2',
                   !disableStrikethrough && isComplete && 'line-through'
                 )}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
-                dangerouslySetInnerHTML={{ __html: weeklyGoal.details }}
               />
             )}
           </div>

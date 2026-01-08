@@ -4,6 +4,7 @@ import { AlertCircle, BarChart3 } from 'lucide-react';
 import { WeekSection } from './WeekSection';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SafeHTML } from '@/components/ui/safe-html';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useQuarterSummary } from '@/hooks/useQuarterSummary';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
@@ -133,13 +134,12 @@ export function QuarterSummaryResults({
                 </h2>
 
                 {quarterlyGoal.details && (
-                  <div
+                  <SafeHTML
+                    html={quarterlyGoal.details}
                     className={cn(
                       'text-sm text-muted-foreground leading-relaxed',
                       isComplete && 'line-through'
                     )}
-                    // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
-                    dangerouslySetInnerHTML={{ __html: quarterlyGoal.details }}
                   />
                 )}
               </div>

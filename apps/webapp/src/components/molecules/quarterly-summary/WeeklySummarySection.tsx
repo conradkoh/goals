@@ -8,6 +8,7 @@ import { DailySummaryItem } from './DailySummaryItem';
 import { SummaryGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SafeHTML } from '@/components/ui/safe-html';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -143,13 +144,12 @@ export function WeeklySummarySection({
             </h3>
 
             {weeklyGoal.details && (
-              <div
+              <SafeHTML
+                html={weeklyGoal.details}
                 className={cn(
                   'text-sm text-muted-foreground leading-relaxed',
                   !disableStrikethrough && isComplete && 'line-through'
                 )}
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
-                dangerouslySetInnerHTML={{ __html: weeklyGoal.details }}
               />
             )}
           </div>
