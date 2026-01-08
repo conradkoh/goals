@@ -387,4 +387,28 @@ export default defineSchema({
   })
     .index('by_user_and_year_and_week', ['userId', 'year', 'weekNumber'])
     .index('by_user_and_goal', ['userId', 'goalId']),
+
+  /**
+   * Goal logs - structured log entries for tracking progress and issues on goals.
+   * Each entry has a date it's recorded for and markdown-formatted content.
+   *
+   * The rootGoalId enables viewing the full log history across carried-over goals.
+   * When a goal is carried over to a new week, the rootGoalId preserves the link
+   * to the original goal, allowing consolidated log viewing.
+   */
+  goalLogs: defineTable({
+    // Partition
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    rootGoalId: v.id('goals'), // The root goal ID for consolidated log viewing
+
+    // Data
+    logDate: v.number(), // Unix timestamp - the date the log entry is for
+    content: v.string(), // HTML/markdown content (like goal.details)
+    createdAt: v.number(), // When the entry was created
+    updatedAt: v.optional(v.number()), // When last modified
+  })
+    .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_goal_and_date', ['goalId', 'logDate'])
+    .index('by_root_goal_and_date', ['rootGoalId', 'logDate']),
 });

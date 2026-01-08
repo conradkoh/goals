@@ -18,8 +18,11 @@ import {
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface AdhocGoalPopoverProps {
@@ -133,6 +136,7 @@ function AdhocGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = (newDetails: string) => {
@@ -158,26 +162,41 @@ function AdhocGoalPopoverContentInner({
         <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
       )}
 
-      {goal.details && (
-        <GoalDetailsSection
-          title={goal.title}
-          details={goal.details}
-          onDetailsChange={handleDetailsChange}
-        />
-      )}
+      {/* Tabs for Details and Log */}
+      <Tabs defaultValue="details" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="log">Log</TabsTrigger>
+        </TabsList>
 
-      {/* Sub-tasks section */}
-      {(subGoals !== undefined || onCreateChild) && (
-        <AdhocSubGoalsList
-          subGoals={subGoals || []}
-          currentDepth={depth}
-          onCompleteChange={onChildCompleteChange}
-          onUpdate={onChildUpdate}
-          onDelete={onChildDelete}
-          onCreateChild={onCreateChild}
-          parentId={goal._id}
-        />
-      )}
+        <TabsContent value="details" className="mt-4">
+          {goal.details && (
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details}
+              onDetailsChange={handleDetailsChange}
+              showSeparator={false}
+            />
+          )}
+
+          {/* Sub-tasks section */}
+          {(subGoals !== undefined || onCreateChild) && (
+            <AdhocSubGoalsList
+              subGoals={subGoals || []}
+              currentDepth={depth}
+              onCompleteChange={onChildCompleteChange}
+              onUpdate={onChildUpdate}
+              onDelete={onChildDelete}
+              onCreateChild={onCreateChild}
+              parentId={goal._id}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="log" className="mt-4">
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
+        </TabsContent>
+      </Tabs>
     </FireGoalsProvider>
   );
 
@@ -193,6 +212,7 @@ function AdhocGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -204,6 +224,7 @@ function AdhocGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>

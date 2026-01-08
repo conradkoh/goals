@@ -26,6 +26,8 @@ import {
 } from '../view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
@@ -268,23 +270,38 @@ function AdhocGoalPopoverContentInner({
           <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
         )}
 
-        {goal.details && (
-          <GoalDetailsSection
-            title={goal.title}
-            details={goal.details}
-            onDetailsChange={onDetailsChange}
-          />
-        )}
+        {/* Tabs for Details and Log */}
+        <Tabs defaultValue="details" className="mt-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="log">Log</TabsTrigger>
+          </TabsList>
 
-        <AdhocSubGoalsList
-          subGoals={subGoals}
-          currentDepth={0}
-          onCompleteChange={onChildCompleteChange}
-          onUpdate={onChildUpdate}
-          onDelete={onChildDelete}
-          onCreateChild={onCreateChild}
-          parentId={goal._id}
-        />
+          <TabsContent value="details" className="mt-4">
+            {goal.details && (
+              <GoalDetailsSection
+                title={goal.title}
+                details={goal.details}
+                onDetailsChange={onDetailsChange}
+                showSeparator={false}
+              />
+            )}
+
+            <AdhocSubGoalsList
+              subGoals={subGoals}
+              currentDepth={0}
+              onCompleteChange={onChildCompleteChange}
+              onUpdate={onChildUpdate}
+              onDelete={onChildDelete}
+              onCreateChild={onCreateChild}
+              parentId={goal._id}
+            />
+          </TabsContent>
+
+          <TabsContent value="log" className="mt-4">
+            <GoalLogTab goalId={goal._id} />
+          </TabsContent>
+        </Tabs>
       </FireGoalsProvider>
 
       <GoalEditModal isOpen={isEditing} goal={editingGoal} onSave={onSave} onClose={stopEditing} />

@@ -15,10 +15,12 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 
@@ -47,6 +49,8 @@ export interface GoalQuickViewModalProps {
  * - Reference multiple goals in quick succession
  */
 export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQuickViewModalProps) {
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+
   if (!goal && !goalId) {
     return null;
   }
@@ -59,11 +63,14 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogContent
+        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
+        onEscapeKeyDown={handleEscapeKeyDown}
+      >
         <GoalProvider goal={goal}>
           <GoalEditProvider>
             <GoalDisplayProvider>
-              <GoalQuickViewContentInternal />
+              <GoalQuickViewContentInternal onNestedActiveChange={handleNestedActiveChange} />
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
@@ -76,7 +83,11 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
  * Internal component that renders the goal content.
  * Separated to access contexts provided by parent.
  */
-function GoalQuickViewContentInternal() {
+function GoalQuickViewContentInternal({
+  onNestedActiveChange,
+}: {
+  onNestedActiveChange?: (isActive: boolean) => void;
+}) {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
   const { weekNumber } = useWeek();
@@ -132,16 +143,28 @@ function GoalQuickViewContentInternal() {
 
           {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-          {goal.details && (
-            <>
-              <Separator className="my-4" />
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={handleDetailsChange}
-              />
-            </>
-          )}
+          {/* Tabs for Details and Log */}
+          <Tabs defaultValue="details" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="log">Log</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="mt-4">
+              {goal.details && (
+                <GoalDetailsSection
+                  title={goal.title}
+                  details={goal.details}
+                  onDetailsChange={handleDetailsChange}
+                  showSeparator={false}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="log" className="mt-4">
+              <GoalLogTab goalId={goal._id} onFormActiveChange={onNestedActiveChange} />
+            </TabsContent>
+          </Tabs>
         </FireGoalsProvider>
       </div>
 

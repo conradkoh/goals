@@ -18,11 +18,14 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -107,6 +110,8 @@ export function AdhocGoalQuickViewModal({
   year,
   weekNumber,
 }: AdhocGoalQuickViewModalProps) {
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+
   /**
    * Converts AdhocGoalWithChildren to GoalWithDetailsAndChildren format.
    * This conversion is necessary for compatibility with GoalProvider context.
@@ -146,11 +151,19 @@ export function AdhocGoalQuickViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogContent
+        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
+        onEscapeKeyDown={handleEscapeKeyDown}
+      >
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>
-              <AdhocGoalQuickViewContent goal={goal} year={year} weekNumber={weekNumber} />
+              <AdhocGoalQuickViewContent
+                goal={goal}
+                year={year}
+                weekNumber={weekNumber}
+                onNestedActiveChange={handleNestedActiveChange}
+              />
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
@@ -176,10 +189,12 @@ function AdhocGoalQuickViewContent({
   goal: adhocGoalProp,
   year,
   weekNumber,
+  onNestedActiveChange,
 }: {
   goal: AdhocGoalWithChildren;
   year: number;
   weekNumber: number;
+  onNestedActiveChange?: (isActive: boolean) => void;
 }) {
   const { goal } = useGoalContext();
   const { sessionId } = useSession();
@@ -336,28 +351,42 @@ function AdhocGoalQuickViewContent({
             <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
           )}
 
-          {goal.details && (
-            <>
-              <Separator className="my-4" />
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={handleDetailsChange}
-              />
-            </>
-          )}
+          {/* Tabs for Details and Log */}
+          <Tabs defaultValue="details" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="log">Log</TabsTrigger>
+            </TabsList>
 
-          {/* Sub-tasks section */}
-          <Separator className="my-4" />
-          <AdhocSubGoalsList
-            subGoals={adhocGoalProp.children || []}
-            currentDepth={currentDepth}
-            onCompleteChange={handleChildCompleteChange}
-            onUpdate={handleChildUpdate}
-            onDelete={handleChildDelete}
-            onCreateChild={handleCreateChild}
-            parentId={goal._id}
-          />
+            <TabsContent value="details" className="mt-4">
+              {goal.details && (
+                <>
+                  <GoalDetailsSection
+                    title={goal.title}
+                    details={goal.details}
+                    onDetailsChange={handleDetailsChange}
+                    showSeparator={false}
+                  />
+                  <Separator className="my-4" />
+                </>
+              )}
+
+              {/* Sub-tasks section */}
+              <AdhocSubGoalsList
+                subGoals={adhocGoalProp.children || []}
+                currentDepth={currentDepth}
+                onCompleteChange={handleChildCompleteChange}
+                onUpdate={handleChildUpdate}
+                onDelete={handleChildDelete}
+                onCreateChild={handleCreateChild}
+                parentId={goal._id}
+              />
+            </TabsContent>
+
+            <TabsContent value="log" className="mt-4">
+              <GoalLogTab goalId={goal._id} onFormActiveChange={onNestedActiveChange} />
+            </TabsContent>
+          </Tabs>
         </FireGoalsProvider>
       </div>
 

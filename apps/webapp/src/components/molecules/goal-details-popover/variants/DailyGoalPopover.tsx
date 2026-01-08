@@ -17,9 +17,12 @@ import {
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface DailyGoalPopoverProps {
@@ -102,6 +105,7 @@ function DailyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = (newDetails: string) => {
@@ -125,20 +129,35 @@ function DailyGoalPopoverContentInner({
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-      {goal.details && (
-        <GoalDetailsSection
-          title={goal.title}
-          details={goal.details}
-          onDetailsChange={handleDetailsChange}
-        />
-      )}
+      {/* Tabs for Details and Log */}
+      <Tabs defaultValue="details" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="log">Log</TabsTrigger>
+        </TabsList>
 
-      {additionalContent && (
-        <>
-          <Separator className="my-2" />
-          <div className="pt-1">{additionalContent}</div>
-        </>
-      )}
+        <TabsContent value="details" className="mt-4">
+          {goal.details && (
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details}
+              onDetailsChange={handleDetailsChange}
+              showSeparator={false}
+            />
+          )}
+
+          {additionalContent && (
+            <>
+              <Separator className="my-2" />
+              <div className="pt-1">{additionalContent}</div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="log" className="mt-4">
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
+        </TabsContent>
+      </Tabs>
     </FireGoalsProvider>
   );
 
@@ -154,6 +173,7 @@ function DailyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -165,6 +185,7 @@ function DailyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>

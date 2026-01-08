@@ -4,6 +4,7 @@ import React from 'react';
 
 import { SummaryGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { Checkbox } from '@/components/ui/checkbox';
+import { SafeHTML } from '@/components/ui/safe-html';
 import type { SummaryGoalActions } from '@/hooks/useSummaryGoalActions';
 import { type DayOfWeek, getDayName } from '@/lib/constants';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
@@ -125,13 +126,12 @@ export function DailySummaryItem({
         </h4>
 
         {dailyGoal.details && (
-          <div
+          <SafeHTML
+            html={dailyGoal.details}
             className={cn(
               'text-xs text-muted-foreground leading-relaxed',
               !disableStrikethrough && isComplete && 'line-through'
             )}
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is user-generated and sanitized before rendering
-            dangerouslySetInnerHTML={{ __html: dailyGoal.details }}
           />
         )}
       </div>

@@ -19,8 +19,11 @@ import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsP
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { GoalLogTab } from '@/components/molecules/goal-log';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
@@ -157,6 +160,7 @@ function QuarterlyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
@@ -190,31 +194,47 @@ function QuarterlyGoalPopoverContentInner({
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-      {goal.details && (
-        <GoalDetailsSection
-          title={goal.title}
-          details={goal.details}
-          onDetailsChange={handleDetailsChange}
-        />
-      )}
+      {/* Tabs for Details and Log */}
+      <Tabs defaultValue="details" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="log">Log</TabsTrigger>
+        </TabsList>
 
-      <GoalChildrenSection
-        title="Weekly Goals"
-        childrenList={
-          hasChildren ? (
-            <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
-          ) : undefined
-        }
-        createInput={
-          <CreateGoalInput
-            placeholder="Add a new weekly goal..."
-            value={newWeeklyGoalTitle}
-            onChange={setNewWeeklyGoalTitle}
-            onSubmit={handleCreateWeeklyGoal}
-            onEscape={() => setNewWeeklyGoalTitle('')}
+        <TabsContent value="details" className="mt-4">
+          {goal.details && (
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details}
+              onDetailsChange={handleDetailsChange}
+              showSeparator={false}
+            />
+          )}
+
+          <GoalChildrenSection
+            title="Weekly Goals"
+            childrenList={
+              hasChildren ? (
+                <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
+              ) : undefined
+            }
+            createInput={
+              <CreateGoalInput
+                placeholder="Add a new weekly goal..."
+                value={newWeeklyGoalTitle}
+                onChange={setNewWeeklyGoalTitle}
+                onSubmit={handleCreateWeeklyGoal}
+                onEscape={() => setNewWeeklyGoalTitle('')}
+              />
+            }
+            showSeparator={!!goal.details}
           />
-        }
-      />
+        </TabsContent>
+
+        <TabsContent value="log" className="mt-4">
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
+        </TabsContent>
+      </Tabs>
     </FireGoalsProvider>
   );
 
@@ -230,6 +250,7 @@ function QuarterlyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -241,6 +262,7 @@ function QuarterlyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>

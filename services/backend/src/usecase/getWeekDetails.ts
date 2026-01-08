@@ -37,6 +37,8 @@ export type QuarterlyGoalSummary = {
     isComplete: boolean;
     completedAt?: number;
     state?: Doc<'goalStateByWeek'>;
+    /** Goal logs for the quarterly goal (by root goal ID for full history) */
+    logs?: Doc<'goalLogs'>[];
   };
   weeklyGoalsByWeek: Record<
     number,
@@ -44,6 +46,8 @@ export type QuarterlyGoalSummary = {
       weekNumber: number;
       weekStartTimestamp: number;
       weekEndTimestamp: number;
+      /** Goal logs for the weekly goal (by root goal ID for full history) */
+      logs?: Doc<'goalLogs'>[];
     })[]
   >;
   quarter: number;

@@ -21,6 +21,7 @@ import type * as discussions from "../discussions.js";
 import type * as domain from "../domain.js";
 import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
+import type * as goalLogs from "../goalLogs.js";
 import type * as migration from "../migration.js";
 import type * as pendingGoals from "../pendingGoals.js";
 import type * as presentations from "../presentations.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   domain: typeof domain;
   fireGoal: typeof fireGoal;
   goal: typeof goal;
+  goalLogs: typeof goalLogs;
   migration: typeof migration;
   pendingGoals: typeof pendingGoals;
   presentations: typeof presentations;

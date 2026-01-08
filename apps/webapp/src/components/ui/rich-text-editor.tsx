@@ -172,10 +172,19 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   className?: string;
   placeholder?: string;
+  /** Whether to automatically focus the editor when mounted */
+  autoFocus?: boolean;
 }
 
-export function RichTextEditor({ value, onChange, className, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({
+  value,
+  onChange,
+  className,
+  placeholder,
+  autoFocus = false,
+}: RichTextEditorProps) {
   const editor = useEditor({
+    autofocus: autoFocus,
     extensions: [
       StarterKit.configure({
         paragraph: {
