@@ -25,6 +25,8 @@ export interface GoalLogCreateFormProps {
   isSubmitting?: boolean;
   /** Callback when the form's expanded state changes */
   onExpandedChange?: (expanded: boolean) => void;
+  /** Whether the form is disabled (e.g., when viewing full history) */
+  disabled?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -47,6 +49,7 @@ export function GoalLogCreateForm({
   onSubmit,
   isSubmitting = false,
   onExpandedChange,
+  disabled = false,
   className,
 }: GoalLogCreateFormProps) {
   const [logDate, setLogDate] = useState<Date>(new Date());
@@ -129,11 +132,17 @@ export function GoalLogCreateForm({
       <div className={cn('border-t pt-4', className)}>
         <Button
           variant="outline"
-          className="w-full justify-start text-muted-foreground hover:text-foreground"
-          onClick={() => setIsExpanded(true)}
+          className={cn(
+            'w-full justify-start',
+            disabled
+              ? 'text-muted-foreground/50 cursor-not-allowed'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          onClick={() => !disabled && setIsExpanded(true)}
+          disabled={disabled}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add log entry...
+          {disabled ? 'Switch to current view to add entries' : 'Add log entry...'}
         </Button>
       </div>
     );

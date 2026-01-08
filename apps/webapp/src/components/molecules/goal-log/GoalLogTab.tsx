@@ -132,25 +132,25 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
-      {/* Full history toggle - only show if goal has carry-over history */}
+      {/* Header with view mode toggle - always reserve space for consistent layout */}
       {hasCarryOverHistory && (
-        <div className="flex items-center justify-end mb-3">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground">
+              {showFullHistory
+                ? 'Viewing logs from all instances of this goal'
+                : 'Viewing logs for current instance only'}
+            </p>
+          </div>
           <Button
-            variant={showFullHistory ? 'secondary' : 'outline'}
+            variant="ghost"
             size="sm"
             onClick={() => setShowFullHistory(!showFullHistory)}
-            className="gap-2"
+            className="gap-1.5 text-xs h-7 px-2 shrink-0"
           >
-            <History className="h-4 w-4" />
-            {showFullHistory ? 'Show current only' : 'View full log history'}
+            <History className="h-3.5 w-3.5" />
+            {showFullHistory ? 'Current only' : 'Full history'}
           </Button>
-        </div>
-      )}
-
-      {/* History mode indicator */}
-      {showFullHistory && (
-        <div className="mb-3 px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
-          Showing logs from all instances of this goal across weeks
         </div>
       )}
 
@@ -173,12 +173,13 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
         )}
       </div>
 
-      {/* Create form - fixed at bottom (only show when not in full history mode) */}
-      {!editingLog && !showFullHistory && (
+      {/* Create form - fixed at bottom */}
+      {!editingLog && (
         <GoalLogCreateForm
           onSubmit={handleCreateLog}
           isSubmitting={isCreating}
           onExpandedChange={setIsCreateFormExpanded}
+          disabled={showFullHistory}
           className="mt-4"
         />
       )}
