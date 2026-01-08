@@ -15,8 +15,9 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useGoalActions } from '@/hooks/useGoalActions';
@@ -132,16 +133,28 @@ function GoalQuickViewContentInternal() {
 
           {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-          {goal.details && (
-            <>
-              <Separator className="my-4" />
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={handleDetailsChange}
-              />
-            </>
-          )}
+          {/* Tabs for Details and Log */}
+          <Tabs defaultValue="details" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="log">Log</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="details" className="mt-4">
+              {goal.details && (
+                <GoalDetailsSection
+                  title={goal.title}
+                  details={goal.details}
+                  onDetailsChange={handleDetailsChange}
+                  showSeparator={false}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="log" className="mt-4">
+              <GoalLogTab goalId={goal._id} />
+            </TabsContent>
+          </Tabs>
         </FireGoalsProvider>
       </div>
 

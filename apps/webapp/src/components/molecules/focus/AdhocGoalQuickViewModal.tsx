@@ -18,8 +18,10 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
@@ -336,28 +338,42 @@ function AdhocGoalQuickViewContent({
             <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
           )}
 
-          {goal.details && (
-            <>
-              <Separator className="my-4" />
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={handleDetailsChange}
-              />
-            </>
-          )}
+          {/* Tabs for Details and Log */}
+          <Tabs defaultValue="details" className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="log">Log</TabsTrigger>
+            </TabsList>
 
-          {/* Sub-tasks section */}
-          <Separator className="my-4" />
-          <AdhocSubGoalsList
-            subGoals={adhocGoalProp.children || []}
-            currentDepth={currentDepth}
-            onCompleteChange={handleChildCompleteChange}
-            onUpdate={handleChildUpdate}
-            onDelete={handleChildDelete}
-            onCreateChild={handleCreateChild}
-            parentId={goal._id}
-          />
+            <TabsContent value="details" className="mt-4">
+              {goal.details && (
+                <>
+                  <GoalDetailsSection
+                    title={goal.title}
+                    details={goal.details}
+                    onDetailsChange={handleDetailsChange}
+                    showSeparator={false}
+                  />
+                  <Separator className="my-4" />
+                </>
+              )}
+
+              {/* Sub-tasks section */}
+              <AdhocSubGoalsList
+                subGoals={adhocGoalProp.children || []}
+                currentDepth={currentDepth}
+                onCompleteChange={handleChildCompleteChange}
+                onUpdate={handleChildUpdate}
+                onDelete={handleChildDelete}
+                onCreateChild={handleCreateChild}
+                parentId={goal._id}
+              />
+            </TabsContent>
+
+            <TabsContent value="log" className="mt-4">
+              <GoalLogTab goalId={goal._id} />
+            </TabsContent>
+          </Tabs>
         </FireGoalsProvider>
       </div>
 

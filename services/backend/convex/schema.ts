@@ -387,4 +387,22 @@ export default defineSchema({
   })
     .index('by_user_and_year_and_week', ['userId', 'year', 'weekNumber'])
     .index('by_user_and_goal', ['userId', 'goalId']),
+
+  /**
+   * Goal logs - structured log entries for tracking progress and issues on goals.
+   * Each entry has a date it's recorded for and markdown-formatted content.
+   */
+  goalLogs: defineTable({
+    // Partition
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+
+    // Data
+    logDate: v.number(), // Unix timestamp - the date the log entry is for
+    content: v.string(), // HTML/markdown content (like goal.details)
+    createdAt: v.number(), // When the entry was created
+    updatedAt: v.optional(v.number()), // When last modified
+  })
+    .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_goal_and_date', ['goalId', 'logDate']),
 });

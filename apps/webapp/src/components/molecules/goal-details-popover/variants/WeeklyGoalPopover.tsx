@@ -19,6 +19,7 @@ import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsP
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useWeek } from '@/hooks/useWeek';
@@ -171,49 +173,67 @@ function WeeklyGoalPopoverContentInner({
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
-      {goal.details && (
-        <GoalDetailsSection
-          title={goal.title}
-          details={goal.details}
-          onDetailsChange={handleDetailsChange}
-        />
-      )}
+      {/* Tabs for Details and Log */}
+      <Tabs defaultValue="details" className="mt-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="log">Log</TabsTrigger>
+        </TabsList>
 
-      <GoalChildrenSection
-        title="Daily Goals"
-        childrenList={
-          hasChildren ? (
-            <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
-          ) : undefined
-        }
-        createInput={
-          <CreateGoalInput
-            placeholder="Add a new daily goal..."
-            value={newDailyGoalTitle}
-            onChange={setNewDailyGoalTitle}
-            onSubmit={handleCreateDailyGoal}
-            onEscape={() => setNewDailyGoalTitle('')}
-          >
-            <div className="mt-2">
-              <Select
-                value={selectedDayOfWeek.toString()}
-                onValueChange={(value) => setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)}
+        <TabsContent value="details" className="mt-4">
+          {goal.details && (
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details}
+              onDetailsChange={handleDetailsChange}
+              showSeparator={false}
+            />
+          )}
+
+          <GoalChildrenSection
+            title="Daily Goals"
+            childrenList={
+              hasChildren ? (
+                <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
+              ) : undefined
+            }
+            createInput={
+              <CreateGoalInput
+                placeholder="Add a new daily goal..."
+                value={newDailyGoalTitle}
+                onChange={setNewDailyGoalTitle}
+                onSubmit={handleCreateDailyGoal}
+                onEscape={() => setNewDailyGoalTitle('')}
               >
-                <SelectTrigger className="h-9 text-xs">
-                  <SelectValue placeholder="Select day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(DayOfWeek).map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {getDayName(value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CreateGoalInput>
-        }
-      />
+                <div className="mt-2">
+                  <Select
+                    value={selectedDayOfWeek.toString()}
+                    onValueChange={(value) =>
+                      setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
+                    }
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(DayOfWeek).map((value) => (
+                        <SelectItem key={value} value={value.toString()}>
+                          {getDayName(value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CreateGoalInput>
+            }
+            showSeparator={!!goal.details}
+          />
+        </TabsContent>
+
+        <TabsContent value="log" className="mt-4">
+          <GoalLogTab goalId={goal._id} />
+        </TabsContent>
+      </Tabs>
     </FireGoalsProvider>
   );
 
