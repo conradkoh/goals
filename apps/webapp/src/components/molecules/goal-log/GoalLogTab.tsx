@@ -5,13 +5,14 @@
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
-import { Loader2 } from 'lucide-react';
+import { History, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
 import { GoalLogCreateForm, GoalLogEditForm } from './GoalLogCreateForm';
 import { GoalLogList } from './GoalLogList';
 
-import { useGoalLogs } from '@/hooks/useGoalLogs';
+import { Button } from '@/components/ui/button';
+import { useGoalLogs, useGoalLogsByRootGoal } from '@/hooks/useGoalLogs';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -28,6 +29,7 @@ export interface GoalLogTabProps {
 /**
  * Main component for the Log tab in goal detail modals.
  * Displays a list of log entries grouped by day with a form to create new entries.
+ * Supports viewing full log history across carried-over goal instances.
  *
  * @example
  * ```tsx
@@ -36,11 +38,30 @@ export interface GoalLogTabProps {
  */
 export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
   const { sessionId } = useSession();
-  const { logs, isLoading, isCreating, isUpdating, createLog, updateLog, deleteLog } = useGoalLogs(
-    sessionId,
-    goalId
-  );
+  const {
+    logs,
+    rootGoalId,
+    hasCarryOverHistory,
+    isLoading,
+    isCreating,
+    isUpdating,
+    createLog,
+    updateLog,
+    deleteLog,
+  } = useGoalLogs(sessionId, goalId);
+
   const [editingLog, setEditingLog] = useState<GoalLog | null>(null);
+  const [showFullHistory, setShowFullHistory] = useState(false);
+
+  // Fetch full history logs when viewing full history
+  const { logs: fullHistoryLogs, isLoading: isLoadingFullHistory } = useGoalLogsByRootGoal(
+    sessionId,
+    showFullHistory ? (rootGoalId ?? null) : null
+  );
+
+  // Determine which logs to display
+  const displayedLogs = showFullHistory ? fullHistoryLogs : logs;
+  const isLoadingLogs = showFullHistory ? isLoadingFullHistory : isLoading;
 
   /**
    * Handles creating a new log entry.
@@ -85,7 +106,7 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
   );
 
   // Loading state
-  if (isLoading) {
+  if (isLoadingLogs) {
     return (
       <div className={cn('flex items-center justify-center py-12', className)}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -95,6 +116,28 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
+      {/* Full history toggle - only show if goal has carry-over history */}
+      {hasCarryOverHistory && (
+        <div className="flex items-center justify-end mb-3">
+          <Button
+            variant={showFullHistory ? 'secondary' : 'outline'}
+            size="sm"
+            onClick={() => setShowFullHistory(!showFullHistory)}
+            className="gap-2"
+          >
+            <History className="h-4 w-4" />
+            {showFullHistory ? 'Show current only' : 'View full log history'}
+          </Button>
+        </div>
+      )}
+
+      {/* History mode indicator */}
+      {showFullHistory && (
+        <div className="mb-3 px-3 py-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
+          Showing logs from all instances of this goal across weeks
+        </div>
+      )}
+
       {/* Log list - scrollable area */}
       <div className="flex-1 overflow-y-auto pr-2">
         {editingLog ? (
@@ -106,7 +149,7 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
           />
         ) : (
           <GoalLogList
-            logs={logs ?? []}
+            logs={displayedLogs ?? []}
             onContentChange={handleContentChange}
             onEdit={setEditingLog}
             onDelete={handleDelete}
@@ -114,8 +157,8 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
         )}
       </div>
 
-      {/* Create form - fixed at bottom */}
-      {!editingLog && (
+      {/* Create form - fixed at bottom (only show when not in full history mode) */}
+      {!editingLog && !showFullHistory && (
         <GoalLogCreateForm onSubmit={handleCreateLog} isSubmitting={isCreating} className="mt-4" />
       )}
     </div>

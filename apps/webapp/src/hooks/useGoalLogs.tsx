@@ -8,7 +8,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { useMutation, useQuery } from 'convex/react';
 import type { SessionId } from 'convex-helpers/server/sessions';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /**
  * Hook for managing goal logs with CRUD operations.
@@ -32,6 +32,13 @@ export function useGoalLogs(sessionId: SessionId | null, goalId: Id<'goals'> | n
   const logs =
     useQuery(api.goalLogs.getGoalLogs, sessionId && goalId ? { sessionId, goalId } : 'skip') ??
     undefined;
+
+  // Query the root goal ID for this goal
+  const rootGoalId =
+    useQuery(
+      api.goalLogs.getRootGoalIdForGoal,
+      sessionId && goalId ? { sessionId, goalId } : 'skip'
+    ) ?? undefined;
 
   const isLoading = logs === undefined;
 
@@ -119,9 +126,19 @@ export function useGoalLogs(sessionId: SessionId | null, goalId: Id<'goals'> | n
     [sessionId, deleteLogMutation]
   );
 
+  // Check if the goal has been carried over (root goal ID differs from current goal ID)
+  const hasCarryOverHistory = useMemo(() => {
+    if (!rootGoalId || !goalId) return false;
+    return rootGoalId !== goalId;
+  }, [rootGoalId, goalId]);
+
   return {
     /** Array of goal log entries, sorted by date descending */
     logs: logs as GoalLog[] | undefined,
+    /** The root goal ID for this goal (for viewing full history) */
+    rootGoalId: rootGoalId as Id<'goals'> | undefined,
+    /** Whether this goal has carry-over history (root differs from current) */
+    hasCarryOverHistory,
     /** Whether the logs are currently loading */
     isLoading,
     /** Whether a log is currently being created */
@@ -136,5 +153,32 @@ export function useGoalLogs(sessionId: SessionId | null, goalId: Id<'goals'> | n
     updateLog,
     /** Deletes a log entry */
     deleteLog,
+  };
+}
+
+/**
+ * Hook for fetching logs by root goal ID (full history view).
+ *
+ * @param sessionId - The current user's session ID
+ * @param rootGoalId - The root goal ID to fetch all logs for
+ * @returns Object containing goal logs data
+ *
+ * @example
+ * ```tsx
+ * const { logs, isLoading } = useGoalLogsByRootGoal(sessionId, rootGoalId);
+ * ```
+ */
+export function useGoalLogsByRootGoal(sessionId: SessionId | null, rootGoalId: Id<'goals'> | null) {
+  const logs =
+    useQuery(
+      api.goalLogs.getGoalLogsByRootGoalId,
+      sessionId && rootGoalId ? { sessionId, rootGoalId } : 'skip'
+    ) ?? undefined;
+
+  return {
+    /** Array of goal log entries across all carried-over instances */
+    logs: logs as GoalLog[] | undefined,
+    /** Whether the logs are currently loading */
+    isLoading: logs === undefined,
   };
 }

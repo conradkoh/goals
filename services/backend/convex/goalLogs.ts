@@ -11,7 +11,23 @@ import { requireLogin } from '../src/usecase/requireLogin';
 export type GoalLog = Doc<'goalLogs'>;
 
 /**
+ * Computes the root goal ID for a given goal.
+ * If the goal was carried over, returns the rootGoalId from the carry-over chain.
+ * Otherwise, returns the goal's own ID.
+ *
+ * @param goal - The goal document
+ * @returns The root goal ID
+ */
+function getRootGoalId(goal: Doc<'goals'>): Id<'goals'> {
+  return goal.carryOver?.fromGoal?.rootGoalId ?? goal._id;
+}
+
+/**
  * Creates a new goal log entry.
+ *
+ * The log is associated with both the current goal (goalId) and the root goal (rootGoalId).
+ * This enables viewing logs for the current goal instance, or viewing the full log history
+ * across all carried-over instances of the goal.
  *
  * @param ctx - Convex mutation context
  * @param args - Mutation arguments containing session, goal ID, date, and content
@@ -62,10 +78,14 @@ export const createGoalLog = mutation({
       });
     }
 
+    // Compute the root goal ID for consolidated log viewing
+    const rootGoalId = getRootGoalId(goal);
+
     const now = Date.now();
     const logId = await ctx.db.insert('goalLogs', {
       userId,
       goalId,
+      rootGoalId,
       logDate,
       content,
       createdAt: now,
@@ -226,5 +246,84 @@ export const getGoalLogs = query({
       .collect();
 
     return logs;
+  },
+});
+
+/**
+ * Fetches all log entries for a root goal (including all carried-over instances),
+ * sorted by log date (most recent first).
+ *
+ * This enables viewing the full log history across all instances of a goal
+ * that has been carried over multiple times.
+ *
+ * @param ctx - Convex query context
+ * @param args - Query arguments containing session and root goal ID
+ * @returns Promise resolving to array of goal log entries
+ *
+ * @example
+ * ```typescript
+ * const logs = await getGoalLogsByRootGoalId(ctx, {
+ *   sessionId: "session123",
+ *   rootGoalId: "goal456"
+ * });
+ * ```
+ */
+export const getGoalLogsByRootGoalId = query({
+  args: {
+    ...SessionIdArg,
+    rootGoalId: v.id('goals'),
+  },
+  handler: async (ctx, args): Promise<GoalLog[]> => {
+    const { sessionId, rootGoalId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Verify the root goal exists and belongs to the user
+    const rootGoal = await ctx.db.get('goals', rootGoalId);
+    if (!rootGoal) {
+      return [];
+    }
+    if (rootGoal.userId !== userId) {
+      return [];
+    }
+
+    // Fetch logs using the root goal index, sorted by date descending
+    const logs = await ctx.db
+      .query('goalLogs')
+      .withIndex('by_root_goal_and_date', (q) => q.eq('rootGoalId', rootGoalId))
+      .order('desc')
+      .collect();
+
+    return logs;
+  },
+});
+
+/**
+ * Gets the root goal ID for a given goal.
+ * Useful for the frontend to determine the root goal ID for viewing full log history.
+ *
+ * @param ctx - Convex query context
+ * @param args - Query arguments containing session and goal ID
+ * @returns Promise resolving to the root goal ID
+ */
+export const getRootGoalIdForGoal = query({
+  args: {
+    ...SessionIdArg,
+    goalId: v.id('goals'),
+  },
+  handler: async (ctx, args): Promise<Id<'goals'> | null> => {
+    const { sessionId, goalId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    const goal = await ctx.db.get('goals', goalId);
+    if (!goal) {
+      return null;
+    }
+    if (goal.userId !== userId) {
+      return null;
+    }
+
+    return getRootGoalId(goal);
   },
 });

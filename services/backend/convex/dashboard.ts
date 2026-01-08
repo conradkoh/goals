@@ -3,12 +3,36 @@ import { SessionIdArg } from 'convex-helpers/server/sessions';
 import { DateTime } from 'luxon';
 
 import { DayOfWeek } from '../src/constants';
-import type { Doc } from './_generated/dataModel';
-import { mutation, query } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+import { mutation, query, type QueryCtx } from './_generated/server';
 import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { joinPath, validateGoalPath } from '../src/util/path';
+
+/**
+ * Helper function to get the root goal ID for a goal.
+ * If the goal was carried over, returns the rootGoalId from the carry-over chain.
+ * Otherwise, returns the goal's own ID.
+ */
+function getRootGoalId(goal: Doc<'goals'>): Id<'goals'> {
+  return goal.carryOver?.fromGoal?.rootGoalId ?? goal._id;
+}
+
+/**
+ * Helper function to fetch goal logs by root goal ID.
+ * Returns logs sorted by date descending.
+ */
+async function fetchGoalLogsByRootGoalId(
+  ctx: QueryCtx,
+  rootGoalId: Id<'goals'>
+): Promise<Doc<'goalLogs'>[]> {
+  return await ctx.db
+    .query('goalLogs')
+    .withIndex('by_root_goal_and_date', (q) => q.eq('rootGoalId', rootGoalId))
+    .order('desc')
+    .collect();
+}
 
 // Get the overview of all weeks in a quarter
 export const getQuarterOverview = query({
@@ -779,6 +803,10 @@ export const getQuarterlyGoalSummary = query({
     const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
     let quarterlyGoalDetails = null;
 
+    // Collect all goal IDs for fetching logs
+    const allGoalIds = new Set<Id<'goals'>>();
+    allGoalIds.add(quarterlyGoalId);
+
     for (const weekTree of weekResults) {
       const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === quarterlyGoalId);
 
@@ -795,10 +823,11 @@ export const getQuarterlyGoalSummary = query({
           };
         }
 
-        // Store weekly goals for this week
-        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) =>
-          mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year)
-        );
+        // Store weekly goals for this week and collect their IDs
+        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => {
+          allGoalIds.add(weeklyGoal._id);
+          return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
+        });
       }
     }
 
@@ -809,9 +838,61 @@ export const getQuarterlyGoalSummary = query({
       });
     }
 
+    // Fetch logs for all goals (using root goal ID for full history)
+    const goalLogsMap = new Map<string, Doc<'goalLogs'>[]>();
+
+    // For each goal, get its root goal ID and fetch logs
+    const goalIdArray = Array.from(allGoalIds);
+    const goalsWithRootIds = await Promise.all(
+      goalIdArray.map(async (goalId) => {
+        const goal = await ctx.db.get('goals', goalId);
+        if (!goal) return { goalId, rootGoalId: goalId };
+        return { goalId, rootGoalId: getRootGoalId(goal) };
+      })
+    );
+
+    // Fetch logs for each unique root goal ID
+    const uniqueRootGoalIds = [...new Set(goalsWithRootIds.map((g) => g.rootGoalId))];
+    const logsPromises = uniqueRootGoalIds.map(async (rootGoalId) => {
+      const logs = await fetchGoalLogsByRootGoalId(ctx, rootGoalId);
+      return { rootGoalId, logs };
+    });
+    const logsResults = await Promise.all(logsPromises);
+
+    // Map root goal ID to logs
+    const rootGoalLogsMap = new Map<string, Doc<'goalLogs'>[]>();
+    for (const { rootGoalId, logs } of logsResults) {
+      rootGoalLogsMap.set(rootGoalId.toString(), logs);
+    }
+
+    // Map each goal ID to its logs (via root goal ID)
+    for (const { goalId, rootGoalId } of goalsWithRootIds) {
+      const logs = rootGoalLogsMap.get(rootGoalId.toString()) || [];
+      goalLogsMap.set(goalId.toString(), logs);
+    }
+
+    // Add logs to quarterly goal details
+    const quarterlyGoalLogs = goalLogsMap.get(quarterlyGoalId.toString()) || [];
+
+    // Add logs to weekly goals
+    const weeklyGoalsByWeekWithLogs: Record<
+      number,
+      (ReturnType<typeof mapWeeklyGoal> & { logs?: Doc<'goalLogs'>[] })[]
+    > = {};
+
+    for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
+      weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
+        ...weeklyGoal,
+        logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
+      }));
+    }
+
     return {
-      quarterlyGoal: quarterlyGoalDetails,
-      weeklyGoalsByWeek,
+      quarterlyGoal: {
+        ...quarterlyGoalDetails,
+        logs: quarterlyGoalLogs,
+      },
+      weeklyGoalsByWeek: weeklyGoalsByWeekWithLogs,
       quarter,
       year,
       weekRange: {
@@ -907,7 +988,6 @@ export const getQuarterSummary = query({
           message: `Quarterly goal ${goalId} not found`,
         });
       }
-      // ... rest of map implementation
       // Verify it's actually a quarterly goal (depth 0)
       if (quarterlyGoal.depth !== 0) {
         throw new ConvexError({
@@ -938,6 +1018,10 @@ export const getQuarterSummary = query({
       const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
       let quarterlyGoalDetails = null;
 
+      // Collect all goal IDs for fetching logs
+      const allGoalIds = new Set<Id<'goals'>>();
+      allGoalIds.add(goalId);
+
       for (const weekTree of weekResults) {
         const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === goalId);
 
@@ -954,9 +1038,12 @@ export const getQuarterSummary = query({
             };
           }
 
-          // Store weekly goals for this week
-          weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) =>
-            mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year)
+          // Store weekly goals for this week and collect their IDs
+          weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
+            (weeklyGoal) => {
+              allGoalIds.add(weeklyGoal._id);
+              return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
+            }
           );
         }
       }
@@ -974,9 +1061,61 @@ export const getQuarterSummary = query({
         };
       }
 
+      // Fetch logs for all goals (using root goal ID for full history)
+      const goalLogsMap = new Map<string, Doc<'goalLogs'>[]>();
+
+      // For each goal, get its root goal ID and fetch logs
+      const goalIdArray = Array.from(allGoalIds);
+      const goalsWithRootIds = await Promise.all(
+        goalIdArray.map(async (gId) => {
+          const goal = await ctx.db.get('goals', gId);
+          if (!goal) return { goalId: gId, rootGoalId: gId };
+          return { goalId: gId, rootGoalId: getRootGoalId(goal) };
+        })
+      );
+
+      // Fetch logs for each unique root goal ID
+      const uniqueRootGoalIds = [...new Set(goalsWithRootIds.map((g) => g.rootGoalId))];
+      const logsPromises = uniqueRootGoalIds.map(async (rootGoalId) => {
+        const logs = await fetchGoalLogsByRootGoalId(ctx, rootGoalId);
+        return { rootGoalId, logs };
+      });
+      const logsResults = await Promise.all(logsPromises);
+
+      // Map root goal ID to logs
+      const rootGoalLogsMap = new Map<string, Doc<'goalLogs'>[]>();
+      for (const { rootGoalId, logs } of logsResults) {
+        rootGoalLogsMap.set(rootGoalId.toString(), logs);
+      }
+
+      // Map each goal ID to its logs (via root goal ID)
+      for (const { goalId: gId, rootGoalId } of goalsWithRootIds) {
+        const logs = rootGoalLogsMap.get(rootGoalId.toString()) || [];
+        goalLogsMap.set(gId.toString(), logs);
+      }
+
+      // Add logs to quarterly goal details
+      const quarterlyGoalLogs = goalLogsMap.get(goalId.toString()) || [];
+
+      // Add logs to weekly goals
+      const weeklyGoalsByWeekWithLogs: Record<
+        number,
+        (ReturnType<typeof mapWeeklyGoal> & { logs?: Doc<'goalLogs'>[] })[]
+      > = {};
+
+      for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
+        weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
+          ...weeklyGoal,
+          logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
+        }));
+      }
+
       return {
-        quarterlyGoal: quarterlyGoalDetails,
-        weeklyGoalsByWeek,
+        quarterlyGoal: {
+          ...quarterlyGoalDetails,
+          logs: quarterlyGoalLogs,
+        },
+        weeklyGoalsByWeek: weeklyGoalsByWeekWithLogs,
         quarter,
         year,
         weekRange: {
