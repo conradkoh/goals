@@ -182,6 +182,7 @@ export function GoalLogCreateForm({
           value={content}
           onChange={setContent}
           placeholder="What happened? What progress was made? Any blockers or issues?"
+          autoFocus
         />
         {error && (
           <p className="text-sm text-destructive mt-2" role="alert">
@@ -339,6 +340,7 @@ export function GoalLogEditForm({
           value={content}
           onChange={setContent}
           placeholder="What happened? What progress was made? Any blockers or issues?"
+          autoFocus
         />
         {error && (
           <p className="text-sm text-destructive mt-2" role="alert">

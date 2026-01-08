@@ -62,6 +62,13 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
     onFormActiveChange?.(isFormActive);
   }, [isFormActive, onFormActiveChange]);
 
+  // Reset form active state when component unmounts (e.g., when switching tabs)
+  useEffect(() => {
+    return () => {
+      onFormActiveChange?.(false);
+    };
+  }, [onFormActiveChange]);
+
   // Fetch full history logs when viewing full history
   const { logs: fullHistoryLogs, isLoading: isLoadingFullHistory } = useGoalLogsByRootGoal(
     sessionId,
