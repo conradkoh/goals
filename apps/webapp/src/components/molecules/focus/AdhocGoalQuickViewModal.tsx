@@ -18,13 +18,14 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -109,7 +110,7 @@ export function AdhocGoalQuickViewModal({
   year,
   weekNumber,
 }: AdhocGoalQuickViewModalProps) {
-  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   /**
    * Converts AdhocGoalWithChildren to GoalWithDetailsAndChildren format.
@@ -161,7 +162,7 @@ export function AdhocGoalQuickViewModal({
                 goal={goal}
                 year={year}
                 weekNumber={weekNumber}
-                onLogFormActiveChange={handleLogFormActiveChange}
+                onNestedActiveChange={handleNestedActiveChange}
               />
             </GoalDisplayProvider>
           </GoalEditProvider>
@@ -188,12 +189,12 @@ function AdhocGoalQuickViewContent({
   goal: adhocGoalProp,
   year,
   weekNumber,
-  onLogFormActiveChange,
+  onNestedActiveChange,
 }: {
   goal: AdhocGoalWithChildren;
   year: number;
   weekNumber: number;
-  onLogFormActiveChange?: (isActive: boolean) => void;
+  onNestedActiveChange?: (isActive: boolean) => void;
 }) {
   const { goal } = useGoalContext();
   const { sessionId } = useSession();
@@ -383,7 +384,7 @@ function AdhocGoalQuickViewContent({
             </TabsContent>
 
             <TabsContent value="log" className="mt-4">
-              <GoalLogTab goalId={goal._id} onFormActiveChange={onLogFormActiveChange} />
+              <GoalLogTab goalId={goal._id} onFormActiveChange={onNestedActiveChange} />
             </TabsContent>
           </Tabs>
         </FireGoalsProvider>

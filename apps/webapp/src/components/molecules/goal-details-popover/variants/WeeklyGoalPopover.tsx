@@ -19,7 +19,7 @@ import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsP
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import {
   Select,
   SelectContent,
@@ -30,6 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
@@ -150,7 +151,7 @@ function WeeklyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
@@ -232,7 +233,7 @@ function WeeklyGoalPopoverContentInner({
         </TabsContent>
 
         <TabsContent value="log" className="mt-4">
-          <GoalLogTab goalId={goal._id} onFormActiveChange={handleLogFormActiveChange} />
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
         </TabsContent>
       </Tabs>
     </FireGoalsProvider>

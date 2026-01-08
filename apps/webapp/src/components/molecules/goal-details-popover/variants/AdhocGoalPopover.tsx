@@ -18,10 +18,11 @@ import {
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
+import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface AdhocGoalPopoverProps {
@@ -135,7 +136,7 @@ function AdhocGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = (newDetails: string) => {
@@ -193,7 +194,7 @@ function AdhocGoalPopoverContentInner({
         </TabsContent>
 
         <TabsContent value="log" className="mt-4">
-          <GoalLogTab goalId={goal._id} onFormActiveChange={handleLogFormActiveChange} />
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
         </TabsContent>
       </Tabs>
     </FireGoalsProvider>

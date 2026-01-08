@@ -12,72 +12,40 @@ By default, Radix UI dialogs close immediately when the Escape key is pressed. H
 ## Solution Overview
 
 We use a combination of:
+
 1. A ref to track whether an inner element is "active"
 2. The `onEscapeKeyDown` prop on `DialogContent` to conditionally prevent dialog close
 3. Callbacks to communicate state changes from child components
 
 ## Implementation
 
-### Step 1: Create the Escape Handler Hook
+### Step 1: Use the Escape Handler Hook
 
-Create a reusable hook that manages the escape key behavior:
-
-```tsx
-// useLogFormEscapeHandler.ts
-import { useCallback, useRef } from 'react';
-
-export function useLogFormEscapeHandler() {
-  // Use ref instead of state to avoid re-renders and ensure synchronous access
-  const isLogFormActiveRef = useRef(false);
-
-  /**
-   * Handles escape key - prevents dialog from closing if a form is active.
-   * Call e.preventDefault() to stop the dialog from closing.
-   */
-  const handleEscapeKeyDown = useCallback((e: KeyboardEvent) => {
-    if (isLogFormActiveRef.current) {
-      e.preventDefault();
-    }
-  }, []);
-
-  /**
-   * Callback to track when a form becomes active/inactive.
-   */
-  const handleLogFormActiveChange = useCallback((isActive: boolean) => {
-    isLogFormActiveRef.current = isActive;
-  }, []);
-
-  return {
-    isLogFormActiveRef,
-    handleEscapeKeyDown,
-    handleLogFormActiveChange,
-  };
-}
-```
-
-### Step 2: Use the Hook in Your Dialog Component
+Import the reusable hook that manages the escape key behavior:
 
 ```tsx
 // MyDialog.tsx
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useLogFormEscapeHandler } from './useLogFormEscapeHandler';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useDialogEscapeHandler } from "@/hooks/useDialogEscapeHandler";
 
 export function MyDialog({ open, onOpenChange }) {
-  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+  const { handleEscapeKeyDown, handleNestedActiveChange } =
+    useDialogEscapeHandler();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onEscapeKeyDown={handleEscapeKeyDown}>
-        <MyForm onFormActiveChange={handleLogFormActiveChange} />
+        <MyForm onActiveChange={handleNestedActiveChange} />
       </DialogContent>
     </Dialog>
   );
 }
 ```
 
-### Step 3: Implement the Child Component
+### Step 2: Implement the Child Component
 
 The child component needs to:
+
 1. Track its own "active" state
 2. Notify the parent when the state changes
 3. Handle its own Escape key behavior
@@ -85,30 +53,30 @@ The child component needs to:
 
 ```tsx
 // MyForm.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface MyFormProps {
-  onFormActiveChange?: (isActive: boolean) => void;
+  onActiveChange?: (isActive: boolean) => void;
 }
 
-export function MyForm({ onFormActiveChange }: MyFormProps) {
+export function MyForm({ onActiveChange }: MyFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Notify parent when form becomes active/inactive
   useEffect(() => {
-    onFormActiveChange?.(isExpanded);
-  }, [isExpanded, onFormActiveChange]);
+    onActiveChange?.(isExpanded);
+  }, [isExpanded, onActiveChange]);
 
   // IMPORTANT: Reset state when component unmounts (e.g., tab switch)
   useEffect(() => {
     return () => {
-      onFormActiveChange?.(false);
+      onActiveChange?.(false);
     };
-  }, [onFormActiveChange]);
+  }, [onActiveChange]);
 
   // Handle Escape key within the form
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
       setIsExpanded(false);
@@ -128,6 +96,42 @@ export function MyForm({ onFormActiveChange }: MyFormProps) {
 }
 ```
 
+## The Hook Implementation
+
+The `useDialogEscapeHandler` hook is located at `apps/webapp/src/hooks/useDialogEscapeHandler.ts`:
+
+```tsx
+import { useCallback, useRef } from "react";
+
+export function useDialogEscapeHandler() {
+  // Use ref instead of state to avoid re-renders and ensure synchronous access
+  const isNestedActiveRef = useRef(false);
+
+  /**
+   * Handles escape key - prevents dialog from closing if a nested element is active.
+   * Call e.preventDefault() to stop the dialog from closing.
+   */
+  const handleEscapeKeyDown = useCallback((e: KeyboardEvent) => {
+    if (isNestedActiveRef.current) {
+      e.preventDefault();
+    }
+  }, []);
+
+  /**
+   * Callback to track when a nested element becomes active/inactive.
+   */
+  const handleNestedActiveChange = useCallback((isActive: boolean) => {
+    isNestedActiveRef.current = isActive;
+  }, []);
+
+  return {
+    isNestedActiveRef,
+    handleEscapeKeyDown,
+    handleNestedActiveChange,
+  };
+}
+```
+
 ## Key Points
 
 ### Why Use a Ref Instead of State?
@@ -143,11 +147,15 @@ const handleEscapeKeyDown = useCallback((e: KeyboardEvent) => {
 
 // ❌ Bad: State may be stale in the callback
 const [isActive, setIsActive] = useState(false);
-const handleEscapeKeyDown = useCallback((e: KeyboardEvent) => {
-  if (isActive) { // This captures the value at callback creation time
-    e.preventDefault();
-  }
-}, [isActive]); // Adding dependency causes new callback on every change
+const handleEscapeKeyDown = useCallback(
+  (e: KeyboardEvent) => {
+    if (isActive) {
+      // This captures the value at callback creation time
+      e.preventDefault();
+    }
+  },
+  [isActive]
+); // Adding dependency causes new callback on every change
 ```
 
 ### Why Clean Up on Unmount?
@@ -158,9 +166,9 @@ When using tabs (like Radix UI Tabs), switching tabs unmounts the previous tab's
 // IMPORTANT: Reset when component unmounts
 useEffect(() => {
   return () => {
-    onFormActiveChange?.(false);
+    onActiveChange?.(false);
   };
-}, [onFormActiveChange]);
+}, [onActiveChange]);
 ```
 
 ### Handling Nested Popovers
@@ -168,18 +176,21 @@ useEffect(() => {
 When your form contains popovers (like date pickers), you need to check if the Escape originated from within a popover:
 
 ```tsx
-const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-  if (e.key === 'Escape') {
-    // Don't handle if inside a popover (let the popover close first)
-    const target = e.target as HTMLElement;
-    const isInPopover = target.closest('[data-radix-popper-content-wrapper]');
-    if (!isInPopover) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleCancel();
+const handleKeyDown = useCallback(
+  (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      // Don't handle if inside a popover (let the popover close first)
+      const target = e.target as HTMLElement;
+      const isInPopover = target.closest("[data-radix-popper-content-wrapper]");
+      if (!isInPopover) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleCancel();
+      }
     }
-  }
-}, [handleCancel]);
+  },
+  [handleCancel]
+);
 ```
 
 ## Usage with GoalDetailsPopoverView
@@ -192,14 +203,15 @@ The `GoalDetailsPopoverView` component accepts an `onEscapeKeyDown` prop that fo
   trigger={<GoalPopoverTrigger title={goal.title} />}
   onEscapeKeyDown={handleEscapeKeyDown}
 >
-  <GoalLogTab goalId={goal._id} onFormActiveChange={handleLogFormActiveChange} />
+  <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
 </GoalDetailsPopoverView>
 ```
 
 ## Complete Example
 
 See the implementation in:
-- `apps/webapp/src/components/molecules/goal-log/useLogFormEscapeHandler.ts`
+
+- `apps/webapp/src/hooks/useDialogEscapeHandler.ts`
 - `apps/webapp/src/components/molecules/goal-log/GoalLogTab.tsx`
 - `apps/webapp/src/components/molecules/goal-log/GoalLogCreateForm.tsx`
 - `apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx`
