@@ -15,7 +15,7 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
+import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
@@ -48,6 +48,8 @@ export interface GoalQuickViewModalProps {
  * - Reference multiple goals in quick succession
  */
 export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQuickViewModalProps) {
+  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+
   if (!goal && !goalId) {
     return null;
   }
@@ -60,11 +62,14 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogContent
+        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
+        onEscapeKeyDown={handleEscapeKeyDown}
+      >
         <GoalProvider goal={goal}>
           <GoalEditProvider>
             <GoalDisplayProvider>
-              <GoalQuickViewContentInternal />
+              <GoalQuickViewContentInternal onLogFormActiveChange={handleLogFormActiveChange} />
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
@@ -77,7 +82,11 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
  * Internal component that renders the goal content.
  * Separated to access contexts provided by parent.
  */
-function GoalQuickViewContentInternal() {
+function GoalQuickViewContentInternal({
+  onLogFormActiveChange,
+}: {
+  onLogFormActiveChange?: (isActive: boolean) => void;
+}) {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
   const { weekNumber } = useWeek();
@@ -152,7 +161,7 @@ function GoalQuickViewContentInternal() {
             </TabsContent>
 
             <TabsContent value="log" className="mt-4">
-              <GoalLogTab goalId={goal._id} />
+              <GoalLogTab goalId={goal._id} onFormActiveChange={onLogFormActiveChange} />
             </TabsContent>
           </Tabs>
         </FireGoalsProvider>

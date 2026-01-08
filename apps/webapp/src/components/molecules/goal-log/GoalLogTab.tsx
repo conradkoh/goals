@@ -6,7 +6,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { History, Loader2 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { GoalLogCreateForm, GoalLogEditForm } from './GoalLogCreateForm';
 import { GoalLogList } from './GoalLogList';
@@ -22,6 +22,8 @@ import { useSession } from '@/modules/auth/useSession';
 export interface GoalLogTabProps {
   /** The goal ID to display logs for */
   goalId: Id<'goals'>;
+  /** Callback when a form becomes active (editing or creating) - used to block dialog escape */
+  onFormActiveChange?: (isActive: boolean) => void;
   /** Additional CSS classes */
   className?: string;
 }
@@ -36,7 +38,7 @@ export interface GoalLogTabProps {
  * <GoalLogTab goalId={goal._id} />
  * ```
  */
-export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
+export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTabProps) {
   const { sessionId } = useSession();
   const {
     logs,
@@ -52,6 +54,13 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
 
   const [editingLog, setEditingLog] = useState<GoalLog | null>(null);
   const [showFullHistory, setShowFullHistory] = useState(false);
+  const [isCreateFormExpanded, setIsCreateFormExpanded] = useState(false);
+
+  // Notify parent when any form becomes active (for blocking dialog escape)
+  const isFormActive = editingLog !== null || isCreateFormExpanded;
+  useEffect(() => {
+    onFormActiveChange?.(isFormActive);
+  }, [isFormActive, onFormActiveChange]);
 
   // Fetch full history logs when viewing full history
   const { logs: fullHistoryLogs, isLoading: isLoadingFullHistory } = useGoalLogsByRootGoal(
@@ -159,7 +168,12 @@ export function GoalLogTab({ goalId, className }: GoalLogTabProps) {
 
       {/* Create form - fixed at bottom (only show when not in full history mode) */}
       {!editingLog && !showFullHistory && (
-        <GoalLogCreateForm onSubmit={handleCreateLog} isSubmitting={isCreating} className="mt-4" />
+        <GoalLogCreateForm
+          onSubmit={handleCreateLog}
+          isSubmitting={isCreating}
+          onExpandedChange={setIsCreateFormExpanded}
+          className="mt-4"
+        />
       )}
     </div>
   );

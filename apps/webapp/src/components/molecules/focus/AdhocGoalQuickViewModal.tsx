@@ -18,7 +18,7 @@ import {
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
+import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,6 +109,8 @@ export function AdhocGoalQuickViewModal({
   year,
   weekNumber,
 }: AdhocGoalQuickViewModalProps) {
+  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
+
   /**
    * Converts AdhocGoalWithChildren to GoalWithDetailsAndChildren format.
    * This conversion is necessary for compatibility with GoalProvider context.
@@ -148,11 +150,19 @@ export function AdhocGoalQuickViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogContent
+        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
+        onEscapeKeyDown={handleEscapeKeyDown}
+      >
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>
-              <AdhocGoalQuickViewContent goal={goal} year={year} weekNumber={weekNumber} />
+              <AdhocGoalQuickViewContent
+                goal={goal}
+                year={year}
+                weekNumber={weekNumber}
+                onLogFormActiveChange={handleLogFormActiveChange}
+              />
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
@@ -178,10 +188,12 @@ function AdhocGoalQuickViewContent({
   goal: adhocGoalProp,
   year,
   weekNumber,
+  onLogFormActiveChange,
 }: {
   goal: AdhocGoalWithChildren;
   year: number;
   weekNumber: number;
+  onLogFormActiveChange?: (isActive: boolean) => void;
 }) {
   const { goal } = useGoalContext();
   const { sessionId } = useSession();
@@ -371,7 +383,7 @@ function AdhocGoalQuickViewContent({
             </TabsContent>
 
             <TabsContent value="log" className="mt-4">
-              <GoalLogTab goalId={goal._id} />
+              <GoalLogTab goalId={goal._id} onFormActiveChange={onLogFormActiveChange} />
             </TabsContent>
           </Tabs>
         </FireGoalsProvider>

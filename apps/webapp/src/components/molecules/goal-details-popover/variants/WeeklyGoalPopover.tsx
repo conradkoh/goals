@@ -19,7 +19,7 @@ import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsP
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
+import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
 import {
   Select,
   SelectContent,
@@ -150,6 +150,7 @@ function WeeklyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
+  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
@@ -231,7 +232,7 @@ function WeeklyGoalPopoverContentInner({
         </TabsContent>
 
         <TabsContent value="log" className="mt-4">
-          <GoalLogTab goalId={goal._id} />
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleLogFormActiveChange} />
         </TabsContent>
       </Tabs>
     </FireGoalsProvider>
@@ -249,6 +250,7 @@ function WeeklyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -260,6 +262,7 @@ function WeeklyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>

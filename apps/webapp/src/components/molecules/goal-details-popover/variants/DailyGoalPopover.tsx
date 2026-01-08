@@ -17,7 +17,7 @@ import {
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
+import { GoalLogTab, useLogFormEscapeHandler } from '@/components/molecules/goal-log';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
@@ -104,6 +104,7 @@ function DailyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
+  const { handleEscapeKeyDown, handleLogFormActiveChange } = useLogFormEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = (newDetails: string) => {
@@ -153,7 +154,7 @@ function DailyGoalPopoverContentInner({
         </TabsContent>
 
         <TabsContent value="log" className="mt-4">
-          <GoalLogTab goalId={goal._id} />
+          <GoalLogTab goalId={goal._id} onFormActiveChange={handleLogFormActiveChange} />
         </TabsContent>
       </Tabs>
     </FireGoalsProvider>
@@ -171,6 +172,7 @@ function DailyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -182,6 +184,7 @@ function DailyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
+        onEscapeKeyDown={handleEscapeKeyDown}
       >
         {goalContent}
       </GoalDetailsPopoverView>

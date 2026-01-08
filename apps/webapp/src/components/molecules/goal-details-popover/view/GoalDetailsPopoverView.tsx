@@ -30,6 +30,8 @@ export interface GoalDetailsPopoverViewProps {
   onOpenChange?: (open: boolean) => void;
   /** Whether to use fullscreen mode on mobile devices (default: true) */
   mobileFullScreen?: boolean;
+  /** Callback when escape key is pressed - can call e.preventDefault() to block dialog close */
+  onEscapeKeyDown?: (e: KeyboardEvent) => void;
 }
 
 /**
@@ -70,6 +72,7 @@ export function GoalDetailsPopoverView({
   open,
   onOpenChange,
   mobileFullScreen = true,
+  onEscapeKeyDown,
 }: GoalDetailsPopoverViewProps) {
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
@@ -111,6 +114,7 @@ export function GoalDetailsPopoverView({
                 'overflow-hidden flex flex-col p-4 sm:p-6',
                 contentClassName
               )}
+              onEscapeKeyDown={onEscapeKeyDown}
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
@@ -128,6 +132,7 @@ export function GoalDetailsPopoverView({
                 'overflow-hidden flex flex-col p-4 sm:p-6',
                 contentClassName
               )}
+              onEscapeKeyDown={onEscapeKeyDown}
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
@@ -157,6 +162,7 @@ export function GoalDetailsPopoverView({
         <DialogContent
           className={cn(`w-[${width}] max-w-[calc(100vw-32px)] p-5`, contentClassName)}
           style={{ width }}
+          onEscapeKeyDown={onEscapeKeyDown}
         >
           <DialogHeader>
             <DialogTitle className="sr-only">Goal Details</DialogTitle>

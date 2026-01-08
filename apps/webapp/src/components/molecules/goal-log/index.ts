@@ -36,3 +36,5 @@ export type { GoalLogEntryProps } from './GoalLogEntry';
 
 export { GoalLogCreateForm, GoalLogEditForm } from './GoalLogCreateForm';
 export type { GoalLogCreateFormProps, GoalLogEditFormProps } from './GoalLogCreateForm';
+
+export { useLogFormEscapeHandler } from './useLogFormEscapeHandler';
