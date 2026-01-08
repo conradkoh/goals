@@ -48,6 +48,7 @@ export function GoalLogCreateForm({
   const [logDate, setLogDate] = useState<Date>(new Date());
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const formattedDate = DateTime.fromJSDate(logDate).toFormat('LLL dd, yyyy');
   const isToday = DateTime.fromJSDate(logDate).hasSame(DateTime.now(), 'day');
@@ -55,15 +56,18 @@ export function GoalLogCreateForm({
   const handleSubmit = useCallback(async () => {
     if (isHTMLEmpty(content) || isSubmitting) return;
 
+    setError(null);
     try {
       await onSubmit(logDate.getTime(), content);
       // Reset form after successful submission
       setContent('');
       setIsExpanded(false);
       setLogDate(new Date()); // Reset to today
-    } catch (error) {
-      // Error handling is done by the parent component
-      console.error('Failed to create log entry:', error);
+      setError(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create log entry';
+      setError(message);
+      console.error('Failed to create log entry:', err);
     }
   }, [content, logDate, onSubmit, isSubmitting]);
 
@@ -71,6 +75,7 @@ export function GoalLogCreateForm({
     setContent('');
     setIsExpanded(false);
     setLogDate(new Date());
+    setError(null);
   }, []);
 
   // Collapsed state - show a button to expand
@@ -133,6 +138,11 @@ export function GoalLogCreateForm({
           onChange={setContent}
           placeholder="What happened? What progress was made? Any blockers or issues?"
         />
+        {error && (
+          <p className="text-sm text-destructive mt-2" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       {/* Action buttons */}
@@ -188,6 +198,7 @@ export function GoalLogEditForm({
 }: GoalLogEditFormProps) {
   const [logDate, setLogDate] = useState<Date>(new Date(log.logDate));
   const [content, setContent] = useState(log.content);
+  const [error, setError] = useState<string | null>(null);
 
   const formattedDate = DateTime.fromJSDate(logDate).toFormat('LLL dd, yyyy');
   const isToday = DateTime.fromJSDate(logDate).hasSame(DateTime.now(), 'day');
@@ -195,10 +206,13 @@ export function GoalLogEditForm({
   const handleSubmit = useCallback(async () => {
     if (isHTMLEmpty(content) || isSubmitting) return;
 
+    setError(null);
     try {
       await onSave(logDate.getTime(), content);
-    } catch (error) {
-      console.error('Failed to update log entry:', error);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update log entry';
+      setError(message);
+      console.error('Failed to update log entry:', err);
     }
   }, [content, logDate, onSave, isSubmitting]);
 
@@ -245,6 +259,11 @@ export function GoalLogEditForm({
           onChange={setContent}
           placeholder="What happened? What progress was made? Any blockers or issues?"
         />
+        {error && (
+          <p className="text-sm text-destructive mt-2" role="alert">
+            {error}
+          </p>
+        )}
       </div>
 
       {/* Action buttons */}

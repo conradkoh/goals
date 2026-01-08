@@ -4,6 +4,7 @@ import { SessionIdArg } from 'convex-helpers/server/sessions';
 import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { requireLogin } from '../src/usecase/requireLogin';
+import { getRootGoalId } from '../src/util/goalUtils';
 
 /**
  * Type for goal log entries returned from queries.
@@ -11,15 +12,54 @@ import { requireLogin } from '../src/usecase/requireLogin';
 export type GoalLog = Doc<'goalLogs'>;
 
 /**
- * Computes the root goal ID for a given goal.
- * If the goal was carried over, returns the rootGoalId from the carry-over chain.
- * Otherwise, returns the goal's own ID.
- *
- * @param goal - The goal document
- * @returns The root goal ID
+ * Maximum content length for goal logs (50KB)
  */
-function getRootGoalId(goal: Doc<'goals'>): Id<'goals'> {
-  return goal.carryOver?.fromGoal?.rootGoalId ?? goal._id;
+const MAX_CONTENT_LENGTH = 50000;
+
+/**
+ * Validates HTML content to ensure it's not empty after stripping tags.
+ * Matches the frontend isHTMLEmpty validation logic.
+ *
+ * @param content - HTML content string
+ * @returns True if content is effectively empty
+ */
+function isHTMLEmpty(content: string): boolean {
+  // Remove HTML tags and check if remaining text is empty
+  const plainText = content.replace(/<[^>]*>/g, '').trim();
+  return plainText.length === 0;
+}
+
+/**
+ * Validates a log date timestamp.
+ *
+ * @param logDate - Unix timestamp to validate
+ * @throws ConvexError if date is invalid
+ */
+function validateLogDate(logDate: number): void {
+  const now = Date.now();
+  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+  const oneDayInFuture = now + 24 * 60 * 60 * 1000;
+
+  if (logDate < oneYearAgo) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: 'Log date cannot be more than one year in the past',
+    });
+  }
+
+  if (logDate > oneDayInFuture) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: 'Log date cannot be in the future',
+    });
+  }
+
+  if (!Number.isFinite(logDate) || logDate < 0) {
+    throw new ConvexError({
+      code: 'INVALID_ARGUMENT',
+      message: 'Log date must be a valid timestamp',
+    });
+  }
 }
 
 /**
@@ -56,12 +96,23 @@ export const createGoalLog = mutation({
     const userId = user._id;
 
     // Validate content
-    if (!content.trim()) {
+    if (isHTMLEmpty(content)) {
       throw new ConvexError({
         code: 'INVALID_ARGUMENT',
         message: 'Log content cannot be empty',
       });
     }
+
+    // Validate content length
+    if (content.length > MAX_CONTENT_LENGTH) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: `Log content exceeds maximum length of ${MAX_CONTENT_LENGTH} characters`,
+      });
+    }
+
+    // Validate log date
+    validateLogDate(logDate);
 
     // Verify the goal exists and belongs to the user
     const goal = await ctx.db.get('goals', goalId);
@@ -139,11 +190,25 @@ export const updateGoalLog = mutation({
     }
 
     // Validate content if provided
-    if (content !== undefined && !content.trim()) {
-      throw new ConvexError({
-        code: 'INVALID_ARGUMENT',
-        message: 'Log content cannot be empty',
-      });
+    if (content !== undefined) {
+      if (isHTMLEmpty(content)) {
+        throw new ConvexError({
+          code: 'INVALID_ARGUMENT',
+          message: 'Log content cannot be empty',
+        });
+      }
+
+      if (content.length > MAX_CONTENT_LENGTH) {
+        throw new ConvexError({
+          code: 'INVALID_ARGUMENT',
+          message: `Log content exceeds maximum length of ${MAX_CONTENT_LENGTH} characters`,
+        });
+      }
+    }
+
+    // Validate log date if provided
+    if (logDate !== undefined) {
+      validateLogDate(logDate);
     }
 
     const updates: Partial<Doc<'goalLogs'>> = {
@@ -304,24 +369,24 @@ export const getGoalLogsByRootGoalId = query({
  *
  * @param ctx - Convex query context
  * @param args - Query arguments containing session and goal ID
- * @returns Promise resolving to the root goal ID
+ * @returns Promise resolving to the root goal ID or undefined if not found
  */
 export const getRootGoalIdForGoal = query({
   args: {
     ...SessionIdArg,
     goalId: v.id('goals'),
   },
-  handler: async (ctx, args): Promise<Id<'goals'> | null> => {
+  handler: async (ctx, args): Promise<Id<'goals'> | undefined> => {
     const { sessionId, goalId } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
     const goal = await ctx.db.get('goals', goalId);
     if (!goal) {
-      return null;
+      return undefined;
     }
     if (goal.userId !== userId) {
-      return null;
+      return undefined;
     }
 
     return getRootGoalId(goal);

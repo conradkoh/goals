@@ -6,6 +6,41 @@ import type {
 import { DateTime } from 'luxon';
 
 /**
+ * Converts HTML content to plain text for markdown output.
+ * Handles common HTML entities, line breaks, and nested tags.
+ *
+ * @param html - HTML content string
+ * @returns Plain text content
+ */
+function htmlToPlainText(html: string): string {
+  let text = html;
+
+  // Replace common HTML entities
+  text = text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // Convert <br> and <p> tags to line breaks
+  text = text.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n');
+
+  // Remove all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, '');
+
+  // Clean up whitespace
+  text = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join(' ');
+
+  return text.trim();
+}
+
+/**
  * Formats goal log entries as markdown.
  * Groups logs by date and renders content.
  *
@@ -40,14 +75,8 @@ function formatGoalLogsAsMarkdown(logs: Doc<'goalLogs'>[], indent = ''): string 
     lines.push(`${indent}- **${formattedDate}:**`);
 
     for (const log of dateLogs) {
-      // Strip HTML tags for markdown output and trim
-      const plainContent = log.content
-        .replace(/<[^>]*>/g, '')
-        .trim()
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-        .join(' ');
+      // Convert HTML to plain text
+      const plainContent = htmlToPlainText(log.content);
 
       if (plainContent) {
         lines.push(`${indent}  - ${plainContent}`);

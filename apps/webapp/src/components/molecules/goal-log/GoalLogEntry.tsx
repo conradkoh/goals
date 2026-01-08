@@ -63,6 +63,7 @@ export function GoalLogEntry({
 }: GoalLogEntryProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const logDateTime = DateTime.fromMillis(log.logDate);
   const formattedDate = logDateTime.toFormat('EEEE, MMMM d, yyyy');
@@ -77,18 +78,26 @@ export function GoalLogEntry({
 
   const handleDeleteClick = useCallback(() => {
     setIsDeleteDialogOpen(true);
+    setDeleteError(null);
   }, []);
 
   const handleConfirmDelete = useCallback(async () => {
-    if (!onDelete) return;
+    if (!onDelete || isDeleting) return;
+
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       await onDelete(log._id);
+      // Only close dialog if still mounted and delete succeeded
       setIsDeleteDialogOpen(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete log entry';
+      setDeleteError(message);
+      console.error('Failed to delete log entry:', err);
     } finally {
       setIsDeleting(false);
     }
-  }, [log._id, onDelete]);
+  }, [log._id, onDelete, isDeleting]);
 
   return (
     <>
@@ -153,6 +162,11 @@ export function GoalLogEntry({
               Are you sure you want to delete this log entry? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+          {deleteError && (
+            <p className="text-sm text-destructive" role="alert">
+              {deleteError}
+            </p>
+          )}
           <DialogFooter>
             <Button
               variant="outline"
