@@ -133,7 +133,7 @@ export function GoalLogEntry({
             <div className="flex-1 min-w-0">
               <InteractiveHTML
                 html={log.content}
-                className="text-sm prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                className="text-sm [&>*:first-child]:!mt-0 [&>*:last-child]:!mb-0"
                 onContentChange={onContentChange ? handleContentChange : undefined}
                 readOnly={!onContentChange}
               />

@@ -13,7 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { isHTMLEmpty, RichTextEditor } from '@/components/ui/rich-text-editor';
+import {
+  isHTMLEmpty,
+  RichTextEditor,
+  stripTrailingEmptyParagraphs,
+} from '@/components/ui/rich-text-editor';
 import { cn } from '@/lib/utils';
 
 /**
@@ -101,7 +105,9 @@ export function GoalLogCreateForm({
     setError(null);
     try {
       const combinedDateTime = combineDateAndTime(logDate, logTime);
-      await onSubmit(combinedDateTime.getTime(), content);
+      // Clean up trailing empty paragraphs before saving
+      const cleanedContent = stripTrailingEmptyParagraphs(content);
+      await onSubmit(combinedDateTime.getTime(), cleanedContent);
       // Reset form after successful submission
       setContent('');
       setIsExpanded(false);
@@ -306,7 +312,9 @@ export function GoalLogEditForm({
     setError(null);
     try {
       const combinedDateTime = combineDateAndTime(logDate, logTime);
-      await onSave(combinedDateTime.getTime(), content);
+      // Clean up trailing empty paragraphs before saving
+      const cleanedContent = stripTrailingEmptyParagraphs(content);
+      await onSave(combinedDateTime.getTime(), cleanedContent);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update log entry';
       setError(message);

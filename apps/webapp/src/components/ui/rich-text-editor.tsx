@@ -24,6 +24,16 @@ export function isHTMLEmpty(html: string) {
 }
 
 /**
+ * Strips trailing empty paragraphs from HTML content.
+ * TipTap often adds empty <p></p> or <p><br></p> at the end of content.
+ */
+export function stripTrailingEmptyParagraphs(html: string): string {
+  // Match trailing empty paragraphs: <p></p>, <p><br></p>, <p><br/></p>, <p class="..."></p>, etc.
+  // Also handles whitespace between tags
+  return html.replace(/(<p[^>]*>(\s*(<br\s*\/?>)?\s*)<\/p>\s*)+$/gi, '');
+}
+
+/**
  * Custom Tiptap extension that prevents new lines from being added when Cmd/Ctrl + Enter is pressed.
  * This is used in conjunction with the form submission shortcut (useFormSubmitShortcut) to ensure
  * that pressing Cmd/Ctrl + Enter only submits the form and doesn't add a new line in the editor.
@@ -259,7 +269,9 @@ export function RichTextEditor({
     },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
-      onChange(html);
+      // Strip trailing empty paragraphs that TipTap adds
+      const cleanedHtml = stripTrailingEmptyParagraphs(html);
+      onChange(cleanedHtml);
     },
     immediatelyRender: false,
   });
