@@ -1,5 +1,6 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
+import { useCallback } from 'react';
 
 import {
   AdhocSubGoalsList,
@@ -139,9 +140,12 @@ function AdhocGoalPopoverContentInner({
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = (newDetails: string) => {
-    onSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
-  };
+  const handleDetailsChange = useCallback(
+    (newDetails: string) => {
+      onSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+    },
+    [onSave, goal.title, goal.adhoc?.dueDate, goal.domainId]
+  );
 
   // Shared content for both popover and fullscreen modes
   const goalContent = (

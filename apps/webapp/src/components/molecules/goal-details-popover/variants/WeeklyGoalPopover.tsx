@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   GoalActionMenuNew,
@@ -156,9 +156,12 @@ function WeeklyGoalPopoverContentInner({
   const hasChildren = goal.children && goal.children.length > 0;
 
   // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = (newDetails: string) => {
-    onSave(goal.title, newDetails, goal.dueDate);
-  };
+  const handleDetailsChange = useCallback(
+    (newDetails: string) => {
+      onSave(goal.title, newDetails, goal.dueDate);
+    },
+    [onSave, goal.title, goal.dueDate]
+  );
 
   // Shared content for both popover and fullscreen modes
   const goalContent = (

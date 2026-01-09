@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -243,6 +244,7 @@ function AdhocGoalPopoverContentInner({
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <>
@@ -299,7 +301,7 @@ function AdhocGoalPopoverContentInner({
           </TabsContent>
 
           <TabsContent value="log" className="mt-4">
-            <GoalLogTab goalId={goal._id} />
+            <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
           </TabsContent>
         </Tabs>
       </FireGoalsProvider>

@@ -2,7 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { CalendarIcon } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { Button } from '@/components/ui/button';
@@ -54,11 +54,6 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
 
-  const handleKeyDown = useFormSubmitShortcut({
-    onSubmit: handleSave,
-    shouldPreventDefault: true,
-  });
-
   // Check if the goal is an adhoc goal (depth === -1)
   const isAdhocGoal = goal?.depth === -1;
 
@@ -80,7 +75,7 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
     }
   }, [isOpen]);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (!goal || isSubmitting) return;
 
     const trimmedTitle = editTitle.trim();
@@ -115,11 +110,16 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
     } finally {
       setIsSubmitting(false);
     }
-  }
+  }, [goal, isSubmitting, editTitle, editDueDate, editDetails, editDomainId, onSave, onClose]);
 
-  const handleCancel = () => {
+  const handleKeyDown = useFormSubmitShortcut({
+    onSubmit: handleSave,
+    shouldPreventDefault: true,
+  });
+
+  const handleCancel = useCallback(() => {
     onClose();
-  };
+  }, [onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

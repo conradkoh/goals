@@ -30,6 +30,7 @@ import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 
@@ -210,6 +211,7 @@ function QuarterlyGoalPopoverContentInner({
 }: QuarterlyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <>
@@ -274,7 +276,7 @@ function QuarterlyGoalPopoverContentInner({
           </TabsContent>
 
           <TabsContent value="log" className="mt-4">
-            <GoalLogTab goalId={goal._id} />
+            <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
           </TabsContent>
         </Tabs>
       </FireGoalsProvider>

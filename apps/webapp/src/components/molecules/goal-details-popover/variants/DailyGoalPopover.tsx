@@ -1,5 +1,5 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
-import type { ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
 
 import {
   GoalActionMenuNew,
@@ -108,9 +108,12 @@ function DailyGoalPopoverContentInner({
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = (newDetails: string) => {
-    onSave(goal.title, newDetails, goal.dueDate);
-  };
+  const handleDetailsChange = useCallback(
+    (newDetails: string) => {
+      onSave(goal.title, newDetails, goal.dueDate);
+    },
+    [onSave, goal.title, goal.dueDate]
+  );
 
   // Shared content for both popover and fullscreen modes
   const goalContent = (
