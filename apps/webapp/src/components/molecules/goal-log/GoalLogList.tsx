@@ -109,9 +109,9 @@ export function GoalLogList({
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-4', className)}>
       {groupedLogs.map((group) => (
-        <div key={group.date} className="space-y-3">
+        <div key={group.date} className="space-y-1.5">
           {/* Day header */}
           <div className="flex items-center gap-2 sticky top-0 bg-background/95 backdrop-blur-sm py-1 -mx-1 px-1 z-10">
             <CalendarIcon className="h-4 w-4 text-primary" />
@@ -122,7 +122,7 @@ export function GoalLogList({
           </div>
 
           {/* Log entries for this day */}
-          <div className="space-y-2 pl-6">
+          <div className="space-y-1.5 pl-6">
             {group.logs.map((log) => (
               <GoalLogEntry
                 key={log._id}

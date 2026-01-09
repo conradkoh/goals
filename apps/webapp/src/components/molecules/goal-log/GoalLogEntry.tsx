@@ -64,10 +64,13 @@ export function GoalLogEntry({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const logDateTime = DateTime.fromMillis(log.logDate);
   const formattedDate = logDateTime.toFormat('EEEE, MMMM d, yyyy');
-  const formattedTime = DateTime.fromMillis(log.createdAt).toFormat('h:mm a');
+  const formattedTime = logDateTime.toFormat('h:mm a');
+
+  const hasActions = onEdit || onDelete;
 
   const handleContentChange = useCallback(
     (newContent: string) => {
@@ -99,9 +102,15 @@ export function GoalLogEntry({
     }
   }, [log._id, onDelete, isDeleting]);
 
+  const handleEntryClick = useCallback(() => {
+    if (hasActions) {
+      setIsExpanded((prev) => !prev);
+    }
+  }, [hasActions]);
+
   return (
     <>
-      <div className={cn('group', className)}>
+      <div className={cn('', className)}>
         {/* Date header - only shown when showDate is true */}
         {showDate && (
           <div className="flex items-center gap-2 mb-2">
@@ -110,46 +119,65 @@ export function GoalLogEntry({
           </div>
         )}
 
-        {/* Log entry content */}
-        <div className="relative rounded-md bg-muted/30 p-3">
-          {/* Action buttons - top right, visible on hover */}
-          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                onClick={() => onEdit(log)}
-                title="Edit log entry"
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                onClick={handleDeleteClick}
-                title="Delete log entry"
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            )}
+        {/* Log entry content - compact inline layout */}
+        <div
+          className={cn(
+            'rounded-md bg-muted/30 px-3 py-2 transition-colors',
+            hasActions && 'cursor-pointer hover:bg-muted/50'
+          )}
+          onClick={handleEntryClick}
+        >
+          {/* Main content row */}
+          <div className="flex items-start gap-2">
+            {/* Content - grows to fill available space */}
+            <div className="flex-1 min-w-0">
+              <InteractiveHTML
+                html={log.content}
+                className="text-sm prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                onContentChange={onContentChange ? handleContentChange : undefined}
+                readOnly={!onContentChange}
+              />
+            </div>
+
+            {/* Timestamp - inline on the right */}
+            <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+              {formattedTime}
+            </span>
           </div>
 
-          {/* Content */}
-          <InteractiveHTML
-            html={log.content}
-            className="text-sm prose prose-sm dark:prose-invert max-w-none pr-12"
-            onContentChange={onContentChange ? handleContentChange : undefined}
-            readOnly={!onContentChange}
-          />
-
-          {/* Timestamp - bottom right */}
-          <div className="flex justify-end mt-2">
-            <span className="text-xs text-muted-foreground">{formattedTime}</span>
-          </div>
+          {/* Action buttons - revealed when expanded */}
+          {isExpanded && hasActions && (
+            <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50">
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(log);
+                  }}
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick();
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Delete
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

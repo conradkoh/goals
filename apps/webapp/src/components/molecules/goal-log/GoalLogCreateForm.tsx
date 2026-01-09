@@ -5,15 +5,40 @@
  */
 
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Clock, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { isHTMLEmpty, RichTextEditor } from '@/components/ui/rich-text-editor';
 import { cn } from '@/lib/utils';
+
+/**
+ * Combines a date and time string into a Date object.
+ * @param date - The date portion
+ * @param time - Time string in HH:mm format
+ * @returns Combined Date object
+ */
+function combineDateAndTime(date: Date, time: string): Date {
+  const [hours, minutes] = time.split(':').map(Number);
+  const combined = new Date(date);
+  combined.setHours(hours, minutes, 0, 0);
+  return combined;
+}
+
+/**
+ * Extracts time string from a Date object in HH:mm format.
+ * @param date - The date to extract time from
+ * @returns Time string in HH:mm format
+ */
+function getTimeFromDate(date: Date): string {
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
 
 /**
  * Props for the GoalLogCreateForm component.
@@ -53,6 +78,7 @@ export function GoalLogCreateForm({
   className,
 }: GoalLogCreateFormProps) {
   const [logDate, setLogDate] = useState<Date>(new Date());
+  const [logTime, setLogTime] = useState<string>(getTimeFromDate(new Date()));
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpandedInternal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,23 +100,26 @@ export function GoalLogCreateForm({
 
     setError(null);
     try {
-      await onSubmit(logDate.getTime(), content);
+      const combinedDateTime = combineDateAndTime(logDate, logTime);
+      await onSubmit(combinedDateTime.getTime(), content);
       // Reset form after successful submission
       setContent('');
       setIsExpanded(false);
       setLogDate(new Date()); // Reset to today
+      setLogTime(getTimeFromDate(new Date())); // Reset to current time
       setError(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create log entry';
       setError(message);
       console.error('Failed to create log entry:', err);
     }
-  }, [content, logDate, onSubmit, isSubmitting, setIsExpanded]);
+  }, [content, logDate, logTime, onSubmit, isSubmitting, setIsExpanded]);
 
   const handleCancel = useCallback(() => {
     setContent('');
     setIsExpanded(false);
     setLogDate(new Date());
+    setLogTime(getTimeFromDate(new Date()));
     setError(null);
   }, [setIsExpanded]);
 
@@ -155,32 +184,43 @@ export function GoalLogCreateForm({
         <h4 className="text-sm font-medium text-foreground">New Log Entry</h4>
       </div>
 
-      {/* Date picker */}
+      {/* Date and time picker */}
       <div className="space-y-2">
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
-        <label className="text-sm font-medium text-muted-foreground">Log Date</label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !logDate && 'text-muted-foreground'
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {isToday ? `Today (${formattedDate})` : formattedDate}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={logDate}
-              onSelect={(date) => date && setLogDate(date)}
-              initialFocus
+        <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'flex-1 justify-start text-left font-normal',
+                  !logDate && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {isToday ? `Today (${formattedDate})` : formattedDate}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={logDate}
+                onSelect={(date) => date && setLogDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="relative flex items-center">
+            <Clock className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="time"
+              value={logTime}
+              onChange={(e) => setLogTime(e.target.value)}
+              className="w-[120px] pl-9"
             />
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
       </div>
 
       {/* Content editor */}
@@ -253,6 +293,7 @@ export function GoalLogEditForm({
   className,
 }: GoalLogEditFormProps) {
   const [logDate, setLogDate] = useState<Date>(new Date(log.logDate));
+  const [logTime, setLogTime] = useState<string>(getTimeFromDate(new Date(log.logDate)));
   const [content, setContent] = useState(log.content);
   const [error, setError] = useState<string | null>(null);
 
@@ -264,13 +305,14 @@ export function GoalLogEditForm({
 
     setError(null);
     try {
-      await onSave(logDate.getTime(), content);
+      const combinedDateTime = combineDateAndTime(logDate, logTime);
+      await onSave(combinedDateTime.getTime(), content);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update log entry';
       setError(message);
       console.error('Failed to update log entry:', err);
     }
-  }, [content, logDate, onSave, isSubmitting]);
+  }, [content, logDate, logTime, onSave, isSubmitting]);
 
   /**
    * Handles keyboard shortcuts for the form.
@@ -313,32 +355,43 @@ export function GoalLogEditForm({
         <h4 className="text-sm font-medium text-foreground">Edit Log Entry</h4>
       </div>
 
-      {/* Date picker */}
+      {/* Date and time picker */}
       <div className="space-y-2">
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
-        <label className="text-sm font-medium text-muted-foreground">Log Date</label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !logDate && 'text-muted-foreground'
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {isToday ? `Today (${formattedDate})` : formattedDate}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={logDate}
-              onSelect={(date) => date && setLogDate(date)}
-              initialFocus
+        <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  'flex-1 justify-start text-left font-normal',
+                  !logDate && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {isToday ? `Today (${formattedDate})` : formattedDate}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={logDate}
+                onSelect={(date) => date && setLogDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <div className="relative flex items-center">
+            <Clock className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="time"
+              value={logTime}
+              onChange={(e) => setLogTime(e.target.value)}
+              className="w-[120px] pl-9"
             />
-          </PopoverContent>
-        </Popover>
+          </div>
+        </div>
       </div>
 
       {/* Content editor */}
