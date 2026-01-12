@@ -51,6 +51,7 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
   // Fix iOS text selection handles not being draggable
@@ -67,6 +68,7 @@ function DialogContent({
           'bg-background/95 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 border-2 border-border/20 p-6 shadow-lg duration-200 sm:max-w-lg',
           className
         )}
+        onEscapeKeyDown={onEscapeKeyDown}
         {...props}
       >
         {children}
@@ -176,7 +178,7 @@ function DialogDescription({
 export const FullscreenDialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, onEscapeKeyDown, ...props }, ref) => {
   // Fix iOS text selection handles not being draggable
   // Must be called before react-remove-scroll attaches its listeners
   // https://github.com/theKashey/react-remove-scroll/pull/144
@@ -192,6 +194,7 @@ export const FullscreenDialogContent = React.forwardRef<
           'fixed inset-0 z-50 m-auto grid gap-4 border-2 bg-background p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg',
           className
         )}
+        onEscapeKeyDown={onEscapeKeyDown}
         {...props}
       >
         {children}
