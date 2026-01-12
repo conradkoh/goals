@@ -87,10 +87,7 @@ const AttendanceContentInner = ({
    * Handle joining the attendance list by opening the dialog with appropriate defaults.
    */
   const handleJoin = useCallback(() => {
-    const defaultName =
-      isAuthenticated && currentUser
-        ? currentUser.name || (currentUser as { displayName?: string }).displayName || ''
-        : '';
+    const defaultName = isAuthenticated && currentUser ? currentUser.name || '' : '';
     setSelectedPerson(defaultName);
     setIsManualJoin(true);
     setDialogOpen(true);
