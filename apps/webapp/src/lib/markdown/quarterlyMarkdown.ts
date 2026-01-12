@@ -313,6 +313,11 @@ export function generateQuarterlySummaryMarkdown(
                   lines.push(`  - ${line.trim()}`);
                 });
               }
+
+              // Add daily goal logs if available
+              if (dailyGoal.logs && dailyGoal.logs.length > 0) {
+                lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, '  '));
+              }
             });
           }
         }
@@ -567,6 +572,11 @@ export function generateMultipleQuarterlyGoalsMarkdown(
                     lines.push(`    - ${line.trim()}`);
                   });
                 }
+
+                // Add daily goal logs if available
+                if (dailyGoal.logs && dailyGoal.logs.length > 0) {
+                  lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, '    '));
+                }
               });
             }
           }
@@ -635,6 +645,11 @@ export function generateMultipleQuarterlyGoalsMarkdown(
             detailLines.forEach((line) => {
               lines.push(`  - ${line.trim()}`);
             });
+          }
+
+          // Add adhoc goal logs if available
+          if (goal.logs && goal.logs.length > 0) {
+            lines.push(formatGoalLogsAsMarkdown(goal.logs, '  '));
           }
         });
 

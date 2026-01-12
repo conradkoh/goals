@@ -5,7 +5,12 @@ import { DateTime } from 'luxon';
 import { DayOfWeek } from '../src/constants';
 import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query, type QueryCtx } from './_generated/server';
-import { getWeekGoalsTree, type WeekGoalsTree } from '../src/usecase/getWeekDetails';
+import {
+  getWeekGoalsTree,
+  type WeekGoalsTree,
+  type WeeklyGoalWithLogs,
+  type AdhocGoalWithLogs,
+} from '../src/usecase/getWeekDetails';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 import { getRootGoalId } from '../src/util/goalUtils';
@@ -835,7 +840,7 @@ export const getQuarterlyGoalSummary = query({
     const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
     let quarterlyGoalDetails = null;
 
-    // Collect all goals for fetching logs
+    // Collect all goals for fetching logs (quarterly, weekly, AND daily goals)
     const allGoals: Doc<'goals'>[] = [quarterlyGoal];
 
     for (const weekTree of weekResults) {
@@ -857,6 +862,10 @@ export const getQuarterlyGoalSummary = query({
         // Store weekly goals for this week and collect them for log fetching
         weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => {
           allGoals.push(weeklyGoal);
+          // Also collect daily goals (children of weekly goals) for log fetching
+          for (const dailyGoal of weeklyGoal.children) {
+            allGoals.push(dailyGoal);
+          }
           return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
         });
       }
@@ -875,16 +884,18 @@ export const getQuarterlyGoalSummary = query({
     // Add logs to quarterly goal details
     const quarterlyGoalLogs = goalLogsMap.get(quarterlyGoalId.toString()) || [];
 
-    // Add logs to weekly goals
-    const weeklyGoalsByWeekWithLogs: Record<
-      number,
-      (ReturnType<typeof mapWeeklyGoal> & { logs?: Doc<'goalLogs'>[] })[]
-    > = {};
+    // Add logs to weekly goals and their children (daily goals)
+    const weeklyGoalsByWeekWithLogs: Record<number, WeeklyGoalWithLogs[]> = {};
 
     for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
       weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
         ...weeklyGoal,
         logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
+        // Attach logs to daily goals (children)
+        children: weeklyGoal.children.map((dailyGoal) => ({
+          ...dailyGoal,
+          logs: goalLogsMap.get(dailyGoal._id.toString()) || [],
+        })),
       }));
     }
 
@@ -1019,7 +1030,7 @@ export const getQuarterSummary = query({
       const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
       let quarterlyGoalDetails = null;
 
-      // Collect all goals for fetching logs
+      // Collect all goals for fetching logs (quarterly, weekly, AND daily goals)
       const allGoals: Doc<'goals'>[] = [quarterlyGoal];
 
       for (const weekTree of weekResults) {
@@ -1042,6 +1053,10 @@ export const getQuarterSummary = query({
           weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
             (weeklyGoal) => {
               allGoals.push(weeklyGoal);
+              // Also collect daily goals (children of weekly goals) for log fetching
+              for (const dailyGoal of weeklyGoal.children) {
+                allGoals.push(dailyGoal);
+              }
               return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
             }
           );
@@ -1067,16 +1082,18 @@ export const getQuarterSummary = query({
       // Add logs to quarterly goal details
       const quarterlyGoalLogs = goalLogsMap.get(goalId.toString()) || [];
 
-      // Add logs to weekly goals
-      const weeklyGoalsByWeekWithLogs: Record<
-        number,
-        (ReturnType<typeof mapWeeklyGoal> & { logs?: Doc<'goalLogs'>[] })[]
-      > = {};
+      // Add logs to weekly goals and their children (daily goals)
+      const weeklyGoalsByWeekWithLogs: Record<number, WeeklyGoalWithLogs[]> = {};
 
       for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
         weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
           ...weeklyGoal,
           logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
+          // Attach logs to daily goals (children)
+          children: weeklyGoal.children.map((dailyGoal) => ({
+            ...dailyGoal,
+            logs: goalLogsMap.get(dailyGoal._id.toString()) || [],
+          })),
         }));
       }
 
@@ -1098,7 +1115,7 @@ export const getQuarterSummary = query({
     const quarterlyGoals = await Promise.all(summaryPromises);
 
     // Fetch adhoc goals if requested
-    let adhocGoals: Doc<'goals'>[] = [];
+    let adhocGoals: AdhocGoalWithLogs[] = [];
     if (includeAdhocGoals) {
       const { weeks } = getQuarterWeeks(year, quarter);
       const adhocPromises = weeks.map((weekNum) =>
@@ -1110,7 +1127,7 @@ export const getQuarterSummary = query({
           .collect()
       );
       const results = await Promise.all(adhocPromises);
-      adhocGoals = results.flat().filter((goal) => {
+      const filteredAdhocGoals = results.flat().filter((goal) => {
         if (!goal.adhoc) return false;
         // Filter by domain if specific domains are selected
         if (adhocDomainIds && adhocDomainIds.length > 0) {
@@ -1131,6 +1148,15 @@ export const getQuarterSummary = query({
         }
         return true;
       });
+
+      // Fetch logs for adhoc goals
+      if (filteredAdhocGoals.length > 0) {
+        const adhocGoalLogsMap = await fetchLogsForGoals(ctx, filteredAdhocGoals);
+        adhocGoals = filteredAdhocGoals.map((goal) => ({
+          ...goal,
+          logs: adhocGoalLogsMap.get(goal._id.toString()) || [],
+        }));
+      }
     }
 
     // Calculate overall week range from the first goal (should be the same for all)

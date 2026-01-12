@@ -28,6 +28,29 @@ export type TWithChildren<T> = T & {
   children: TWithChildren<T>[];
 };
 
+/** Daily goal with optional logs */
+export type DailyGoalWithLogs = GoalWithDetailsAndChildren & {
+  /** Goal logs for the daily goal (by root goal ID for full history) */
+  logs?: Doc<'goalLogs'>[];
+};
+
+/** Weekly goal with logs and children (daily goals) that also have logs */
+export type WeeklyGoalWithLogs = Omit<GoalWithDetailsAndChildren, 'children'> & {
+  weekNumber: number;
+  weekStartTimestamp: number;
+  weekEndTimestamp: number;
+  /** Goal logs for the weekly goal (by root goal ID for full history) */
+  logs?: Doc<'goalLogs'>[];
+  /** Daily goals with their logs */
+  children: DailyGoalWithLogs[];
+};
+
+/** Adhoc goal with optional logs */
+export type AdhocGoalWithLogs = Doc<'goals'> & {
+  /** Goal logs for the adhoc goal (by root goal ID for full history) */
+  logs?: Doc<'goalLogs'>[];
+};
+
 // Quarterly goal summary data structure
 export type QuarterlyGoalSummary = {
   quarterlyGoal: {
@@ -40,16 +63,7 @@ export type QuarterlyGoalSummary = {
     /** Goal logs for the quarterly goal (by root goal ID for full history) */
     logs?: Doc<'goalLogs'>[];
   };
-  weeklyGoalsByWeek: Record<
-    number,
-    (GoalWithDetailsAndChildren & {
-      weekNumber: number;
-      weekStartTimestamp: number;
-      weekEndTimestamp: number;
-      /** Goal logs for the weekly goal (by root goal ID for full history) */
-      logs?: Doc<'goalLogs'>[];
-    })[]
-  >;
+  weeklyGoalsByWeek: Record<number, WeeklyGoalWithLogs[]>;
   quarter: number;
   year: number;
   weekRange: {
@@ -61,7 +75,8 @@ export type QuarterlyGoalSummary = {
 // Multiple quarterly goals summary data structure
 export type MultipleQuarterlyGoalsSummary = {
   quarterlyGoals: QuarterlyGoalSummary[];
-  adhocGoals?: Doc<'goals'>[];
+  /** Adhoc goals with their logs */
+  adhocGoals?: AdhocGoalWithLogs[];
   year: number;
   quarter: number;
   weekRange: {
