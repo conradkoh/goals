@@ -1,6 +1,6 @@
-import { ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { DailyWeeklyActionMenu } from '@/components/molecules/focus/DailyWeeklyActionMenu';
@@ -11,8 +11,25 @@ import {
 } from '@/components/molecules/focus-context-selector';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { type DayOfWeek, getDayNameShort } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
+
+/**
+ * Returns a platform-aware label for the search shortcut.
+ * Shows keyboard shortcut on desktop, plain "Search" on mobile.
+ * @internal
+ */
+function getSearchShortcutLabel(): string {
+  if (typeof navigator !== 'undefined') {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) return 'Search';
+    return isMac ? 'Search (⌘K)' : 'Search (Ctrl+K)';
+  }
+  return 'Search';
+}
 
 /** Navigation params for updating URL state atomically */
 export type NavigationParams = {
@@ -43,6 +60,8 @@ export type FocusMenuBarProps = {
   showPullGoals?: boolean;
   onPullGoals?: () => Promise<void>;
   pullGoalsDialog?: ReactElement;
+  /** Handler to open the command palette / search dialog */
+  onOpenCommandPalette?: () => void;
 };
 
 /**
@@ -68,6 +87,8 @@ export const FocusMenuBar = ({
   showPullGoals,
   onPullGoals,
   pullGoalsDialog,
+  /** Command palette handler */
+  onOpenCommandPalette,
 }: FocusMenuBarProps) => {
   // State for selector dialogs
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -105,6 +126,9 @@ export const FocusMenuBar = ({
 
   // Show navigation controls for all views
   const showNavigation = onPrevious && onNext;
+
+  // Memoize search shortcut label to avoid recalculation
+  const searchShortcutLabel = useMemo(() => getSearchShortcutLabel(), []);
 
   // Handle selector changes - updates URL params atomically via onNavigate
   const handleQuarterlyApply = (year: number, quarter: 1 | 2 | 3 | 4) => {
@@ -196,6 +220,28 @@ export const FocusMenuBar = ({
                   viewMode={viewMode}
                   onViewModeChange={onViewModeChange}
                 />
+              )}
+
+              {/* Search button - opens command palette */}
+              {onOpenCommandPalette && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onOpenCommandPalette}
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                        aria-label="Search"
+                      >
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{searchShortcutLabel}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>
