@@ -14,14 +14,6 @@ Enable CMD + K command palette functionality on mobile devices.
 
 ---
 
-### Fix Vulnerable Projects
-
-Address security vulnerabilities in project dependencies.
-
-**Status:** Backlog
-
----
-
 ### [GOALS] Chat to Create Goals
 
 As a user, I want to be able to chat to create a goal.
