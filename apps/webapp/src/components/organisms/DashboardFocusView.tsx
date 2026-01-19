@@ -396,6 +396,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             showPullGoals={showPullGoals}
             onPullGoals={handlePullGoals}
             pullGoalsDialog={pullGoalsDialog}
+            onOpenCommandPalette={handleOpenCommandDialog}
           />
         </div>
         <div className="w-full h-full">
