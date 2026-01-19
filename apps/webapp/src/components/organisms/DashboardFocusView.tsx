@@ -105,8 +105,11 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onYearQuarterChange,
 }) => {
   const { selectedYear, selectedQuarter, isFocusModeEnabled, updateUrlParams } = useDashboard();
-  const { currentWeekNumber } = useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
-  const { weekday: currentDay } = useCurrentWeekInfo();
+  // Note: We don't use currentWeekNumber from useQuarterWeekInfo because it's memoized
+  // based on year/quarter only, which means it doesn't update when crossing week boundaries.
+  // Instead, we get it from useCurrentWeekInfo which properly updates at midnight.
+  useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
+  const { weekday: currentDay, weekNumber: currentWeekNumber } = useCurrentWeekInfo();
 
   // State for dialogs
   const [isQuarterJumpOpen, setIsQuarterJumpOpen] = useState(false);
