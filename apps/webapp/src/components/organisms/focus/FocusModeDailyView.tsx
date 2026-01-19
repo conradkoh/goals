@@ -7,6 +7,7 @@ import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSectio
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
+import { QuarterlyGoalsQuickSection } from '@/components/organisms/focus/QuarterlyGoalsQuickSection';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
 import { useWeek, type WeekData, WeekProvider } from '@/hooks/useWeek';
@@ -172,6 +173,8 @@ const FocusModeDailyViewInner = ({
         />
 
         <AdhocGoalsSection year={year} weekNumber={weekNumber} variant="card" showHeader={true} />
+
+        <QuarterlyGoalsQuickSection showHeader={true} />
 
         <PendingGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}

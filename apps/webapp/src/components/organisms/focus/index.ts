@@ -5,3 +5,4 @@ export * from './FocusModeDailyViewDailyGoals';
 export * from './FocusModeQuarterlyView/FocusModeQuarterlyView';
 export * from './FocusModeQuarterlyView/FocusModeQuarterlyView';
 export * from './FocusModeWeeklyView';
+export * from './QuarterlyGoalsQuickSection';
