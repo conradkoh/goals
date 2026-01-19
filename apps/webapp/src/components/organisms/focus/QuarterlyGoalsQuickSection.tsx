@@ -54,7 +54,7 @@ export function QuarterlyGoalsQuickSection({ showHeader = true }: QuarterlyGoals
         return isStarred || isPinned;
       })
       .sort((a, b) => {
-        // Sort: starred first, then pinned, then by title
+        // Sort: starred first, then pinned, then by creation time (oldest first for stability)
         const aIsStarred = a.state?.isStarred ?? false;
         const aIsPinned = a.state?.isPinned ?? false;
         const bIsStarred = b.state?.isStarred ?? false;
