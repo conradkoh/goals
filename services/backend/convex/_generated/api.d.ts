@@ -18,6 +18,7 @@ import type * as cleanupTasks from "../cleanupTasks.js";
 import type * as crypto from "../crypto.js";
 import type * as dashboard from "../dashboard.js";
 import type * as discussions from "../discussions.js";
+import type * as documents from "../documents.js";
 import type * as domain from "../domain.js";
 import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   crypto: typeof crypto;
   dashboard: typeof dashboard;
   discussions: typeof discussions;
+  documents: typeof documents;
   domain: typeof domain;
   fireGoal: typeof fireGoal;
   goal: typeof goal;

@@ -1,7 +1,8 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Calendar, CheckSquare, Folder, Plus, Target } from 'lucide-react';
+import { Calendar, CheckSquare, FileText, Folder, Plus, Target } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -125,8 +126,18 @@ export function GoalSearchDialog({
   onNewAdhocGoal,
   isGoalModalOpen = false,
 }: GoalSearchDialogProps) {
+  const router = useRouter();
   const [searchValue, setSearchValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Navigates to the documents page.
+   * @internal
+   */
+  const handleDocumentsClick = useCallback(() => {
+    onOpenChange(false);
+    router.push('/app/documents');
+  }, [onOpenChange, router]);
 
   // Refocus search input when modal closes
   useEffect(() => {
@@ -358,30 +369,36 @@ export function GoalSearchDialog({
         <CommandEmpty>No goals found.</CommandEmpty>
 
         {/* Show Navigation Group */}
-        {(onJumpToQuarter || onNewAdhocGoal) && (
-          <CommandGroup heading="Navigation">
-            {onNewAdhocGoal && (
-              <CommandItem
-                value="new-adhoc-goal"
-                onSelect={handleNewAdhocGoalClick}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Adhoc Goal</span>
-              </CommandItem>
-            )}
-            {onJumpToQuarter && (
-              <CommandItem
-                value="jump-to-quarter"
-                onSelect={handleJumpToQuarterClick}
-                className="flex items-center gap-2"
-              >
-                <Calendar className="h-4 w-4" />
-                <span>Jump to quarter...</span>
-              </CommandItem>
-            )}
-          </CommandGroup>
-        )}
+        <CommandGroup heading="Navigation">
+          {onNewAdhocGoal && (
+            <CommandItem
+              value="new-adhoc-goal"
+              onSelect={handleNewAdhocGoalClick}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Adhoc Goal</span>
+            </CommandItem>
+          )}
+          {onJumpToQuarter && (
+            <CommandItem
+              value="jump-to-quarter"
+              onSelect={handleJumpToQuarterClick}
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              <span>Jump to quarter...</span>
+            </CommandItem>
+          )}
+          <CommandItem
+            value="documents"
+            onSelect={handleDocumentsClick}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            <span>Documents</span>
+          </CommandItem>
+        </CommandGroup>
 
         {/* Domains */}
         {domainItems.length > 0 && (
