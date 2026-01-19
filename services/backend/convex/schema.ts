@@ -401,4 +401,27 @@ export default defineSchema({
     .index('by_user_and_goal', ['userId', 'goalId'])
     .index('by_goal_and_date', ['goalId', 'logDate'])
     .index('by_root_goal_and_date', ['rootGoalId', 'logDate']),
+
+  // ============================================================================
+  // DOCUMENTS TABLE
+  // ============================================================================
+
+  /**
+   * Documents - user-created rich text documents.
+   * Supports HTML content from the RichTextEditor (Tiptap).
+   */
+  documents: defineTable({
+    // Ownership
+    userId: v.id('users'),
+
+    // Content
+    title: v.string(),
+    content: v.optional(v.string()), // HTML content from RichTextEditor
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_updated', ['userId', 'updatedAt']),
 });
