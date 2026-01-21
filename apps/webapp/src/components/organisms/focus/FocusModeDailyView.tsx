@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
+import { DomainsQuickSection } from '@/components/organisms/focus/DomainsQuickSection';
 import { FocusModeDailyViewDailyGoals } from '@/components/organisms/focus/FocusModeDailyViewDailyGoals';
 import { OnFireGoalsSection } from '@/components/organisms/focus/OnFireGoalsSection';
 import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSection';
@@ -172,9 +173,11 @@ const FocusModeDailyViewInner = ({
           isFocusModeEnabled={isFocusModeEnabled}
         />
 
-        <AdhocGoalsSection year={year} weekNumber={weekNumber} variant="card" showHeader={true} />
-
         <QuarterlyGoalsQuickSection showHeader={true} />
+
+        <DomainsQuickSection showHeader={true} year={year} weekNumber={weekNumber} />
+
+        <AdhocGoalsSection year={year} weekNumber={weekNumber} variant="card" showHeader={true} />
 
         <PendingGoalsSection
           weeklyGoalsWithQuarterly={weeklyGoalsWithQuarterly}
