@@ -131,10 +131,11 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
   }
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
-      {/* Header with view mode toggle - always reserve space for consistent layout */}
+    // flex-1 min-h-0 instead of h-full - works with flexbox parent that uses flex sizing, not fixed height
+    <div className={cn('flex flex-col flex-1 min-h-0', className)}>
+      {/* Header with view mode toggle - shrink-0 ensures it never compresses */}
       {hasCarryOverHistory && (
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border shrink-0">
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground">
               {showFullHistory
@@ -154,8 +155,8 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
         </div>
       )}
 
-      {/* Log list - scrollable area */}
-      <div className="flex-1 overflow-y-auto pr-2">
+      {/* Log list - scrollable area: flex-1 min-h-0 takes remaining space and enables scrolling */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-2">
         {editingLog ? (
           <GoalLogEditForm
             log={editingLog}
@@ -173,15 +174,16 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
         )}
       </div>
 
-      {/* Create form - fixed at bottom */}
+      {/* Create form - fixed at bottom: shrink-0 ensures it never compresses */}
       {!editingLog && (
-        <GoalLogCreateForm
-          onSubmit={handleCreateLog}
-          isSubmitting={isCreating}
-          onExpandedChange={setIsCreateFormExpanded}
-          disabled={showFullHistory}
-          className="mt-4"
-        />
+        <div className="shrink-0 mt-4">
+          <GoalLogCreateForm
+            onSubmit={handleCreateLog}
+            isSubmitting={isCreating}
+            onExpandedChange={setIsCreateFormExpanded}
+            disabled={showFullHistory}
+          />
+        </div>
       )}
     </div>
   );

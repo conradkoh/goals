@@ -179,13 +179,15 @@ function WeeklyGoalPopoverContentInner({
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
       {/* Tabs for Details and Log */}
-      <Tabs defaultValue="details" className="mt-4">
+      {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
+      <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="log">Log</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details" className="mt-4">
+        {/* overflow-y-auto allows Details content to scroll if it overflows */}
+        <TabsContent value="details" className="mt-4 overflow-y-auto">
           {goal.details && (
             <GoalDetailsSection
               title={goal.title}
@@ -235,7 +237,8 @@ function WeeklyGoalPopoverContentInner({
           />
         </TabsContent>
 
-        <TabsContent value="log" className="mt-4">
+        {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
+        <TabsContent value="log" className="mt-4 flex flex-col">
           <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
         </TabsContent>
       </Tabs>

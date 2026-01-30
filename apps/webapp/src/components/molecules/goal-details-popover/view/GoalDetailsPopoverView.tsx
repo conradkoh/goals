@@ -160,14 +160,21 @@ export function GoalDetailsPopoverView({
       </span>
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent
-          className={cn(`w-[${width}] max-w-[calc(100vw-32px)] p-5`, contentClassName)}
+          className={cn(
+            `w-[${width}] max-w-[calc(100vw-32px)]`,
+            // Fixed height (h-*) not max-height - establishes the height context for flexbox children
+            'h-[min(600px,90vh)]',
+            'overflow-hidden flex flex-col p-5',
+            contentClassName
+          )}
           style={{ width }}
           onEscapeKeyDown={onEscapeKeyDown}
         >
-          <DialogHeader>
+          <DialogHeader className="shrink-0">
             <DialogTitle className="sr-only">Goal Details</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">{children}</div>
+          {/* Content wrapper: flex-1 min-h-0 takes remaining space, can shrink */}
+          <div className="flex flex-col gap-3 flex-1 min-h-0">{children}</div>
         </DialogContent>
       </Dialog>
     </>

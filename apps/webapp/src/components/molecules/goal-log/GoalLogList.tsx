@@ -113,7 +113,7 @@ export function GoalLogList({
       {groupedLogs.map((group) => (
         <div key={group.date} className="space-y-1.5">
           {/* Day header */}
-          <div className="flex items-center gap-2 sticky top-0 bg-background/95 backdrop-blur-sm py-1 -mx-1 px-1 z-10">
+          <div className="flex items-center gap-2 sticky top-0 bg-background/95 backdrop-blur-sm py-1 z-10">
             <CalendarIcon className="h-4 w-4 text-primary" />
             <h4 className="text-sm font-semibold text-foreground">{group.dateLabel}</h4>
             <span className="text-xs text-muted-foreground">
