@@ -168,16 +168,24 @@ export const MultiWeekLayout = memo(() => {
 
   // Drag state management
   const [activeDragData, setActiveDragData] = useState<WeeklyGoalDragData | null>(null);
+  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
 
   /**
    * Handle drag start - store the dragged item data
+   * Don't allow starting a new drag while processing a previous drop
    */
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    if (active.data.current && isWeeklyGoalDrag(active.data.current)) {
-      setActiveDragData(active.data.current);
-    }
-  }, []);
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      if (isProcessingDrop) {
+        return;
+      }
+      const { active } = event;
+      if (active.data.current && isWeeklyGoalDrag(active.data.current)) {
+        setActiveDragData(active.data.current);
+      }
+    },
+    [isProcessingDrop]
+  );
 
   /**
    * Handle moving a weekly goal to a different week
@@ -202,6 +210,7 @@ export const MultiWeekLayout = memo(() => {
         return;
       }
 
+      setIsProcessingDrop(true);
       try {
         await moveWeeklyGoalMutation({
           sessionId,
@@ -229,6 +238,8 @@ export const MultiWeekLayout = memo(() => {
           description: error instanceof Error ? error.message : 'An error occurred',
           variant: 'destructive',
         });
+      } finally {
+        setIsProcessingDrop(false);
       }
     },
     [sessionId, moveWeeklyGoalMutation]
@@ -253,6 +264,7 @@ export const MultiWeekLayout = memo(() => {
         return;
       }
 
+      setIsProcessingDrop(true);
       try {
         await updateGoalParentMutation({
           sessionId,
@@ -271,6 +283,8 @@ export const MultiWeekLayout = memo(() => {
           description: error instanceof Error ? error.message : 'An error occurred',
           variant: 'destructive',
         });
+      } finally {
+        setIsProcessingDrop(false);
       }
     },
     [sessionId, updateGoalParentMutation]
