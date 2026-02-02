@@ -49,7 +49,7 @@ export function DroppableWeekColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        'transition-colors duration-200',
+        'h-full transition-colors duration-200',
         showDropHighlight && 'ring-2 ring-primary ring-offset-2 bg-primary/5',
         className
       )}
