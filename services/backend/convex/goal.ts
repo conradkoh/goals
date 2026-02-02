@@ -2204,6 +2204,142 @@ export const moveWeeklyGoalToWeek = mutation({
   },
 });
 
+/**
+ * Result type for updateGoalParent mutation.
+ */
+export type UpdateGoalParentResult = {
+  success: boolean;
+  error?: string;
+};
+
+/**
+ * Updates the parent of a goal (reparenting).
+ * Used to move a weekly goal to a different quarterly goal.
+ * The goal remains in the same year/quarter but changes its parent hierarchy.
+ *
+ * @param ctx - Convex mutation context
+ * @param args - Mutation arguments containing session, goal ID, and new parent ID
+ * @returns Promise resolving to update result
+ *
+ * @example
+ * ```typescript
+ * const result = await updateGoalParent(ctx, {
+ *   sessionId: "session123",
+ *   goalId: "weekly-goal-456",
+ *   newParentId: "quarterly-goal-789"
+ * });
+ * // Returns: { success: true }
+ * ```
+ */
+export const updateGoalParent = mutation({
+  args: {
+    ...SessionIdArg,
+    goalId: v.id('goals'),
+    newParentId: v.id('goals'),
+  },
+  handler: async (ctx, args): Promise<UpdateGoalParentResult> => {
+    const { sessionId, goalId, newParentId } = args;
+
+    // Auth check
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get the goal to reparent
+    const goal = await ctx.db.get('goals', goalId);
+    if (!goal) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'Goal not found',
+      });
+    }
+
+    // Verify ownership
+    if (goal.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to modify this goal',
+      });
+    }
+
+    // Get the new parent goal
+    const newParent = await ctx.db.get('goals', newParentId);
+    if (!newParent) {
+      throw new ConvexError({
+        code: 'NOT_FOUND',
+        message: 'New parent goal not found',
+      });
+    }
+
+    // Verify new parent ownership
+    if (newParent.userId !== userId) {
+      throw new ConvexError({
+        code: 'UNAUTHORIZED',
+        message: 'You do not have permission to reparent to this goal',
+      });
+    }
+
+    // Verify the goal is a weekly goal (depth 1)
+    if (goal.depth !== 1) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Only weekly goals can be reparented to a different quarterly goal',
+      });
+    }
+
+    // Verify the new parent is a quarterly goal (depth 0)
+    if (newParent.depth !== 0) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Goals can only be reparented to quarterly goals',
+      });
+    }
+
+    // Verify same year and quarter
+    if (goal.year !== newParent.year || goal.quarter !== newParent.quarter) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'Goal and new parent must be in the same year and quarter',
+      });
+    }
+
+    // Don't allow reparenting to the same parent
+    if (goal.parentId === newParentId) {
+      return { success: true }; // No-op, already has this parent
+    }
+
+    // Calculate new inPath based on new parent
+    const newInPath = joinPath(newParent.inPath, newParentId);
+
+    // Update the goal with new parent and path
+    await ctx.db.patch('goals', goalId, {
+      parentId: newParentId,
+      inPath: newInPath,
+    });
+
+    // Also update any child goals (daily goals under this weekly goal)
+    const childGoals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_year_and_quarter_and_parent', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', goal.year)
+          .eq('quarter', goal.quarter)
+          .eq('parentId', goalId)
+      )
+      .collect();
+
+    // Update children's inPath to reflect new hierarchy
+    for (const child of childGoals) {
+      const childNewInPath = joinPath(newInPath, goalId);
+      await ctx.db.patch('goals', child._id, {
+        inPath: childNewInPath,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
 // ============================================================================
 // INTERNAL QUERIES (for actions that need to look up data)
 // ============================================================================

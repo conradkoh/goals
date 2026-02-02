@@ -17,8 +17,10 @@ import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
 import { DroppableWeekColumn } from '../dnd/DroppableWeekColumn';
 import {
+  isQuarterlyGoalDrop,
   isWeekColumnDrop,
   isWeeklyGoalDrag,
+  type QuarterlyGoalDropData,
   type WeekColumnDropData,
   type WeeklyGoalDragData,
 } from '../dnd/types';
@@ -132,6 +134,7 @@ export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
   const { sessionId } = useSession();
   const moveWeeklyGoalMutation = useMutation(api.goal.moveWeeklyGoalToWeek);
+  const updateGoalParentMutation = useMutation(api.goal.updateGoalParent);
 
   // Get the current week/year/quarter info using our optimized hook
   // Use ISO week year and week-based quarter for consistency
@@ -232,6 +235,48 @@ export const MultiWeekLayout = memo(() => {
   );
 
   /**
+   * Handle reparenting a weekly goal to a different quarterly goal
+   */
+  const handleReparentGoal = useCallback(
+    async (dragData: WeeklyGoalDragData, dropData: QuarterlyGoalDropData) => {
+      // Don't reparent to the same parent
+      if (dragData.parentId === dropData.quarterlyGoalId) {
+        return;
+      }
+
+      if (!sessionId) {
+        toast({
+          title: 'Not authenticated',
+          description: 'Please log in to reparent goals',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      try {
+        await updateGoalParentMutation({
+          sessionId,
+          goalId: dragData.goalId,
+          newParentId: dropData.quarterlyGoalId,
+        });
+
+        toast({
+          title: 'Goal reparented',
+          description: `"${dragData.goalTitle}" moved under "${dropData.quarterlyGoalTitle}"`,
+        });
+      } catch (error) {
+        console.error('[DnD] Failed to reparent goal:', error);
+        toast({
+          title: 'Failed to reparent goal',
+          description: error instanceof Error ? error.message : 'An error occurred',
+          variant: 'destructive',
+        });
+      }
+    },
+    [sessionId, updateGoalParentMutation]
+  );
+
+  /**
    * Handle drag end - process the drop
    */
   const handleDragEnd = useCallback(
@@ -261,9 +306,16 @@ export const MultiWeekLayout = memo(() => {
       // Handle week column drops (week-to-week movement)
       if (isWeekColumnDrop(dropData)) {
         void handleMoveGoalToWeek(dragData, dropData);
+        return;
+      }
+
+      // Handle quarterly goal drops (reparenting)
+      if (isQuarterlyGoalDrop(dropData)) {
+        void handleReparentGoal(dragData, dropData);
+        return;
       }
     },
-    [handleMoveGoalToWeek]
+    [handleMoveGoalToWeek, handleReparentGoal]
   );
 
   /**
