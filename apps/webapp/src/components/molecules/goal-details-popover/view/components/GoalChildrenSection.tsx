@@ -50,7 +50,7 @@ export function GoalChildrenSection({
       {showSeparator && <Separator className="my-2" />}
       <div className="pt-1 space-y-3">
         {childrenList}
-        {createInput && <div className="pl-4 pt-1">{createInput}</div>}
+        {createInput && <div className="pl-4 pt-1 pb-2">{createInput}</div>}
       </div>
     </>
   );
