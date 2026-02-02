@@ -1,3 +1,5 @@
+import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
+import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -7,29 +9,36 @@ import {
   type GoalSearchItem,
 } from './useGoalFuzzySearch';
 
-// Mock goal structure matching GoalWithDetailsAndChildren
+// Mock goal structure - creates a minimal mock that satisfies the search requirements
+// Uses `as unknown as` pattern for type testing with incomplete mock data
 const createMockGoal = (overrides: {
   _id: string;
   title: string;
   parent?: { _id: string; title: string };
   depth?: number;
-}) => ({
-  _id: overrides._id,
-  title: overrides.title,
-  depth: overrides.depth ?? 1,
-  parent: overrides.parent ?? null,
-  isCompleted: false,
-  children: [],
-});
+}): GoalWithDetailsAndChildren =>
+  ({
+    _id: overrides._id,
+    title: overrides.title,
+    depth: overrides.depth ?? 1,
+    parent: overrides.parent ?? null,
+    isCompleted: false,
+    children: [],
+  }) as unknown as GoalWithDetailsAndChildren;
 
 // Mock adhoc goal structure
-const createMockAdhocGoal = (overrides: { _id: string; title: string; domainName?: string }) => ({
-  _id: overrides._id,
-  title: overrides.title,
-  domainName: overrides.domainName,
-  isCompleted: false,
-  children: [],
-});
+const createMockAdhocGoal = (overrides: {
+  _id: string;
+  title: string;
+  domainName?: string;
+}): AdhocGoalWithChildren =>
+  ({
+    _id: overrides._id,
+    title: overrides.title,
+    domainName: overrides.domainName,
+    isCompleted: false,
+    children: [],
+  }) as unknown as AdhocGoalWithChildren;
 
 describe('Goal Fuzzy Search Adapter', () => {
   describe('createGoalSearchItem', () => {

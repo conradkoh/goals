@@ -79,7 +79,7 @@ export function createGoalSearchItem(
     typeof goal.parent === 'object' &&
     'title' in goal.parent
   ) {
-    item.parentTitle = goal.parent.title;
+    item.parentTitle = (goal.parent as { title: string }).title;
   }
 
   // Attach the original goal or adhoc goal
