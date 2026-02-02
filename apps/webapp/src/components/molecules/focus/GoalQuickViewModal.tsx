@@ -1,10 +1,13 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
-import { useCallback } from 'react';
+import { DateTime } from 'luxon';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalChildrenSection,
   GoalCompletionDate,
+  GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
   GoalDueDateDisplay,
@@ -14,15 +17,24 @@ import {
   useGoalEditContext,
 } from '../goal-details-popover/view/components';
 
+import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
+import { DayOfWeek, getDayName } from '@/lib/constants';
 
 /**
  * Props for the GoalQuickViewModal component.
@@ -90,9 +102,25 @@ function GoalQuickViewContentInternal({
 }) {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
-  const { weekNumber } = useWeek();
+  const { weekNumber, year, createWeeklyGoalOptimistic, createDailyGoalOptimistic } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const isComplete = goal.isComplete;
+
+  // State for creating child goals
+  const [newChildGoalTitle, setNewChildGoalTitle] = useState('');
+
+  // For daily goals, we need day selection (default to current day)
+  const currentWeekday = useMemo(() => {
+    const now = DateTime.local();
+    const day = now.weekday as DayOfWeek;
+    return day;
+  }, []);
+  const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<DayOfWeek>(currentWeekday);
+
+  // Determine goal type and whether it can have children
+  const isQuarterlyGoal = goal.depth === 0;
+  const isWeeklyGoal = goal.depth === 1;
+  const hasChildren = goal.children && goal.children.length > 0;
 
   const handleSave = useCallback(
     async (title: string, details?: string, dueDate?: number) => {
@@ -121,6 +149,49 @@ function GoalQuickViewContentInternal({
     },
     [goal.title, goal.dueDate, handleSave]
   );
+
+  // Handler for creating weekly goals (from quarterly goal)
+  const handleCreateWeeklyGoal = useCallback(async () => {
+    const trimmedTitle = newChildGoalTitle.trim();
+    if (trimmedTitle && isQuarterlyGoal) {
+      try {
+        setNewChildGoalTitle('');
+        await createWeeklyGoalOptimistic(goal._id, trimmedTitle);
+      } catch (error) {
+        console.error('Failed to create weekly goal:', error);
+        setNewChildGoalTitle(trimmedTitle);
+      }
+    }
+  }, [newChildGoalTitle, goal._id, isQuarterlyGoal, createWeeklyGoalOptimistic]);
+
+  // Handler for creating daily goals (from weekly goal)
+  const handleCreateDailyGoal = useCallback(async () => {
+    const trimmedTitle = newChildGoalTitle.trim();
+    if (trimmedTitle && isWeeklyGoal) {
+      try {
+        setNewChildGoalTitle('');
+        // Calculate the date timestamp for the selected day
+        const dateTimestamp = DateTime.local()
+          .set({ weekYear: year, weekNumber: weekNumber })
+          .startOf('week')
+          .plus({ days: selectedDayOfWeek - 1 })
+          .toMillis();
+
+        await createDailyGoalOptimistic(goal._id, trimmedTitle, selectedDayOfWeek, dateTimestamp);
+      } catch (error) {
+        console.error('Failed to create daily goal:', error);
+        setNewChildGoalTitle(trimmedTitle);
+      }
+    }
+  }, [
+    newChildGoalTitle,
+    goal._id,
+    isWeeklyGoal,
+    selectedDayOfWeek,
+    weekNumber,
+    year,
+    createDailyGoalOptimistic,
+  ]);
 
   return (
     <>
@@ -157,6 +228,70 @@ function GoalQuickViewContentInternal({
                   details={goal.details}
                   onDetailsChange={handleDetailsChange}
                   showSeparator={false}
+                />
+              )}
+
+              {/* Weekly Goals section for quarterly goals */}
+              {isQuarterlyGoal && (
+                <GoalChildrenSection
+                  title="Weekly Goals"
+                  childrenList={
+                    hasChildren ? (
+                      <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
+                    ) : undefined
+                  }
+                  createInput={
+                    <CreateGoalInput
+                      placeholder="Add a new weekly goal..."
+                      value={newChildGoalTitle}
+                      onChange={setNewChildGoalTitle}
+                      onSubmit={handleCreateWeeklyGoal}
+                      onEscape={() => setNewChildGoalTitle('')}
+                    />
+                  }
+                  showSeparator={!!goal.details}
+                />
+              )}
+
+              {/* Daily Goals section for weekly goals */}
+              {isWeeklyGoal && (
+                <GoalChildrenSection
+                  title="Daily Goals"
+                  childrenList={
+                    hasChildren ? (
+                      <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
+                    ) : undefined
+                  }
+                  createInput={
+                    <CreateGoalInput
+                      placeholder="Add a new daily goal..."
+                      value={newChildGoalTitle}
+                      onChange={setNewChildGoalTitle}
+                      onSubmit={handleCreateDailyGoal}
+                      onEscape={() => setNewChildGoalTitle('')}
+                    >
+                      <div className="mt-2">
+                        <Select
+                          value={selectedDayOfWeek.toString()}
+                          onValueChange={(value) =>
+                            setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
+                          }
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Select day" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(DayOfWeek).map((value) => (
+                              <SelectItem key={value} value={value.toString()}>
+                                {getDayName(value)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CreateGoalInput>
+                  }
+                  showSeparator={!!goal.details}
                 />
               )}
             </TabsContent>
