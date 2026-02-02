@@ -6,6 +6,7 @@ import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { DraggableWeeklyGoal } from '../molecules/dnd/DraggableWeeklyGoal';
 
 import { FireIcon } from '@/components/atoms/FireIcon';
 import {
@@ -236,7 +237,7 @@ const WeeklyGoalGroup = ({
   const [isHovering, setIsHovering] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
-  const { createWeeklyGoalOptimistic } = useWeek();
+  const { createWeeklyGoalOptimistic, year, quarter, weekNumber } = useWeek();
 
   const handleSubmit = async () => {
     const trimmedTitle = newGoalTitle.trim();
@@ -268,14 +269,29 @@ const WeeklyGoalGroup = ({
     setPreviousTitle(''); // Clear the stored title
   };
 
+  // Source week info for drag-and-drop
+  const sourceWeek = useMemo(() => ({ year, quarter, weekNumber }), [year, quarter, weekNumber]);
+
   return (
     <div className="space-y-1">
-      {weeklyGoals.map((weeklyGoal) => (
-        <GoalProvider key={weeklyGoal._id} goal={weeklyGoal}>
-          {/* WeeklyGoal gets goal from context */}
-          <WeeklyGoal onUpdateGoal={onUpdateGoal} />
-        </GoalProvider>
-      ))}
+      {weeklyGoals.map((weeklyGoal) => {
+        // Check if goal is optimistic (being created)
+        const isOptimistic = 'isOptimistic' in weeklyGoal && weeklyGoal.isOptimistic;
+
+        return (
+          <GoalProvider key={weeklyGoal._id} goal={weeklyGoal}>
+            <DraggableWeeklyGoal
+              goal={weeklyGoal}
+              sourceWeek={sourceWeek}
+              parentId={quarterlyGoal._id}
+              disabled={isOptimistic}
+            >
+              {/* WeeklyGoal gets goal from context */}
+              <WeeklyGoal onUpdateGoal={onUpdateGoal} />
+            </DraggableWeeklyGoal>
+          </GoalProvider>
+        );
+      })}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         className="px-2 py-1"

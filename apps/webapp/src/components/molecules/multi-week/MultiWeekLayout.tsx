@@ -1,10 +1,20 @@
-import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { DateTime } from 'luxon';
 import type React from 'react';
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
+import { DroppableWeekColumn } from '../dnd/DroppableWeekColumn';
+import { isWeeklyGoalDrag, type WeeklyGoalDragData } from '../dnd/types';
 import { WeekCard } from '../week/WeekCard';
 
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
@@ -142,9 +152,69 @@ export const MultiWeekLayout = memo(() => {
   });
   const sensors = useSensors(mouseSensor);
 
+  // Drag state management
+  const [activeDragData, setActiveDragData] = useState<WeeklyGoalDragData | null>(null);
+
+  /**
+   * Handle drag start - store the dragged item data
+   */
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event;
+    if (active.data.current && isWeeklyGoalDrag(active.data.current)) {
+      setActiveDragData(active.data.current);
+    }
+  }, []);
+
+  /**
+   * Handle drag end - process the drop
+   */
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // Reset drag state
+    setActiveDragData(null);
+
+    // If no drop target, cancel
+    if (!over) {
+      return;
+    }
+
+    // Get drag data
+    const dragData = active.data.current;
+    if (!dragData || !isWeeklyGoalDrag(dragData)) {
+      return;
+    }
+
+    // Get drop data
+    const dropData = over.data.current;
+    if (!dropData) {
+      return;
+    }
+
+    // Log for debugging (Phase 1 - will be replaced with actual mutations in Phase 2)
+    console.log('[DnD] Drag ended', {
+      dragData,
+      dropData,
+      from: `Week ${dragData.sourceWeek.weekNumber}`,
+      to: over.id,
+    });
+  }, []);
+
+  /**
+   * Handle drag cancel - reset state
+   */
+  const handleDragCancel = useCallback(() => {
+    setActiveDragData(null);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
-      <DndContext sensors={sensors}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <MultiWeekGrid currentIndex={currentIndex} numItems={weeks.length}>
           {weeks.map((week) => {
             // Compare using ISO week year and week-based quarter
@@ -154,14 +224,26 @@ export const MultiWeekLayout = memo(() => {
               week.quarter === currentQuarter;
 
             return (
-              <WeekCardContent
+              <DroppableWeekColumn
                 key={`${week.year}-${week.quarter}-${week.weekNumber}`}
-                week={week}
-                isCurrentWeek={isCurrentWeek}
-              />
+                year={week.year}
+                quarter={week.quarter}
+                weekNumber={week.weekNumber}
+              >
+                <WeekCardContent week={week} isCurrentWeek={isCurrentWeek} />
+              </DroppableWeekColumn>
             );
           })}
         </MultiWeekGrid>
+
+        {/* Drag overlay - shows the dragged item while dragging */}
+        <DragOverlay>
+          {activeDragData && (
+            <div className="bg-card border border-border shadow-lg rounded-md px-3 py-2 opacity-90">
+              <span className="text-sm font-medium">{activeDragData.goalTitle}</span>
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
     </div>
   );
