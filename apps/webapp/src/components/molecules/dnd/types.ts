@@ -42,15 +42,25 @@ export type DropData = WeekColumnDropData | QuarterlyGoalDropData;
 /**
  * Type guard to check if data is a week column drop.
  */
-export function isWeekColumnDrop(data: DropData): data is WeekColumnDropData {
-  return data.type === 'week-column';
+export function isWeekColumnDrop(data: unknown): data is WeekColumnDropData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    (data as WeekColumnDropData).type === 'week-column'
+  );
 }
 
 /**
  * Type guard to check if data is a quarterly goal drop.
  */
-export function isQuarterlyGoalDrop(data: DropData): data is QuarterlyGoalDropData {
-  return data.type === 'quarterly-goal';
+export function isQuarterlyGoalDrop(data: unknown): data is QuarterlyGoalDropData {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'type' in data &&
+    (data as QuarterlyGoalDropData).type === 'quarterly-goal'
+  );
 }
 
 /**

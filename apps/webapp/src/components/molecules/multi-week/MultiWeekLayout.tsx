@@ -7,6 +7,8 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
+import { api } from '@workspace/backend/convex/_generated/api';
+import { useMutation } from 'convex/react';
 import { DateTime } from 'luxon';
 import type React from 'react';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -14,15 +16,22 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
 import { DroppableWeekColumn } from '../dnd/DroppableWeekColumn';
-import { isWeeklyGoalDrag, type WeeklyGoalDragData } from '../dnd/types';
+import {
+  isWeekColumnDrop,
+  isWeeklyGoalDrag,
+  type WeekColumnDropData,
+  type WeeklyGoalDragData,
+} from '../dnd/types';
 import { WeekCard } from '../week/WeekCard';
 
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
+import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { useWeekData, type WeekData } from '@/hooks/useWeek';
+import { useSession } from '@/modules/auth/useSession';
 
 // Week card content component
 const WeekCardContent = ({
@@ -121,6 +130,8 @@ WeekCardContent.displayName = 'WeekCardContent';
 
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
+  const { sessionId } = useSession();
+  const moveWeeklyGoalMutation = useMutation(api.goal.moveWeeklyGoalToWeek);
 
   // Get the current week/year/quarter info using our optimized hook
   // Use ISO week year and week-based quarter for consistency
@@ -166,39 +177,94 @@ export const MultiWeekLayout = memo(() => {
   }, []);
 
   /**
+   * Handle moving a weekly goal to a different week
+   */
+  const handleMoveGoalToWeek = useCallback(
+    async (dragData: WeeklyGoalDragData, dropData: WeekColumnDropData) => {
+      // Don't move if same week
+      if (
+        dragData.sourceWeek.weekNumber === dropData.weekNumber &&
+        dragData.sourceWeek.year === dropData.year &&
+        dragData.sourceWeek.quarter === dropData.quarter
+      ) {
+        return;
+      }
+
+      if (!sessionId) {
+        toast({
+          title: 'Not authenticated',
+          description: 'Please log in to move goals',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      try {
+        await moveWeeklyGoalMutation({
+          sessionId,
+          goalId: dragData.goalId,
+          currentWeek: {
+            year: dragData.sourceWeek.year,
+            quarter: dragData.sourceWeek.quarter,
+            weekNumber: dragData.sourceWeek.weekNumber,
+          },
+          targetWeek: {
+            year: dropData.year,
+            quarter: dropData.quarter,
+            weekNumber: dropData.weekNumber,
+          },
+        });
+
+        toast({
+          title: 'Goal moved',
+          description: `"${dragData.goalTitle}" moved to Week ${dropData.weekNumber}`,
+        });
+      } catch (error) {
+        console.error('[DnD] Failed to move goal:', error);
+        toast({
+          title: 'Failed to move goal',
+          description: error instanceof Error ? error.message : 'An error occurred',
+          variant: 'destructive',
+        });
+      }
+    },
+    [sessionId, moveWeeklyGoalMutation]
+  );
+
+  /**
    * Handle drag end - process the drop
    */
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    // Reset drag state
-    setActiveDragData(null);
+      // Reset drag state
+      setActiveDragData(null);
 
-    // If no drop target, cancel
-    if (!over) {
-      return;
-    }
+      // If no drop target, cancel
+      if (!over) {
+        return;
+      }
 
-    // Get drag data
-    const dragData = active.data.current;
-    if (!dragData || !isWeeklyGoalDrag(dragData)) {
-      return;
-    }
+      // Get drag data
+      const dragData = active.data.current;
+      if (!dragData || !isWeeklyGoalDrag(dragData)) {
+        return;
+      }
 
-    // Get drop data
-    const dropData = over.data.current;
-    if (!dropData) {
-      return;
-    }
+      // Get drop data
+      const dropData = over.data.current;
+      if (!dropData) {
+        return;
+      }
 
-    // Log for debugging (Phase 1 - will be replaced with actual mutations in Phase 2)
-    console.log('[DnD] Drag ended', {
-      dragData,
-      dropData,
-      from: `Week ${dragData.sourceWeek.weekNumber}`,
-      to: over.id,
-    });
-  }, []);
+      // Handle week column drops (week-to-week movement)
+      if (isWeekColumnDrop(dropData)) {
+        void handleMoveGoalToWeek(dragData, dropData);
+      }
+    },
+    [handleMoveGoalToWeek]
+  );
 
   /**
    * Handle drag cancel - reset state
