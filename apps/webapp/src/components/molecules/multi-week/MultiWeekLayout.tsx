@@ -369,7 +369,8 @@ export const MultiWeekLayout = memo(() => {
         </MultiWeekGrid>
 
         {/* Drag overlay - shows the dragged item while dragging */}
-        <DragOverlay>
+        {/* dropAnimation={null} prevents the "fly back" animation on drop */}
+        <DragOverlay dropAnimation={null}>
           {activeDragData && (
             <div className="bg-card border border-border shadow-lg rounded-md px-3 py-2 opacity-90">
               <span className="text-sm font-medium">{activeDragData.goalTitle}</span>
