@@ -66,7 +66,7 @@ export function DraggableWeeklyGoal({
     <div
       ref={setNodeRef}
       style={style}
-      className={cn('flex items-center gap-1', isDragging && 'opacity-50 z-50', className)}
+      className={cn('group flex items-center gap-1', isDragging && 'opacity-50 z-50', className)}
     >
       <DragHandle
         attributes={attributes}
