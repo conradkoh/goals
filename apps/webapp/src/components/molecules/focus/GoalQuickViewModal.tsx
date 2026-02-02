@@ -59,17 +59,29 @@ export interface GoalQuickViewModalProps {
  * - Close this modal and continue searching (press Escape)
  * - Open other goals without reopening the search dialog
  * - Reference multiple goals in quick succession
+ *
+ * Note: This modal looks up fresh goal data from WeekContext to ensure
+ * optimistic updates and new children are reflected in real-time.
  */
 export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQuickViewModalProps) {
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { quarterlyGoals, weeklyGoals, dailyGoals } = useWeek();
 
-  if (!goal && !goalId) {
-    return null;
-  }
+  // Look up fresh goal data from WeekContext by ID
+  // This ensures we get the latest data including optimistic children
+  const goalIdToLookup = goalId ?? goal?._id;
+  const freshGoal = useMemo(() => {
+    if (!goalIdToLookup) return null;
 
-  // If we only have goalId, we would need to fetch the goal
-  // For now, we require the full goal object
-  if (!goal) {
+    // Search in all goal types
+    const allContextGoals = [...quarterlyGoals, ...weeklyGoals, ...dailyGoals];
+    return allContextGoals.find((g) => g._id === goalIdToLookup) ?? null;
+  }, [goalIdToLookup, quarterlyGoals, weeklyGoals, dailyGoals]);
+
+  // Use fresh goal from context, fallback to prop for initial render
+  const goalToDisplay = freshGoal ?? goal;
+
+  if (!goalToDisplay) {
     return null;
   }
 
@@ -79,7 +91,7 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
         className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
         onEscapeKeyDown={handleEscapeKeyDown}
       >
-        <GoalProvider goal={goal}>
+        <GoalProvider goal={goalToDisplay}>
           <GoalEditProvider>
             <GoalDisplayProvider>
               <GoalQuickViewContentInternal onNestedActiveChange={handleNestedActiveChange} />
