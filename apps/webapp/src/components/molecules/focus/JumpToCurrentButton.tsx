@@ -1,4 +1,5 @@
 import { CalendarClock } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
@@ -63,6 +64,9 @@ export const JumpToCurrentButton = ({
   const currentWeekNumber = currentDateInfo.weekNumber;
   const currentDay = currentDateInfo.weekday;
 
+  // Track if navigation is pending (button clicked but URL params not yet updated)
+  const [isPending, setIsPending] = useState(false);
+
   // Check if we're already viewing today (same ISO week year, week-based quarter, week, AND day)
   const isViewingToday =
     year === currentYear &&
@@ -70,12 +74,41 @@ export const JumpToCurrentButton = ({
     selectedWeek === currentWeekNumber &&
     selectedDay === currentDay;
 
-  // Don't show the button if we're already viewing today
-  if (isViewingToday) {
+  // Reset pending state when props change to values different from target
+  // This handles cases where user navigates away after clicking the button
+  useEffect(() => {
+    if (isPending && !isViewingToday) {
+      // Check if we've reached the target destination
+      const reachedTarget =
+        year === currentYear &&
+        quarter === currentQuarter &&
+        selectedWeek === currentWeekNumber &&
+        selectedDay === currentDay;
+
+      if (reachedTarget) {
+        setIsPending(false);
+      }
+    }
+  }, [
+    isPending,
+    isViewingToday,
+    year,
+    quarter,
+    selectedWeek,
+    selectedDay,
+    currentYear,
+    currentQuarter,
+    currentWeekNumber,
+    currentDay,
+  ]);
+
+  // Don't show the button if we're already viewing today or navigation is pending
+  if (isViewingToday || isPending) {
     return null;
   }
 
   const handleJumpToToday = () => {
+    setIsPending(true);
     onJumpToToday(currentYear, currentQuarter, currentWeekNumber, currentDay);
   };
 
