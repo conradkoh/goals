@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 
+import { DashboardProvider } from '@/hooks/useDashboard';
 import { AuthErrorBoundary } from '@/modules/auth/AuthErrorBoundary';
 import { RequireLogin } from '@/modules/auth/RequireLogin';
 
@@ -40,7 +41,9 @@ export default function AppLayout({
   return (
     <RequireLogin>
       <AuthErrorBoundary>
-        <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+        <DashboardProvider>
+          <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+        </DashboardProvider>
       </AuthErrorBoundary>
     </RequireLogin>
   );
