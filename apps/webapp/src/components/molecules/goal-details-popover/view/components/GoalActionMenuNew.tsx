@@ -350,6 +350,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
         onConfirm={handleMoveConfirm}
         moveMode={moveModalState.goal ? getMoveMode(moveModalState.goal) : 'move_all'}
         isSubmitting={isSubmitting}
+        currentWeekNumber={weekNumber}
       />
 
       {/* Pending Status Dialog (controlled mode) */}
