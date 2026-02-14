@@ -36,7 +36,6 @@ type FocusModeDailyViewInnerProps = Omit<FocusModeDailyViewProps, 'weekData'>;
 // It gets goal data from useWeek() context which includes optimistic updates
 const FocusModeDailyViewInner = ({
   year,
-  quarter,
   weekNumber,
   selectedDayOfWeek,
   onJumpToCurrent,
@@ -156,13 +155,7 @@ const FocusModeDailyViewInner = ({
     <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={handleDeleteGoal}>
       <div className="bg-card rounded-lg shadow-sm p-4">
         <div className="flex justify-end mb-4 gap-2">
-          <JumpToCurrentButton
-            year={year}
-            quarter={quarter}
-            selectedWeek={weekNumber}
-            selectedDay={selectedDayOfWeek}
-            onJumpToToday={onJumpToCurrent}
-          />
+          <JumpToCurrentButton onJumpToToday={onJumpToCurrent} />
         </div>
 
         <OnFireGoalsSection
