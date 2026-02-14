@@ -330,15 +330,16 @@ function AdhocGoalQuickViewContent({
             title={goal.title}
             isComplete={isComplete}
             onToggleComplete={handleToggleComplete}
-            statusControls={
-              <GoalStatusIcons
-                goalId={goal._id}
-                showBacklog
+            statusControls={<GoalStatusIcons goalId={goal._id} />}
+            actionMenu={
+              <GoalActionMenuNew
+                onSave={handleSave}
+                isQuarterlyGoal={false}
+                isAdhocGoal={true}
                 isBacklog={adhocGoalProp.isBacklog || false}
                 onToggleBacklog={handleToggleBacklog}
               />
             }
-            actionMenu={<GoalActionMenuNew onSave={handleSave} isQuarterlyGoal={false} />}
           />
 
           {adhocGoalProp.domain && (

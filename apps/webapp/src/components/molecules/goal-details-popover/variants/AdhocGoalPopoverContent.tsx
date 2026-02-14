@@ -253,15 +253,16 @@ function AdhocGoalPopoverContentInner({
           title={goal.title}
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
-          actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
-          statusControls={
-            <GoalStatusIcons
-              goalId={goal._id}
-              showBacklog
+          actionMenu={
+            <GoalActionMenuNew
+              onSave={onSave}
+              isQuarterlyGoal={false}
+              isAdhocGoal={true}
               isBacklog={isBacklog}
               onToggleBacklog={onToggleBacklog}
             />
           }
+          statusControls={<GoalStatusIcons goalId={goal._id} />}
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}

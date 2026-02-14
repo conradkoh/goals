@@ -374,10 +374,6 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           </WeekProvider>
         )}
 
-        {/* Render goal quick view placeholder outside WeekProvider for quarterly view */}
-        {viewMode === 'quarterly' && (
-          <GoalQuickViewModal open={false} onOpenChange={() => {}} goal={null} />
-        )}
         <div className="w-full">
           <FocusMenuBar
             viewMode={viewMode}

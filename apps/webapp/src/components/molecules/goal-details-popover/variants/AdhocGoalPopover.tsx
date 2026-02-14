@@ -39,6 +39,10 @@ export interface AdhocGoalPopoverProps {
   domain?: Doc<'domains'> | null;
   /** Week number for the domain popover context. When provided, clicking domain shows popover. */
   weekNumber?: number;
+  /** Whether the goal is in backlog */
+  isBacklog?: boolean;
+  /** Handler for toggling backlog status */
+  onToggleBacklog?: (isBacklog: boolean) => void;
   /** Child adhoc goals (sub-tasks) to display */
   subGoals?: AdhocGoalWithChildren[];
   /** Current nesting depth (0 = root level) */
@@ -74,6 +78,8 @@ export function AdhocGoalPopover({
   titleClassName,
   domain,
   weekNumber,
+  isBacklog = false,
+  onToggleBacklog,
   subGoals,
   depth = 0,
   onChildCompleteChange,
@@ -95,6 +101,8 @@ export function AdhocGoalPopover({
           isComplete={isComplete}
           domain={domain}
           weekNumber={weekNumber}
+          isBacklog={isBacklog}
+          onToggleBacklog={onToggleBacklog}
           subGoals={subGoals}
           depth={depth}
           onChildCompleteChange={onChildCompleteChange}
@@ -127,6 +135,8 @@ function AdhocGoalPopoverContentInner({
   isComplete,
   domain,
   weekNumber,
+  isBacklog = false,
+  onToggleBacklog,
   subGoals,
   depth = 0,
   onChildCompleteChange,
@@ -154,7 +164,15 @@ function AdhocGoalPopoverContentInner({
         title={goal.title}
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
-        actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+        actionMenu={
+          <GoalActionMenuNew
+            onSave={onSave}
+            isQuarterlyGoal={false}
+            isAdhocGoal={true}
+            isBacklog={isBacklog}
+            onToggleBacklog={onToggleBacklog}
+          />
+        }
         statusControls={<GoalStatusIcons goalId={goal._id} />}
       />
 

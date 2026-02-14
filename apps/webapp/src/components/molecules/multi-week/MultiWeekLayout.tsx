@@ -1,18 +1,39 @@
-import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import { api } from '@workspace/backend/convex/_generated/api';
+import { useMutation } from 'convex/react';
 import { DateTime } from 'luxon';
 import type React from 'react';
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
+import { DroppableWeekColumn } from '../dnd/DroppableWeekColumn';
+import {
+  isQuarterlyGoalDrop,
+  isWeekColumnDrop,
+  isWeeklyGoalDrag,
+  type QuarterlyGoalDropData,
+  type WeekColumnDropData,
+  type WeeklyGoalDragData,
+} from '../dnd/types';
 import { WeekCard } from '../week/WeekCard';
 
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
+import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { useWeekData, type WeekData } from '@/hooks/useWeek';
+import { useSession } from '@/modules/auth/useSession';
 
 // Week card content component
 const WeekCardContent = ({
@@ -111,6 +132,9 @@ WeekCardContent.displayName = 'WeekCardContent';
 
 export const MultiWeekLayout = memo(() => {
   const { weeks } = useMultiWeek();
+  const { sessionId } = useSession();
+  const moveWeeklyGoalMutation = useMutation(api.goal.moveWeeklyGoalToWeek);
+  const updateGoalParentMutation = useMutation(api.goal.updateGoalParent);
 
   // Get the current week/year/quarter info using our optimized hook
   // Use ISO week year and week-based quarter for consistency
@@ -142,9 +166,187 @@ export const MultiWeekLayout = memo(() => {
   });
   const sensors = useSensors(mouseSensor);
 
+  // Drag state management
+  const [activeDragData, setActiveDragData] = useState<WeeklyGoalDragData | null>(null);
+  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
+
+  /**
+   * Handle drag start - store the dragged item data
+   * Don't allow starting a new drag while processing a previous drop
+   */
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      if (isProcessingDrop) {
+        return;
+      }
+      const { active } = event;
+      if (active.data.current && isWeeklyGoalDrag(active.data.current)) {
+        setActiveDragData(active.data.current);
+      }
+    },
+    [isProcessingDrop]
+  );
+
+  /**
+   * Handle moving a weekly goal to a different week
+   */
+  const handleMoveGoalToWeek = useCallback(
+    async (dragData: WeeklyGoalDragData, dropData: WeekColumnDropData) => {
+      // Don't move if same week
+      if (
+        dragData.sourceWeek.weekNumber === dropData.weekNumber &&
+        dragData.sourceWeek.year === dropData.year &&
+        dragData.sourceWeek.quarter === dropData.quarter
+      ) {
+        return;
+      }
+
+      if (!sessionId) {
+        toast({
+          title: 'Not authenticated',
+          description: 'Please log in to move goals',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsProcessingDrop(true);
+      try {
+        await moveWeeklyGoalMutation({
+          sessionId,
+          goalId: dragData.goalId,
+          currentWeek: {
+            year: dragData.sourceWeek.year,
+            quarter: dragData.sourceWeek.quarter,
+            weekNumber: dragData.sourceWeek.weekNumber,
+          },
+          targetWeek: {
+            year: dropData.year,
+            quarter: dropData.quarter,
+            weekNumber: dropData.weekNumber,
+          },
+        });
+
+        toast({
+          title: 'Goal moved',
+          description: `"${dragData.goalTitle}" moved to Week ${dropData.weekNumber}`,
+        });
+      } catch (error) {
+        console.error('[DnD] Failed to move goal:', error);
+        toast({
+          title: 'Failed to move goal',
+          description: error instanceof Error ? error.message : 'An error occurred',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsProcessingDrop(false);
+      }
+    },
+    [sessionId, moveWeeklyGoalMutation]
+  );
+
+  /**
+   * Handle reparenting a weekly goal to a different quarterly goal
+   */
+  const handleReparentGoal = useCallback(
+    async (dragData: WeeklyGoalDragData, dropData: QuarterlyGoalDropData) => {
+      // Don't reparent to the same parent
+      if (dragData.parentId === dropData.quarterlyGoalId) {
+        return;
+      }
+
+      if (!sessionId) {
+        toast({
+          title: 'Not authenticated',
+          description: 'Please log in to reparent goals',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsProcessingDrop(true);
+      try {
+        await updateGoalParentMutation({
+          sessionId,
+          goalId: dragData.goalId,
+          newParentId: dropData.quarterlyGoalId,
+        });
+
+        toast({
+          title: 'Goal reparented',
+          description: `"${dragData.goalTitle}" moved under "${dropData.quarterlyGoalTitle}"`,
+        });
+      } catch (error) {
+        console.error('[DnD] Failed to reparent goal:', error);
+        toast({
+          title: 'Failed to reparent goal',
+          description: error instanceof Error ? error.message : 'An error occurred',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsProcessingDrop(false);
+      }
+    },
+    [sessionId, updateGoalParentMutation]
+  );
+
+  /**
+   * Handle drag end - process the drop
+   */
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      // Reset drag state
+      setActiveDragData(null);
+
+      // If no drop target, cancel
+      if (!over) {
+        return;
+      }
+
+      // Get drag data
+      const dragData = active.data.current;
+      if (!dragData || !isWeeklyGoalDrag(dragData)) {
+        return;
+      }
+
+      // Get drop data
+      const dropData = over.data.current;
+      if (!dropData) {
+        return;
+      }
+
+      // Handle week column drops (week-to-week movement)
+      if (isWeekColumnDrop(dropData)) {
+        void handleMoveGoalToWeek(dragData, dropData);
+        return;
+      }
+
+      // Handle quarterly goal drops (reparenting)
+      if (isQuarterlyGoalDrop(dropData)) {
+        void handleReparentGoal(dragData, dropData);
+        return;
+      }
+    },
+    [handleMoveGoalToWeek, handleReparentGoal]
+  );
+
+  /**
+   * Handle drag cancel - reset state
+   */
+  const handleDragCancel = useCallback(() => {
+    setActiveDragData(null);
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
-      <DndContext sensors={sensors}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
         <MultiWeekGrid currentIndex={currentIndex} numItems={weeks.length}>
           {weeks.map((week) => {
             // Compare using ISO week year and week-based quarter
@@ -154,14 +356,27 @@ export const MultiWeekLayout = memo(() => {
               week.quarter === currentQuarter;
 
             return (
-              <WeekCardContent
+              <DroppableWeekColumn
                 key={`${week.year}-${week.quarter}-${week.weekNumber}`}
-                week={week}
-                isCurrentWeek={isCurrentWeek}
-              />
+                year={week.year}
+                quarter={week.quarter}
+                weekNumber={week.weekNumber}
+              >
+                <WeekCardContent week={week} isCurrentWeek={isCurrentWeek} />
+              </DroppableWeekColumn>
             );
           })}
         </MultiWeekGrid>
+
+        {/* Drag overlay - shows the dragged item while dragging */}
+        {/* dropAnimation={null} prevents the "fly back" animation on drop */}
+        <DragOverlay dropAnimation={null}>
+          {activeDragData && (
+            <div className="bg-card border border-border shadow-lg rounded-md px-3 py-2 opacity-90">
+              <span className="text-sm font-medium">{activeDragData.goalTitle}</span>
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
     </div>
   );

@@ -82,7 +82,7 @@ export const DailyWeeklyActionMenu = React.memo(
           <DropdownMenuContent
             align={align}
             sideOffset={5}
-            className="z-50 max-h-[70vh] overflow-y-auto"
+            className="z-50 max-h-[70vh] overflow-y-auto min-w-[200px]"
           >
             {/* View Mode Section */}
             {onViewModeChange && (

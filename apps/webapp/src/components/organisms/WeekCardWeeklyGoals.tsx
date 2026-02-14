@@ -6,6 +6,8 @@ import { forwardRef, useCallback, useMemo, useState } from 'react';
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
 import { GoalEditPopover } from '../atoms/GoalEditPopover';
+import { DraggableWeeklyGoal } from '../molecules/dnd/DraggableWeeklyGoal';
+import { DroppableQuarterlyGoal } from '../molecules/dnd/DroppableQuarterlyGoal';
 
 import { FireIcon } from '@/components/atoms/FireIcon';
 import {
@@ -236,7 +238,7 @@ const WeeklyGoalGroup = ({
   const [isHovering, setIsHovering] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
-  const { createWeeklyGoalOptimistic } = useWeek();
+  const { createWeeklyGoalOptimistic, year, quarter, weekNumber } = useWeek();
 
   const handleSubmit = async () => {
     const trimmedTitle = newGoalTitle.trim();
@@ -268,14 +270,29 @@ const WeeklyGoalGroup = ({
     setPreviousTitle(''); // Clear the stored title
   };
 
+  // Source week info for drag-and-drop
+  const sourceWeek = useMemo(() => ({ year, quarter, weekNumber }), [year, quarter, weekNumber]);
+
   return (
     <div className="space-y-1">
-      {weeklyGoals.map((weeklyGoal) => (
-        <GoalProvider key={weeklyGoal._id} goal={weeklyGoal}>
-          {/* WeeklyGoal gets goal from context */}
-          <WeeklyGoal onUpdateGoal={onUpdateGoal} />
-        </GoalProvider>
-      ))}
+      {weeklyGoals.map((weeklyGoal) => {
+        // Check if goal is optimistic (being created)
+        const isOptimistic = 'isOptimistic' in weeklyGoal && weeklyGoal.isOptimistic;
+
+        return (
+          <GoalProvider key={weeklyGoal._id} goal={weeklyGoal}>
+            <DraggableWeeklyGoal
+              goal={weeklyGoal}
+              sourceWeek={sourceWeek}
+              parentId={quarterlyGoal._id}
+              disabled={isOptimistic}
+            >
+              {/* WeeklyGoal gets goal from context */}
+              <WeeklyGoal onUpdateGoal={onUpdateGoal} />
+            </DraggableWeeklyGoal>
+          </GoalProvider>
+        );
+      })}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse interactions are needed for visibility control */}
       <div
         className="px-2 py-1"
@@ -396,46 +413,51 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                 weeklyGoals.length > 0 && weeklyGoals.every((goal) => getIsComplete(goal));
 
               return (
-                <div
+                <DroppableQuarterlyGoal
                   key={goal._id}
-                  className={cn(
-                    'px-3 space-y-2 rounded-md',
-                    isAllWeeklyGoalsComplete ? 'bg-green-50 dark:bg-green-950/20' : ''
-                  )}
+                  quarterlyGoalId={goal._id}
+                  quarterlyGoalTitle={goal.title}
                 >
                   <div
                     className={cn(
-                      'font-semibold text-sm text-foreground px-2 py-1 rounded-md',
-                      !isAllWeeklyGoalsComplete &&
-                        (isStarred
-                          ? 'bg-yellow-50 dark:bg-yellow-950/20'
-                          : isPinned && 'bg-blue-50 dark:bg-blue-950/20')
+                      'px-3 space-y-2 rounded-md',
+                      isAllWeeklyGoalsComplete ? 'bg-green-50 dark:bg-green-950/20' : ''
                     )}
                   >
-                    <GoalProvider goal={goal}>
-                      <QuarterlyGoalPopover
-                        onSave={async (title, details, dueDate) => {
-                          await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
-                        }}
-                        triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
-                        titleClassName={cn(
-                          getDueDateStyle(
-                            goal.dueDate ? new Date(goal.dueDate) : null,
-                            goal.isComplete
-                          )
-                        )}
-                        onToggleComplete={(newState) =>
-                          handleToggleQuarterlyCompletion(goal._id, newState)
-                        }
-                      />
-                    </GoalProvider>
+                    <div
+                      className={cn(
+                        'font-semibold text-sm text-foreground px-2 py-1 rounded-md',
+                        !isAllWeeklyGoalsComplete &&
+                          (isStarred
+                            ? 'bg-yellow-50 dark:bg-yellow-950/20'
+                            : isPinned && 'bg-blue-50 dark:bg-blue-950/20')
+                      )}
+                    >
+                      <GoalProvider goal={goal}>
+                        <QuarterlyGoalPopover
+                          onSave={async (title, details, dueDate) => {
+                            await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
+                          }}
+                          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
+                          titleClassName={cn(
+                            getDueDateStyle(
+                              goal.dueDate ? new Date(goal.dueDate) : null,
+                              goal.isComplete
+                            )
+                          )}
+                          onToggleComplete={(newState) =>
+                            handleToggleQuarterlyCompletion(goal._id, newState)
+                          }
+                        />
+                      </GoalProvider>
+                    </div>
+                    <WeeklyGoalGroup
+                      quarterlyGoal={goal}
+                      weeklyGoals={weeklyGoals}
+                      onUpdateGoal={handleUpdateWeeklyGoal}
+                    />
                   </div>
-                  <WeeklyGoalGroup
-                    quarterlyGoal={goal}
-                    weeklyGoals={weeklyGoals}
-                    onUpdateGoal={handleUpdateWeeklyGoal}
-                  />
-                </div>
+                </DroppableQuarterlyGoal>
               );
             })}
           </div>
