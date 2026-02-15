@@ -8,6 +8,9 @@ package-lock.json
 # Nx Cloud
 .nx/cache
 
+# Turborepo
+.turbo
+
 # Next.js
 .next/
 out/
