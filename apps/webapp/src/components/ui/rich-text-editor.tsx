@@ -355,8 +355,8 @@ export function RichTextEditor({
     });
   }
   return (
-    <div className="relative">
-      <EditorContent editor={editor} />
+    <div className="relative min-w-0 overflow-hidden">
+      <EditorContent editor={editor} className="overflow-y-auto max-h-[400px]" />
     </div>
   );
 }
