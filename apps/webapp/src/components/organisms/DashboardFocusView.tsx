@@ -16,6 +16,7 @@ import { GoalSearchDialog } from '@/components/molecules/focus/GoalSearchDialog'
 import { QuarterJumpDialog } from '@/components/molecules/focus/QuarterJumpDialog';
 import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
+import { FocusModeFocusedView } from '@/components/organisms/focus/FocusModeFocusedView';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
 import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
@@ -441,6 +442,12 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Loading week data...</p>
               </div>
+            </div>
+          )}
+
+          {viewMode === 'focused' && (
+            <div className="w-full h-full md:max-w-4xl mx-auto">
+              <FocusModeFocusedView />
             </div>
           )}
         </div>

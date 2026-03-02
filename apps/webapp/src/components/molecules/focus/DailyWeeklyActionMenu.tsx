@@ -1,4 +1,11 @@
-import { ArrowDownToLine, Calendar, CalendarDays, LayoutGrid, MoreVertical } from 'lucide-react';
+import {
+  ArrowDownToLine,
+  Calendar,
+  CalendarDays,
+  Focus,
+  LayoutGrid,
+  MoreVertical,
+} from 'lucide-react';
 import React, { type ReactElement } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
@@ -111,6 +118,14 @@ export const DailyWeeklyActionMenu = React.memo(
                   <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
                   <span className="text-sm">Daily</span>
                   <span className="ml-auto text-xs text-muted-foreground">D</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('focused')}
+                  className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
+                >
+                  <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Focused</span>
+                  <span className="ml-auto text-xs text-muted-foreground">F</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
