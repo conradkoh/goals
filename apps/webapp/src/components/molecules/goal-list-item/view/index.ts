@@ -15,6 +15,10 @@
  * ```
  */
 
+// Re-export GoalStatusIcons from atoms (single source of truth)
+export { GoalStatusIcons, type GoalStatusIconsProps } from '@/components/atoms/GoalStatusIcons';
+
+// Re-export other components from local components
 export * from './components';
 export {
   GoalListItemActions,

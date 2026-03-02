@@ -1,35 +1,64 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { ReactNode } from 'react';
 
 import { FireIcon } from '@/components/atoms/FireIcon';
+import { PendingIcon } from '@/components/atoms/PendingIcon';
+import { cn } from '@/lib/utils';
 
 export interface GoalStatusIconsProps {
   /** Goal ID for status tracking */
   goalId: Id<'goals'>;
+  /** Whether to show fire icon */
+  showFireIcon?: boolean;
+  /** Whether to show pending icon */
+  showPendingIcon?: boolean;
   /** Additional class names */
   className?: string;
+  /** Additional icons to render before fire/pending */
+  prefixIcons?: ReactNode;
+  /** Additional icons to render after fire/pending */
+  suffixIcons?: ReactNode;
 }
 
 /**
- * Displays Fire (urgent) icon for a goal.
- * Used in goal detail popovers/modals for quick access to mark urgent.
- *
- * Other actions (Mark Pending, Delete, Move to Backlog) are now in the GoalActionMenuNew.
+ * Container for goal status icons (fire, pending).
+ * Renders icons conditionally based on props.
  *
  * @example
  * ```tsx
  * <GoalStatusIcons goalId={goal._id} />
  * ```
+ *
+ * @example
+ * ```tsx
+ * <GoalStatusIcons
+ *   goalId={goal._id}
+ *   showFireIcon
+ *   showPendingIcon
+ * />
+ * ```
  */
-export function GoalStatusIcons({ goalId, className }: GoalStatusIconsProps) {
+export function GoalStatusIcons({
+  goalId,
+  showFireIcon = true,
+  showPendingIcon = true,
+  className,
+  prefixIcons,
+  suffixIcons,
+}: GoalStatusIconsProps) {
   return (
-    <div className={className}>
-      <div className="flex items-center gap-1">
-        {/* Fire icon for quick urgent toggle - larger for better touch targets */}
+    <div
+      className={cn('flex items-center gap-1 min-w-[40px] justify-end flex-shrink-0', className)}
+    >
+      {prefixIcons}
+      {showFireIcon && (
         <FireIcon
           goalId={goalId}
           className="opacity-100 [&_svg]:h-5 [&_svg]:w-5 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center"
         />
-      </div>
+      )}
+      {showPendingIcon && <PendingIcon goalId={goalId} />}
+      {suffixIcons}
     </div>
   );
 }
