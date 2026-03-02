@@ -424,4 +424,29 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_updated', ['userId', 'updatedAt']),
+
+  // ============================================================================
+  // SCRATCHPAD TABLES
+  // ============================================================================
+
+  /**
+   * Scratchpad - global per-user scratchpad not tied to any week/day.
+   * Supports HTML content from the RichTextEditor (Tiptap).
+   */
+  scratchpad: defineTable({
+    userId: v.id('users'),
+    content: v.optional(v.string()), // HTML content from RichTextEditor
+    updatedAt: v.number(),
+  }).index('by_user', ['userId']),
+
+  /**
+   * Scratchpad archive - stores previous scratchpad contents when archived.
+   */
+  scratchpadArchive: defineTable({
+    userId: v.id('users'),
+    content: v.optional(v.string()), // Archived HTML content
+    archivedAt: v.number(), // Unix timestamp when archived
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_archived', ['userId', 'archivedAt']),
 });
