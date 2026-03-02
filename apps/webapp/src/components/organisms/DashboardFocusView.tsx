@@ -104,7 +104,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const { selectedYear, selectedQuarter, isFocusModeEnabled, updateUrlParams } = useDashboard();
+  const {
+    selectedYear,
+    selectedQuarter,
+    isFocusModeEnabled,
+    updateUrlParams,
+    selectedWeek: currentSelectedWeek,
+    selectedDayOfWeek: currentSelectedDay,
+  } = useDashboard();
   // Note: We don't use currentWeekNumber from useQuarterWeekInfo because it's memoized
   // based on year/quarter only, which means it doesn't update when crossing week boundaries.
   // Instead, we get it from useCurrentWeekInfo which properly updates at midnight.
@@ -156,13 +163,13 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
    */
   const showPullGoals = useMemo(() => {
     if (viewMode === 'daily') {
-      return selectedWeekNumber === currentWeekNumber && selectedDayOfWeek === currentDay;
+      return currentSelectedWeek === currentWeekNumber && currentSelectedDay === currentDay;
     }
     if (viewMode === 'weekly') {
-      return selectedWeekNumber === currentWeekNumber;
+      return currentSelectedWeek === currentWeekNumber;
     }
     return false;
-  }, [viewMode, selectedWeekNumber, currentWeekNumber, selectedDayOfWeek, currentDay]);
+  }, [viewMode, currentSelectedWeek, currentWeekNumber, currentSelectedDay, currentDay]);
 
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
