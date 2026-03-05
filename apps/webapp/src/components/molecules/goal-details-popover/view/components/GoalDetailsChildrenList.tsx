@@ -74,11 +74,11 @@ export function GoalDetailsChildrenList({
 
   return (
     <div className="mt-3">
-      <h4 className="text-sm font-semibold mb-3 text-foreground bg-gray-50 dark:bg-gray-800 py-1.5 px-2 rounded-md">
+      <h4 className="text-sm font-semibold mb-3 text-foreground bg-gray-50 dark:bg-gray-800 py-1.5 px-4 rounded-md">
         {title}
       </h4>
       <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={_handleDeleteGoal}>
-        <div className="space-y-1 px-2">
+        <div className="space-y-1 px-4">
           {subGoals.map((child) => (
             <GoalProvider key={child._id} goal={child}>
               <div>

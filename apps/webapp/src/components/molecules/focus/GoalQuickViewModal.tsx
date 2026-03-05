@@ -88,7 +88,7 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
+        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-5"
         onEscapeKeyDown={handleEscapeKeyDown}
       >
         <GoalProvider goal={goalToDisplay}>
