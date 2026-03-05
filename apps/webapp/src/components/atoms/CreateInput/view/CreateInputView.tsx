@@ -76,7 +76,7 @@ export const CreateInputView = forwardRef<HTMLInputElement, CreateInputViewProps
           onKeyDown={handleKeyDown}
           className={cn(
             // Exact match to original CreateGoalInput, only changed h-7 to h-9
-            'h-9 text-sm pl-8 bg-transparent border-none hover:bg-accent/50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm',
+            'h-9 text-sm pl-8 bg-transparent hover:bg-accent/50 transition-colors placeholder:text-muted-foreground/60 shadow-none hover:shadow-sm',
             className
           )}
           {...inputProps}
