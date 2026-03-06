@@ -2,7 +2,8 @@ import { Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { InteractiveHTML } from '@/components/ui/interactive-html';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { cn } from '@/lib/utils';
@@ -89,11 +90,11 @@ export function GoalDetailsContent({
 
       {/* Full view dialog */}
       <Dialog open={isFullViewOpen} onOpenChange={(open) => !open && setIsFullViewOpen(false)}>
-        <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-5">
+        <FixedSizeDialog>
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold break-words">{title}</DialogTitle>
           </DialogHeader>
-          <div className="mt-4 overflow-y-auto flex-1 pr-2">
+          <FixedSizeDialogContent>
             {hasInteractiveFeatures ? (
               <InteractiveHTML
                 html={details}
@@ -107,8 +108,8 @@ export function GoalDetailsContent({
                 className="text-sm prose prose-sm dark:prose-invert max-w-none"
               />
             )}
-          </div>
-        </DialogContent>
+          </FixedSizeDialogContent>
+        </FixedSizeDialog>
       </Dialog>
     </>
   );

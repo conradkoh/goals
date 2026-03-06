@@ -8,6 +8,7 @@ import {
   DialogTitle,
   FullscreenDialogContent,
 } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 
@@ -67,7 +68,7 @@ export function GoalDetailsPopoverView({
   trigger,
   children,
   contentClassName,
-  width = '450px',
+  width: _width = '450px',
   fullScreen = false,
   open,
   onOpenChange,
@@ -149,8 +150,8 @@ export function GoalDetailsPopoverView({
     );
   }
 
-  // Desktop: Use Dialog instead of Popover to avoid Safari issues with nested portals
-  // When a Popover is inside a Dialog, Safari's focus trap closes the Popover immediately
+  // Desktop: Use FixedSizeDialog for consistent sizing across all goal detail modals.
+  // FixedSizeDialog avoids Safari issues with nested portals (Popover inside Dialog).
   return (
     <>
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
@@ -159,30 +160,23 @@ export function GoalDetailsPopoverView({
         {trigger}
       </span>
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent
-          className={cn(
-            `w-[${width}] max-w-[calc(100vw-32px)]`,
-            // Fixed height (h-*) not max-height - establishes the height context for flexbox children
-            'h-[min(600px,90vh)]',
-            'overflow-hidden flex flex-col p-5',
-            contentClassName
-          )}
-          style={{ width }}
-          onEscapeKeyDown={onEscapeKeyDown}
-        >
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="sr-only">Goal Details</DialogTitle>
+        <FixedSizeDialog onEscapeKeyDown={onEscapeKeyDown}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
-          {/* Content wrapper: flex-1 min-h-0 takes remaining space, can shrink */}
-          <div className="flex flex-col gap-3 flex-1 min-h-0">{children}</div>
-        </DialogContent>
+          <FixedSizeDialogContent className={cn('flex flex-col gap-3', contentClassName)}>
+            {children}
+          </FixedSizeDialogContent>
+        </FixedSizeDialog>
       </Dialog>
     </>
   );
 }
 
-export interface GoalPopoverTriggerProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> {
+export interface GoalPopoverTriggerProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'title'
+> {
   /** Goal title to display */
   title: string;
   /** Button variant */

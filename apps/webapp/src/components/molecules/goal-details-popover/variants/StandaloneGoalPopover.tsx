@@ -24,7 +24,8 @@ import { useMemo } from 'react';
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
 import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { WeekProvider } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
@@ -94,33 +95,34 @@ export function StandaloneGoalPopover({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[450px] max-w-[calc(100vw-32px)] max-h-[85vh] overflow-y-auto p-5">
-        <DialogHeader>
-          <DialogTitle className="sr-only">Goal Details</DialogTitle>
+      <FixedSizeDialog>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Goal Details</DialogTitle>
         </DialogHeader>
+        <FixedSizeDialogContent className="flex flex-col gap-3">
+          {(weekData === undefined || goalDetails === undefined) && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
 
-        {(weekData === undefined || goalDetails === undefined) && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
+          {goalDetails === null && (
+            <div className="py-8 text-center text-muted-foreground">Goal not found</div>
+          )}
 
-        {goalDetails === null && (
-          <div className="py-8 text-center text-muted-foreground">Goal not found</div>
-        )}
-
-        {weekData && goalDetails && (
-          <WeekProvider weekData={{ ...weekData, year, quarter }}>
-            <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-              {goalType === 'quarterly' ? (
-                <QuarterlyGoalPopoverContent onComplete={onComplete} />
-              ) : (
-                <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
-              )}
-            </GoalProvider>
-          </WeekProvider>
-        )}
-      </DialogContent>
+          {weekData && goalDetails && (
+            <WeekProvider weekData={{ ...weekData, year, quarter }}>
+              <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
+                {goalType === 'quarterly' ? (
+                  <QuarterlyGoalPopoverContent onComplete={onComplete} />
+                ) : (
+                  <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
+                )}
+              </GoalProvider>
+            </WeekProvider>
+          )}
+        </FixedSizeDialogContent>
+      </FixedSizeDialog>
     </Dialog>
   );
 }
