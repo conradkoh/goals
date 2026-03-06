@@ -54,7 +54,8 @@ export function GoalStatusIcons({
       {showFireIcon && (
         <FireIcon
           goalId={goalId}
-          className="opacity-100 [&_svg]:h-5 [&_svg]:w-5 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center"
+          className="opacity-100 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center"
+          iconClassName="h-3.5 w-3.5"
         />
       )}
       {showPendingIcon && <PendingIcon goalId={goalId} />}
