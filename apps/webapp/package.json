@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 5279",
-    "build": "next build",
-    "start": "next start",
+    "dev": "dotenv -e .env.local -- next dev",
+    "build": "next build --turbopack",
+    "start": "next start --turbopack",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
