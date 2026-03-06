@@ -19,7 +19,8 @@ import {
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { GoalLogTab } from '@/components/molecules/goal-log';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
@@ -151,10 +152,7 @@ export function AdhocGoalQuickViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
-        onEscapeKeyDown={handleEscapeKeyDown}
-      >
+      <FixedSizeDialog onEscapeKeyDown={handleEscapeKeyDown}>
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>
@@ -167,7 +165,7 @@ export function AdhocGoalQuickViewModal({
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
-      </DialogContent>
+      </FixedSizeDialog>
     </Dialog>
   );
 }
@@ -321,10 +319,10 @@ function AdhocGoalQuickViewContent({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="sr-only">{goal.title}</DialogTitle>
+      <DialogHeader className="sr-only">
+        <DialogTitle>{goal.title}</DialogTitle>
       </DialogHeader>
-      <div className="overflow-y-auto flex-1 pr-2">
+      <FixedSizeDialogContent>
         <FireGoalsProvider>
           <GoalHeader
             title={goal.title}
@@ -389,7 +387,7 @@ function AdhocGoalQuickViewContent({
             </TabsContent>
           </Tabs>
         </FireGoalsProvider>
-      </div>
+      </FixedSizeDialogContent>
 
       <GoalEditModal
         isOpen={isEditing}
