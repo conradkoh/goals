@@ -1,4 +1,14 @@
-import { ChevronLeft, ChevronRight, MoreVertical, Search } from 'lucide-react';
+import {
+  Calendar,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Focus,
+  LayoutGrid,
+  MoreVertical,
+  Search,
+} from 'lucide-react';
+import { DateTime } from 'luxon';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 
@@ -11,6 +21,13 @@ import {
 } from '@/components/molecules/focus-context-selector';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { type DayOfWeek, getDayNameShort } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
@@ -157,91 +174,137 @@ export const FocusMenuBar = ({
         <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 flex justify-center">
           <div id="focus-menu-bar" className="flex items-center justify-center w-full">
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Navigation with unified indicator */}
-              {showNavigation && (
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onPrevious}
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsSelectorOpen(true)}
-                    className="text-xs sm:text-sm font-medium text-center px-1 sm:px-2 hover:bg-accent"
-                  >
-                    {getNavigationLabel()}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onNext}
-                    className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              {/* ── Focused view: date label + view-switch dropdown ─────────── */}
+              {viewMode === 'focused' ? (
+                <>
+                  <span className="text-sm font-medium text-foreground">
+                    Focus — {DateTime.now().toFormat('cccc, MMMM d')}
+                  </span>
 
-              {/* Quarter Action Menu - with vertical dots icon and view mode options */}
-              {showQuarterActionMenu && (
-                <QuarterActionMenu
-                  isDisabled={isActionMenuDisabled}
-                  isFirstQuarter={isFirstQuarter}
-                  isMovingGoals={isMovingGoals}
-                  handlePreviewGoals={handlePreviewGoals}
-                  tooltipContent={tooltipContent}
-                  buttonSize="icon"
-                  buttonVariant="ghost"
-                  showLabel={false}
-                  menuIcon={<MoreVertical className="h-4 w-4" />}
-                  year={selectedYear}
-                  quarter={selectedQuarter}
-                  viewMode={viewMode}
-                  onViewModeChange={onViewModeChange}
-                />
-              )}
-
-              {/* Daily/Weekly Action Menu - with vertical dots icon and view mode options */}
-              {showDailyWeeklyActionMenu && (
-                <DailyWeeklyActionMenu
-                  isPulling={isPullingGoals}
-                  showPullGoals={showPullGoals}
-                  onPullGoals={onPullGoals}
-                  pullGoalsDialog={pullGoalsDialog}
-                  tooltipContent="Navigate to current day/week to pull goals"
-                  buttonSize="icon"
-                  buttonVariant="ghost"
-                  menuIcon={<MoreVertical className="h-4 w-4" />}
-                  viewMode={viewMode}
-                  onViewModeChange={onViewModeChange}
-                />
-              )}
-
-              {/* Search button - opens command palette */}
-              {onOpenCommandPalette && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                  {/* View-switch dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>View</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => onViewModeChange?.('quarterly')}>
+                        <LayoutGrid className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Quarterly</span>
+                        <span className="ml-4 text-xs text-muted-foreground">Q</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onViewModeChange?.('weekly')}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Weekly</span>
+                        <span className="ml-4 text-xs text-muted-foreground">W</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onViewModeChange?.('daily')}>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Daily</span>
+                        <span className="ml-4 text-xs text-muted-foreground">D</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="bg-accent"
+                        onClick={() => onViewModeChange?.('focused')}
+                      >
+                        <Focus className="mr-2 h-4 w-4" />
+                        <span className="flex-1">Focused</span>
+                        <span className="ml-4 text-xs text-muted-foreground">F</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  {/* Navigation with unified indicator */}
+                  {showNavigation && (
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={onOpenCommandPalette}
-                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                        aria-label="Search"
+                        onClick={onPrevious}
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
                       >
-                        <Search className="h-4 w-4" />
+                        <ChevronLeft className="h-4 w-4" />
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{searchShortcutLabel}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsSelectorOpen(true)}
+                        className="text-xs sm:text-sm font-medium text-center px-1 sm:px-2 hover:bg-accent"
+                      >
+                        {getNavigationLabel()}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onNext}
+                        className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Quarter Action Menu - with vertical dots icon and view mode options */}
+                  {showQuarterActionMenu && (
+                    <QuarterActionMenu
+                      isDisabled={isActionMenuDisabled}
+                      isFirstQuarter={isFirstQuarter}
+                      isMovingGoals={isMovingGoals}
+                      handlePreviewGoals={handlePreviewGoals}
+                      tooltipContent={tooltipContent}
+                      buttonSize="icon"
+                      buttonVariant="ghost"
+                      showLabel={false}
+                      menuIcon={<MoreVertical className="h-4 w-4" />}
+                      year={selectedYear}
+                      quarter={selectedQuarter}
+                      viewMode={viewMode}
+                      onViewModeChange={onViewModeChange}
+                    />
+                  )}
+
+                  {/* Daily/Weekly Action Menu - with vertical dots icon and view mode options */}
+                  {showDailyWeeklyActionMenu && (
+                    <DailyWeeklyActionMenu
+                      isPulling={isPullingGoals}
+                      showPullGoals={showPullGoals}
+                      onPullGoals={onPullGoals}
+                      pullGoalsDialog={pullGoalsDialog}
+                      tooltipContent="Navigate to current day/week to pull goals"
+                      buttonSize="icon"
+                      buttonVariant="ghost"
+                      menuIcon={<MoreVertical className="h-4 w-4" />}
+                      viewMode={viewMode}
+                      onViewModeChange={onViewModeChange}
+                    />
+                  )}
+
+                  {/* Search button - opens command palette */}
+                  {onOpenCommandPalette && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onOpenCommandPalette}
+                            className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                            aria-label="Search"
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{searchShortcutLabel}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </>
               )}
             </div>
           </div>
