@@ -19,8 +19,18 @@ import { StandaloneGoalPopover } from '@/components/molecules/goal-details-popov
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
-export function FocusUrgentSection() {
-  const urgentGoals = useSessionQuery(api.fireGoal.getFireGoalDetails, {});
+interface FocusUrgentSectionProps {
+  year: number;
+  quarter: number;
+  weekNumber: number;
+}
+
+export function FocusUrgentSection({ year, quarter, weekNumber }: FocusUrgentSectionProps) {
+  const urgentGoals = useSessionQuery(api.fireGoal.getFireGoalDetails, {
+    year,
+    quarter,
+    weekNumber,
+  });
   const toggleCompletion = useSessionMutation(api.dashboard.toggleGoalCompletion);
 
   const [selectedGoalId, setSelectedGoalId] = useState<Id<'goals'> | null>(null);

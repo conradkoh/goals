@@ -81,9 +81,14 @@ export const getFireGoals = query({
  * Returns on-fire goals with basic data needed to render a flat list and open a detail panel.
  */
 export const getFireGoalDetails = query({
-  args: { ...SessionIdArg },
+  args: {
+    ...SessionIdArg,
+    year: v.optional(v.number()),
+    quarter: v.optional(v.number()),
+    weekNumber: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
-    const { sessionId } = args;
+    const { sessionId, year, quarter, weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -103,18 +108,27 @@ export const getFireGoalDetails = query({
       })
     );
 
-    // Return only valid goals with relevant fields
-    return goals
-      .filter((g): g is NonNullable<typeof g> => g !== null)
-      .map((g) => ({
-        _id: g._id,
-        title: g.title,
-        isComplete: g.isComplete ?? false,
-        year: g.year,
-        quarter: g.quarter,
-        weekNumber: g.adhoc?.weekNumber ?? null,
-        depth: g.depth, // 0=quarterly, 1=weekly, 2=daily
-        isAdhoc: Boolean(g.adhoc),
-      }));
+    const validGoals = goals.filter((g): g is NonNullable<typeof g> => g !== null);
+
+    const shouldFilter = year !== undefined && quarter !== undefined && weekNumber !== undefined;
+    const filtered = shouldFilter
+      ? validGoals.filter((g) => {
+          if (g.adhoc) {
+            return g.year === year && g.adhoc.weekNumber === weekNumber;
+          }
+          return g.year === year && g.quarter === quarter;
+        })
+      : validGoals;
+
+    return filtered.map((g) => ({
+      _id: g._id,
+      title: g.title,
+      isComplete: g.isComplete ?? false,
+      year: g.year,
+      quarter: g.quarter,
+      weekNumber: g.adhoc?.weekNumber ?? null,
+      depth: g.depth,
+      isAdhoc: Boolean(g.adhoc),
+    }));
   },
 });

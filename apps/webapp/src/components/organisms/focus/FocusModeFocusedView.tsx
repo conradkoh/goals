@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DayOfWeek } from '@/lib/constants';
+import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
 // ============================================================================
 // Types
@@ -141,6 +142,7 @@ export function FocusModeFocusedView() {
 
   const year = currentDate.weekYear;
   const weekNumber = currentDate.weekNumber;
+  const quarter = getQuarterFromWeek(weekNumber);
   const dayOfWeek = currentDate.weekday as DayOfWeek; // 1 = Monday … 7 = Sunday
 
   const formattedDate = currentDate.toFormat('cccc, MMMM d'); // e.g. "Monday, March 2"
@@ -257,7 +259,7 @@ export function FocusModeFocusedView() {
         </div>
 
         {/* Urgent (on-fire) goals section */}
-        <FocusUrgentSection />
+        <FocusUrgentSection year={year} quarter={quarter} weekNumber={weekNumber} />
 
         {/* Task list */}
         <div className="px-4 py-3">
