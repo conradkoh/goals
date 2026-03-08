@@ -21,6 +21,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AdhocGoalItem } from '@/components/molecules/goal-list-item';
+import { FocusUrgentSection } from '@/components/organisms/focus/FocusUrgentSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -254,6 +255,9 @@ export function FocusModeFocusedView() {
           </h2>
           <p className="text-[10px] text-muted-foreground mt-0.5">{formattedDate}</p>
         </div>
+
+        {/* Urgent (on-fire) goals section */}
+        <FocusUrgentSection />
 
         {/* Task list */}
         <div className="px-4 py-3">

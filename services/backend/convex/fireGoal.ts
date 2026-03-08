@@ -76,3 +76,45 @@ export const getFireGoals = query({
     return fireGoals.map((fg) => fg.goalId);
   },
 });
+
+/**
+ * Returns on-fire goals with basic data needed to render a flat list and open a detail panel.
+ */
+export const getFireGoalDetails = query({
+  args: { ...SessionIdArg },
+  handler: async (ctx, args) => {
+    const { sessionId } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    // Get all fire goal IDs for this user
+    const fireGoals = await ctx.db
+      .query('fireGoals')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    if (fireGoals.length === 0) return [];
+
+    // Fetch each goal's data
+    const goals = await Promise.all(
+      fireGoals.map(async (fg) => {
+        const goal = await ctx.db.get('goals', fg.goalId);
+        return goal ? { ...goal, fireGoalId: fg._id } : null;
+      })
+    );
+
+    // Return only valid goals with relevant fields
+    return goals
+      .filter((g): g is NonNullable<typeof g> => g !== null)
+      .map((g) => ({
+        _id: g._id,
+        title: g.title,
+        isComplete: g.isComplete ?? false,
+        year: g.year,
+        quarter: g.quarter,
+        weekNumber: g.adhoc?.weekNumber ?? null,
+        depth: g.depth, // 0=quarterly, 1=weekly, 2=daily
+        isAdhoc: Boolean(g.adhoc),
+      }));
+  },
+});
