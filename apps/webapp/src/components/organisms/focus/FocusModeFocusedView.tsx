@@ -24,6 +24,7 @@ import { AdhocGoalItem } from '@/components/molecules/goal-list-item';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DayOfWeek } from '@/lib/constants';
 
 // ============================================================================
@@ -111,6 +112,22 @@ export function FocusModeFocusedView() {
     }
   }, [content, archiveScratchpad]);
 
+  // Keyboard shortcut: Ctrl+N / Cmd+N → handleNew
+  // Does NOT fire when focused on a native input or textarea
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+        const target = event.target as HTMLElement;
+        const isNativeInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+        if (isNativeInput) return;
+        event.preventDefault();
+        handleNew();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleNew]);
+
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
   const [currentDate, setCurrentDate] = useState<DateTime>(() => DateTime.now());
 
@@ -189,14 +206,23 @@ export function FocusModeFocusedView() {
                   Error
                 </span>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNew}
-                className="text-xs uppercase tracking-wider font-bold"
-              >
-                New
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleNew}
+                      className="text-xs uppercase tracking-wider font-bold"
+                    >
+                      New
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Archive &amp; clear (⌘N / Ctrl+N)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
