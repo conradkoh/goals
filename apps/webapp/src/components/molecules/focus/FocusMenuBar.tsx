@@ -1,4 +1,5 @@
 import {
+  ArrowDownToLine,
   Calendar,
   CalendarDays,
   ChevronLeft,
@@ -26,6 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -181,7 +183,7 @@ export const FocusMenuBar = ({
                     Focus — {DateTime.now().toFormat('cccc, MMMM d')}
                   </span>
 
-                  {/* View-switch dropdown */}
+                  {/* View-switch + actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -213,8 +215,43 @@ export const FocusMenuBar = ({
                         <span className="flex-1">Focused</span>
                         <span className="ml-4 text-xs text-muted-foreground">F</span>
                       </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+                      {/* Pull incomplete goals */}
+                      {!showPullGoals ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <DropdownMenuItem disabled>
+                                  <ArrowDownToLine className="mr-2 h-4 w-4" />
+                                  Pull incomplete goals
+                                </DropdownMenuItem>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Navigate to current day/week to pull goals</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <DropdownMenuItem
+                          disabled={isPullingGoals}
+                          onClick={() => {
+                            onPullGoals?.();
+                          }}
+                        >
+                          <ArrowDownToLine className="mr-2 h-4 w-4" />
+                          {isPullingGoals ? 'Pulling...' : 'Pull incomplete goals'}
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
+
+                  {/* Pull goals dialog must be in the DOM */}
+                  {pullGoalsDialog}
                 </>
               ) : (
                 <>

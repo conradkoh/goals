@@ -169,6 +169,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     if (viewMode === 'weekly') {
       return currentSelectedWeek === currentWeekNumber;
     }
+    if (viewMode === 'focused') {
+      // Focused mode always refers to today — pull is available when viewing current week
+      return true; // Always show as active (usePullGoals silently no-ops if nothing to pull)
+    }
     return false;
   }, [viewMode, currentSelectedWeek, currentWeekNumber, currentSelectedDay, currentDay]);
 
