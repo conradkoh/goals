@@ -86,9 +86,10 @@ export const getFireGoalDetails = query({
     year: v.optional(v.number()),
     quarter: v.optional(v.number()),
     weekNumber: v.optional(v.number()),
+    dayOfWeek: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, weekNumber } = args;
+    const { sessionId, year, quarter, weekNumber, dayOfWeek } = args;
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
@@ -111,7 +112,8 @@ export const getFireGoalDetails = query({
     const validGoals = goals.filter((g): g is NonNullable<typeof g> => g !== null);
 
     const shouldFilter = year !== undefined && quarter !== undefined && weekNumber !== undefined;
-    const filtered = shouldFilter
+
+    let filtered = shouldFilter
       ? validGoals.filter((g) => {
           if (g.adhoc) {
             return g.year === year && g.adhoc.weekNumber === weekNumber;
@@ -119,6 +121,41 @@ export const getFireGoalDetails = query({
           return g.year === year && g.quarter === quarter;
         })
       : validGoals;
+
+    if (shouldFilter && dayOfWeek !== undefined) {
+      // Exclude quarterly goals (depth=0) — they're just headers in daily view
+      filtered = filtered.filter((g) => g.depth !== 0 || g.adhoc);
+
+      // For daily goals (depth=2), only include if assigned to the given day
+      const dailyGoals = filtered.filter((g) => g.depth === 2 && !g.adhoc);
+      const dailyGoalStates = await Promise.all(
+        dailyGoals.map(async (g) => {
+          const state = await ctx.db
+            .query('goalStateByWeek')
+            .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
+              q
+                .eq('userId', userId)
+                .eq('goalId', g._id)
+                .eq('year', year!)
+                .eq('quarter', quarter!)
+                .eq('weekNumber', weekNumber!)
+            )
+            .first();
+          return { goalId: g._id, dayOfWeek: state?.daily?.dayOfWeek ?? null };
+        })
+      );
+
+      const dailyGoalDayMap = new Map(
+        dailyGoalStates.map((s) => [s.goalId.toString(), s.dayOfWeek])
+      );
+
+      filtered = filtered.filter((g) => {
+        if (g.depth === 2 && !g.adhoc) {
+          return dailyGoalDayMap.get(g._id.toString()) === dayOfWeek;
+        }
+        return true;
+      });
+    }
 
     return filtered.map((g) => ({
       _id: g._id,

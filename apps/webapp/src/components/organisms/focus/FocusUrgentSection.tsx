@@ -23,13 +23,20 @@ interface FocusUrgentSectionProps {
   year: number;
   quarter: number;
   weekNumber: number;
+  dayOfWeek: number;
 }
 
-export function FocusUrgentSection({ year, quarter, weekNumber }: FocusUrgentSectionProps) {
+export function FocusUrgentSection({
+  year,
+  quarter,
+  weekNumber,
+  dayOfWeek,
+}: FocusUrgentSectionProps) {
   const urgentGoals = useSessionQuery(api.fireGoal.getFireGoalDetails, {
     year,
     quarter,
     weekNumber,
+    dayOfWeek,
   });
   const toggleCompletion = useSessionMutation(api.dashboard.toggleGoalCompletion);
 

@@ -259,7 +259,12 @@ export function FocusModeFocusedView() {
         </div>
 
         {/* Urgent (on-fire) goals section */}
-        <FocusUrgentSection year={year} quarter={quarter} weekNumber={weekNumber} />
+        <FocusUrgentSection
+          year={year}
+          quarter={quarter}
+          weekNumber={weekNumber}
+          dayOfWeek={dayOfWeek}
+        />
 
         {/* Task list */}
         <div className="px-4 py-3">
