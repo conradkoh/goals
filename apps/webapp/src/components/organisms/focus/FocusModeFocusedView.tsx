@@ -16,12 +16,13 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
-import { Check, Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AdhocGoalItem } from '@/components/molecules/goal-list-item';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { DayOfWeek } from '@/lib/constants';
 
@@ -133,6 +134,30 @@ export function FocusModeFocusedView() {
     dayOfWeek,
   });
 
+  // ── Add task ─────────────────────────────────────────────────────────────
+  const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isAddingTask, setIsAddingTask] = useState(false);
+
+  const handleAddTask = useCallback(async () => {
+    const title = newTaskTitle.trim();
+    if (!title) return;
+    setIsAddingTask(true);
+    try {
+      await createAdhocGoal({
+        title,
+        year,
+        weekNumber,
+        dayOfWeek,
+      });
+      setNewTaskTitle('');
+    } catch (error) {
+      console.error('Failed to create task:', error);
+    } finally {
+      setIsAddingTask(false);
+    }
+  }, [newTaskTitle, createAdhocGoal, year, weekNumber, dayOfWeek]);
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col md:flex-row gap-0 h-full">
@@ -145,22 +170,25 @@ export function FocusModeFocusedView() {
               Scratchpad
             </h2>
             <div className="flex items-center gap-3">
-              {/* Save status indicator */}
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                {saveStatus === 'saving' && (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Saving...
-                  </>
-                )}
-                {saveStatus === 'saved' && (
-                  <>
-                    <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                    Saved ✓
-                  </>
-                )}
-                {saveStatus === 'error' && <span className="text-destructive">Error saving</span>}
-              </span>
+              {/* Save status dot indicator */}
+              {saveStatus === 'saving' && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Saving
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="w-1.5 h-1.5 bg-emerald-400" />
+                  Saved
+                </span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-destructive">
+                  <span className="w-1.5 h-1.5 bg-red-400" />
+                  Error
+                </span>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -217,6 +245,24 @@ export function FocusModeFocusedView() {
               ))}
             </ul>
           )}
+
+          {/* Inline add task */}
+          <div className="flex items-center gap-2 mt-3 border-t border-border pt-3">
+            <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+            <Input
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAddTask();
+                }
+              }}
+              placeholder="Add a task..."
+              disabled={isAddingTask}
+              className="h-7 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
+            />
+          </div>
         </div>
       </div>
     </div>

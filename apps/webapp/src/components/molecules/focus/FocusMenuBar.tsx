@@ -179,7 +179,7 @@ export const FocusMenuBar = ({
               {/* ── Focused view: date label + view-switch dropdown ─────────── */}
               {viewMode === 'focused' ? (
                 <>
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Focus — {DateTime.now().toFormat('cccc, MMMM d')}
                   </span>
 
@@ -191,7 +191,9 @@ export const FocusMenuBar = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>View</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+                        View
+                      </DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => onViewModeChange?.('quarterly')}>
                         <LayoutGrid className="mr-2 h-4 w-4" />
                         <span className="flex-1">Quarterly</span>
@@ -217,7 +219,9 @@ export const FocusMenuBar = ({
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+                        Actions
+                      </DropdownMenuLabel>
 
                       {/* Pull incomplete goals */}
                       {!showPullGoals ? (
