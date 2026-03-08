@@ -145,10 +145,11 @@ export function FocusModeFocusedView() {
   const formattedDate = currentDate.toFormat('cccc, MMMM d'); // e.g. "Monday, March 2"
 
   // ── Today's adhoc goals ──────────────────────────────────────────────────
-  const adhocGoals = useSessionQuery(api.adhocGoal.getAdhocGoalsForDay, {
+  // Use getAdhocGoalsForWeek (returns AdhocGoalWithChildren[] — hierarchical)
+  // getAdhocGoalsForDay returns a flat list without children, so hierarchy wouldn't show
+  const adhocGoals = useSessionQuery(api.adhocGoal.getAdhocGoalsForWeek, {
     year,
     weekNumber,
-    dayOfWeek,
   });
 
   // ── Add task ─────────────────────────────────────────────────────────────
