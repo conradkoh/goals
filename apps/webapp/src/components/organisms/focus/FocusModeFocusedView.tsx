@@ -45,21 +45,18 @@ export function FocusModeFocusedView() {
   const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
   const archiveScratchpad = useSessionMutation(api.scratchpad.archiveScratchpad);
 
-  // Local editor content state
-  const [content, setContent] = useState('');
+  // localContent: null means "not yet edited by user" — falls back to server value
+  const [localContent, setLocalContent] = useState<string | null>(null);
+
+  // Derived: use local edits if any, otherwise fall back to server value
+  const content = localContent ?? scratchpad?.content ?? '';
+  // Editor is only shown once the server data has loaded
+  const isContentInitialized = scratchpad !== undefined;
+
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  // Refs for debounced save and preventing re-initialization
+  // Ref for debounced save
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const hasInitializedRef = useRef(false);
-
-  // Initialize editor content from scratchpad data (only once)
-  useEffect(() => {
-    if (scratchpad !== undefined && !hasInitializedRef.current) {
-      setContent(scratchpad?.content ?? '');
-      hasInitializedRef.current = true;
-    }
-  }, [scratchpad]);
 
   // Save function
   const save = useCallback(
@@ -80,7 +77,7 @@ export function FocusModeFocusedView() {
   // Debounced save on content change
   const handleContentChange = useCallback(
     (newContent: string) => {
-      setContent(newContent);
+      setLocalContent(newContent);
 
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -102,7 +99,7 @@ export function FocusModeFocusedView() {
     try {
       await archiveScratchpad({});
       // Clear editor
-      setContent('');
+      setLocalContent('');
       setSaveStatus('idle');
     } catch (error) {
       console.error('Failed to archive scratchpad:', error);
@@ -163,8 +160,8 @@ export function FocusModeFocusedView() {
           </div>
         </div>
 
-        {/* Editor — shown once scratchpad has loaded */}
-        {scratchpad === undefined ? (
+        {/* Editor — shown once content has been initialized from backend */}
+        {!isContentInitialized ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
