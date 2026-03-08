@@ -7,6 +7,10 @@
  * 1. Global scratchpad — rich text editor with auto-save and archive ("New") support
  * 2. Today's adhoc items — live clock-driven list of today's adhoc goals
  *
+ * Layout:
+ * - Mobile: stacked vertically (scratchpad on top, tasks below)
+ * - Desktop (md+): side-by-side — scratchpad takes 2/3, tasks take 1/3
+ *
  * @module FocusModeFocusedView
  */
 
@@ -131,72 +135,89 @@ export function FocusModeFocusedView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 p-4">
-      {/* ── Scratchpad section ─────────────────────────────────────────── */}
-      <div className="bg-card rounded-lg shadow-sm p-4">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-foreground">📝 Scratchpad</h2>
-          <div className="flex items-center gap-2">
-            {/* Save status indicator */}
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              {saveStatus === 'saving' && (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Saving...
-                </>
-              )}
-              {saveStatus === 'saved' && (
-                <>
-                  <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                  Saved ✓
-                </>
-              )}
-              {saveStatus === 'error' && <span className="text-destructive">Error saving</span>}
-            </span>
-            <Button variant="outline" size="sm" onClick={handleNew}>
-              New
-            </Button>
+    <div className="flex flex-col md:flex-row gap-0 h-full">
+      {/* ── Scratchpad section — 2/3 on desktop, full on mobile ─────────── */}
+      <div className="flex-1 md:flex-[2] border-b md:border-b-0 md:border-r border-border flex flex-col">
+        <div className="flex flex-col h-full">
+          {/* Industrial header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Scratchpad
+            </h2>
+            <div className="flex items-center gap-3">
+              {/* Save status indicator */}
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                {saveStatus === 'saving' && (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Saving...
+                  </>
+                )}
+                {saveStatus === 'saved' && (
+                  <>
+                    <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    Saved ✓
+                  </>
+                )}
+                {saveStatus === 'error' && <span className="text-destructive">Error saving</span>}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNew}
+                className="text-xs uppercase tracking-wider font-bold"
+              >
+                New
+              </Button>
+            </div>
+          </div>
+
+          {/* Editor — flex-1 to fill height */}
+          <div className="flex-1 min-h-[300px]">
+            {!isContentInitialized ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <RichTextEditor
+                value={content}
+                onChange={handleContentChange}
+                placeholder="Start writing..."
+                className="min-h-[500px]"
+              />
+            )}
           </div>
         </div>
-
-        {/* Editor — shown once content has been initialized from backend */}
-        {!isContentInitialized ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <div className="min-h-[200px] border border-border rounded-md">
-            <RichTextEditor
-              value={content}
-              onChange={handleContentChange}
-              placeholder="Start writing..."
-            />
-          </div>
-        )}
       </div>
 
-      {/* ── Today's adhoc items section ────────────────────────────────── */}
-      <div className="bg-card rounded-lg shadow-sm p-4">
-        <h2 className="font-semibold text-foreground mb-4">
-          📋 Today&apos;s Tasks — {formattedDate}
-        </h2>
+      {/* ── Today's tasks section — 1/3 on desktop, full on mobile ─────── */}
+      <div className="md:w-80 flex flex-col">
+        {/* Industrial header */}
+        <div className="px-4 py-3 border-b-2 border-border">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            Today&apos;s Tasks
+          </h2>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{formattedDate}</p>
+        </div>
 
-        {adhocGoals === undefined ? (
-          <div className="flex items-center justify-center h-16">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : adhocGoals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tasks for today.</p>
-        ) : (
-          <ul className="space-y-1">
-            {adhocGoals.map((goal) => (
-              <li key={goal._id}>
-                <AdhocGoalItem goal={goal} />
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Task list */}
+        <div className="px-4 py-3">
+          {adhocGoals === undefined ? (
+            <div className="flex items-center justify-center h-16">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : adhocGoals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No tasks for today.</p>
+          ) : (
+            <ul className="space-y-1">
+              {adhocGoals.map((goal) => (
+                <li key={goal._id}>
+                  <AdhocGoalItem goal={goal} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
