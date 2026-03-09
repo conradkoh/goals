@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
 
@@ -147,6 +148,9 @@ export function FocusModeFocusedView() {
   const dayOfWeek = currentDate.weekday as DayOfWeek; // 1 = Monday … 7 = Sunday
 
   const formattedDate = currentDate.toFormat('cccc, MMMM d'); // e.g. "Monday, March 2"
+
+  // ── Week data (needed by GoalActionMenuNew via WeekProvider) ──────────
+  const weekData = useWeekData({ year, quarter, week: weekNumber });
 
   // ── Today's adhoc goals ──────────────────────────────────────────────────
   // Use getAdhocGoalsForWeek (returns AdhocGoalWithChildren[] — hierarchical)
@@ -318,58 +322,66 @@ export function FocusModeFocusedView() {
           <p className="text-[10px] text-muted-foreground mt-0.5">{formattedDate}</p>
         </div>
 
-        {/* Urgent (on-fire) goals section */}
-        <FocusUrgentSection
-          year={year}
-          quarter={quarter}
-          weekNumber={weekNumber}
-          dayOfWeek={dayOfWeek}
-        />
-
-        {/* Task list */}
-        <div className="px-4 py-3">
-          {adhocGoals === undefined ? (
-            <div className="flex items-center justify-center h-16">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : adhocGoals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tasks for today.</p>
-          ) : (
-            <ul className="space-y-1">
-              {adhocGoals.map((goal) => (
-                <li key={goal._id}>
-                  <AdhocGoalItem
-                    goal={goal}
-                    onCompleteChange={handleCompleteChange}
-                    onUpdate={handleUpdate}
-                    onDelete={handleDelete}
-                    onCreateChild={handleCreateChild}
-                    showDueDate={false}
-                    showDomain={false}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Inline add task */}
-          <div className="flex items-center gap-2 mt-3 border-t border-border pt-3">
-            <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-            <Input
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleAddTask();
-                }
-              }}
-              placeholder="Add a task..."
-              disabled={isAddingTask}
-              className="h-7 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
-            />
+        {!weekData ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        </div>
+        ) : (
+          <WeekProvider weekData={weekData}>
+            {/* Urgent (on-fire) goals section */}
+            <FocusUrgentSection
+              year={year}
+              quarter={quarter}
+              weekNumber={weekNumber}
+              dayOfWeek={dayOfWeek}
+            />
+
+            {/* Task list */}
+            <div className="px-4 py-3">
+              {adhocGoals === undefined ? (
+                <div className="flex items-center justify-center h-16">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : adhocGoals.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tasks for today.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {adhocGoals.map((goal) => (
+                    <li key={goal._id}>
+                      <AdhocGoalItem
+                        goal={goal}
+                        onCompleteChange={handleCompleteChange}
+                        onUpdate={handleUpdate}
+                        onDelete={handleDelete}
+                        onCreateChild={handleCreateChild}
+                        showDueDate={false}
+                        showDomain={false}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Inline add task */}
+              <div className="flex items-center gap-2 mt-3 border-t border-border pt-3">
+                <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                <Input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddTask();
+                    }
+                  }}
+                  placeholder="Add a task..."
+                  disabled={isAddingTask}
+                  className="h-7 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                />
+              </div>
+            </div>
+          </WeekProvider>
+        )}
       </div>
     </div>
   );
