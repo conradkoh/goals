@@ -19,7 +19,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
 import { History, Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   FocusedAdhocGoalsSection,
@@ -30,18 +30,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { isHTMLEmpty, RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 // ============================================================================
 // Helpers
@@ -105,94 +100,14 @@ export function FocusModeFocusedView() {
     isHistoryOpen ? {} : 'skip'
   );
 
-  // ── Scratchpad data ──────────────────────────────────────────────────────
-  const scratchpad = useSessionQuery(api.scratchpad.getScratchpad, {});
-  const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
-  const archiveScratchpad = useSessionMutation(api.scratchpad.archiveScratchpad);
-
-  // localContent: null = no pending local edits, falls back to server value.
-  // Once the user types, localContent holds their edits until save completes.
-  const [localContent, setLocalContent] = useState<string | null>(null);
-
-  // Timestamp of our last successful save — used to reject stale server echoes
-  const lastSavedAtRef = useRef<number>(0);
-  // Whether a save is currently in-flight
-  const isSavingRef = useRef(false);
-  // Ref for debounced save
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const cancelPendingSave = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-    }
-  }, []);
-
-  // Clean up pending save on unmount
-  useEffect(() => cancelPendingSave, [cancelPendingSave]);
-
-  const serverContent = scratchpad?.content ?? '';
-  const serverUpdatedAt = scratchpad?.updatedAt ?? 0;
-  const hasPendingLocalEdits = localContent !== null;
-
-  // Accept newer server timestamps when no local edits are pending
-  if (!hasPendingLocalEdits && !isSavingRef.current && serverUpdatedAt > lastSavedAtRef.current) {
-    lastSavedAtRef.current = serverUpdatedAt;
-  }
-
-  const content = hasPendingLocalEdits ? localContent : serverContent;
-  const isContentInitialized = scratchpad !== undefined;
-
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-
-  const save = useCallback(
-    async (contentToSave: string) => {
-      setSaveStatus('saving');
-      isSavingRef.current = true;
-      try {
-        await upsertScratchpad({ content: contentToSave });
-        lastSavedAtRef.current = Date.now();
-        isSavingRef.current = false;
-        setLocalContent(null);
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-      } catch (error) {
-        isSavingRef.current = false;
-        console.error('Failed to save scratchpad:', error);
-        setSaveStatus('error');
-      }
-    },
-    [upsertScratchpad]
-  );
-
-  const handleContentChange = useCallback(
-    (newContent: string) => {
-      setLocalContent(newContent);
-      cancelPendingSave();
-      saveTimeoutRef.current = setTimeout(() => {
-        save(newContent);
-      }, 500);
-    },
-    [save, cancelPendingSave]
-  );
-
-  const handleNew = useCallback(async () => {
-    if (content && !isHTMLEmpty(content)) {
-      const confirmed = window.confirm('Archive current content and start fresh?');
-      if (!confirmed) return;
-    }
-
-    cancelPendingSave();
-
-    try {
-      await archiveScratchpad({});
-      setLocalContent(null);
-      lastSavedAtRef.current = Date.now();
-      setSaveStatus('idle');
-    } catch (error) {
-      console.error('Failed to archive scratchpad:', error);
-    }
-  }, [content, archiveScratchpad, cancelPendingSave]);
+  // ── Scratchpad ─────────────────────────────────────────────────────────
+  const {
+    content,
+    saveStatus,
+    isReady: isContentInitialized,
+    handleContentChange,
+    handleNew,
+  } = useScratchpad();
 
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
   const [currentDate, setCurrentDate] = useState<DateTime>(() => DateTime.now());
