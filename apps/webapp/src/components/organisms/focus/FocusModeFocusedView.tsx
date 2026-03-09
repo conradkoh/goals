@@ -22,6 +22,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
+  FocusedDailyGoalsSection,
   FocusedUrgentSection,
   FocusedTasksSection,
 } from '@/components/organisms/focus/focused-view';
@@ -326,6 +327,8 @@ export function FocusModeFocusedView() {
               weekNumber={weekNumber}
               dayOfWeek={dayOfWeek}
             />
+
+            <FocusedDailyGoalsSection dayOfWeek={dayOfWeek} />
 
             <FocusedTasksSection
               adhocGoals={adhocGoals}
