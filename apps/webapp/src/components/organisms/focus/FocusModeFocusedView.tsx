@@ -30,7 +30,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { isHTMLEmpty, RichTextEditor } from '@/components/ui/rich-text-editor';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
@@ -156,14 +156,19 @@ export function FocusModeFocusedView() {
 
   // "New" — archive current content and clear editor
   const handleNew = useCallback(async () => {
-    if (content && content.trim().length > 0) {
+    if (content && !isHTMLEmpty(content)) {
       const confirmed = window.confirm('Archive current content and start fresh?');
       if (!confirmed) return;
     }
 
+    // Cancel any pending debounced save to prevent it from re-saving old content
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
     try {
       await archiveScratchpad({});
-      // Clear editor
       setLocalContent('');
       setSaveStatus('idle');
     } catch (error) {
