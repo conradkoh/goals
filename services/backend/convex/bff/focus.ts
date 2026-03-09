@@ -27,6 +27,7 @@ export type FocusedGoalItem = {
 
 export type FocusedViewData = {
   urgent: FocusedGoalItem[];
+  weeklyGoals: FocusedGoalItem[];
   dailyGoals: FocusedGoalItem[];
   adhocTasks: FocusedGoalItem[];
 };
@@ -44,13 +45,14 @@ export const getFocusedViewData = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const [urgent, dailyGoals, adhocTasks] = await Promise.all([
+    const [urgent, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
+      getWeeklyGoals(ctx, { userId, year, quarter, weekNumber }),
       getDailyGoalsForDay(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
     ]);
 
-    return { urgent, dailyGoals, adhocTasks };
+    return { urgent, weeklyGoals, dailyGoals, adhocTasks };
   },
 });
 
@@ -132,6 +134,48 @@ async function getUrgentGoals(
       };
     })
   );
+}
+
+// ── Weekly Goals ──────────────────────────────────────────────────────────────
+
+async function getWeeklyGoals(
+  ctx: QueryCtx,
+  args: {
+    userId: Id<'users'>;
+    year: number;
+    quarter: number;
+    weekNumber: number;
+  }
+): Promise<FocusedGoalItem[]> {
+  const { userId, year, quarter, weekNumber } = args;
+
+  const weekTree = await getWeekGoalsTree(ctx, { userId, year, quarter, weekNumber });
+
+  const result: FocusedGoalItem[] = [];
+
+  for (const qGoal of weekTree.quarterlyGoals) {
+    if (!qGoal.state?.isStarred && !qGoal.state?.isPinned) continue;
+
+    for (const wGoal of qGoal.children) {
+      result.push({
+        _id: wGoal._id,
+        title: wGoal.title,
+        isComplete: wGoal.isComplete ?? false,
+        isAdhoc: false,
+        year,
+        quarter,
+        weekNumber,
+        depth: wGoal.depth,
+        indentLevel: 0,
+        breadcrumb: [
+          { label: `Q${quarter} ${year}`, type: 'quarter' },
+          { label: qGoal.title, type: 'parent' },
+        ],
+      });
+    }
+  }
+
+  return result;
 }
 
 // ── Daily Goals ───────────────────────────────────────────────────────────────

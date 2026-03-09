@@ -24,6 +24,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   FocusedDailyGoalsSection,
   FocusedUrgentSection,
+  FocusedWeeklyGoalsSection,
   FocusedTasksSection,
 } from '@/components/organisms/focus/focused-view';
 import { Button } from '@/components/ui/button';
@@ -349,6 +350,11 @@ export function FocusModeFocusedView() {
             <FocusedUrgentSection
               goals={focusedViewData.urgent}
               onToggleComplete={handleUrgentCompleteChange}
+            />
+
+            <FocusedWeeklyGoalsSection
+              goals={focusedViewData.weeklyGoals}
+              onToggleComplete={handleNormalGoalCompleteChange}
             />
 
             <FocusedDailyGoalsSection
