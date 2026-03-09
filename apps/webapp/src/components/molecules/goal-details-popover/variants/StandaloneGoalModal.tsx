@@ -22,7 +22,7 @@ import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
-import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
+import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
@@ -114,7 +114,7 @@ export function StandaloneGoalModal({
             <WeekProvider weekData={{ ...weekData, year, quarter }}>
               <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
                 {goalCategory === 'standard' ? (
-                  <QuarterlyGoalPopoverContent onComplete={onComplete} />
+                  <StandardGoalPopoverContent onComplete={onComplete} />
                 ) : (
                   <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
                 )}

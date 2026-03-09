@@ -1,8 +1,8 @@
 /**
- * Quarterly Goal Popover Content
+ * Standard Goal Popover Content
  *
- * Renders the full quarterly goal content for use in standalone modals.
- * This is the same content as QuarterlyGoalPopover but without the trigger/popover wrapper.
+ * Renders the full standard (non-adhoc) goal content for use in standalone modals.
+ * Used for quarterly, weekly, and daily goals.
  *
  * @module
  */
@@ -36,11 +36,11 @@ import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
- * Props for the QuarterlyGoalPopoverContent component.
+ * Props for the StandardGoalPopoverContent component.
  *
  * @public
  */
-export interface QuarterlyGoalPopoverContentProps {
+export interface StandardGoalPopoverContentProps {
   /** Callback fired when the goal is marked as complete */
   onComplete?: () => void;
 }
@@ -50,7 +50,7 @@ export interface QuarterlyGoalPopoverContentProps {
  *
  * @internal
  */
-interface QuarterlyGoalPopoverContentInnerProps {
+interface StandardGoalPopoverContentInnerProps {
   /** Whether the goal is currently marked as complete */
   isComplete: boolean;
   /** Whether the goal is starred for this week */
@@ -88,7 +88,7 @@ interface QuarterlyGoalPopoverContentInnerProps {
  * @param props - Component props
  * @returns Rendered quarterly goal content
  */
-export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopoverContentProps) {
+export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, updateQuarterlyGoalStatus } =
     useWeek();
@@ -169,7 +169,7 @@ export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopover
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <QuarterlyGoalPopoverContentInner
+        <StandardGoalPopoverContentInner
           isComplete={isComplete}
           isStarred={isStarred}
           isPinned={isPinned}
@@ -196,7 +196,7 @@ export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopover
  * @param props - Component props
  * @returns Rendered goal content with edit capabilities
  */
-function QuarterlyGoalPopoverContentInner({
+function StandardGoalPopoverContentInner({
   isComplete,
   isStarred,
   isPinned,
@@ -209,7 +209,7 @@ function QuarterlyGoalPopoverContentInner({
   newWeeklyGoalTitle,
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
-}: QuarterlyGoalPopoverContentInnerProps) {
+}: StandardGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { year, quarter } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();

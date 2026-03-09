@@ -16,7 +16,7 @@ import { ArrowLeft, Calendar, Home, Loader2, Target } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
-import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
+import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 
 import { Button } from '@/components/ui/button';
 import { GoalProvider } from '@/contexts/GoalContext';
@@ -223,7 +223,7 @@ export function QuarterlyGoalPullPreviewContent({
               {/* Goal Content */}
               <WeekProvider weekData={mockWeekData}>
                 <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-                  <QuarterlyGoalPopoverContent />
+                  <StandardGoalPopoverContent />
                 </GoalProvider>
               </WeekProvider>
             </div>

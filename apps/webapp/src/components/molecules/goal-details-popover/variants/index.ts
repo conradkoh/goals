@@ -21,9 +21,9 @@ export { DailyGoalPopover, type DailyGoalPopoverProps } from './DailyGoalPopover
 export { GoalPageContent, type GoalPageContentProps } from './GoalPageContent';
 export { QuarterlyGoalPopover, type QuarterlyGoalPopoverProps } from './QuarterlyGoalPopover';
 export {
-  QuarterlyGoalPopoverContent,
-  type QuarterlyGoalPopoverContentProps,
-} from './QuarterlyGoalPopoverContent';
+  StandardGoalPopoverContent,
+  type StandardGoalPopoverContentProps,
+} from './StandardGoalPopoverContent';
 export { StandaloneGoalModal, type StandaloneGoalModalProps } from './StandaloneGoalModal';
 export { WeeklyGoalPopover, type WeeklyGoalPopoverProps } from './WeeklyGoalPopover';
 export { WeeklyGoalPageContent, type WeeklyGoalPageContentProps } from './WeeklyGoalPageContent';
