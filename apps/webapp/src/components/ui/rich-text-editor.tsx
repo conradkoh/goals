@@ -8,7 +8,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import styles from './rich-text-editor.module.css';
 
@@ -194,9 +194,6 @@ export function RichTextEditor({
   placeholder,
   autoFocus = false,
 }: RichTextEditorProps) {
-  // Track whether the last change came from the editor itself to avoid feedback loops
-  const isInternalUpdate = useRef(false);
-
   const editor = useEditor({
     autofocus: autoFocus,
     extensions: [
@@ -274,7 +271,6 @@ export function RichTextEditor({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const cleanedHtml = stripTrailingEmptyParagraphs(html);
-      isInternalUpdate.current = true;
       onChange(cleanedHtml);
     },
     immediatelyRender: false,
@@ -282,10 +278,7 @@ export function RichTextEditor({
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-    if (isInternalUpdate.current) {
-      isInternalUpdate.current = false;
-      return;
-    }
+    if (editor.isFocused) return;
     const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
     if (currentHtml !== value) {
       editor.commands.setContent(value || '');
