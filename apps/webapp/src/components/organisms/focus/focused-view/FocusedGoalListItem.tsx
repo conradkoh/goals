@@ -7,7 +7,7 @@ import { StandaloneGoalPopover } from '@/components/molecules/goal-details-popov
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
-interface FocusedTaskItemProps {
+interface FocusedGoalListItemProps {
   goalId: Id<'goals'>;
   title: string;
   isComplete: boolean;
@@ -21,7 +21,7 @@ interface FocusedTaskItemProps {
   indentLevel?: number;
 }
 
-export function FocusedTaskItem({
+export function FocusedGoalListItem({
   goalId,
   title,
   isComplete,
@@ -32,7 +32,7 @@ export function FocusedTaskItem({
   onToggleComplete,
   incompleteClassName,
   indentLevel = 0,
-}: FocusedTaskItemProps) {
+}: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (

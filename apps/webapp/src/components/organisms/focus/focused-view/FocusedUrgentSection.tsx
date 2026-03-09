@@ -2,8 +2,8 @@
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 
-import { FocusedTaskItem } from './FocusedTaskItem';
-import { FocusedTaskSection } from './FocusedTaskSection';
+import { FocusedGoalListItem } from './FocusedGoalListItem';
+import { FocusedGoalSection } from './FocusedGoalSection';
 
 interface FocusedUrgentSectionProps {
   goals: FocusedGoalItem[];
@@ -16,7 +16,7 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
-    <FocusedTaskSection
+    <FocusedGoalSection
       title="Urgent"
       count={incompleteCount}
       countColorClass="text-red-400"
@@ -25,7 +25,7 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
       <div className="px-4 py-2">
         <ul className="space-y-1">
           {goals.map((goal) => (
-            <FocusedTaskItem
+            <FocusedGoalListItem
               key={goal._id}
               goalId={goal._id}
               title={goal.title}
@@ -40,6 +40,6 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
           ))}
         </ul>
       </div>
-    </FocusedTaskSection>
+    </FocusedGoalSection>
   );
 }

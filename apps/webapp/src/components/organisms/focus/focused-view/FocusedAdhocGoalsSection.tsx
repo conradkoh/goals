@@ -3,17 +3,20 @@
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { Loader2 } from 'lucide-react';
 
-import { FocusedTaskItem } from './FocusedTaskItem';
-import { FocusedTaskSection } from './FocusedTaskSection';
+import { FocusedGoalListItem } from './FocusedGoalListItem';
+import { FocusedGoalSection } from './FocusedGoalSection';
 
-interface FocusedTasksSectionProps {
+interface FocusedAdhocGoalsSectionProps {
   goals: FocusedGoalItem[] | undefined;
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
 }
 
-export function FocusedTasksSection({ goals, onToggleComplete }: FocusedTasksSectionProps) {
+export function FocusedAdhocGoalsSection({
+  goals,
+  onToggleComplete,
+}: FocusedAdhocGoalsSectionProps) {
   return (
-    <FocusedTaskSection title="Tasks">
+    <FocusedGoalSection title="Tasks">
       <div className="px-4 py-2">
         {goals === undefined ? (
           <div className="flex items-center justify-center h-16">
@@ -24,7 +27,7 @@ export function FocusedTasksSection({ goals, onToggleComplete }: FocusedTasksSec
         ) : (
           <ul className="space-y-1">
             {goals.map((goal) => (
-              <FocusedTaskItem
+              <FocusedGoalListItem
                 key={goal._id}
                 goalId={goal._id}
                 title={goal.title}
@@ -40,6 +43,6 @@ export function FocusedTasksSection({ goals, onToggleComplete }: FocusedTasksSec
           </ul>
         )}
       </div>
-    </FocusedTaskSection>
+    </FocusedGoalSection>
   );
 }

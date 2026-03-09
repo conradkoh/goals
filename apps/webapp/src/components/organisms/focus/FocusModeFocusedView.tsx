@@ -22,10 +22,10 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
+  FocusedAdhocGoalsSection,
   FocusedDailyGoalsSection,
   FocusedUrgentSection,
   FocusedWeeklyGoalsSection,
-  FocusedTasksSection,
 } from '@/components/organisms/focus/focused-view';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -362,7 +362,7 @@ export function FocusModeFocusedView() {
               onToggleComplete={handleNormalGoalCompleteChange}
             />
 
-            <FocusedTasksSection
+            <FocusedAdhocGoalsSection
               goals={focusedViewData.adhocTasks}
               onToggleComplete={handleAdhocCompleteChange}
             />
