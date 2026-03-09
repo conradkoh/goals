@@ -21,8 +21,10 @@ import { Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { AdhocGoalItem } from '@/components/molecules/goal-list-item';
-import { FocusUrgentSection } from '@/components/organisms/focus/FocusUrgentSection';
+import {
+  FocusedUrgentSection,
+  FocusedTasksSection,
+} from '@/components/organisms/focus/focused-view';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -163,7 +165,6 @@ export function FocusModeFocusedView() {
   // ── Adhoc goal mutations ────────────────────────────────────────────────
   const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
   const updateAdhocGoal = useSessionMutation(api.adhocGoal.updateAdhocGoal);
-  const deleteAdhocGoal = useSessionMutation(api.adhocGoal.deleteAdhocGoal);
 
   const handleCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
@@ -174,50 +175,6 @@ export function FocusModeFocusedView() {
       }
     },
     [updateAdhocGoal]
-  );
-
-  const handleUpdate = useCallback(
-    async (
-      goalId: Id<'goals'>,
-      title: string,
-      details?: string,
-      dueDate?: number,
-      domainId?: Id<'domains'> | null
-    ) => {
-      try {
-        await updateAdhocGoal({ goalId, title, details, dueDate, domainId });
-      } catch (error) {
-        console.error('Failed to update adhoc goal:', error);
-      }
-    },
-    [updateAdhocGoal]
-  );
-
-  const handleDelete = useCallback(
-    async (goalId: Id<'goals'>) => {
-      try {
-        await deleteAdhocGoal({ goalId });
-      } catch (error) {
-        console.error('Failed to delete adhoc goal:', error);
-      }
-    },
-    [deleteAdhocGoal]
-  );
-
-  const handleCreateChild = useCallback(
-    async (parentId: Id<'goals'>, title: string) => {
-      try {
-        await createAdhocGoal({
-          title,
-          year,
-          weekNumber,
-          parentId,
-        });
-      } catch (error) {
-        console.error('Failed to create subtask:', error);
-      }
-    },
-    [createAdhocGoal, year, weekNumber]
   );
 
   // ── Add task ─────────────────────────────────────────────────────────────
@@ -328,42 +285,24 @@ export function FocusModeFocusedView() {
           </div>
         ) : (
           <WeekProvider weekData={weekData}>
-            {/* Urgent (on-fire) goals section */}
-            <FocusUrgentSection
+            <FocusedUrgentSection
               year={year}
               quarter={quarter}
               weekNumber={weekNumber}
               dayOfWeek={dayOfWeek}
             />
 
-            {/* Task list */}
-            <div className="px-4 py-3">
-              {adhocGoals === undefined ? (
-                <div className="flex items-center justify-center h-16">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              ) : adhocGoals.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tasks for today.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {adhocGoals.map((goal) => (
-                    <li key={goal._id}>
-                      <AdhocGoalItem
-                        goal={goal}
-                        onCompleteChange={handleCompleteChange}
-                        onUpdate={handleUpdate}
-                        onDelete={handleDelete}
-                        onCreateChild={handleCreateChild}
-                        showDueDate={false}
-                        showDomain={false}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <FocusedTasksSection
+              adhocGoals={adhocGoals}
+              year={year}
+              quarter={quarter as 1 | 2 | 3 | 4}
+              weekNumber={weekNumber}
+              onToggleComplete={handleCompleteChange}
+            />
 
-              {/* Inline add task */}
-              <div className="flex items-center gap-2 mt-3 border-t border-border pt-3">
+            {/* Inline add task */}
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-2 border-t border-border pt-3">
                 <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                 <Input
                   value={newTaskTitle}
