@@ -91,17 +91,6 @@ export const upsertScratchpad = mutation({
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .unique();
 
-    // Safety guard: don't overwrite existing content with an empty/blank string
-    const isContentEmpty = content === undefined || content.trim().length === 0;
-    if (
-      isContentEmpty &&
-      existing !== null &&
-      existing.content &&
-      existing.content.trim().length > 0
-    ) {
-      return existing._id; // skip — don't wipe existing content with empty
-    }
-
     if (existing === null) {
       // Create new scratchpad record
       const id = await ctx.db.insert('scratchpad', {
