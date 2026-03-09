@@ -17,6 +17,8 @@ interface FocusedTaskItemProps {
   weekNumber?: number;
   onToggleComplete: (goalId: Id<'goals'>, isComplete: boolean) => void;
   incompleteClassName?: string;
+  /** Nesting depth for visual indentation (0 = root) */
+  indentLevel?: number;
 }
 
 export function FocusedTaskItem({
@@ -29,12 +31,16 @@ export function FocusedTaskItem({
   weekNumber,
   onToggleComplete,
   incompleteClassName,
+  indentLevel = 0,
 }: FocusedTaskItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
     <>
-      <li className="flex items-center gap-2 py-1">
+      <li
+        className="flex items-center gap-2 py-1"
+        style={indentLevel > 0 ? { paddingLeft: `${indentLevel * 16}px` } : undefined}
+      >
         <Checkbox
           checked={isComplete}
           onCheckedChange={(checked) => onToggleComplete(goalId, Boolean(checked))}
