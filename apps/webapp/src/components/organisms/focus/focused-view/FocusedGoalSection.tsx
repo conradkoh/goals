@@ -1,6 +1,6 @@
 'use client';
 
-interface FocusedTaskSectionProps {
+interface FocusedGoalSectionProps {
   title: string;
   count?: number;
   countColorClass?: string;
@@ -8,13 +8,13 @@ interface FocusedTaskSectionProps {
   children: React.ReactNode;
 }
 
-export function FocusedTaskSection({
+export function FocusedGoalSection({
   title,
   count,
   countColorClass = 'text-muted-foreground',
   countDotColorClass = 'bg-muted-foreground',
   children,
-}: FocusedTaskSectionProps) {
+}: FocusedGoalSectionProps) {
   return (
     <div>
       <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-border">

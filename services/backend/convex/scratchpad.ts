@@ -11,6 +11,7 @@
 import { v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
 
+import type { Id } from './_generated/dataModel';
 import { mutation, query } from './_generated/server';
 import { requireLogin } from '../src/usecase/requireLogin';
 
@@ -91,17 +92,6 @@ export const upsertScratchpad = mutation({
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .unique();
 
-    // Safety guard: don't overwrite existing content with an empty/blank string
-    const isContentEmpty = content === undefined || content.trim().length === 0;
-    if (
-      isContentEmpty &&
-      existing !== null &&
-      existing.content &&
-      existing.content.trim().length > 0
-    ) {
-      return existing._id; // skip — don't wipe existing content with empty
-    }
-
     if (existing === null) {
       // Create new scratchpad record
       const id = await ctx.db.insert('scratchpad', {
@@ -146,8 +136,7 @@ export const archiveScratchpad = mutation({
       .withIndex('by_user', (q) => q.eq('userId', user._id))
       .unique();
 
-    // Only archive if there is content to archive
-    let archiveId: string | null = null;
+    let archiveId: Id<'scratchpadArchive'> | null = null;
     if (existing !== null && existing.content && existing.content.trim().length > 0) {
       archiveId = await ctx.db.insert('scratchpadArchive', {
         userId: user._id,

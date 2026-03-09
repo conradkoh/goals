@@ -14,6 +14,7 @@ import { useCallback } from 'react';
 import {
   AdhocSubGoalsList,
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalCompletionDate,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -249,6 +250,7 @@ function AdhocGoalPopoverContentInner({
   return (
     <>
       <FireGoalsProvider>
+        <GoalBreadcrumb domain={domain} />
         <GoalHeader
           title={goal.title}
           isComplete={isComplete}

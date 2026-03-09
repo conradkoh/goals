@@ -3,6 +3,7 @@ import { useCallback, type ReactNode } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalCompletionDate,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -23,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface DailyGoalPopoverProps {
@@ -106,6 +108,7 @@ function DailyGoalPopoverContentInner({
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { year, quarter } = useWeek();
 
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = useCallback(
@@ -118,6 +121,7 @@ function DailyGoalPopoverContentInner({
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
+      <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} domain={domain} />
       <GoalHeader
         title={goal.title}
         isComplete={isComplete}

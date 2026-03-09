@@ -3,11 +3,11 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useState } from 'react';
 
-import { StandaloneGoalPopover } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalPopover';
+import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
-interface FocusedTaskItemProps {
+interface FocusedGoalListItemProps {
   goalId: Id<'goals'>;
   title: string;
   isComplete: boolean;
@@ -17,9 +17,11 @@ interface FocusedTaskItemProps {
   weekNumber?: number;
   onToggleComplete: (goalId: Id<'goals'>, isComplete: boolean) => void;
   incompleteClassName?: string;
+  /** Nesting depth for visual indentation (0 = root) */
+  indentLevel?: number;
 }
 
-export function FocusedTaskItem({
+export function FocusedGoalListItem({
   goalId,
   title,
   isComplete,
@@ -29,12 +31,16 @@ export function FocusedTaskItem({
   weekNumber,
   onToggleComplete,
   incompleteClassName,
-}: FocusedTaskItemProps) {
+  indentLevel = 0,
+}: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
     <>
-      <li className="flex items-center gap-2 py-1">
+      <li
+        className="flex items-center gap-2 py-1"
+        style={indentLevel > 0 ? { paddingLeft: `${indentLevel * 16}px` } : undefined}
+      >
         <Checkbox
           checked={isComplete}
           onCheckedChange={(checked) => onToggleComplete(goalId, Boolean(checked))}
@@ -54,11 +60,11 @@ export function FocusedTaskItem({
         </button>
       </li>
 
-      <StandaloneGoalPopover
+      <StandaloneGoalModal
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
         goalId={popoverOpen ? goalId : null}
-        goalType={isAdhoc ? 'adhoc' : 'quarterly'}
+        goalCategory={isAdhoc ? 'adhoc' : 'standard'}
         year={year}
         quarter={quarter}
         weekNumber={weekNumber}

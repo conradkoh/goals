@@ -1,4 +1,6 @@
-export { FocusedTaskItem } from './FocusedTaskItem';
-export { FocusedTaskSection } from './FocusedTaskSection';
+export { FocusedAdhocGoalsSection } from './FocusedAdhocGoalsSection';
+export { FocusedDailyGoalsSection } from './FocusedDailyGoalsSection';
+export { FocusedGoalListItem } from './FocusedGoalListItem';
+export { FocusedGoalSection } from './FocusedGoalSection';
 export { FocusedUrgentSection } from './FocusedUrgentSection';
-export { FocusedTasksSection } from './FocusedTasksSection';
+export { FocusedWeeklyGoalsSection } from './FocusedWeeklyGoalsSection';

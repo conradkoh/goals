@@ -19,11 +19,13 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
 import { History, Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
+  FocusedAdhocGoalsSection,
+  FocusedDailyGoalsSection,
   FocusedUrgentSection,
-  FocusedTasksSection,
+  FocusedWeeklyGoalsSection,
 } from '@/components/organisms/focus/focused-view';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -31,15 +33,10 @@ import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 // ============================================================================
 // Helpers
@@ -103,71 +100,14 @@ export function FocusModeFocusedView() {
     isHistoryOpen ? {} : 'skip'
   );
 
-  // ── Scratchpad data ──────────────────────────────────────────────────────
-  const scratchpad = useSessionQuery(api.scratchpad.getScratchpad, {});
-  const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
-  const archiveScratchpad = useSessionMutation(api.scratchpad.archiveScratchpad);
-
-  // localContent: null means "not yet edited by user" — falls back to server value
-  const [localContent, setLocalContent] = useState<string | null>(null);
-
-  // Derived: use local edits if any, otherwise fall back to server value
-  const content = localContent ?? scratchpad?.content ?? '';
-  // Editor is only shown once the server data has loaded
-  const isContentInitialized = scratchpad !== undefined;
-
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
-
-  // Ref for debounced save
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Save function
-  const save = useCallback(
-    async (contentToSave: string) => {
-      setSaveStatus('saving');
-      try {
-        await upsertScratchpad({ content: contentToSave });
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-      } catch (error) {
-        console.error('Failed to save scratchpad:', error);
-        setSaveStatus('error');
-      }
-    },
-    [upsertScratchpad]
-  );
-
-  // Debounced save on content change
-  const handleContentChange = useCallback(
-    (newContent: string) => {
-      setLocalContent(newContent);
-
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      saveTimeoutRef.current = setTimeout(() => {
-        save(newContent);
-      }, 500);
-    },
-    [save]
-  );
-
-  // "New" — archive current content and clear editor
-  const handleNew = useCallback(async () => {
-    if (content && content.trim().length > 0) {
-      const confirmed = window.confirm('Archive current content and start fresh?');
-      if (!confirmed) return;
-    }
-
-    try {
-      await archiveScratchpad({});
-      // Clear editor
-      setLocalContent('');
-      setSaveStatus('idle');
-    } catch (error) {
-      console.error('Failed to archive scratchpad:', error);
-    }
-  }, [content, archiveScratchpad]);
+  // ── Scratchpad ─────────────────────────────────────────────────────────
+  const {
+    content,
+    saveStatus,
+    isReady: isContentInitialized,
+    handleContentChange,
+    handleNew,
+  } = useScratchpad();
 
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
   const [currentDate, setCurrentDate] = useState<DateTime>(() => DateTime.now());
@@ -189,19 +129,20 @@ export function FocusModeFocusedView() {
   // ── Week data (needed by GoalActionMenuNew via WeekProvider) ──────────
   const weekData = useWeekData({ year, quarter, week: weekNumber });
 
-  // ── Today's adhoc goals ──────────────────────────────────────────────────
-  // Use getAdhocGoalsForWeek (returns AdhocGoalWithChildren[] — hierarchical)
-  // getAdhocGoalsForDay returns a flat list without children, so hierarchy wouldn't show
-  const adhocGoals = useSessionQuery(api.adhocGoal.getAdhocGoalsForWeek, {
+  // ── BFF: Consolidated focused view data ─────────────────────────────────
+  const focusedViewData = useSessionQuery(api.bff.focus.getFocusedViewData, {
     year,
+    quarter,
     weekNumber,
+    dayOfWeek,
   });
 
-  // ── Adhoc goal mutations ────────────────────────────────────────────────
+  // ── Goal mutations ──────────────────────────────────────────────────────
   const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
   const updateAdhocGoal = useSessionMutation(api.adhocGoal.updateAdhocGoal);
+  const toggleGoalCompletion = useSessionMutation(api.dashboard.toggleGoalCompletion);
 
-  const handleCompleteChange = useCallback(
+  const handleAdhocCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
       try {
         await updateAdhocGoal({ goalId, isComplete });
@@ -210,6 +151,30 @@ export function FocusModeFocusedView() {
       }
     },
     [updateAdhocGoal]
+  );
+
+  const handleNormalGoalCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      try {
+        await toggleGoalCompletion({ goalId, weekNumber, isComplete });
+      } catch (error) {
+        console.error('Failed to toggle goal completion:', error);
+      }
+    },
+    [toggleGoalCompletion, weekNumber]
+  );
+
+  const handleUrgentCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      const goal = focusedViewData?.urgent.find((g) => g._id === goalId);
+      if (!goal) return;
+      if (goal.isAdhoc) {
+        await handleAdhocCompleteChange(goalId, isComplete);
+      } else {
+        await handleNormalGoalCompleteChange(goalId, isComplete);
+      }
+    },
+    [focusedViewData?.urgent, handleAdhocCompleteChange, handleNormalGoalCompleteChange]
   );
 
   // ── Add task ─────────────────────────────────────────────────────────────
@@ -314,25 +279,30 @@ export function FocusModeFocusedView() {
           <p className="text-[10px] text-muted-foreground mt-0.5">{formattedDate}</p>
         </div>
 
-        {!weekData ? (
+        {!weekData || !focusedViewData ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <WeekProvider weekData={weekData}>
             <FocusedUrgentSection
-              year={year}
-              quarter={quarter}
-              weekNumber={weekNumber}
-              dayOfWeek={dayOfWeek}
+              goals={focusedViewData.urgent}
+              onToggleComplete={handleUrgentCompleteChange}
             />
 
-            <FocusedTasksSection
-              adhocGoals={adhocGoals}
-              year={year}
-              quarter={quarter as 1 | 2 | 3 | 4}
-              weekNumber={weekNumber}
-              onToggleComplete={handleCompleteChange}
+            <FocusedWeeklyGoalsSection
+              goals={focusedViewData.weeklyGoals}
+              onToggleComplete={handleNormalGoalCompleteChange}
+            />
+
+            <FocusedDailyGoalsSection
+              goals={focusedViewData.dailyGoals}
+              onToggleComplete={handleNormalGoalCompleteChange}
+            />
+
+            <FocusedAdhocGoalsSection
+              goals={focusedViewData.adhocTasks}
+              onToggleComplete={handleAdhocCompleteChange}
             />
 
             {/* Inline add task */}

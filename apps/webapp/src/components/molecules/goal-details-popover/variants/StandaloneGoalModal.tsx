@@ -1,5 +1,5 @@
 /**
- * Standalone Goal Popover
+ * Standalone Goal Modal
  *
  * A self-contained modal that displays goal details with full interactivity.
  * Unlike the regular popovers which rely on WeekProvider being set up by a parent,
@@ -22,7 +22,7 @@ import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
-import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
+import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
@@ -31,19 +31,19 @@ import { WeekProvider } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
- * Props for the StandaloneGoalPopover component.
+ * Props for the StandaloneGoalModal component.
  *
  * @public
  */
-export interface StandaloneGoalPopoverProps {
+export interface StandaloneGoalModalProps {
   /** Whether the modal is open */
   open: boolean;
   /** Callback fired when the modal open state changes */
   onOpenChange: (open: boolean) => void;
   /** The goal ID to display, or null if no goal selected */
   goalId: Id<'goals'> | null;
-  /** Type of goal being displayed */
-  goalType: 'quarterly' | 'adhoc';
+  /** Category of goal being displayed */
+  goalCategory: 'standard' | 'adhoc';
   /** Year of the goal's quarter */
   year: number;
   /** Quarter number (1-4) */
@@ -63,16 +63,16 @@ export interface StandaloneGoalPopoverProps {
  * @param props - Component props
  * @returns Rendered modal with goal details, or null if no goalId
  */
-export function StandaloneGoalPopover({
+export function StandaloneGoalModal({
   open,
   onOpenChange,
   goalId,
-  goalType,
+  goalCategory,
   year,
   quarter,
   weekNumber: weekNumberProp,
   onComplete,
-}: StandaloneGoalPopoverProps) {
+}: StandaloneGoalModalProps) {
   const { sessionId } = useSession();
 
   const weekNumber = useMemo(() => {
@@ -113,8 +113,8 @@ export function StandaloneGoalPopover({
           {weekData && goalDetails && (
             <WeekProvider weekData={{ ...weekData, year, quarter }}>
               <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-                {goalType === 'quarterly' ? (
-                  <QuarterlyGoalPopoverContent onComplete={onComplete} />
+                {goalCategory === 'standard' ? (
+                  <StandardGoalPopoverContent onComplete={onComplete} />
                 ) : (
                   <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
                 )}

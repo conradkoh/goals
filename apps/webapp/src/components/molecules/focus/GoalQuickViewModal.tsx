@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
   GoalDetailsChildrenList,
@@ -112,7 +113,8 @@ function GoalQuickViewContentInternal({
 }) {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
-  const { weekNumber, year, createWeeklyGoalOptimistic, createDailyGoalOptimistic } = useWeek();
+  const { weekNumber, year, quarter, createWeeklyGoalOptimistic, createDailyGoalOptimistic } =
+    useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const isComplete = goal.isComplete;
 
@@ -210,6 +212,7 @@ function GoalQuickViewContentInternal({
       </DialogHeader>
       <FixedSizeDialogContent>
         <FireGoalsProvider>
+          <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} />
           <GoalHeader
             title={goal.title}
             isComplete={isComplete}
