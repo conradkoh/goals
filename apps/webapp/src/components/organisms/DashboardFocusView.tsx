@@ -326,7 +326,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   return (
     <GoalStatusProvider>
-      <div id="db-focus-view" className="w-full h-full">
+      <div id="db-focus-view" className="w-full h-full flex flex-col">
         <ViewModeKeyboardShortcuts
           onViewModeChange={onViewModeChange}
           onOpenQuarterJump={handleOpenCommandDialog}
@@ -386,7 +386,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           </WeekProvider>
         )}
 
-        <div className="w-full">
+        <div className="w-full flex-shrink-0">
           <FocusMenuBar
             viewMode={viewMode}
             selectedWeek={selectedWeekNumber}
@@ -407,7 +407,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             onOpenCommandPalette={handleOpenCommandDialog}
           />
         </div>
-        <div className="w-full h-full">
+        <div className="w-full flex-1 min-h-0">
           {viewMode === 'quarterly' && (
             <div key={quarterlyViewKey}>
               <FocusModeQuarterlyView year={selectedYear} quarter={selectedQuarter} />

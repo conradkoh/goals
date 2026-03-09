@@ -261,7 +261,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border break-words [word-break:break-word]',
+          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] h-full p-3 rounded-md border break-words [word-break:break-word]',
           styles.prose,
           className
         ),
@@ -355,8 +355,8 @@ export function RichTextEditor({
     });
   }
   return (
-    <div className="relative min-w-0 overflow-hidden">
-      <EditorContent editor={editor} className="overflow-y-auto max-h-[400px]" />
+    <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
+      <EditorContent editor={editor} className="overflow-y-auto flex-1 min-h-0 flex flex-col" />
     </div>
   );
 }

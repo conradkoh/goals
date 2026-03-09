@@ -202,10 +202,10 @@ export function FocusModeFocusedView() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col md:flex-row gap-0 h-full">
+    <div className="flex flex-col md:flex-row gap-0 h-full md:overflow-hidden">
       {/* ── Scratchpad section — 2/3 on desktop, full on mobile ─────────── */}
-      <div className="flex-1 md:flex-[2] border-b md:border-b-0 md:border-r border-border flex flex-col">
-        <div className="flex flex-col h-full">
+      <div className="flex-1 md:flex-[2] border-b md:border-b-0 md:border-r border-border flex flex-col md:min-h-0 md:overflow-hidden">
+        <div className="flex flex-col h-full md:min-h-0 md:overflow-hidden">
           {/* Industrial header */}
           <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
             <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
@@ -252,7 +252,7 @@ export function FocusModeFocusedView() {
           </div>
 
           {/* Editor — flex-1 to fill height */}
-          <div className="flex-1 min-h-[300px]">
+          <div className="flex-1 md:min-h-0 md:overflow-hidden min-h-[300px]">
             {!isContentInitialized ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -262,7 +262,7 @@ export function FocusModeFocusedView() {
                 value={content}
                 onChange={handleContentChange}
                 placeholder="Start writing..."
-                className="min-h-[500px]"
+                className="min-h-[300px] md:min-h-0"
               />
             )}
           </div>
@@ -270,7 +270,7 @@ export function FocusModeFocusedView() {
       </div>
 
       {/* ── Today's tasks section — 1/3 on desktop, full on mobile ─────── */}
-      <div className="md:w-80 flex flex-col">
+      <div className="md:w-80 flex flex-col md:min-h-0 md:overflow-y-auto">
         {/* Industrial header */}
         <div className="px-4 py-3 border-b-2 border-border">
           <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
