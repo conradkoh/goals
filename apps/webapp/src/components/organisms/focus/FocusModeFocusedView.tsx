@@ -110,28 +110,52 @@ export function FocusModeFocusedView() {
   const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
   const archiveScratchpad = useSessionMutation(api.scratchpad.archiveScratchpad);
 
-  // localContent: null means "not yet edited by user" — falls back to server value
+  // localContent: null = no pending local edits, falls back to server value.
+  // Once the user types, localContent holds their edits until save completes.
   const [localContent, setLocalContent] = useState<string | null>(null);
 
-  // Derived: use local edits if any, otherwise fall back to server value
-  const content = localContent ?? scratchpad?.content ?? '';
-  // Editor is only shown once the server data has loaded
+  // Timestamp of our last successful save — used to reject stale server echoes
+  const lastSavedAtRef = useRef<number>(0);
+  // Whether a save is currently in-flight
+  const isSavingRef = useRef(false);
+  // Ref for debounced save
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Accept server content when: no local edits pending, no save in-flight,
+  // and the server's updatedAt is newer than our last save (not just our own echo).
+  const serverContent = scratchpad?.content ?? '';
+  const serverUpdatedAt = scratchpad?.updatedAt ?? 0;
+
+  const hasPendingLocalEdits = localContent !== null;
+  const isServerNewer = serverUpdatedAt > lastSavedAtRef.current;
+
+  // When a newer server update arrives and we have no pending edits, accept it
+  useEffect(() => {
+    if (!hasPendingLocalEdits && !isSavingRef.current && isServerNewer) {
+      lastSavedAtRef.current = serverUpdatedAt;
+    }
+  }, [hasPendingLocalEdits, isServerNewer, serverUpdatedAt]);
+
+  const content = hasPendingLocalEdits ? localContent : serverContent;
   const isContentInitialized = scratchpad !== undefined;
 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  // Ref for debounced save
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Save function
+  // Save function — resets localContent to null on success so the subscription takes over
   const save = useCallback(
     async (contentToSave: string) => {
       setSaveStatus('saving');
+      isSavingRef.current = true;
       try {
         await upsertScratchpad({ content: contentToSave });
+        lastSavedAtRef.current = Date.now();
+        isSavingRef.current = false;
+        // Release local override — let the Convex subscription take over
+        setLocalContent(null);
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
+        isSavingRef.current = false;
         console.error('Failed to save scratchpad:', error);
         setSaveStatus('error');
       }
@@ -169,7 +193,10 @@ export function FocusModeFocusedView() {
 
     try {
       await archiveScratchpad({});
-      setLocalContent('');
+      // Reset local state — the archive mutation clears server content,
+      // and the Convex subscription will deliver the empty state
+      setLocalContent(null);
+      lastSavedAtRef.current = Date.now();
       setSaveStatus('idle');
     } catch (error) {
       console.error('Failed to archive scratchpad:', error);
