@@ -6,7 +6,7 @@
  * - WeeklyGoalPopover: For weekly goals under quarterly goals
  * - DailyGoalPopover: For daily goals under weekly goals
  * - AdhocGoalPopover: For adhoc tasks with domain support
- * - StandaloneGoalPopover: Self-contained modal for any goal type
+ * - StandaloneGoalModal: Self-contained modal for any goal type
  * - GoalPageContent: Full page view for any goal type
  *
  * @module
@@ -24,9 +24,6 @@ export {
   QuarterlyGoalPopoverContent,
   type QuarterlyGoalPopoverContentProps,
 } from './QuarterlyGoalPopoverContent';
-export { StandaloneGoalPopover, type StandaloneGoalPopoverProps } from './StandaloneGoalPopover';
+export { StandaloneGoalModal, type StandaloneGoalModalProps } from './StandaloneGoalModal';
 export { WeeklyGoalPopover, type WeeklyGoalPopoverProps } from './WeeklyGoalPopover';
-export {
-  WeeklyGoalPageContent,
-  type WeeklyGoalPageContentProps,
-} from './WeeklyGoalPageContent';
+export { WeeklyGoalPageContent, type WeeklyGoalPageContentProps } from './WeeklyGoalPageContent';

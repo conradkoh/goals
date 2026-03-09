@@ -3,7 +3,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useState } from 'react';
 
-import { StandaloneGoalPopover } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalPopover';
+import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
@@ -60,11 +60,11 @@ export function FocusedGoalListItem({
         </button>
       </li>
 
-      <StandaloneGoalPopover
+      <StandaloneGoalModal
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
         goalId={popoverOpen ? goalId : null}
-        goalType={isAdhoc ? 'adhoc' : 'quarterly'}
+        goalCategory={isAdhoc ? 'adhoc' : 'standard'}
         year={year}
         quarter={quarter}
         weekNumber={weekNumber}
