@@ -212,7 +212,7 @@ function GoalQuickViewContentInternal({
       </DialogHeader>
       <FixedSizeDialogContent>
         <FireGoalsProvider>
-          <GoalBreadcrumb quarter={quarter} year={year} />
+          <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} />
           <GoalHeader
             title={goal.title}
             isComplete={isComplete}

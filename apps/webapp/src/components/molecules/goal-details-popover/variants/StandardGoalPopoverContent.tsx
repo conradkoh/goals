@@ -211,14 +211,14 @@ function StandardGoalPopoverContentInner({
   handleCreateWeeklyGoal,
 }: StandardGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
-  const { year, quarter } = useWeek();
+  const { year, quarter, weekNumber } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <>
       <FireGoalsProvider>
-        <GoalBreadcrumb quarter={quarter} year={year} />
+        <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} />
         <GoalHeader
           title={goal.title}
           isComplete={isComplete}

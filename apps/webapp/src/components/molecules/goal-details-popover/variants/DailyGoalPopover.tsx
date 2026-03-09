@@ -121,7 +121,7 @@ function DailyGoalPopoverContentInner({
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
-      <GoalBreadcrumb quarter={quarter} year={year} domain={domain} />
+      <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} domain={domain} />
       <GoalHeader
         title={goal.title}
         isComplete={isComplete}

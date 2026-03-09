@@ -1310,6 +1310,7 @@ export const getGoalDetails = query({
     // Resolve parent and grandparent titles for breadcrumb context
     let parentTitle: string | undefined;
     let grandParentTitle: string | undefined;
+    let grandParentId: Id<'goals'> | undefined;
     if (goal.parentId) {
       const parent = await ctx.db.get('goals', goal.parentId);
       if (parent) {
@@ -1318,6 +1319,7 @@ export const getGoalDetails = query({
           const grandParent = await ctx.db.get('goals', parent.parentId);
           if (grandParent) {
             grandParentTitle = grandParent.title;
+            grandParentId = grandParent._id;
           }
         }
       }
@@ -1334,6 +1336,7 @@ export const getGoalDetails = query({
       parentId: goal.parentId,
       parentTitle,
       grandParentTitle,
+      grandParentId,
       domainId: goal.domainId,
       year: goal.year,
       quarter: goal.quarter,
