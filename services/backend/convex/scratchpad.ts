@@ -42,6 +42,26 @@ export const getScratchpad = query({
   },
 });
 
+/**
+ * List the most recent archived scratchpads for the current user.
+ * Returns up to 50 entries sorted by most recent first.
+ */
+export const listArchivedScratchpads = query({
+  args: { ...SessionIdArg },
+  handler: async (ctx, args) => {
+    const { sessionId } = args;
+    const user = await requireLogin(ctx, sessionId);
+
+    const archives = await ctx.db
+      .query('scratchpadArchive')
+      .withIndex('by_user_archived', (q) => q.eq('userId', user._id))
+      .order('desc')
+      .take(50);
+
+    return archives;
+  },
+});
+
 // ============================================================================
 // MUTATIONS
 // ============================================================================
