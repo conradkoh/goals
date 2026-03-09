@@ -190,19 +190,20 @@ export function FocusModeFocusedView() {
   // ── Week data (needed by GoalActionMenuNew via WeekProvider) ──────────
   const weekData = useWeekData({ year, quarter, week: weekNumber });
 
-  // ── Today's adhoc goals ──────────────────────────────────────────────────
-  // Use getAdhocGoalsForWeek (returns AdhocGoalWithChildren[] — hierarchical)
-  // getAdhocGoalsForDay returns a flat list without children, so hierarchy wouldn't show
-  const adhocGoals = useSessionQuery(api.adhocGoal.getAdhocGoalsForWeek, {
+  // ── BFF: Consolidated focused view data ─────────────────────────────────
+  const focusedViewData = useSessionQuery(api.bff.focus.getFocusedViewData, {
     year,
+    quarter,
     weekNumber,
+    dayOfWeek,
   });
 
-  // ── Adhoc goal mutations ────────────────────────────────────────────────
+  // ── Goal mutations ──────────────────────────────────────────────────────
   const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
   const updateAdhocGoal = useSessionMutation(api.adhocGoal.updateAdhocGoal);
+  const toggleGoalCompletion = useSessionMutation(api.dashboard.toggleGoalCompletion);
 
-  const handleCompleteChange = useCallback(
+  const handleAdhocCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
       try {
         await updateAdhocGoal({ goalId, isComplete });
@@ -211,6 +212,30 @@ export function FocusModeFocusedView() {
       }
     },
     [updateAdhocGoal]
+  );
+
+  const handleNormalGoalCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      try {
+        await toggleGoalCompletion({ goalId, weekNumber, isComplete });
+      } catch (error) {
+        console.error('Failed to toggle goal completion:', error);
+      }
+    },
+    [toggleGoalCompletion, weekNumber]
+  );
+
+  const handleUrgentCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      const goal = focusedViewData?.urgent.find((g) => g._id === goalId);
+      if (!goal) return;
+      if (goal.isAdhoc) {
+        await handleAdhocCompleteChange(goalId, isComplete);
+      } else {
+        await handleNormalGoalCompleteChange(goalId, isComplete);
+      }
+    },
+    [focusedViewData?.urgent, handleAdhocCompleteChange, handleNormalGoalCompleteChange]
   );
 
   // ── Add task ─────────────────────────────────────────────────────────────
@@ -315,27 +340,25 @@ export function FocusModeFocusedView() {
           <p className="text-[10px] text-muted-foreground mt-0.5">{formattedDate}</p>
         </div>
 
-        {!weekData ? (
+        {!weekData || !focusedViewData ? (
           <div className="flex items-center justify-center h-32">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : (
           <WeekProvider weekData={weekData}>
             <FocusedUrgentSection
-              year={year}
-              quarter={quarter}
-              weekNumber={weekNumber}
-              dayOfWeek={dayOfWeek}
+              goals={focusedViewData.urgent}
+              onToggleComplete={handleUrgentCompleteChange}
             />
 
-            <FocusedDailyGoalsSection dayOfWeek={dayOfWeek} />
+            <FocusedDailyGoalsSection
+              goals={focusedViewData.dailyGoals}
+              onToggleComplete={handleNormalGoalCompleteChange}
+            />
 
             <FocusedTasksSection
-              adhocGoals={adhocGoals}
-              year={year}
-              quarter={quarter as 1 | 2 | 3 | 4}
-              weekNumber={weekNumber}
-              onToggleComplete={handleCompleteChange}
+              goals={focusedViewData.adhocTasks}
+              onToggleComplete={handleAdhocCompleteChange}
             />
 
             {/* Inline add task */}

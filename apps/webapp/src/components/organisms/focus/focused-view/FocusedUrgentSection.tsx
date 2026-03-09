@@ -1,45 +1,19 @@
 'use client';
 
-import { api } from '@workspace/backend/convex/_generated/api';
-import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
+import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 
 import { FocusedTaskItem } from './FocusedTaskItem';
 import { FocusedTaskSection } from './FocusedTaskSection';
 
 interface FocusedUrgentSectionProps {
-  year: number;
-  quarter: number;
-  weekNumber: number;
-  dayOfWeek: number;
+  goals: FocusedGoalItem[];
+  onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
 }
 
-export function FocusedUrgentSection({
-  year,
-  quarter,
-  weekNumber,
-  dayOfWeek,
-}: FocusedUrgentSectionProps) {
-  const urgentGoals = useSessionQuery(api.fireGoal.getFireGoalDetails, {
-    year,
-    quarter,
-    weekNumber,
-    dayOfWeek,
-  });
-  const toggleCompletion = useSessionMutation(api.dashboard.toggleGoalCompletion);
+export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentSectionProps) {
+  if (goals.length === 0) return null;
 
-  if (!urgentGoals || urgentGoals.length === 0) return null;
-
-  const incompleteCount = urgentGoals.filter((g) => !g.isComplete).length;
-
-  const handleToggle = async (goalId: (typeof urgentGoals)[number]['_id'], isComplete: boolean) => {
-    const goal = urgentGoals.find((g) => g._id === goalId);
-    if (!goal) return;
-    await toggleCompletion({
-      goalId: goal._id,
-      weekNumber: goal.weekNumber ?? 1,
-      isComplete,
-    });
-  };
+  const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
     <FocusedTaskSection
@@ -50,7 +24,7 @@ export function FocusedUrgentSection({
     >
       <div className="px-4 py-2">
         <ul className="space-y-1">
-          {urgentGoals.map((goal) => (
+          {goals.map((goal) => (
             <FocusedTaskItem
               key={goal._id}
               goalId={goal._id}
@@ -60,7 +34,7 @@ export function FocusedUrgentSection({
               year={goal.year}
               quarter={goal.quarter as 1 | 2 | 3 | 4}
               weekNumber={goal.weekNumber ?? undefined}
-              onToggleComplete={handleToggle}
+              onToggleComplete={onToggleComplete}
               incompleteClassName="text-red-500 dark:text-red-400"
             />
           ))}
