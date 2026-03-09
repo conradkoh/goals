@@ -15,6 +15,7 @@
  */
 
 import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
 import { Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
@@ -155,8 +156,67 @@ export function FocusModeFocusedView() {
     weekNumber,
   });
 
-  // ── Add task ─────────────────────────────────────────────────────────────
+  // ── Adhoc goal mutations ────────────────────────────────────────────────
   const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
+  const updateAdhocGoal = useSessionMutation(api.adhocGoal.updateAdhocGoal);
+  const deleteAdhocGoal = useSessionMutation(api.adhocGoal.deleteAdhocGoal);
+
+  const handleCompleteChange = useCallback(
+    async (goalId: Id<'goals'>, isComplete: boolean) => {
+      try {
+        await updateAdhocGoal({ goalId, isComplete });
+      } catch (error) {
+        console.error('Failed to update goal completion:', error);
+      }
+    },
+    [updateAdhocGoal]
+  );
+
+  const handleUpdate = useCallback(
+    async (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null
+    ) => {
+      try {
+        await updateAdhocGoal({ goalId, title, details, dueDate, domainId });
+      } catch (error) {
+        console.error('Failed to update adhoc goal:', error);
+      }
+    },
+    [updateAdhocGoal]
+  );
+
+  const handleDelete = useCallback(
+    async (goalId: Id<'goals'>) => {
+      try {
+        await deleteAdhocGoal({ goalId });
+      } catch (error) {
+        console.error('Failed to delete adhoc goal:', error);
+      }
+    },
+    [deleteAdhocGoal]
+  );
+
+  const handleCreateChild = useCallback(
+    async (parentId: Id<'goals'>, title: string) => {
+      try {
+        await createAdhocGoal({
+          title,
+          year,
+          weekNumber,
+          parentId,
+        });
+      } catch (error) {
+        console.error('Failed to create subtask:', error);
+      }
+    },
+    [createAdhocGoal, year, weekNumber]
+  );
+
+  // ── Add task ─────────────────────────────────────────────────────────────
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
 
@@ -278,7 +338,15 @@ export function FocusModeFocusedView() {
             <ul className="space-y-1">
               {adhocGoals.map((goal) => (
                 <li key={goal._id}>
-                  <AdhocGoalItem goal={goal} />
+                  <AdhocGoalItem
+                    goal={goal}
+                    onCompleteChange={handleCompleteChange}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                    onCreateChild={handleCreateChild}
+                    showDueDate={false}
+                    showDomain={false}
+                  />
                 </li>
               ))}
             </ul>
