@@ -70,6 +70,92 @@ const NoNewLineOnSubmit = Extension.create({
  * Custom Tiptap extension that handles pasting of markdown task list syntax.
  * Converts `- [ ] task` or `- [x] task` syntax to proper task list nodes.
  */
+/**
+ * Custom Tiptap extension for markdown-style shortcuts triggered on space.
+ * Converts line prefixes like `# `, `- `, `1. `, `[ ] `, `> `, ```` ``` ```` into
+ * their rich-text equivalents.
+ */
+const MarkdownLineShortcuts = Extension.create({
+  name: 'markdown_line_shortcuts',
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('markdownLineShortcuts'),
+        props: {
+          handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+            if (event.key !== ' ' || event.metaKey || event.ctrlKey) return false;
+
+            const { from } = view.state.selection;
+            const line = view.state.doc.textBetween(Math.max(0, from - 10), from, '\n');
+
+            if (line.endsWith('# ')) {
+              editor.commands.setHeading({ level: 1 });
+              return true;
+            }
+            if (line.endsWith('## ')) {
+              editor.commands.setHeading({ level: 2 });
+              return true;
+            }
+            if (line.endsWith('### ')) {
+              editor.commands.setHeading({ level: 3 });
+              return true;
+            }
+            if (line.endsWith('* ') || line.endsWith('- ')) {
+              editor.commands.toggleBulletList();
+              return true;
+            }
+            if (line.endsWith('1. ')) {
+              editor.commands.toggleOrderedList();
+              return true;
+            }
+            if (line.endsWith('[ ] ') || line.endsWith('[x] ')) {
+              editor.commands.toggleTaskList();
+              return true;
+            }
+            if (line.endsWith('> ')) {
+              editor.commands.toggleBlockquote();
+              return true;
+            }
+            if (line.endsWith('``` ')) {
+              editor.commands.toggleCodeBlock();
+              return true;
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Custom Tiptap extension that converts a pasted URL into a link when text is selected.
+ */
+const LinkPasteHandler = Extension.create({
+  name: 'link_paste_handler',
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('linkPasteHandler'),
+        props: {
+          handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+            const clipboardText = event.clipboardData?.getData('text/plain');
+            if (!clipboardText) return false;
+
+            if (clipboardText.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
+              editor.commands.setLink({ href: clipboardText });
+              return true;
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
 const MarkdownTaskListPaste = Extension.create({
   name: 'markdown_task_list_paste',
   addProseMirrorPlugins() {
@@ -256,6 +342,8 @@ export function RichTextEditor({
         placeholder,
       }),
       NoNewLineOnSubmit,
+      MarkdownLineShortcuts,
+      LinkPasteHandler,
       MarkdownTaskListPaste,
     ],
     content: value || '',
@@ -285,84 +373,6 @@ export function RichTextEditor({
     }
   }, [editor, value]);
 
-  // Handle keyboard shortcuts
-  if (editor) {
-    editor.setOptions({
-      editorProps: {
-        handleKeyDown: (view, event) => {
-          // Bold: Cmd/Ctrl + B
-          if ((event.metaKey || event.ctrlKey) && event.key === 'b') {
-            editor.commands.toggleBold();
-            return true;
-          }
-          // Italic: Cmd/Ctrl + I
-          if ((event.metaKey || event.ctrlKey) && event.key === 'i') {
-            editor.commands.toggleItalic();
-            return true;
-          }
-          // Underline: Cmd/Ctrl + U
-          if ((event.metaKey || event.ctrlKey) && event.key === 'u') {
-            editor.commands.toggleUnderline();
-            return true;
-          }
-          // Handle markdown shortcuts
-          if (event.key === ' ' && !event.metaKey && !event.ctrlKey) {
-            // Check for markdown syntax at the start of the line
-            const { from } = view.state.selection;
-            const line = view.state.doc.textBetween(Math.max(0, from - 10), from, '\n');
-
-            // Handle basic markdown shortcuts
-            if (line.endsWith('# ')) {
-              editor.commands.setHeading({ level: 1 });
-              return true;
-            }
-            if (line.endsWith('## ')) {
-              editor.commands.setHeading({ level: 2 });
-              return true;
-            }
-            if (line.endsWith('### ')) {
-              editor.commands.setHeading({ level: 3 });
-              return true;
-            }
-            if (line.endsWith('* ') || line.endsWith('- ')) {
-              editor.commands.toggleBulletList();
-              return true;
-            }
-            if (line.endsWith('1. ')) {
-              editor.commands.toggleOrderedList();
-              return true;
-            }
-            if (line.endsWith('[ ] ') || line.endsWith('[x] ')) {
-              editor.commands.toggleTaskList();
-              return true;
-            }
-            if (line.endsWith('> ')) {
-              editor.commands.toggleBlockquote();
-              return true;
-            }
-            if (line.endsWith('``` ')) {
-              editor.commands.toggleCodeBlock();
-              return true;
-            }
-          }
-          return false;
-        },
-        handlePaste: (_view, event) => {
-          const clipboardText = event.clipboardData?.getData('text/plain');
-          if (!clipboardText) return false;
-
-          // Handle link pasting over selected text
-          if (clipboardText.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
-            editor.commands.setLink({ href: clipboardText });
-            return true;
-          }
-
-          // Task list paste is handled by MarkdownTaskListPaste extension
-          return false;
-        },
-      },
-    });
-  }
   return (
     <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
       <EditorContent editor={editor} className="overflow-y-auto flex-1 min-h-0 flex flex-col" />
