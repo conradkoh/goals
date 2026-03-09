@@ -95,7 +95,7 @@ export function FocusUrgentSection({
                 type="button"
                 onClick={() => handleGoalClick(goal)}
                 className={cn(
-                  'text-sm text-left flex-1 truncate hover:text-foreground transition-colors',
+                  'text-sm text-left flex-1 truncate hover:text-foreground transition-colors uppercase tracking-wider font-bold',
                   goal.isComplete
                     ? 'line-through text-muted-foreground'
                     : 'text-red-500 dark:text-red-400'
