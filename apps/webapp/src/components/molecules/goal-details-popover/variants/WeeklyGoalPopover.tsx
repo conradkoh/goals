@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
   GoalDetailsChildrenList,
@@ -152,6 +153,7 @@ function WeeklyGoalPopoverContentInner({
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { year, quarter } = useWeek();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
@@ -166,6 +168,7 @@ function WeeklyGoalPopoverContentInner({
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
+      <GoalBreadcrumb quarter={quarter} year={year} />
       <GoalHeader
         title={goal.title}
         isComplete={isComplete}

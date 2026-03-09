@@ -6,6 +6,7 @@ import { useCallback, useMemo } from 'react';
 import {
   AdhocSubGoalsList,
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalCompletionDate,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -324,6 +325,7 @@ function AdhocGoalQuickViewContent({
       </DialogHeader>
       <FixedSizeDialogContent>
         <FireGoalsProvider>
+          <GoalBreadcrumb domain={adhocGoalProp.domain ?? null} />
           <GoalHeader
             title={goal.title}
             isComplete={isComplete}
