@@ -195,7 +195,7 @@ export const GoalPopoverTrigger = forwardRef<HTMLButtonElement, GoalPopoverTrigg
     {
       title,
       variant = 'ghost',
-      className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
+      className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1 normal-case tracking-normal',
       titleClassName = 'text-gray-600',
       ...props
     },
