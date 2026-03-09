@@ -11,6 +11,7 @@ import { useState, useCallback } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
   GoalDetailsChildrenList,
@@ -210,12 +211,14 @@ function QuarterlyGoalPopoverContentInner({
   handleCreateWeeklyGoal,
 }: QuarterlyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
+  const { year, quarter } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <>
       <FireGoalsProvider>
+        <GoalBreadcrumb quarter={quarter} year={year} />
         <GoalHeader
           title={goal.title}
           isComplete={isComplete}
