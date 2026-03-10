@@ -4,15 +4,16 @@ import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { isHTMLEmpty } from '@/components/ui/rich-text-editor';
+import { isHTMLEmpty, type RichTextEditorHandle } from '@/components/ui/rich-text-editor';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 /**
- * Encapsulates all scratchpad state management:
- * - Real-time Convex subscription with local-first editing
- * - Debounced auto-save (500ms)
- * - Race condition handling via timestamp comparison
+ * Encapsulates all scratchpad state management with optimistic concurrency control:
+ * - Real-time Convex subscription for server state
+ * - Uncontrolled editor via editorRef (no useEffect sync loops)
+ * - Debounced auto-save (500ms) with version tracking
+ * - Server-side conflict detection via expectedVersion
  * - Archive ("New") with confirmation
  */
 export function useScratchpad() {
@@ -20,12 +21,14 @@ export function useScratchpad() {
   const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
   const archiveScratchpad = useSessionMutation(api.scratchpad.archiveScratchpad);
 
-  const [localContent, setLocalContent] = useState<string | null>(null);
+  const editorRef = useRef<RichTextEditorHandle | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  const lastSavedAtRef = useRef<number>(0);
+  const lastKnownVersionRef = useRef<number>(0);
   const isSavingRef = useRef(false);
+  const pendingContentRef = useRef<string | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isReadyRef = useRef(false);
 
   const cancelPendingSave = useCallback(() => {
     if (saveTimeoutRef.current) {
@@ -37,25 +40,53 @@ export function useScratchpad() {
   useEffect(() => cancelPendingSave, [cancelPendingSave]);
 
   const serverContent = scratchpad?.content ?? '';
-  const serverUpdatedAt = scratchpad?.updatedAt ?? 0;
-  const hasPendingLocalEdits = localContent !== null;
-
-  if (!hasPendingLocalEdits && !isSavingRef.current && serverUpdatedAt > lastSavedAtRef.current) {
-    lastSavedAtRef.current = serverUpdatedAt;
-  }
-
-  const content = hasPendingLocalEdits ? localContent : serverContent;
+  const serverVersion = scratchpad?.version ?? 0;
   const isReady = scratchpad !== undefined;
+
+  // Apply server content when version advances from an external source
+  useEffect(() => {
+    if (!isReady) return;
+
+    if (serverVersion > lastKnownVersionRef.current) {
+      if (!isSavingRef.current && pendingContentRef.current === null) {
+        // No local edits pending and not mid-save — safe to apply server content
+        if (isReadyRef.current) {
+          editorRef.current?.setContent(serverContent);
+        }
+      }
+      lastKnownVersionRef.current = serverVersion;
+    }
+
+    if (!isReadyRef.current) {
+      isReadyRef.current = true;
+    }
+  }, [serverVersion, serverContent, isReady]);
 
   const save = useCallback(
     async (contentToSave: string) => {
       setSaveStatus('saving');
       isSavingRef.current = true;
       try {
-        await upsertScratchpad({ content: contentToSave });
-        lastSavedAtRef.current = Date.now();
+        const result = await upsertScratchpad({
+          content: contentToSave,
+          expectedVersion: lastKnownVersionRef.current,
+        });
+
         isSavingRef.current = false;
-        setLocalContent(null);
+
+        if (result.conflict) {
+          // Server had a newer version — our write was rejected.
+          // Accept server state: the subscription will push the latest content.
+          pendingContentRef.current = null;
+          setSaveStatus('error');
+          console.warn(
+            'Scratchpad save conflict: server version diverged. Accepting server state.'
+          );
+          return;
+        }
+
+        lastKnownVersionRef.current = result.version;
+        pendingContentRef.current = null;
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
@@ -69,7 +100,7 @@ export function useScratchpad() {
 
   const handleContentChange = useCallback(
     (newContent: string) => {
-      setLocalContent(newContent);
+      pendingContentRef.current = newContent;
       cancelPendingSave();
       saveTimeoutRef.current = setTimeout(() => {
         save(newContent);
@@ -79,25 +110,27 @@ export function useScratchpad() {
   );
 
   const handleNew = useCallback(async () => {
-    if (content && !isHTMLEmpty(content)) {
+    const currentContent = pendingContentRef.current ?? serverContent;
+    if (currentContent && !isHTMLEmpty(currentContent)) {
       const confirmed = window.confirm('Archive current content and start fresh?');
       if (!confirmed) return;
     }
 
     cancelPendingSave();
+    pendingContentRef.current = null;
 
     try {
       await archiveScratchpad({});
-      setLocalContent(null);
-      lastSavedAtRef.current = Date.now();
+      editorRef.current?.setContent('');
       setSaveStatus('idle');
     } catch (error) {
       console.error('Failed to archive scratchpad:', error);
     }
-  }, [content, archiveScratchpad, cancelPendingSave]);
+  }, [serverContent, archiveScratchpad, cancelPendingSave]);
 
   return {
-    content,
+    initialContent: serverContent,
+    editorRef,
     saveStatus,
     isReady,
     handleContentChange,

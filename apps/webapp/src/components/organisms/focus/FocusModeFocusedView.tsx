@@ -102,7 +102,8 @@ export function FocusModeFocusedView() {
 
   // ── Scratchpad ─────────────────────────────────────────────────────────
   const {
-    content,
+    initialContent,
+    editorRef,
     saveStatus,
     isReady: isContentInitialized,
     handleContentChange,
@@ -259,8 +260,9 @@ export function FocusModeFocusedView() {
               </div>
             ) : (
               <RichTextEditor
-                value={content}
+                value={initialContent}
                 onChange={handleContentChange}
+                editorRef={editorRef}
                 placeholder="Start writing..."
                 className="min-h-[300px] md:min-h-0"
               />

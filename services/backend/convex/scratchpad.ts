@@ -68,23 +68,30 @@ export const listArchivedScratchpads = query({
 // ============================================================================
 
 /**
- * Create or update the user's scratchpad content.
- * If no scratchpad record exists, creates one.
- * If one exists, patches it with the new content and updates `updatedAt`.
+ * Create or update the user's scratchpad content with optimistic concurrency control.
+ *
+ * When `expectedVersion` is provided, the mutation will reject the write if the
+ * server's current version doesn't match, indicating a concurrent modification.
+ * The client should re-fetch and resolve the conflict.
+ *
+ * Returns `{ id, version, updatedAt }` on success, or `{ conflict: true, ... }`
+ * if the write was rejected due to version mismatch.
  *
  * @example
  * ```tsx
  * const upsertScratchpad = useSessionMutation(api.scratchpad.upsertScratchpad);
- * await upsertScratchpad({ content: '<p>My notes</p>' });
+ * const result = await upsertScratchpad({ content: '<p>My notes</p>', expectedVersion: 5 });
+ * if (result.conflict) { /* handle conflict *\/ }
  * ```
  */
 export const upsertScratchpad = mutation({
   args: {
     ...SessionIdArg,
     content: v.optional(v.string()),
+    expectedVersion: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, content } = args;
+    const { sessionId, content, expectedVersion } = args;
     const user = await requireLogin(ctx, sessionId);
 
     const existing = await ctx.db
@@ -93,20 +100,35 @@ export const upsertScratchpad = mutation({
       .unique();
 
     if (existing === null) {
-      // Create new scratchpad record
+      const now = Date.now();
       const id = await ctx.db.insert('scratchpad', {
         userId: user._id,
         content,
-        updatedAt: Date.now(),
+        updatedAt: now,
+        version: 1,
       });
-      return id;
+      return { id, version: 1, updatedAt: now, conflict: false };
     }
-    // Update existing record
+
+    const currentVersion = existing.version ?? 0;
+
+    if (expectedVersion !== undefined && expectedVersion !== currentVersion) {
+      return {
+        id: existing._id,
+        version: currentVersion,
+        updatedAt: existing.updatedAt,
+        conflict: true,
+      };
+    }
+
+    const newVersion = currentVersion + 1;
+    const now = Date.now();
     await ctx.db.patch('scratchpad', existing._id, {
       content,
-      updatedAt: Date.now(),
+      updatedAt: now,
+      version: newVersion,
     });
-    return existing._id;
+    return { id: existing._id, version: newVersion, updatedAt: now, conflict: false };
   },
 });
 
@@ -144,15 +166,17 @@ export const archiveScratchpad = mutation({
         archivedAt: Date.now(),
       });
 
-      // Clear the scratchpad content
+      const newVersion = (existing.version ?? 0) + 1;
       await ctx.db.patch('scratchpad', existing._id, {
         content: undefined,
         updatedAt: Date.now(),
+        version: newVersion,
       });
     } else if (existing !== null) {
-      // Scratchpad exists but is empty — still update the timestamp
+      const newVersion = (existing.version ?? 0) + 1;
       await ctx.db.patch('scratchpad', existing._id, {
         updatedAt: Date.now(),
+        version: newVersion,
       });
     }
 

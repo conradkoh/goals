@@ -437,6 +437,7 @@ export default defineSchema({
     userId: v.id('users'),
     content: v.optional(v.string()), // HTML content from RichTextEditor
     updatedAt: v.number(),
+    version: v.optional(v.number()), // Optimistic concurrency control version (starts at 1)
   }).index('by_user', ['userId']),
 
   /**

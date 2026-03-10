@@ -8,7 +8,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import styles from './rich-text-editor.module.css';
 
@@ -264,6 +264,11 @@ const MarkdownTaskListPaste = Extension.create({
   },
 });
 
+/** Imperative handle for pushing external content into the editor without triggering onChange. */
+export interface RichTextEditorHandle {
+  setContent: (html: string) => void;
+}
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -271,6 +276,14 @@ interface RichTextEditorProps {
   placeholder?: string;
   /** Whether to automatically focus the editor when mounted */
   autoFocus?: boolean;
+  /**
+   * When provided, the editor operates in uncontrolled mode:
+   * - `value` is only used as the initial content at mount time
+   * - External content should be pushed via `editorRef.current.setContent()`
+   *   which does NOT trigger onChange (breaking feedback loops)
+   * - The `value` prop useEffect sync is disabled
+   */
+  editorRef?: React.MutableRefObject<RichTextEditorHandle | null>;
 }
 
 export function RichTextEditor({
@@ -279,7 +292,11 @@ export function RichTextEditor({
   className,
   placeholder,
   autoFocus = false,
+  editorRef,
 }: RichTextEditorProps) {
+  const isExternalUpdateRef = useRef(false);
+  const isUncontrolled = editorRef !== undefined;
+
   const editor = useEditor({
     autofocus: autoFocus,
     extensions: [
@@ -357,6 +374,7 @@ export function RichTextEditor({
       },
     },
     onUpdate: ({ editor }) => {
+      if (isExternalUpdateRef.current) return;
       const html = editor.getHTML();
       const cleanedHtml = stripTrailingEmptyParagraphs(html);
       onChange(cleanedHtml);
@@ -364,14 +382,32 @@ export function RichTextEditor({
     immediatelyRender: false,
   });
 
+  // Expose imperative handle for uncontrolled mode
   useEffect(() => {
+    if (!editorRef || !editor) return;
+    editorRef.current = {
+      setContent: (html: string) => {
+        if (editor.isDestroyed) return;
+        isExternalUpdateRef.current = true;
+        editor.commands.setContent(html || '');
+        isExternalUpdateRef.current = false;
+      },
+    };
+    return () => {
+      editorRef.current = null;
+    };
+  }, [editor, editorRef]);
+
+  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided)
+  useEffect(() => {
+    if (isUncontrolled) return;
     if (!editor || editor.isDestroyed) return;
     if (editor.isFocused) return;
     const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
     if (currentHtml !== value) {
       editor.commands.setContent(value || '');
     }
-  }, [editor, value]);
+  }, [editor, value, isUncontrolled]);
 
   return (
     <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
