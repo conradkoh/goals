@@ -340,7 +340,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
         />
 
         {/* Render goal search and quick view within WeekProvider context if week data available */}
-        {weekData && (viewMode === 'weekly' || viewMode === 'daily') && (
+        {weekData && (viewMode === 'weekly' || viewMode === 'daily' || viewMode === 'focused') && (
           <WeekProvider weekData={weekData}>
             <GoalSearchDialogWrapper
               open={isGoalSearchOpen}
