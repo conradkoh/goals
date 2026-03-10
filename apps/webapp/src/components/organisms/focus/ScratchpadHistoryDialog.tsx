@@ -162,7 +162,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
         No archived scratchpads yet.
       </div>
     ) : (
-      <div className="space-y-6 px-3">
+      <div className="space-y-4 px-3 py-2">
         {groupArchivesByDay(archivedScratchpads).map(({ dateLabel, items }) => (
           <div key={dateLabel}>
             <div className="sticky top-0 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm z-10 py-2 px-1">
