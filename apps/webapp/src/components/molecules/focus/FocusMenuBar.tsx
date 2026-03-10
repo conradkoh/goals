@@ -183,6 +183,28 @@ export const FocusMenuBar = ({
                     Focus — {DateTime.now().toFormat('cccc, MMMM d')}
                   </span>
 
+                  {/* Search button — opens command palette */}
+                  {onOpenCommandPalette && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onOpenCommandPalette}
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            aria-label="Search"
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{searchShortcutLabel}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
                   {/* View-switch + actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
