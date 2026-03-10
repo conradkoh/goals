@@ -353,7 +353,7 @@ export function DomainPopover({
             <span className="text-xs font-normal text-muted-foreground">({allGoals.length})</span>
           </FixedSizeDialogTitle>
           <FixedSizeDialogContent className="p-0">{content}</FixedSizeDialogContent>
-          <FixedSizeDialogActions>
+          <FixedSizeDialogActions className="flex-col sm:flex-col">
             <CreateGoalInput
               placeholder={`Add a task to ${domainName.toLowerCase()}...`}
               value={newGoalTitle}
