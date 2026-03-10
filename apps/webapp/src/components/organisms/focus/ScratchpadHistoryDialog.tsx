@@ -2,13 +2,15 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionQuery } from 'convex-helpers/react/sessions';
-import { ChevronLeft, Loader2 } from 'lucide-react';
+import { Check, ChevronLeft, Copy, Loader2 } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SafeHTML } from '@/components/ui/safe-html';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { htmlToMarkdown } from '@/lib/html-to-markdown';
 
 // ============================================================================
 // Helpers
@@ -99,6 +101,24 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
     ? archivedScratchpads.find((a) => a._id === selectedId)
     : undefined;
 
+  const [copySuccess, setCopySuccess] = useState(false);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCopy = useCallback(async () => {
+    if (!selectedItem?.content) return;
+    const markdown = htmlToMarkdown(selectedItem.content);
+    await navigator.clipboard.writeText(markdown);
+    setCopySuccess(true);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 2000);
+  }, [selectedItem?.content]);
+
   // ── List content ──────────────────────────────────────────────────────
   const listContent =
     archivedScratchpads === undefined ? (
@@ -144,8 +164,30 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
   // ── Detail content ────────────────────────────────────────────────────
   const detailContent = selectedItem ? (
     <div key={selectedId} className="p-4 animate-in fade-in-0 duration-200">
-      <div className="text-xs text-muted-foreground mb-4">
-        {formatArchiveDateTime(selectedItem.archivedAt)}
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-xs text-muted-foreground">
+          {formatArchiveDateTime(selectedItem.archivedAt)}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleCopy}
+          className={`text-xs uppercase tracking-wider font-bold ${
+            copySuccess ? 'text-emerald-600 dark:text-emerald-400' : ''
+          }`}
+        >
+          {copySuccess ? (
+            <>
+              <Check className="h-3.5 w-3.5 mr-1" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-3.5 w-3.5 mr-1" />
+              Copy
+            </>
+          )}
+        </Button>
       </div>
       <SafeHTML html={selectedItem.content ?? ''} className="text-sm" />
     </div>
