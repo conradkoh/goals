@@ -183,3 +183,34 @@ export const archiveScratchpad = mutation({
     return archiveId;
   },
 });
+
+/**
+ * Delete a single archived scratchpad entry.
+ *
+ * Validates ownership before deletion — only the user who created the
+ * archive can delete it.
+ *
+ * @example
+ * ```tsx
+ * const deleteArchived = useSessionMutation(api.scratchpad.deleteArchivedScratchpad);
+ * await deleteArchived({ archiveId });
+ * ```
+ */
+export const deleteArchivedScratchpad = mutation({
+  args: { ...SessionIdArg, archiveId: v.id('scratchpadArchive') },
+  handler: async (ctx, args) => {
+    const { sessionId, archiveId } = args;
+    const user = await requireLogin(ctx, sessionId);
+
+    const entry = await ctx.db.get('scratchpadArchive', archiveId);
+    if (!entry) {
+      throw new Error('Archive entry not found');
+    }
+    if (entry.userId !== user._id) {
+      throw new Error('Not authorized to delete this archive entry');
+    }
+
+    await ctx.db.delete('scratchpadArchive', archiveId);
+    return { success: true };
+  },
+});
