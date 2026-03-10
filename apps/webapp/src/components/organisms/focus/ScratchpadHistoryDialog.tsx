@@ -123,7 +123,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item._id)}
-                  className={`rounded-md px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors ${
+                  className={`rounded-md px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors duration-150 ${
                     selectedId === item._id ? 'bg-accent border-l-2 border-primary' : ''
                   }`}
                 >
@@ -143,7 +143,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
 
   // ── Detail content ────────────────────────────────────────────────────
   const detailContent = selectedItem ? (
-    <div className="p-4">
+    <div key={selectedId} className="p-4 animate-in fade-in-0 duration-200">
       <div className="text-xs text-muted-foreground mb-4">
         {formatArchiveDateTime(selectedItem.archivedAt)}
       </div>
@@ -164,31 +164,39 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 flex flex-row">
-          {/* List panel — always visible on desktop, conditional on mobile */}
-          <div
-            className={`md:w-[300px] md:flex-shrink-0 md:border-r md:border-border overflow-y-auto ${
-              view === 'detail' ? 'hidden md:block' : 'w-full'
-            }`}
-          >
+        {/* Desktop layout — side-by-side, always visible */}
+        <div className="hidden md:flex flex-1 min-h-0 flex-row">
+          <div className="w-[300px] flex-shrink-0 border-r border-border overflow-y-auto">
             <ScrollArea className="h-full">{listContent}</ScrollArea>
           </div>
+          <div className="flex-1 overflow-y-auto">{detailContent}</div>
+        </div>
 
-          {/* Detail panel — always visible on desktop, conditional on mobile */}
+        {/* Mobile layout — sliding transition between list and detail */}
+        <div className="md:hidden flex-1 min-h-0 overflow-hidden">
           <div
-            className={`flex-1 overflow-y-auto ${view === 'list' ? 'hidden md:block' : 'w-full'}`}
+            className={`flex h-full transition-transform duration-200 ease-in-out ${
+              view === 'detail' ? '-translate-x-full' : 'translate-x-0'
+            }`}
           >
-            {/* Mobile back button */}
-            <div className="md:hidden p-4 pb-0">
-              <button
-                onClick={() => setView('list')}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Back
-              </button>
+            {/* List panel (mobile) */}
+            <div className="w-full flex-shrink-0 overflow-y-auto">
+              <ScrollArea className="h-full">{listContent}</ScrollArea>
             </div>
-            {detailContent}
+
+            {/* Detail panel (mobile) */}
+            <div className="w-full flex-shrink-0 overflow-y-auto">
+              <div className="p-4 pb-0">
+                <button
+                  onClick={() => setView('list')}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 mb-3"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Back
+                </button>
+              </div>
+              {detailContent}
+            </div>
           </div>
         </div>
       </DialogContent>
