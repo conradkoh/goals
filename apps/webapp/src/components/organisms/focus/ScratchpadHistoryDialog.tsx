@@ -1,11 +1,22 @@
 'use client';
 
 import { api } from '@workspace/backend/convex/_generated/api';
-import { useSessionQuery } from 'convex-helpers/react/sessions';
-import { Check, ChevronLeft, Copy, Loader2 } from 'lucide-react';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
+import { Check, ChevronLeft, Copy, Loader2, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SafeHTML } from '@/components/ui/safe-html';
@@ -86,6 +97,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
       if (!nextOpen) {
         setSelectedId(null);
         setView('list');
+        setShowDeleteConfirm(false);
       }
       onOpenChange(nextOpen);
     },
@@ -118,6 +130,22 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
     if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
     copyTimeoutRef.current = setTimeout(() => setCopySuccess(false), 2000);
   }, [selectedItem?.content]);
+
+  // ── Delete ────────────────────────────────────────────────────────────
+  const deleteArchived = useSessionMutation(api.scratchpad.deleteArchivedScratchpad);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!selectedId) return;
+    setShowDeleteConfirm(false);
+    try {
+      await deleteArchived({ archiveId: selectedId as Id<'scratchpadArchive'> });
+      setSelectedId(null);
+      setView('list');
+    } catch (error) {
+      console.error('Failed to delete archived scratchpad:', error);
+    }
+  }, [selectedId, deleteArchived]);
 
   // ── List content ──────────────────────────────────────────────────────
   const listContent =
@@ -168,26 +196,37 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
         <div className="text-xs text-muted-foreground">
           {formatArchiveDateTime(selectedItem.archivedAt)}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCopy}
-          className={`text-xs uppercase tracking-wider font-bold ${
-            copySuccess ? 'text-emerald-600 dark:text-emerald-400' : ''
-          }`}
-        >
-          {copySuccess ? (
-            <>
-              <Check className="h-3.5 w-3.5 mr-1" />
-              Copied!
-            </>
-          ) : (
-            <>
-              <Copy className="h-3.5 w-3.5 mr-1" />
-              Copy
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className={`text-xs uppercase tracking-wider font-bold ${
+              copySuccess ? 'text-emerald-600 dark:text-emerald-400' : ''
+            }`}
+          >
+            {copySuccess ? (
+              <>
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5 mr-1" />
+                Copy
+              </>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-xs uppercase tracking-wider font-bold text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1" />
+            Delete
+          </Button>
+        </div>
       </div>
       <SafeHTML html={selectedItem.content ?? ''} className="text-sm" />
     </div>
@@ -242,6 +281,26 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
           </div>
         </div>
       </DialogContent>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Archived Item</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this archived scratchpad. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
