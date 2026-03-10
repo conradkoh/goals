@@ -140,6 +140,12 @@ export function GoalSearchDialog({
     router.push('/app/documents');
   }, [onOpenChange, router]);
 
+  useEffect(() => {
+    if (open) {
+      setSearchValue('');
+    }
+  }, [open]);
+
   // Refocus search input when modal closes
   useEffect(() => {
     if (open && !isGoalModalOpen) {
