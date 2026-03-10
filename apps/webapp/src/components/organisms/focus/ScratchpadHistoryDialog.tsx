@@ -122,6 +122,10 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
     };
   }, []);
 
+  useEffect(() => {
+    setCopySuccess(false);
+  }, [selectedId]);
+
   const handleCopy = useCallback(async () => {
     if (!selectedItem?.content) return;
     const markdown = htmlToMarkdown(selectedItem.content);
