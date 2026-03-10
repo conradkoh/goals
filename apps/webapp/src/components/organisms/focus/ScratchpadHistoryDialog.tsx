@@ -195,7 +195,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
 
   // ── Detail content ────────────────────────────────────────────────────
   const detailContent = selectedItem ? (
-    <div key={selectedId} className="p-4 animate-in fade-in-0 duration-200">
+    <div key={selectedId} className="pt-1 px-4 pb-4 animate-in fade-in-0 duration-200">
       <div className="flex items-center justify-between mb-4">
         <div className="text-xs text-muted-foreground">
           {formatArchiveDateTime(selectedItem.archivedAt)}
