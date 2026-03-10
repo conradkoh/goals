@@ -242,7 +242,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[900px] h-[600px] max-w-[95vw] max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[900px] h-[600px] max-w-[95vw] sm:max-w-[95vw] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xs font-bold uppercase tracking-wider">
             Scratchpad History
