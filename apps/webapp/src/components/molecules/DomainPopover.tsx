@@ -10,6 +10,7 @@ import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   FixedSizeDialog,
+  FixedSizeDialogActions,
   FixedSizeDialogContent,
   FixedSizeDialogTitle,
 } from '@/components/ui/fixed-size-dialog';
@@ -281,23 +282,6 @@ export function DomainPopover({
               ))
             )}
           </div>
-
-          {/* Create Input */}
-          <div className="border-t pt-3">
-            <CreateGoalInput
-              placeholder={`Add a task to ${domainName.toLowerCase()}...`}
-              value={newGoalTitle}
-              onChange={setNewGoalTitle}
-              onSubmit={handleSubmit}
-              onEscape={handleEscape}
-            >
-              {isCreating && (
-                <div className="flex items-center justify-center pt-2">
-                  <Spinner className="h-4 w-4" />
-                </div>
-              )}
-            </CreateGoalInput>
-          </div>
         </TabsContent>
 
         <TabsContent value="backlog" className="flex-1 mt-0 p-4">
@@ -369,6 +353,21 @@ export function DomainPopover({
             <span className="text-xs font-normal text-muted-foreground">({allGoals.length})</span>
           </FixedSizeDialogTitle>
           <FixedSizeDialogContent className="p-0">{content}</FixedSizeDialogContent>
+          <FixedSizeDialogActions>
+            <CreateGoalInput
+              placeholder={`Add a task to ${domainName.toLowerCase()}...`}
+              value={newGoalTitle}
+              onChange={setNewGoalTitle}
+              onSubmit={handleSubmit}
+              onEscape={handleEscape}
+            >
+              {isCreating && (
+                <div className="flex items-center justify-center pt-2">
+                  <Spinner className="h-4 w-4" />
+                </div>
+              )}
+            </CreateGoalInput>
+          </FixedSizeDialogActions>
         </FixedSizeDialog>
       </Dialog>
     </>
