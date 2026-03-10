@@ -7,18 +7,15 @@ import { useCallback, useState } from 'react';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  FullscreenDialogContent,
-} from '@/components/ui/dialog';
+  FixedSizeDialog,
+  FixedSizeDialogContent,
+  FixedSizeDialogTitle,
+} from '@/components/ui/fixed-size-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
-import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
-import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -61,7 +58,6 @@ export function DomainPopover({
   onOpenChange: controlledOnOpenChange,
 }: DomainPopoverProps) {
   const { sessionId } = useSession();
-  const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [internalOpen, setInternalOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -264,7 +260,7 @@ export function DomainPopover({
 
         <TabsContent value="active" className="flex-1 mt-0 p-4 space-y-3">
           {/* Goals List */}
-          <div className="space-y-1 max-h-[300px] overflow-y-auto">
+          <div className="space-y-1 overflow-y-auto">
             {activeGoals.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No active tasks. Create one below!
@@ -305,7 +301,7 @@ export function DomainPopover({
         </TabsContent>
 
         <TabsContent value="backlog" className="flex-1 mt-0 p-4">
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+          <div className="space-y-1 overflow-y-auto">
             {backlogGoals.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No backlog tasks. Move tasks here for later.
@@ -329,7 +325,7 @@ export function DomainPopover({
         </TabsContent>
 
         <TabsContent value="completed" className="flex-1 mt-0 p-4">
-          <div className="space-y-1 max-h-[400px] overflow-y-auto">
+          <div className="space-y-1 overflow-y-auto">
             {completedGoals.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No completed tasks yet.
@@ -355,41 +351,6 @@ export function DomainPopover({
     </div>
   );
 
-  // Use fullscreen dialog on touch devices
-  if (isHydrated && preferFullscreenDialogs) {
-    return (
-      <>
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: The trigger contains interactive elements */}
-        <span className="contents" onClick={() => setIsOpen(true)}>
-          {trigger}
-        </span>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <FullscreenDialogContent
-            className={cn(
-              // Width: full width minus small margin
-              'w-[calc(100vw-16px)] max-w-none',
-              // Height: use dvh for iOS Safari dynamic viewport
-              'h-[calc(100dvh-32px)] max-h-none',
-              // Safe area padding for notch and home indicator
-              'pb-[env(safe-area-inset-bottom,0px)]',
-              'overflow-hidden flex flex-col p-0'
-            )}
-          >
-            <DialogHeader className="flex-row items-center gap-2 px-4 pt-4 pb-3 border-b space-y-0">
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              <DialogTitle className="font-semibold text-sm">{domainName}</DialogTitle>
-              <span className="text-xs text-muted-foreground">({allGoals.length})</span>
-            </DialogHeader>
-            {/* pb-4 ensures content can scroll past keyboard on iOS */}
-            <div className="flex-1 overflow-y-auto w-full pb-4 overscroll-contain">{content}</div>
-          </FullscreenDialogContent>
-        </Dialog>
-      </>
-    );
-  }
-
-  // Desktop: Use a modal dialog instead of popover
   return (
     <>
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
@@ -398,14 +359,17 @@ export function DomainPopover({
         {trigger}
       </span>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-0">
-          <DialogHeader className="flex-row items-center gap-2 px-4 pt-4 pb-3 border-b space-y-0">
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            <DialogTitle className="font-semibold text-sm">{domainName}</DialogTitle>
-            <span className="text-xs text-muted-foreground">({allGoals.length})</span>
+        <FixedSizeDialog>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{domainName}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto">{content}</div>
-        </DialogContent>
+          <FixedSizeDialogTitle className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
+            <span>{domainName}</span>
+            <span className="text-xs font-normal text-muted-foreground">({allGoals.length})</span>
+          </FixedSizeDialogTitle>
+          <FixedSizeDialogContent className="p-0">{content}</FixedSizeDialogContent>
+        </FixedSizeDialog>
       </Dialog>
     </>
   );
