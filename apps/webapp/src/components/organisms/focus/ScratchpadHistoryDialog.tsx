@@ -251,7 +251,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
 
         {/* Desktop layout — side-by-side, always visible */}
         <div className="hidden md:flex flex-1 min-h-0 flex-row">
-          <div className="w-[300px] flex-shrink-0 border-r border-border overflow-y-auto">
+          <div className="w-[240px] flex-shrink-0 border-r border-border overflow-y-auto">
             <ScrollArea className="h-full">{listContent}</ScrollArea>
           </div>
           <div className="flex-1 overflow-y-auto">{detailContent}</div>
