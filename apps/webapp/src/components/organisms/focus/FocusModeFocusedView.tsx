@@ -27,6 +27,16 @@ import {
   FocusedUrgentSection,
   FocusedWeeklyGoalsSection,
 } from '@/components/organisms/focus/focused-view';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -107,7 +117,10 @@ export function FocusModeFocusedView() {
     saveStatus,
     isReady: isContentInitialized,
     handleContentChange,
-    handleNew,
+    handleNewClick,
+    handleArchiveConfirm,
+    showArchiveConfirm,
+    setShowArchiveConfirm,
   } = useScratchpad();
 
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
@@ -235,7 +248,7 @@ export function FocusModeFocusedView() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleNew}
+                onClick={handleNewClick}
                 className="text-xs uppercase tracking-wider font-bold"
               >
                 New
@@ -372,6 +385,22 @@ export function FocusModeFocusedView() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive &amp; Start Fresh</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive your current scratchpad content and start a new one. You can find
+              archived content in your history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchiveConfirm}>Archive</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

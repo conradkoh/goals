@@ -109,13 +109,30 @@ export function useScratchpad() {
     [save, cancelPendingSave]
   );
 
-  const handleNew = useCallback(async () => {
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+  const handleNewClick = useCallback(() => {
     const currentContent = pendingContentRef.current ?? serverContent;
     if (currentContent && !isHTMLEmpty(currentContent)) {
-      const confirmed = window.confirm('Archive current content and start fresh?');
-      if (!confirmed) return;
+      setShowArchiveConfirm(true);
+      return;
     }
 
+    // Content is empty — archive immediately without confirmation
+    cancelPendingSave();
+    pendingContentRef.current = null;
+    archiveScratchpad({})
+      .then(() => {
+        editorRef.current?.setContent('');
+        setSaveStatus('idle');
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to archive scratchpad:', error);
+      });
+  }, [serverContent, archiveScratchpad, cancelPendingSave]);
+
+  const handleArchiveConfirm = useCallback(async () => {
+    setShowArchiveConfirm(false);
     cancelPendingSave();
     pendingContentRef.current = null;
 
@@ -126,7 +143,7 @@ export function useScratchpad() {
     } catch (error) {
       console.error('Failed to archive scratchpad:', error);
     }
-  }, [serverContent, archiveScratchpad, cancelPendingSave]);
+  }, [archiveScratchpad, cancelPendingSave]);
 
   return {
     initialContent: serverContent,
@@ -134,6 +151,9 @@ export function useScratchpad() {
     saveStatus,
     isReady,
     handleContentChange,
-    handleNew,
+    handleNewClick,
+    handleArchiveConfirm,
+    showArchiveConfirm,
+    setShowArchiveConfirm,
   };
 }
