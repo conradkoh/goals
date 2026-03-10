@@ -162,10 +162,10 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
         No archived scratchpads yet.
       </div>
     ) : (
-      <div className="space-y-6 pr-4">
+      <div className="space-y-6 px-3">
         {groupArchivesByDay(archivedScratchpads).map(({ dateLabel, items }) => (
           <div key={dateLabel}>
-            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 pt-1">
+            <div className="sticky top-0 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm z-10 py-2 px-1">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {dateLabel}
               </h3>
@@ -251,7 +251,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
 
         {/* Desktop layout — side-by-side, always visible */}
         <div className="hidden md:flex flex-1 min-h-0 flex-row">
-          <div className="w-[240px] flex-shrink-0 border-r border-border overflow-y-auto">
+          <div className="w-[240px] flex-shrink-0 border-r border-border overflow-y-auto bg-muted/30">
             <ScrollArea className="h-full">{listContent}</ScrollArea>
           </div>
           <div className="flex-1 overflow-y-auto">{detailContent}</div>
