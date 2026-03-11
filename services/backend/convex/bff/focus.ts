@@ -127,7 +127,7 @@ async function getUrgentGoals(
         isAdhoc: Boolean(g.adhoc),
         year: g.year,
         quarter: g.quarter,
-        weekNumber: g.adhoc?.weekNumber,
+        weekNumber: g.adhoc?.weekNumber ?? weekNumber,
         depth: g.depth,
         indentLevel: 0,
         breadcrumb,
