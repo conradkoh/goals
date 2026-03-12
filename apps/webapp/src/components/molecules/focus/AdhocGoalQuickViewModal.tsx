@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
@@ -334,8 +335,7 @@ function AdhocGoalQuickViewContent({
             actionMenu={
               <GoalActionMenuNew
                 onSave={handleSave}
-                isQuarterlyGoal={false}
-                isAdhocGoal={true}
+                goalType={GoalType.Adhoc}
                 isBacklog={adhocGoalProp.isBacklog || false}
                 onToggleBacklog={handleToggleBacklog}
               />

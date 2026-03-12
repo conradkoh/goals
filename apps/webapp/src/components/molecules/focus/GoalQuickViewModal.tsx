@@ -33,6 +33,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { resolveGoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
@@ -218,9 +219,7 @@ function GoalQuickViewContentInternal({
             isComplete={isComplete}
             onToggleComplete={handleToggleComplete}
             statusControls={<GoalStatusIcons goalId={goal._id} />}
-            actionMenu={
-              <GoalActionMenuNew onSave={handleSave} isQuarterlyGoal={goal.depth === 0} />
-            }
+            actionMenu={<GoalActionMenuNew onSave={handleSave} goalType={resolveGoalType(goal)} />}
           />
 
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}

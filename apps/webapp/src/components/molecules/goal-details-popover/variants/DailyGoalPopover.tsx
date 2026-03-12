@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
@@ -127,7 +128,7 @@ function DailyGoalPopoverContentInner({
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
         statusControls={<GoalStatusIcons goalId={goal._id} />}
-        actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+        actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Daily} />}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}

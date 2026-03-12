@@ -8,13 +8,14 @@ import {
   Clock,
   Edit2,
   FileText,
+  Flame,
   Maximize2,
   MoreVertical,
   Trash2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useGoalDisplayContext } from './GoalDisplayContext';
 import { useGoalEditContext } from './GoalEditContext';
@@ -31,7 +32,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGoalContext } from '@/contexts/GoalContext';
-import { usePendingGoalStatus } from '@/contexts/GoalStatusContext';
+import { useFireGoalStatus, usePendingGoalStatus } from '@/contexts/GoalStatusContext';
+import {
+  GoalActionId,
+  GoalType,
+  getAvailableActionIds,
+  resolveGoalType,
+} from '@/domain/goal-actions';
 import { useMoveWeeklyGoal } from '@/hooks/useMoveWeeklyGoal';
 import { useWeek } from '@/hooks/useWeek';
 import { cn } from '@/lib/utils';
@@ -62,9 +69,11 @@ export interface GoalActionMenuNewProps {
     details: string | undefined,
     dueDate: number | undefined
   ) => Promise<void>;
-  /** Whether this is a quarterly goal (affects available actions) */
+  /** Goal type — determines which actions are available. Auto-resolved from goal context if omitted. */
+  goalType?: GoalType;
+  /** @deprecated Use goalType instead. Whether this is a quarterly goal. */
   isQuarterlyGoal?: boolean;
-  /** Whether this is an adhoc goal (shows backlog toggle) */
+  /** @deprecated Use goalType instead. Whether this is an adhoc goal. */
   isAdhocGoal?: boolean;
   /** Current backlog status (only for adhoc goals) */
   isBacklog?: boolean;
@@ -75,11 +84,13 @@ export interface GoalActionMenuNewProps {
 }
 
 /**
- * New action menu component that uses the GoalDisplayContext for fullscreen mode.
- * This replaces the old GoalActionMenu and removes the need for a separate fullscreen modal.
+ * Action menu component driven by the goal actions domain layer.
+ * Uses getAvailableActionIds() to determine which actions to show
+ * based on the goal type.
  */
 export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
   onSave: _onSave,
+  goalType: goalTypeProp,
   isQuarterlyGoal = false,
   isAdhocGoal = false,
   isBacklog = false,
@@ -93,6 +104,22 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
   const { year, quarter, weekNumber } = useWeek();
   const { sessionId } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Resolve goal type from prop, legacy boolean props, or goal context
+  const goalType = useMemo(() => {
+    if (goalTypeProp) return goalTypeProp;
+    if (isAdhocGoal) return GoalType.Adhoc;
+    if (isQuarterlyGoal) return GoalType.Quarterly;
+    return resolveGoalType(goal);
+  }, [goalTypeProp, isAdhocGoal, isQuarterlyGoal, goal]);
+
+  const availableActions = useMemo(() => {
+    const actions = getAvailableActionIds(goalType);
+    return new Set(actions);
+  }, [goalType]);
+
+  // Fire/urgent status
+  const { isOnFire, toggleFireStatus } = useFireGoalStatus(goal._id);
 
   // Pending status
   const { isPending } = usePendingGoalStatus(goal._id);
@@ -115,8 +142,6 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
     getMoveMode,
     isSubmitting,
   } = useMoveWeeklyGoal(year, quarter, weekNumber);
-
-  const isWeeklyGoal = goal.depth === 1;
 
   /**
    * Handles edit action click, opening the edit modal and closing dropdown.
@@ -161,6 +186,14 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
     },
     [moveGoalToWeek, moveModalState.goal]
   );
+
+  /**
+   * Handles fire/urgent toggle, toggling fire status and closing dropdown.
+   */
+  const handleFireToggle = useCallback(() => {
+    setIsOpen(false);
+    toggleFireStatus(goal._id);
+  }, [goal._id, toggleFireStatus]);
 
   /**
    * Handles pending action click, opening the pending dialog.
@@ -239,17 +272,19 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleFullScreenClick();
-            }}
-            className="flex items-center cursor-pointer"
-          >
-            <Maximize2 className="mr-2 h-4 w-4" />
-            <span>View Full Details</span>
-          </DropdownMenuItem>
-          {isQuarterlyGoal && (
+          {availableActions.has(GoalActionId.ViewFullDetails) && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleFullScreenClick();
+              }}
+              className="flex items-center cursor-pointer"
+            >
+              <Maximize2 className="mr-2 h-4 w-4" />
+              <span>View Full Details</span>
+            </DropdownMenuItem>
+          )}
+          {availableActions.has(GoalActionId.ViewSummary) && (
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
@@ -261,7 +296,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
               <span>View Summary</span>
             </DropdownMenuItem>
           )}
-          {isWeeklyGoal && (
+          {availableActions.has(GoalActionId.MoveToWeek) && (
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
@@ -273,36 +308,54 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
               <span>Move to Week…</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleEditClick();
-            }}
-            className="flex items-center cursor-pointer"
-          >
-            <Edit2 className="mr-2 h-4 w-4" />
-            <span>Edit</span>
-          </DropdownMenuItem>
+          {availableActions.has(GoalActionId.Edit) && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleEditClick();
+              }}
+              className="flex items-center cursor-pointer"
+            >
+              <Edit2 className="mr-2 h-4 w-4" />
+              <span>Edit</span>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuSeparator />
 
-          {/* Mark Pending */}
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handlePendingClick();
-            }}
-            className={cn(
-              'flex items-center cursor-pointer',
-              isPending && 'text-orange-600 dark:text-orange-400'
-            )}
-          >
-            <Clock className="mr-2 h-4 w-4" />
-            <span>{isPending ? 'Update Pending' : 'Mark Pending'}</span>
-          </DropdownMenuItem>
+          {availableActions.has(GoalActionId.ToggleFireStatus) && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleFireToggle();
+              }}
+              className={cn(
+                'flex items-center cursor-pointer',
+                isOnFire && 'text-red-600 dark:text-red-400'
+              )}
+            >
+              <Flame className="mr-2 h-4 w-4" />
+              <span>{isOnFire ? 'Remove Urgent' : 'Mark Urgent'}</span>
+            </DropdownMenuItem>
+          )}
 
-          {/* Move to Backlog (only for adhoc goals) */}
-          {isAdhocGoal && onToggleBacklog && (
+          {availableActions.has(GoalActionId.MarkPending) && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handlePendingClick();
+              }}
+              className={cn(
+                'flex items-center cursor-pointer',
+                isPending && 'text-orange-600 dark:text-orange-400'
+              )}
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              <span>{isPending ? 'Update Pending' : 'Mark Pending'}</span>
+            </DropdownMenuItem>
+          )}
+
+          {availableActions.has(GoalActionId.ToggleBacklog) && onToggleBacklog && (
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
@@ -326,18 +379,19 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
 
           <DropdownMenuSeparator />
 
-          {/* Delete */}
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              handleDeleteClick();
-            }}
-            className="flex items-center cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-            disabled={isDeleting}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span>Delete</span>
-          </DropdownMenuItem>
+          {availableActions.has(GoalActionId.Delete) && (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                handleDeleteClick();
+              }}
+              className="flex items-center cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+              disabled={isDeleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
