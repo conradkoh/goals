@@ -439,6 +439,15 @@
   opacity: 0.8 !important;
 }
 
+/* When Cmd/Ctrl is held, show pointer cursor on links to indicate they're clickable */
+.prose:global(.cmd-hover-active) :global(a) {
+  cursor: pointer !important;
+}
+
+.prose:global(.cmd-hover-active) :global(a:hover) {
+  opacity: 0.7 !important;
+}
+
 /* Links in headings - no underline by default */
 .prose :global(h1 a),
 .prose :global(h2 a),
