@@ -442,6 +442,32 @@ export function RichTextEditor({
     }
   }, [editor, value, isUncontrolled]);
 
+  // Toggle pointer cursor on links when Cmd/Ctrl is held
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom;
+    const addClass = () => el.classList.add('cmd-hover-active');
+    const removeClass = () => el.classList.remove('cmd-hover-active');
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control') addClass();
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control') removeClass();
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', removeClass);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', removeClass);
+      removeClass();
+    };
+  }, [editor]);
+
   return (
     <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
       <EditorContent editor={editor} className="overflow-y-auto flex-1 min-h-0 flex flex-col" />
