@@ -352,6 +352,8 @@ export function RichTextEditor({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-primary underline',
+          target: '_blank',
+          rel: 'noopener noreferrer nofollow',
         },
       }),
       Underline,
