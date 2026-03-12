@@ -31,6 +31,7 @@ import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
@@ -258,8 +259,7 @@ function AdhocGoalPopoverContentInner({
           actionMenu={
             <GoalActionMenuNew
               onSave={onSave}
-              isQuarterlyGoal={false}
-              isAdhocGoal={true}
+              goalType={GoalType.Adhoc}
               isBacklog={isBacklog}
               onToggleBacklog={onToggleBacklog}
             />

@@ -27,10 +27,12 @@ import {
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
@@ -224,15 +226,18 @@ function StandardGoalPopoverContentInner({
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
           statusControls={
-            <GoalStarPinContainer>
-              <GoalStarPin
-                value={{ isStarred, isPinned }}
-                onStarred={onToggleStar}
-                onPinned={onTogglePin}
-              />
-            </GoalStarPinContainer>
+            <div className="flex items-center gap-0.5">
+              <GoalStatusIcons goalId={goal._id} />
+              <GoalStarPinContainer>
+                <GoalStarPin
+                  value={{ isStarred, isPinned }}
+                  onStarred={onToggleStar}
+                  onPinned={onTogglePin}
+                />
+              </GoalStarPinContainer>
+            </div>
           }
-          actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={true} />}
+          actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Quarterly} />}
         />
 
         <GoalStatusIndicators isStarred={isStarred} isPinned={isPinned} />
