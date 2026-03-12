@@ -1,5 +1,4 @@
 import { Extension } from '@tiptap/core';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
@@ -149,6 +148,37 @@ const LinkPasteHandler = Extension.create({
               return true;
             }
             return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Custom Tiptap extension that opens links in the system browser on Cmd/Ctrl+Click.
+ * In PWA mode, Tiptap's built-in `window.open()` keeps navigation inside the PWA webview.
+ * By creating and clicking a native `<a>` element, Safari correctly routes to the system browser.
+ */
+const PWALinkClickHandler = Extension.create({
+  name: 'pwa_link_click_handler',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('pwaLinkClickHandler'),
+        props: {
+          handleClick: (_view: EditorView, _pos: number, event: MouseEvent) => {
+            if (!event.metaKey && !event.ctrlKey) return false;
+            const link = (event.target as HTMLElement).closest?.('a');
+            if (!link) return false;
+            const href = link.getAttribute('href');
+            if (!href) return false;
+            const nativeLink = document.createElement('a');
+            nativeLink.href = href;
+            nativeLink.target = '_blank';
+            nativeLink.rel = 'noopener noreferrer nofollow';
+            nativeLink.click();
+            return true;
           },
         },
       }),
@@ -336,6 +366,14 @@ export function RichTextEditor({
             class: 'border-l-2 border-muted pl-4',
           },
         },
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-primary underline',
+            target: '_blank',
+            rel: 'noopener noreferrer nofollow',
+          },
+        },
       }),
       TaskList.configure({
         HTMLAttributes: {
@@ -348,14 +386,6 @@ export function RichTextEditor({
           class: 'task-item flex gap-2',
         },
       }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline',
-          target: '_blank',
-          rel: 'noopener noreferrer nofollow',
-        },
-      }),
       Underline,
       Placeholder.configure({
         placeholder,
@@ -363,6 +393,7 @@ export function RichTextEditor({
       NoNewLineOnSubmit,
       MarkdownLineShortcuts,
       LinkPasteHandler,
+      PWALinkClickHandler,
       MarkdownTaskListPaste,
     ],
     content: value || '',
