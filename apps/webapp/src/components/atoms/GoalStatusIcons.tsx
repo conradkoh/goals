@@ -47,16 +47,10 @@ export function GoalStatusIcons({
   suffixIcons,
 }: GoalStatusIconsProps) {
   return (
-    <div
-      className={cn('flex items-center gap-1 min-w-[40px] justify-end flex-shrink-0', className)}
-    >
+    <div className={cn('flex items-center gap-0.5 flex-shrink-0', className)}>
       {prefixIcons}
       {showFireIcon && (
-        <FireIcon
-          goalId={goalId}
-          className="opacity-100 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center"
-          iconClassName="h-3.5 w-3.5"
-        />
+        <FireIcon goalId={goalId} className="opacity-100" iconClassName="h-3.5 w-3.5" />
       )}
       {showPendingIcon && <PendingIcon goalId={goalId} />}
       {suffixIcons}

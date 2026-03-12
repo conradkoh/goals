@@ -226,7 +226,7 @@ function StandardGoalPopoverContentInner({
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
           statusControls={
-            <>
+            <div className="flex items-center gap-0.5">
               <GoalStatusIcons goalId={goal._id} />
               <GoalStarPinContainer>
                 <GoalStarPin
@@ -235,7 +235,7 @@ function StandardGoalPopoverContentInner({
                   onPinned={onTogglePin}
                 />
               </GoalStarPinContainer>
-            </>
+            </div>
           }
           actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Quarterly} />}
         />
