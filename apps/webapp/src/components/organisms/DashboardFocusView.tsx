@@ -456,7 +456,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'focused' && (
-            <div className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+            <div className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-[85rem] mx-auto">
               <FocusModeFocusedView />
             </div>
           )}
