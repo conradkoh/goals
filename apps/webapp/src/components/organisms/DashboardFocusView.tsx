@@ -415,7 +415,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'weekly' && weekData && (
-            <div className="w-full h-full md:max-w-4xl mx-auto" key={weeklyViewKey}>
+            <div
+              className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto"
+              key={weeklyViewKey}
+            >
               <FocusModeWeeklyView
                 weekNumber={selectedWeekNumber}
                 year={selectedYear}
@@ -427,7 +430,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'daily' && weekData && (
-            <div className="w-full h-full md:max-w-4xl mx-auto" key={dailyViewKey}>
+            <div
+              className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto"
+              key={dailyViewKey}
+            >
               <FocusModeDailyView
                 weekNumber={selectedWeekNumber}
                 year={selectedYear}
@@ -450,7 +456,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'focused' && (
-            <div className="w-full h-full md:max-w-4xl mx-auto">
+            <div className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
               <FocusModeFocusedView />
             </div>
           )}
