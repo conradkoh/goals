@@ -170,7 +170,7 @@ export function FocusModeFocusedView() {
   return (
     <div className="flex flex-col md:flex-row gap-0 h-full md:overflow-hidden">
       {/* ── Scratchpad section — 2/3 on desktop, full on mobile ─────────── */}
-      <div className="flex-1 md:flex-[2] border-b md:border-b-0 md:border-r border-border flex flex-col md:min-h-0 md:overflow-hidden">
+      <div className="flex-1 md:flex-[2.6] border-b md:border-b-0 md:border-r border-border flex flex-col md:min-h-0 md:overflow-hidden">
         <div className="flex flex-col h-full md:min-h-0 md:overflow-hidden">
           {/* Industrial header */}
           <div className="flex items-center justify-between px-4 py-3 border-b-2 border-border">
