@@ -9,7 +9,7 @@
  *
  * Layout:
  * - Mobile: stacked vertically (scratchpad on top, tasks below)
- * - Desktop (md+): side-by-side — scratchpad takes 2/3, tasks take 1/3
+ * - Desktop (md+): side-by-side — scratchpad takes remaining space, tasks panel is fixed-width (30rem)
  *
  * @module FocusModeFocusedView
  */
@@ -236,8 +236,8 @@ export function FocusModeFocusedView() {
         </div>
       </div>
 
-      {/* ── Today's tasks section — 1/3 on desktop, full on mobile ─────── */}
-      <div className="md:w-80 flex flex-col md:min-h-0 md:overflow-y-auto">
+      {/* ── Today's tasks section — wider panel on desktop, full on mobile ─ */}
+      <div className="md:w-[30rem] flex flex-col md:min-h-0 md:overflow-y-auto">
         {/* Industrial header */}
         <div className="px-4 py-3 border-b-2 border-border">
           <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
