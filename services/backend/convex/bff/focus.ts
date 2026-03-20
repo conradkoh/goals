@@ -87,7 +87,8 @@ async function getUrgentGoals(
       }
       return g.year === year && g.quarter === quarter;
     })
-    .filter((g) => g.depth !== 0 || g.adhoc);
+    .filter((g) => g.depth !== 0 || g.adhoc)
+    .filter((g) => !g.isBacklog); // Exclude backlog goals from urgent section
 
   // For daily goals, filter by day of week
   const dailyGoals = filtered.filter((g) => g.depth === 2 && !g.adhoc);
@@ -249,12 +250,15 @@ async function getAdhocTasksFlattened(
 ): Promise<FocusedGoalItem[]> {
   const { userId, year, weekNumber } = args;
 
-  const adhocGoals = await ctx.db
+  const allAdhocGoals = await ctx.db
     .query('goals')
     .withIndex('by_user_and_adhoc_year_week', (q) =>
       q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
     )
     .collect();
+
+  // Filter out backlog goals — they should not appear in the focused view
+  const adhocGoals = allAdhocGoals.filter((g) => !g.isBacklog);
 
   // Resolve domains
   const domainIds = [

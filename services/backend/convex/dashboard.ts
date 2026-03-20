@@ -1330,6 +1330,7 @@ export const getGoalDetails = query({
       title: goal.title,
       details: goal.details,
       isComplete: goal.isComplete,
+      isBacklog: goal.isBacklog ?? false,
       completedAt: goal.completedAt,
       dueDate: goal.dueDate,
       depth: goal.depth,
