@@ -11,8 +11,6 @@ interface FocusedUrgentSectionProps {
 }
 
 export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentSectionProps) {
-  if (goals.length === 0) return null;
-
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
@@ -22,24 +20,28 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
       countColorClass="text-red-400"
       countDotColorClass="bg-red-400"
     >
-      <div className="px-4 py-2">
-        <ul className="space-y-1">
-          {goals.map((goal) => (
-            <FocusedGoalListItem
-              key={goal._id}
-              goalId={goal._id}
-              title={goal.title}
-              isComplete={goal.isComplete}
-              isAdhoc={goal.isAdhoc}
-              year={goal.year}
-              quarter={goal.quarter as 1 | 2 | 3 | 4}
-              weekNumber={goal.weekNumber ?? undefined}
-              onToggleComplete={onToggleComplete}
-              incompleteClassName="text-red-500 dark:text-red-400"
-            />
-          ))}
-        </ul>
-      </div>
+      {goals.length === 0 ? (
+        <p className="px-4 py-3 text-sm text-muted-foreground">No urgent goals</p>
+      ) : (
+        <div className="px-4 py-2">
+          <ul className="space-y-1">
+            {goals.map((goal) => (
+              <FocusedGoalListItem
+                key={goal._id}
+                goalId={goal._id}
+                title={goal.title}
+                isComplete={goal.isComplete}
+                isAdhoc={goal.isAdhoc}
+                year={goal.year}
+                quarter={goal.quarter as 1 | 2 | 3 | 4}
+                weekNumber={goal.weekNumber ?? undefined}
+                onToggleComplete={onToggleComplete}
+                incompleteClassName="text-red-500 dark:text-red-400"
+              />
+            ))}
+          </ul>
+        </div>
+      )}
     </FocusedGoalSection>
   );
 }
