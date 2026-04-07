@@ -150,6 +150,14 @@ async function getWeeklyGoals(
 ): Promise<FocusedGoalItem[]> {
   const { userId, year, quarter, weekNumber } = args;
 
+  // Get fire goals so we can exclude them from weekly goals
+  const fireGoals = await ctx.db
+    .query('fireGoals')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect();
+
+  const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
+
   const weekTree = await getWeekGoalsTree(ctx, { userId, year, quarter, weekNumber });
 
   const result: FocusedGoalItem[] = [];
@@ -158,6 +166,9 @@ async function getWeeklyGoals(
     if (!qGoal.state?.isStarred && !qGoal.state?.isPinned) continue;
 
     for (const wGoal of qGoal.children) {
+      // Filter out fire goals - they should only appear in the urgent section
+      if (fireGoalIds.has(wGoal._id.toString())) continue;
+
       result.push({
         _id: wGoal._id,
         title: wGoal.title,
@@ -193,6 +204,14 @@ async function getDailyGoalsForDay(
 ): Promise<FocusedGoalItem[]> {
   const { userId, year, quarter, weekNumber, dayOfWeek } = args;
 
+  // Get fire goals so we can exclude them from daily goals
+  const fireGoals = await ctx.db
+    .query('fireGoals')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect();
+
+  const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
+
   const weekTree = await getWeekGoalsTree(ctx, { userId, year, quarter, weekNumber });
 
   const result: FocusedGoalItem[] = [];
@@ -200,6 +219,9 @@ async function getDailyGoalsForDay(
   for (const qGoal of weekTree.quarterlyGoals) {
     for (const wGoal of qGoal.children) {
       for (const dGoal of wGoal.children) {
+        // Filter out fire goals - they should only appear in the urgent section
+        if (fireGoalIds.has(dGoal._id.toString())) continue;
+
         if (dGoal.state?.daily?.dayOfWeek === dayOfWeek) {
           result.push({
             _id: dGoal._id,
@@ -250,6 +272,14 @@ async function getAdhocTasksFlattened(
 ): Promise<FocusedGoalItem[]> {
   const { userId, year, weekNumber } = args;
 
+  // Get fire goals so we can exclude them from adhoc tasks
+  const fireGoals = await ctx.db
+    .query('fireGoals')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect();
+
+  const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
+
   const allAdhocGoals = await ctx.db
     .query('goals')
     .withIndex('by_user_and_adhoc_year_week', (q) =>
@@ -258,7 +288,10 @@ async function getAdhocTasksFlattened(
     .collect();
 
   // Filter out backlog goals — they should not appear in the focused view
-  const adhocGoals = allAdhocGoals.filter((g) => !g.isBacklog);
+  // Also filter out fire goals — urgent goals should only appear in the urgent section
+  const adhocGoals = allAdhocGoals.filter(
+    (g) => !g.isBacklog && !fireGoalIds.has(g._id.toString())
+  );
 
   // Resolve domains
   const domainIds = [
