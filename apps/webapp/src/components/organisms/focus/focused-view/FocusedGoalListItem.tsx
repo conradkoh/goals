@@ -50,9 +50,9 @@ export function FocusedGoalListItem({
           type="button"
           onClick={() => setPopoverOpen(true)}
           className={cn(
-            'text-sm text-left flex-1 truncate hover:text-foreground transition-colors',
+            'text-sm text-left flex-1 truncate transition-all duration-200',
             isComplete
-              ? 'line-through text-muted-foreground'
+              ? 'line-through text-muted-foreground/60 opacity-60'
               : (incompleteClassName ?? 'text-foreground')
           )}
         >
