@@ -274,8 +274,16 @@ export function FocusModeFocusedView() {
 
             {/* Inline add task */}
             <div className="px-4 py-3">
-              <div className="flex items-center gap-2 border-t border-border pt-3">
-                <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-2 border border-border/60 rounded-md bg-background/50 px-3 py-2 transition-colors hover:bg-background/80 focus-within:bg-background focus-within:border-border">
+                <button
+                  type="button"
+                  onClick={handleAddTask}
+                  disabled={!newTaskTitle.trim() || isAddingTask}
+                  className="flex-shrink-0 h-5 w-5 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Add task"
+                >
+                  <Plus className="h-3 w-3 text-muted-foreground" />
+                </button>
                 <Input
                   value={newTaskTitle}
                   onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -287,7 +295,7 @@ export function FocusModeFocusedView() {
                   }}
                   placeholder="Add a task..."
                   disabled={isAddingTask}
-                  className="h-7 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                  className="h-6 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
