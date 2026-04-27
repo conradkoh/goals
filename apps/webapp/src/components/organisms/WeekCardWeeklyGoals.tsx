@@ -30,6 +30,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
 import { cn } from '@/lib/utils';
@@ -239,6 +240,7 @@ const WeeklyGoalGroup = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [previousTitle, setPreviousTitle] = useState(''); // Store previous title for error recovery
   const { createWeeklyGoalOptimistic, year, quarter, weekNumber } = useWeek();
+  const { isTouchDevice } = useDeviceScreenInfo();
 
   const handleSubmit = async () => {
     const trimmedTitle = newGoalTitle.trim();
@@ -315,6 +317,9 @@ const WeeklyGoalGroup = ({
             onEscape={handleEscape}
             onFocus={() => setIsCreating(true)}
             onBlur={() => {
+              if (isTouchDevice) {
+                return;
+              }
               if (!newGoalTitle) {
                 setIsCreating(false);
                 setIsHovering(false);
