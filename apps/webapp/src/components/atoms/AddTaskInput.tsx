@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { toast } from '@/components/ui/use-toast';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +27,7 @@ export const AddTaskInput = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isTouchDevice } = useDeviceScreenInfo();
 
   // Handle successful task creation
   const handleSubmit = async () => {
@@ -97,9 +99,12 @@ export const AddTaskInput = ({
           onEscape={handleEscape}
           onFocus={() => setIsVisible(true)}
           onBlur={() => {
-            // Only hide if empty and not actively being used
+            // On touch devices, don't hide the input on blur to keep keyboard open
+            // On desktop, only hide if empty and not actively being used
+            if (isTouchDevice) {
+              return;
+            }
             if (!newGoalTitle) {
-              // Small delay to allow for click events to process
               setTimeout(() => setIsVisible(false), 100);
             }
           }}

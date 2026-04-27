@@ -109,16 +109,16 @@ export function useScratchpad() {
     [save, cancelPendingSave]
   );
 
-  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [showNewDialog, setShowNewDialog] = useState(false);
 
   const handleNewClick = useCallback(() => {
     const currentContent = pendingContentRef.current ?? serverContent;
     if (currentContent && !isHTMLEmpty(currentContent)) {
-      setShowArchiveConfirm(true);
+      setShowNewDialog(true);
       return;
     }
 
-    // Content is empty — archive immediately without confirmation
+    // Content is empty — archive immediately without dialog
     cancelPendingSave();
     pendingContentRef.current = null;
     archiveScratchpad({})
@@ -132,7 +132,7 @@ export function useScratchpad() {
   }, [serverContent, archiveScratchpad, cancelPendingSave]);
 
   const handleArchiveConfirm = useCallback(async () => {
-    setShowArchiveConfirm(false);
+    setShowNewDialog(false);
     cancelPendingSave();
     pendingContentRef.current = null;
 
@@ -145,6 +145,36 @@ export function useScratchpad() {
     }
   }, [archiveScratchpad, cancelPendingSave]);
 
+  const handleRemoveCompletedItems = useCallback(
+    async (cleanedContent: string) => {
+      setShowNewDialog(false);
+      cancelPendingSave();
+
+      try {
+        const result = await upsertScratchpad({
+          content: cleanedContent,
+          expectedVersion: lastKnownVersionRef.current,
+        });
+
+        if (result.conflict) {
+          console.warn(
+            'Scratchpad save conflict: server version diverged. Accepting server state.'
+          );
+          return;
+        }
+
+        lastKnownVersionRef.current = result.version;
+        pendingContentRef.current = null;
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch (error) {
+        console.error('Failed to remove completed items:', error);
+        setSaveStatus('error');
+      }
+    },
+    [upsertScratchpad, cancelPendingSave]
+  );
+
   return {
     initialContent: serverContent,
     editorRef,
@@ -153,7 +183,8 @@ export function useScratchpad() {
     handleContentChange,
     handleNewClick,
     handleArchiveConfirm,
-    showArchiveConfirm,
-    setShowArchiveConfirm,
+    handleRemoveCompletedItems,
+    showNewDialog,
+    setShowNewDialog,
   };
 }

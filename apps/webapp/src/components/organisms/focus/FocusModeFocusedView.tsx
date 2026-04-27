@@ -27,17 +27,9 @@ import {
   FocusedUrgentSection,
   FocusedWeeklyGoalsSection,
 } from '@/components/organisms/focus/focused-view';
+import { removeCompletedItemsFromEditor } from '@/components/organisms/focus/removeCompletedItems';
 import { ScratchpadHistoryDialog } from '@/components/organisms/focus/ScratchpadHistoryDialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ScratchpadNewDialog } from '@/components/organisms/focus/ScratchpadNewDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -71,9 +63,15 @@ export function FocusModeFocusedView() {
     handleContentChange,
     handleNewClick,
     handleArchiveConfirm,
-    showArchiveConfirm,
-    setShowArchiveConfirm,
+    handleRemoveCompletedItems,
+    showNewDialog,
+    setShowNewDialog,
   } = useScratchpad();
+
+  const hasCompletedItems = (() => {
+    const content = editorRef.current?.getContent() ?? '';
+    return content.includes('data-checked="true"');
+  })();
 
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
   const [currentDate, setCurrentDate] = useState<DateTime>(() => DateTime.now());
@@ -165,6 +163,18 @@ export function FocusModeFocusedView() {
       setIsAddingTask(false);
     }
   }, [newTaskTitle, createAdhocGoal, year, weekNumber, dayOfWeek]);
+
+  // ── Scratchpad actions ───────────────────────────────────────────────────
+  const onClearScratchpad = useCallback(() => {
+    handleArchiveConfirm();
+  }, [handleArchiveConfirm]);
+
+  const onRemoveCompletedItems = useCallback(() => {
+    const cleanedContent = removeCompletedItemsFromEditor(editorRef);
+    if (cleanedContent !== null) {
+      handleRemoveCompletedItems(cleanedContent);
+    }
+  }, [editorRef, handleRemoveCompletedItems]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -297,21 +307,13 @@ export function FocusModeFocusedView() {
 
       <ScratchpadHistoryDialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 
-      <AlertDialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive &amp; Start Fresh</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will archive your current scratchpad content and start a new one. You can find
-              archived content in your history.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchiveConfirm}>Archive</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ScratchpadNewDialog
+        open={showNewDialog}
+        onOpenChange={setShowNewDialog}
+        onClearScratchpad={onClearScratchpad}
+        onRemoveCompletedItems={onRemoveCompletedItems}
+        hasCompletedItems={hasCompletedItems}
+      />
     </div>
   );
 }
