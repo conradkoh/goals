@@ -5,6 +5,7 @@ interface FocusedGoalSectionProps {
   count?: number;
   countColorClass?: string;
   countDotColorClass?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -13,11 +14,13 @@ export function FocusedGoalSection({
   count,
   countColorClass = 'text-muted-foreground',
   countDotColorClass = 'bg-muted-foreground',
+  icon,
   children,
 }: FocusedGoalSectionProps) {
   return (
     <div>
       <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-border">
+        {icon && <span className="flex-shrink-0 text-muted-foreground">{icon}</span>}
         <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{title}</h3>
         {count !== undefined && count > 0 && (
           <span className="flex items-center gap-1">
