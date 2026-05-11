@@ -23,6 +23,8 @@ export type FocusedGoalItem = {
   depth: number;
   indentLevel: number;
   breadcrumb: BreadcrumbSegment[];
+  isStarred?: boolean;
+  isPinned?: boolean;
 };
 
 export type FocusedViewData = {
@@ -48,7 +50,7 @@ export const getFocusedViewData = query({
 
     const [urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
-      getQuarterlyGoals(ctx, { userId, year, quarter }),
+      getQuarterlyGoals(ctx, { userId, year, quarter, weekNumber }),
       getWeeklyGoals(ctx, { userId, year, quarter, weekNumber }),
       getDailyGoalsForDay(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
@@ -66,9 +68,10 @@ async function getQuarterlyGoals(
     userId: Id<'users'>;
     year: number;
     quarter: number;
+    weekNumber: number;
   }
 ): Promise<FocusedGoalItem[]> {
-  const { userId, year, quarter } = args;
+  const { userId, year, quarter, weekNumber } = args;
 
   const goals = await ctx.db
     .query('goals')
@@ -77,21 +80,45 @@ async function getQuarterlyGoals(
     )
     .collect();
 
+  const weekStates = await ctx.db
+    .query('goalStateByWeek')
+    .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', weekNumber)
+    )
+    .collect();
+
+  const stateByGoalId = new Map(weekStates.map((s) => [s.goalId.toString(), s]));
+
   return goals
     .filter((g) => g.depth === 0 && !g.adhoc && !g.isBacklog && !g.isComplete)
-    .sort((a, b) => a._creationTime - b._creationTime)
-    .map((g) => ({
-      _id: g._id,
-      title: g.title,
-      isComplete: g.isComplete ?? false,
-      isAdhoc: false,
-      year: g.year,
-      quarter: g.quarter,
-      weekNumber: undefined,
-      depth: 0,
-      indentLevel: 0,
-      breadcrumb: [],
-    }));
+    .sort((a, b) => {
+      const aState = stateByGoalId.get(a._id.toString());
+      const bState = stateByGoalId.get(b._id.toString());
+      const aStar = aState?.isStarred ? 1 : 0;
+      const bStar = bState?.isStarred ? 1 : 0;
+      if (aStar !== bStar) return bStar - aStar;
+      const aPin = aState?.isPinned ? 1 : 0;
+      const bPin = bState?.isPinned ? 1 : 0;
+      if (aPin !== bPin) return bPin - aPin;
+      return a._creationTime - b._creationTime;
+    })
+    .map((g) => {
+      const state = stateByGoalId.get(g._id.toString());
+      return {
+        _id: g._id,
+        title: g.title,
+        isComplete: g.isComplete ?? false,
+        isAdhoc: false,
+        year: g.year,
+        quarter: g.quarter,
+        weekNumber: undefined,
+        depth: 0,
+        indentLevel: 0,
+        breadcrumb: [],
+        isStarred: state?.isStarred ?? false,
+        isPinned: state?.isPinned ?? false,
+      };
+    });
 }
 
 // ── Urgent Goals ──────────────────────────────────────────────────────────────
