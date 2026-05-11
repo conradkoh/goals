@@ -27,6 +27,7 @@ export type FocusedGoalItem = {
 
 export type FocusedViewData = {
   urgent: FocusedGoalItem[];
+  quarterlyGoals: FocusedGoalItem[];
   weeklyGoals: FocusedGoalItem[];
   dailyGoals: FocusedGoalItem[];
   adhocTasks: FocusedGoalItem[];
@@ -45,16 +46,53 @@ export const getFocusedViewData = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const [urgent, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
+    const [urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
+      getQuarterlyGoals(ctx, { userId, year, quarter }),
       getWeeklyGoals(ctx, { userId, year, quarter, weekNumber }),
       getDailyGoalsForDay(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
     ]);
 
-    return { urgent, weeklyGoals, dailyGoals, adhocTasks };
+    return { urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks };
   },
 });
+
+// ── Quarterly Goals ───────────────────────────────────────────────────────────
+
+async function getQuarterlyGoals(
+  ctx: QueryCtx,
+  args: {
+    userId: Id<'users'>;
+    year: number;
+    quarter: number;
+  }
+): Promise<FocusedGoalItem[]> {
+  const { userId, year, quarter } = args;
+
+  const goals = await ctx.db
+    .query('goals')
+    .withIndex('by_user_and_year_and_quarter', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+    )
+    .collect();
+
+  return goals
+    .filter((g) => g.depth === 0 && !g.adhoc && !g.isBacklog && !g.isComplete)
+    .sort((a, b) => a._creationTime - b._creationTime)
+    .map((g) => ({
+      _id: g._id,
+      title: g.title,
+      isComplete: g.isComplete ?? false,
+      isAdhoc: false,
+      year: g.year,
+      quarter: g.quarter,
+      weekNumber: undefined,
+      depth: 0,
+      indentLevel: 0,
+      breadcrumb: [],
+    }));
+}
 
 // ── Urgent Goals ──────────────────────────────────────────────────────────────
 
