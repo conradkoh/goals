@@ -426,6 +426,29 @@ export default defineSchema({
     .index('by_user_updated', ['userId', 'updatedAt']),
 
   // ============================================================================
+  // NOTES TABLE
+  // ============================================================================
+
+  /**
+   * Notes - user-created rich text notes.
+   * Supports HTML content from the RichTextEditor (Tiptap).
+   */
+  notes: defineTable({
+    // Ownership
+    userId: v.id('users'),
+
+    // Content
+    title: v.string(),
+    content: v.optional(v.string()), // HTML content from RichTextEditor
+
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_updated', ['userId', 'updatedAt']),
+
+  // ============================================================================
   // SCRATCHPAD TABLES
   // ============================================================================
 
