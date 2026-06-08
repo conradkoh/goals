@@ -1327,6 +1327,7 @@ export const getGoalDetails = query({
 
     return {
       _id: goal._id,
+      _creationTime: goal._creationTime,
       title: goal.title,
       details: goal.details,
       isComplete: goal.isComplete,

@@ -1,7 +1,6 @@
 import { v } from 'convex/values';
 import { SessionIdArg } from 'convex-helpers/server/sessions';
 
-import { getWeekGoalsTree } from '../../src/usecase/getWeekDetails';
 import { requireLogin } from '../../src/usecase/requireLogin';
 import type { Id } from '../_generated/dataModel';
 import type { QueryCtx } from '../_generated/server';
@@ -30,8 +29,6 @@ export type FocusedGoalItem = {
 export type FocusedViewData = {
   urgent: FocusedGoalItem[];
   quarterlyGoals: FocusedGoalItem[];
-  weeklyGoals: FocusedGoalItem[];
-  dailyGoals: FocusedGoalItem[];
   adhocTasks: FocusedGoalItem[];
 };
 
@@ -48,15 +45,13 @@ export const getFocusedViewData = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const [urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
+    const [urgent, quarterlyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getQuarterlyGoals(ctx, { userId, year, quarter, weekNumber }),
-      getWeeklyGoals(ctx, { userId, year, quarter, weekNumber }),
-      getDailyGoalsForDay(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
     ]);
 
-    return { urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks };
+    return { urgent, quarterlyGoals, adhocTasks };
   },
 });
 
@@ -197,116 +192,6 @@ async function getUrgentGoals(
       };
     })
   );
-}
-
-// ── Weekly Goals ──────────────────────────────────────────────────────────────
-
-async function getWeeklyGoals(
-  ctx: QueryCtx,
-  args: {
-    userId: Id<'users'>;
-    year: number;
-    quarter: number;
-    weekNumber: number;
-  }
-): Promise<FocusedGoalItem[]> {
-  const { userId, year, quarter, weekNumber } = args;
-
-  // Get fire goals so we can exclude them from weekly goals
-  const fireGoals = await ctx.db
-    .query('fireGoals')
-    .withIndex('by_user', (q) => q.eq('userId', userId))
-    .collect();
-
-  const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
-
-  const weekTree = await getWeekGoalsTree(ctx, { userId, year, quarter, weekNumber });
-
-  const result: FocusedGoalItem[] = [];
-
-  for (const qGoal of weekTree.quarterlyGoals) {
-    if (!qGoal.state?.isStarred && !qGoal.state?.isPinned) continue;
-
-    for (const wGoal of qGoal.children) {
-      // Filter out fire goals - they should only appear in the urgent section
-      if (fireGoalIds.has(wGoal._id.toString())) continue;
-
-      result.push({
-        _id: wGoal._id,
-        title: wGoal.title,
-        isComplete: wGoal.isComplete ?? false,
-        isAdhoc: false,
-        year,
-        quarter,
-        weekNumber,
-        depth: wGoal.depth,
-        indentLevel: 0,
-        breadcrumb: [
-          { label: `Q${quarter} ${year}`, type: 'quarter' },
-          { label: qGoal.title, type: 'parent' },
-        ],
-      });
-    }
-  }
-
-  return result;
-}
-
-// ── Daily Goals ───────────────────────────────────────────────────────────────
-
-async function getDailyGoalsForDay(
-  ctx: QueryCtx,
-  args: {
-    userId: Id<'users'>;
-    year: number;
-    quarter: number;
-    weekNumber: number;
-    dayOfWeek: number;
-  }
-): Promise<FocusedGoalItem[]> {
-  const { userId, year, quarter, weekNumber, dayOfWeek } = args;
-
-  // Get fire goals so we can exclude them from daily goals
-  const fireGoals = await ctx.db
-    .query('fireGoals')
-    .withIndex('by_user', (q) => q.eq('userId', userId))
-    .collect();
-
-  const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
-
-  const weekTree = await getWeekGoalsTree(ctx, { userId, year, quarter, weekNumber });
-
-  const result: FocusedGoalItem[] = [];
-
-  for (const qGoal of weekTree.quarterlyGoals) {
-    for (const wGoal of qGoal.children) {
-      for (const dGoal of wGoal.children) {
-        // Filter out fire goals - they should only appear in the urgent section
-        if (fireGoalIds.has(dGoal._id.toString())) continue;
-
-        if (dGoal.state?.daily?.dayOfWeek === dayOfWeek) {
-          result.push({
-            _id: dGoal._id,
-            title: dGoal.title,
-            isComplete: dGoal.isComplete ?? false,
-            isAdhoc: false,
-            year,
-            quarter,
-            weekNumber,
-            depth: dGoal.depth,
-            indentLevel: 0,
-            breadcrumb: [
-              { label: `Q${quarter} ${year}`, type: 'quarter' },
-              { label: qGoal.title, type: 'grandparent' },
-              { label: wGoal.title, type: 'parent' },
-            ],
-          });
-        }
-      }
-    }
-  }
-
-  return result;
 }
 
 // ── Adhoc Tasks ───────────────────────────────────────────────────────────────
