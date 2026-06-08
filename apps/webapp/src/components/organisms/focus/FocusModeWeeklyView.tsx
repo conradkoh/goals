@@ -6,7 +6,6 @@ import { WeekCardWeeklyGoals } from '../WeekCardWeeklyGoals';
 
 import { JumpToCurrentButton } from '@/components/molecules/focus/JumpToCurrentButton';
 import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSection';
-import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { type WeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
@@ -29,8 +28,6 @@ const FocusModeWeeklyViewInner = ({
   quarter,
   onJumpToToday,
 }: FocusModeWeeklyViewInnerProps) => {
-  const { weekday: currentDay } = useCurrentWeekInfo();
-
   // Memoize the components to prevent unnecessary re-renders
   const quarterlyGoalsComponent = useMemo(
     () => <WeekCardQuarterlyGoals weekNumber={weekNumber} year={year} quarter={quarter} />,
@@ -52,13 +49,7 @@ const FocusModeWeeklyViewInner = ({
       <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
           <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
-          <JumpToCurrentButton
-            year={year}
-            quarter={quarter}
-            selectedWeek={weekNumber}
-            selectedDay={currentDay}
-            onJumpToToday={onJumpToToday}
-          />
+          <JumpToCurrentButton onJumpToToday={onJumpToToday} />
         </div>
         {quarterlyGoalsComponent}
       </div>

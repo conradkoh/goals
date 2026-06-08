@@ -10,9 +10,8 @@ A full-stack goals tracking and management web application built with Next.js an
 
 - `package.json` - Root workspace configuration with development scripts, dependencies, and workspace orchestration
 - `pnpm-workspace.yaml` - pnpm workspace configuration defining packages in `apps/*` and `services/*`
-- `nx.json` - NX monorepo configuration for task orchestration and caching
+- `turbo.json` - Turbo monorepo configuration for task orchestration and caching
 - `eslint.config.mjs` - ESLint configuration for linting with strict TypeScript, React, and Convex rules
-- `biome.json` - Biome configuration for code formatting (linting disabled, ESLint handles that)
 - `.github/` - GitHub workflows, issue templates, and project automation
 
 ### Root Scripts
@@ -177,7 +176,7 @@ A full-stack goals tracking and management web application built with Next.js an
 - `dev` - Parallel development server startup for both frontend and backend
 - `setup` - Automated project initialization and environment configuration
 - `lint` / `lint:fix` - Code quality linting using ESLint across all workspace packages
-- `format` / `format:fix` - Code formatting using Biome across all packages
+- `format` / `format:fix` - Code formatting using Prettier across all packages
 - `typecheck` - TypeScript validation across frontend and backend
 
 ## Tech Stack
@@ -207,7 +206,7 @@ A full-stack goals tracking and management web application built with Next.js an
 
 ### Development Tools
 
-- **NX** (v21.4.1) - Build system and monorepo orchestration with caching and task scheduling
+- **Turbo** (v2.4.4) - Build system and monorepo orchestration with caching and task scheduling
 - **Vite** (v6.3.5) - Build tool and development server for fast hot module replacement
 - **Vitest** (v3.1.3) - Testing framework with TypeScript support and Vite integration
 
@@ -224,11 +223,9 @@ A full-stack goals tracking and management web application built with Next.js an
 
 #### Formatting
 
-- **Biome** (v2.1.2) - Fast, opinionated code formatter
+- **Prettier** - Code formatter for consistent code style
   - Handles code style (indentation, quotes, semicolons, line width)
-  - Organizes imports automatically
-  - Linting disabled (ESLint handles all linting)
-  - Formats TypeScript, JavaScript, JSON, and Markdown
+  - Formats TypeScript, JavaScript, JSON, HTML, and Markdown
 
 #### Quality Automation
 
@@ -277,7 +274,7 @@ A full-stack goals tracking and management web application built with Next.js an
 - **Type Checking** - Compile-time validation with strict TypeScript configuration
 - **Quality Gates** - Pre-commit hooks enforcing:
   - Linting (ESLint) - Code quality and correctness
-  - Formatting (Biome) - Consistent code style
+  - Formatting (Prettier) - Consistent code style
   - Type checking (TypeScript) - Type safety validation
 
 ## Development Patterns
@@ -292,7 +289,7 @@ A full-stack goals tracking and management web application built with Next.js an
 
 - **Feature Modules** - Domain-driven organization with modules for each major feature area
 - **Code Quality** - ESLint for linting (correctness, best practices, type safety)
-- **Code Formatting** - Biome for consistent code style (indentation, quotes, spacing)
+- **Code Formatting** - Prettier for consistent code style (indentation, quotes, spacing)
 - **Configuration Management** - Feature flags system for runtime behavior control
 
 ### User Experience & Interface

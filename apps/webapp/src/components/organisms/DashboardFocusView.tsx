@@ -16,6 +16,7 @@ import { GoalSearchDialog } from '@/components/molecules/focus/GoalSearchDialog'
 import { QuarterJumpDialog } from '@/components/molecules/focus/QuarterJumpDialog';
 import { ViewModeKeyboardShortcuts } from '@/components/molecules/focus/ViewModeKeyboardShortcuts';
 import { FocusModeDailyView } from '@/components/organisms/focus/FocusModeDailyView';
+import { FocusModeFocusedView } from '@/components/organisms/focus/FocusModeFocusedView';
 import { FocusModeQuarterlyView } from '@/components/organisms/focus/FocusModeQuarterlyView/FocusModeQuarterlyView';
 import { FocusModeWeeklyView } from '@/components/organisms/focus/FocusModeWeeklyView';
 import { GoalStatusProvider } from '@/contexts/GoalStatusContext';
@@ -104,7 +105,14 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   onNext,
   onYearQuarterChange,
 }) => {
-  const { selectedYear, selectedQuarter, isFocusModeEnabled, updateUrlParams } = useDashboard();
+  const {
+    selectedYear,
+    selectedQuarter,
+    isFocusModeEnabled,
+    updateUrlParams,
+    selectedWeek: currentSelectedWeek,
+    selectedDayOfWeek: currentSelectedDay,
+  } = useDashboard();
   // Note: We don't use currentWeekNumber from useQuarterWeekInfo because it's memoized
   // based on year/quarter only, which means it doesn't update when crossing week boundaries.
   // Instead, we get it from useCurrentWeekInfo which properly updates at midnight.
@@ -156,13 +164,17 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
    */
   const showPullGoals = useMemo(() => {
     if (viewMode === 'daily') {
-      return selectedWeekNumber === currentWeekNumber && selectedDayOfWeek === currentDay;
+      return currentSelectedWeek === currentWeekNumber && currentSelectedDay === currentDay;
     }
     if (viewMode === 'weekly') {
-      return selectedWeekNumber === currentWeekNumber;
+      return currentSelectedWeek === currentWeekNumber;
+    }
+    if (viewMode === 'focused') {
+      // Focused mode always refers to today — pull is available when viewing current week
+      return true; // Always show as active (usePullGoals silently no-ops if nothing to pull)
     }
     return false;
-  }, [viewMode, selectedWeekNumber, currentWeekNumber, selectedDayOfWeek, currentDay]);
+  }, [viewMode, currentSelectedWeek, currentWeekNumber, currentSelectedDay, currentDay]);
 
   // Force component re-render when year/quarter changes
   const [forceRender, setForceRender] = React.useState(0);
@@ -314,7 +326,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
 
   return (
     <GoalStatusProvider>
-      <div id="db-focus-view" className="w-full h-full">
+      <div id="db-focus-view" className="w-full h-full flex flex-col">
         <ViewModeKeyboardShortcuts
           onViewModeChange={onViewModeChange}
           onOpenQuarterJump={handleOpenCommandDialog}
@@ -328,7 +340,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
         />
 
         {/* Render goal search and quick view within WeekProvider context if week data available */}
-        {weekData && (viewMode === 'weekly' || viewMode === 'daily') && (
+        {weekData && (viewMode === 'weekly' || viewMode === 'daily' || viewMode === 'focused') && (
           <WeekProvider weekData={weekData}>
             <GoalSearchDialogWrapper
               open={isGoalSearchOpen}
@@ -374,11 +386,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           </WeekProvider>
         )}
 
-        {/* Render goal quick view placeholder outside WeekProvider for quarterly view */}
-        {viewMode === 'quarterly' && (
-          <GoalQuickViewModal open={false} onOpenChange={() => {}} goal={null} />
-        )}
-        <div className="w-full">
+        <div className="w-full flex-shrink-0">
           <FocusMenuBar
             viewMode={viewMode}
             selectedWeek={selectedWeekNumber}
@@ -399,7 +407,7 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
             onOpenCommandPalette={handleOpenCommandDialog}
           />
         </div>
-        <div className="w-full h-full">
+        <div className="w-full flex-1 min-h-0">
           {viewMode === 'quarterly' && (
             <div key={quarterlyViewKey}>
               <FocusModeQuarterlyView year={selectedYear} quarter={selectedQuarter} />
@@ -407,7 +415,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'weekly' && weekData && (
-            <div className="w-full h-full md:max-w-4xl mx-auto" key={weeklyViewKey}>
+            <div
+              className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto"
+              key={weeklyViewKey}
+            >
               <FocusModeWeeklyView
                 weekNumber={selectedWeekNumber}
                 year={selectedYear}
@@ -419,7 +430,10 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
           )}
 
           {viewMode === 'daily' && weekData && (
-            <div className="w-full h-full md:max-w-4xl mx-auto" key={dailyViewKey}>
+            <div
+              className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto"
+              key={dailyViewKey}
+            >
               <FocusModeDailyView
                 weekNumber={selectedWeekNumber}
                 year={selectedYear}
@@ -438,6 +452,12 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">Loading week data...</p>
               </div>
+            </div>
+          )}
+
+          {viewMode === 'focused' && (
+            <div className="w-full h-full md:max-w-4xl lg:max-w-5xl xl:max-w-[85rem] mx-auto">
+              <FocusModeFocusedView />
             </div>
           )}
         </div>

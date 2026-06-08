@@ -3,6 +3,7 @@ import {
   Calendar,
   CalendarDays,
   FileText,
+  Focus,
   History,
   LayoutGrid,
 } from 'lucide-react';
@@ -127,6 +128,14 @@ export const QuarterActionMenu = React.memo(
                 <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
                 <span className="text-sm">Daily</span>
                 <span className="ml-auto text-xs text-muted-foreground">D</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleViewModeChange('focused')}
+                className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
+              >
+                <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
+                <span className="text-sm">Focused</span>
+                <span className="ml-auto text-xs text-muted-foreground">F</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
             </>

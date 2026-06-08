@@ -1307,14 +1307,38 @@ export const getGoalDetails = query({
       )
       .collect();
 
+    // Resolve parent and grandparent titles for breadcrumb context
+    let parentTitle: string | undefined;
+    let grandParentTitle: string | undefined;
+    let grandParentId: Id<'goals'> | undefined;
+    if (goal.parentId) {
+      const parent = await ctx.db.get('goals', goal.parentId);
+      if (parent) {
+        parentTitle = parent.title;
+        if (parent.parentId) {
+          const grandParent = await ctx.db.get('goals', parent.parentId);
+          if (grandParent) {
+            grandParentTitle = grandParent.title;
+            grandParentId = grandParent._id;
+          }
+        }
+      }
+    }
+
     return {
       _id: goal._id,
       title: goal.title,
       details: goal.details,
       isComplete: goal.isComplete,
+      isBacklog: goal.isBacklog ?? false,
       completedAt: goal.completedAt,
       dueDate: goal.dueDate,
       depth: goal.depth,
+      parentId: goal.parentId,
+      parentTitle,
+      grandParentTitle,
+      grandParentId,
+      domainId: goal.domainId,
       year: goal.year,
       quarter: goal.quarter,
       adhoc: goal.adhoc,

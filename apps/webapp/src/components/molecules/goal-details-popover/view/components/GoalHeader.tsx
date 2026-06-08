@@ -56,7 +56,7 @@ export function GoalHeader({
         />
         <h3 className={`${titleClassName} break-words flex-1 leading-tight`}>{title}</h3>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {statusControls}
         {actionMenu}
       </div>

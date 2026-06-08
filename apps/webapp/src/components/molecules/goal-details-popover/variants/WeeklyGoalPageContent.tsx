@@ -16,6 +16,7 @@ import {
   GoalActionMenuNew,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -37,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
@@ -212,9 +214,10 @@ function WeeklyGoalPageContentInner({
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
           statusControls={<GoalStatusIcons goalId={goal._id} />}
-          actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+          actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
         />
 
+        <GoalCreatedDate createdAt={goal._creationTime} />
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
         {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}

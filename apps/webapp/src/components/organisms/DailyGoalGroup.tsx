@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ export const DailyGoalGroup = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const { isTouchDevice } = useDeviceScreenInfo();
 
   const unsortedDailyGoals = weeklyGoal.children.filter(
     (dailyGoal) => dailyGoal.state?.daily?.dayOfWeek === dayOfWeek
@@ -151,6 +153,9 @@ export const DailyGoalGroup = ({
                   onEscape={handleEscape}
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => {
+                    if (isTouchDevice) {
+                      return;
+                    }
                     if (!newGoalTitle) {
                       setIsInputFocused(false);
                       setIsHovering(false);

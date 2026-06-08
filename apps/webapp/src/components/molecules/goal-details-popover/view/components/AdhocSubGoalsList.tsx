@@ -158,13 +158,15 @@ export function AdhocSubGoalsList({
 
         {/* Create input - always visible when allowed */}
         {canAddSubGoal && (
-          <CreateInputView
-            placeholder="Add a new sub-task..."
-            value={newSubGoalTitle}
-            onChange={setNewSubGoalTitle}
-            onSubmit={handleCreateSubGoal}
-            onEscape={() => setNewSubGoalTitle('')}
-          />
+          <div className="px-4 pt-1 pb-2">
+            <CreateInputView
+              placeholder="Add a new sub-task..."
+              value={newSubGoalTitle}
+              onChange={setNewSubGoalTitle}
+              onSubmit={handleCreateSubGoal}
+              onEscape={() => setNewSubGoalTitle('')}
+            />
+          </div>
         )}
 
         {/* Depth limit message - shown when at max depth and can't add more */}

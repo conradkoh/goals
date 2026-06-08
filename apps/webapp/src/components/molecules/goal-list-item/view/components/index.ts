@@ -15,4 +15,6 @@ export {
 } from './GoalListItemContext';
 
 export { GoalPendingIndicator, type GoalPendingIndicatorProps } from './GoalPendingIndicator';
-export { GoalStatusIcons, type GoalStatusIconsProps } from './GoalStatusIcons';
+
+// Re-export GoalStatusIcons from atoms (single source of truth)
+export { GoalStatusIcons, type GoalStatusIconsProps } from '@/components/atoms/GoalStatusIcons';

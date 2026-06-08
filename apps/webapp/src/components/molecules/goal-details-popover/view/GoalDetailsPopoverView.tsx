@@ -8,6 +8,7 @@ import {
   DialogTitle,
   FullscreenDialogContent,
 } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { cn } from '@/lib/utils';
 
@@ -67,7 +68,7 @@ export function GoalDetailsPopoverView({
   trigger,
   children,
   contentClassName,
-  width = '450px',
+  width: _width = '450px',
   fullScreen = false,
   open,
   onOpenChange,
@@ -149,8 +150,8 @@ export function GoalDetailsPopoverView({
     );
   }
 
-  // Desktop: Use Dialog instead of Popover to avoid Safari issues with nested portals
-  // When a Popover is inside a Dialog, Safari's focus trap closes the Popover immediately
+  // Desktop: Use FixedSizeDialog for consistent sizing across all goal detail modals.
+  // FixedSizeDialog avoids Safari issues with nested portals (Popover inside Dialog).
   return (
     <>
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: The trigger itself handles keyboard events */}
@@ -159,23 +160,23 @@ export function GoalDetailsPopoverView({
         {trigger}
       </span>
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent
-          className={cn(`w-[${width}] max-w-[calc(100vw-32px)] p-5`, contentClassName)}
-          style={{ width }}
-          onEscapeKeyDown={onEscapeKeyDown}
-        >
-          <DialogHeader>
-            <DialogTitle className="sr-only">Goal Details</DialogTitle>
+        <FixedSizeDialog onEscapeKeyDown={onEscapeKeyDown}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">{children}</div>
-        </DialogContent>
+          <FixedSizeDialogContent className={cn('flex flex-col gap-3', contentClassName)}>
+            {children}
+          </FixedSizeDialogContent>
+        </FixedSizeDialog>
       </Dialog>
     </>
   );
 }
 
-export interface GoalPopoverTriggerProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'title'> {
+export interface GoalPopoverTriggerProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'title'
+> {
   /** Goal title to display */
   title: string;
   /** Button variant */
@@ -194,7 +195,7 @@ export const GoalPopoverTrigger = forwardRef<HTMLButtonElement, GoalPopoverTrigg
     {
       title,
       variant = 'ghost',
-      className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1',
+      className = 'p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full mb-1 normal-case tracking-normal',
       titleClassName = 'text-gray-600',
       ...props
     },

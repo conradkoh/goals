@@ -12,12 +12,18 @@ import { cn } from '@/lib/utils';
 export interface FireIconProps {
   goalId: Id<'goals'>;
   className?: string;
+  /** Class name to apply to the Flame icon SVG (controls size). Defaults to "h-3.5 w-3.5" */
+  iconClassName?: string;
 }
 
 /**
  * Displays a clickable fire icon that toggles the urgent status of a goal.
  */
-export const FireIcon: React.FC<FireIconProps> = ({ goalId, className }) => {
+export const FireIcon: React.FC<FireIconProps> = ({
+  goalId,
+  className,
+  iconClassName = 'h-3.5 w-3.5',
+}) => {
   const { isOnFire, toggleFireStatus } = useFireGoalStatus(goalId);
 
   /**
@@ -42,7 +48,7 @@ export const FireIcon: React.FC<FireIconProps> = ({ goalId, className }) => {
       )}
       title={isOnFire ? 'Remove from urgent' : 'Mark as urgent'}
     >
-      <Flame className="h-3.5 w-3.5" />
+      <Flame className={iconClassName} />
     </button>
   );
 };

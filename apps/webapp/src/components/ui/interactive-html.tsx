@@ -74,6 +74,11 @@ function processLinksInHtml(html: string, maxLength = 60): string {
     const href = link.getAttribute('href');
     const textContent = link.textContent?.trim() || '';
 
+    if (href && /^https?:\/\//i.test(href)) {
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener noreferrer nofollow');
+    }
+
     // Only process if the link text looks like a URL
     // (i.e., the text is the same as or similar to the href)
     if (href && textContent && isTextUrl(textContent)) {
@@ -258,7 +263,7 @@ export function InteractiveHTML({
     <div
       ref={containerRef}
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none break-words overflow-wrap-anywhere',
+        'prose prose-sm dark:prose-invert max-w-none break-words overflow-wrap-anywhere min-w-0 overflow-hidden',
         styles.prose,
         className
       )}

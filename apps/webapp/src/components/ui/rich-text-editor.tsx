@@ -1,5 +1,4 @@
 import { Extension } from '@tiptap/core';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
@@ -8,6 +7,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useImperativeHandle, useRef } from 'react';
 
 import styles from './rich-text-editor.module.css';
 
@@ -69,6 +69,123 @@ const NoNewLineOnSubmit = Extension.create({
  * Custom Tiptap extension that handles pasting of markdown task list syntax.
  * Converts `- [ ] task` or `- [x] task` syntax to proper task list nodes.
  */
+/**
+ * Custom Tiptap extension for markdown-style shortcuts triggered on space.
+ * Converts line prefixes like `# `, `- `, `1. `, `[ ] `, `> `, ```` ``` ```` into
+ * their rich-text equivalents.
+ */
+const MarkdownLineShortcuts = Extension.create({
+  name: 'markdown_line_shortcuts',
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('markdownLineShortcuts'),
+        props: {
+          handleKeyDown: (view: EditorView, event: KeyboardEvent) => {
+            if (event.key !== ' ' || event.metaKey || event.ctrlKey) return false;
+
+            const { from } = view.state.selection;
+            const line = view.state.doc.textBetween(Math.max(0, from - 10), from, '\n');
+
+            if (line.endsWith('# ')) {
+              editor.commands.setHeading({ level: 1 });
+              return true;
+            }
+            if (line.endsWith('## ')) {
+              editor.commands.setHeading({ level: 2 });
+              return true;
+            }
+            if (line.endsWith('### ')) {
+              editor.commands.setHeading({ level: 3 });
+              return true;
+            }
+            if (line.endsWith('* ') || line.endsWith('- ')) {
+              editor.commands.toggleBulletList();
+              return true;
+            }
+            if (line.endsWith('1. ')) {
+              editor.commands.toggleOrderedList();
+              return true;
+            }
+            if (line.endsWith('[ ] ') || line.endsWith('[x] ')) {
+              editor.commands.toggleTaskList();
+              return true;
+            }
+            if (line.endsWith('> ')) {
+              editor.commands.toggleBlockquote();
+              return true;
+            }
+            if (line.endsWith('``` ')) {
+              editor.commands.toggleCodeBlock();
+              return true;
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Custom Tiptap extension that converts a pasted URL into a link when text is selected.
+ */
+const LinkPasteHandler = Extension.create({
+  name: 'link_paste_handler',
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('linkPasteHandler'),
+        props: {
+          handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+            const clipboardText = event.clipboardData?.getData('text/plain');
+            if (!clipboardText) return false;
+
+            if (clipboardText.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
+              editor.commands.setLink({ href: clipboardText });
+              return true;
+            }
+            return false;
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
+ * Custom Tiptap extension that opens links in the system browser on Cmd/Ctrl+Click.
+ * In PWA mode, Tiptap's built-in `window.open()` keeps navigation inside the PWA webview.
+ * By creating and clicking a native `<a>` element, Safari correctly routes to the system browser.
+ */
+const PWALinkClickHandler = Extension.create({
+  name: 'pwa_link_click_handler',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('pwaLinkClickHandler'),
+        props: {
+          handleClick: (_view: EditorView, _pos: number, event: MouseEvent) => {
+            if (!event.metaKey && !event.ctrlKey) return false;
+            const link = (event.target as HTMLElement).closest?.('a');
+            if (!link) return false;
+            const href = link.getAttribute('href');
+            if (!href) return false;
+            const nativeLink = document.createElement('a');
+            nativeLink.href = href;
+            nativeLink.target = '_blank';
+            nativeLink.rel = 'noopener noreferrer nofollow';
+            nativeLink.click();
+            return true;
+          },
+        },
+      }),
+    ];
+  },
+});
+
 const MarkdownTaskListPaste = Extension.create({
   name: 'markdown_task_list_paste',
   addProseMirrorPlugins() {
@@ -177,6 +294,12 @@ const MarkdownTaskListPaste = Extension.create({
   },
 });
 
+/** Imperative handle for pushing external content into the editor without triggering onChange. */
+export interface RichTextEditorHandle {
+  setContent: (html: string) => void;
+  getContent: () => string;
+}
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -184,6 +307,14 @@ interface RichTextEditorProps {
   placeholder?: string;
   /** Whether to automatically focus the editor when mounted */
   autoFocus?: boolean;
+  /**
+   * When provided, the editor operates in uncontrolled mode:
+   * - `value` is only used as the initial content at mount time
+   * - External content should be pushed via `editorRef.current.setContent()`
+   *   which does NOT trigger onChange (breaking feedback loops)
+   * - The `value` prop useEffect sync is disabled
+   */
+  editorRef?: React.MutableRefObject<RichTextEditorHandle | null>;
 }
 
 export function RichTextEditor({
@@ -192,7 +323,11 @@ export function RichTextEditor({
   className,
   placeholder,
   autoFocus = false,
+  editorRef,
 }: RichTextEditorProps) {
+  const isExternalUpdateRef = useRef(false);
+  const isUncontrolled = editorRef !== undefined;
+
   const editor = useEditor({
     autofocus: autoFocus,
     extensions: [
@@ -232,6 +367,14 @@ export function RichTextEditor({
             class: 'border-l-2 border-muted pl-4',
           },
         },
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: 'text-primary underline',
+            target: '_blank',
+            rel: 'noopener noreferrer nofollow',
+          },
+        },
       }),
       TaskList.configure({
         HTMLAttributes: {
@@ -244,119 +387,100 @@ export function RichTextEditor({
           class: 'task-item flex gap-2',
         },
       }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-primary underline',
-        },
-      }),
       Underline,
       Placeholder.configure({
         placeholder,
       }),
       NoNewLineOnSubmit,
+      MarkdownLineShortcuts,
+      LinkPasteHandler,
+      PWALinkClickHandler,
       MarkdownTaskListPaste,
     ],
     content: value || '',
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] p-3 rounded-md border break-words [word-break:break-word]',
+          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] h-full p-3 rounded-md border break-words [word-break:break-word]',
           styles.prose,
           className
         ),
       },
     },
     onUpdate: ({ editor }) => {
+      if (isExternalUpdateRef.current) return;
       const html = editor.getHTML();
-      // Strip trailing empty paragraphs that TipTap adds
       const cleanedHtml = stripTrailingEmptyParagraphs(html);
       onChange(cleanedHtml);
     },
     immediatelyRender: false,
   });
 
-  // Handle keyboard shortcuts
-  if (editor) {
-    editor.setOptions({
-      editorProps: {
-        handleKeyDown: (view, event) => {
-          // Bold: Cmd/Ctrl + B
-          if ((event.metaKey || event.ctrlKey) && event.key === 'b') {
-            editor.commands.toggleBold();
-            return true;
-          }
-          // Italic: Cmd/Ctrl + I
-          if ((event.metaKey || event.ctrlKey) && event.key === 'i') {
-            editor.commands.toggleItalic();
-            return true;
-          }
-          // Underline: Cmd/Ctrl + U
-          if ((event.metaKey || event.ctrlKey) && event.key === 'u') {
-            editor.commands.toggleUnderline();
-            return true;
-          }
-          // Handle markdown shortcuts
-          if (event.key === ' ' && !event.metaKey && !event.ctrlKey) {
-            // Check for markdown syntax at the start of the line
-            const { from } = view.state.selection;
-            const line = view.state.doc.textBetween(Math.max(0, from - 10), from, '\n');
-
-            // Handle basic markdown shortcuts
-            if (line.endsWith('# ')) {
-              editor.commands.setHeading({ level: 1 });
-              return true;
-            }
-            if (line.endsWith('## ')) {
-              editor.commands.setHeading({ level: 2 });
-              return true;
-            }
-            if (line.endsWith('### ')) {
-              editor.commands.setHeading({ level: 3 });
-              return true;
-            }
-            if (line.endsWith('* ') || line.endsWith('- ')) {
-              editor.commands.toggleBulletList();
-              return true;
-            }
-            if (line.endsWith('1. ')) {
-              editor.commands.toggleOrderedList();
-              return true;
-            }
-            if (line.endsWith('[ ] ') || line.endsWith('[x] ')) {
-              editor.commands.toggleTaskList();
-              return true;
-            }
-            if (line.endsWith('> ')) {
-              editor.commands.toggleBlockquote();
-              return true;
-            }
-            if (line.endsWith('``` ')) {
-              editor.commands.toggleCodeBlock();
-              return true;
-            }
-          }
-          return false;
-        },
-        handlePaste: (_view, event) => {
-          const clipboardText = event.clipboardData?.getData('text/plain');
-          if (!clipboardText) return false;
-
-          // Handle link pasting over selected text
-          if (clipboardText.match(/^https?:\/\//) && editor.state.selection.content().size > 0) {
-            editor.commands.setLink({ href: clipboardText });
-            return true;
-          }
-
-          // Task list paste is handled by MarkdownTaskListPaste extension
-          return false;
-        },
+  // Expose imperative handle for uncontrolled mode
+  useImperativeHandle(
+    editorRef,
+    () => ({
+      setContent: (html: string) => {
+        if (!editor || editor.isDestroyed) return;
+        isExternalUpdateRef.current = true;
+        editor.commands.setContent(html || '');
+        isExternalUpdateRef.current = false;
       },
-    });
-  }
+      getContent: () => {
+        if (!editor || editor.isDestroyed) return '';
+        return stripTrailingEmptyParagraphs(editor.getHTML());
+      },
+    }),
+    [editor]
+  );
+
+  useEffect(() => {
+    if (!editorRef) return;
+    return () => {
+      editorRef.current = null;
+    };
+  }, [editorRef]);
+
+  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided)
+  useEffect(() => {
+    if (isUncontrolled) return;
+    if (!editor || editor.isDestroyed) return;
+    if (editor.isFocused) return;
+    const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
+    if (currentHtml !== value) {
+      editor.commands.setContent(value || '');
+    }
+  }, [editor, value, isUncontrolled]);
+
+  // Toggle pointer cursor on links when Cmd/Ctrl is held
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom;
+    const addClass = () => el.classList.add('cmd-hover-active');
+    const removeClass = () => el.classList.remove('cmd-hover-active');
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control') addClass();
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Meta' || e.key === 'Control') removeClass();
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', removeClass);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', removeClass);
+      removeClass();
+    };
+  }, [editor]);
+
   return (
-    <div className="relative">
-      <EditorContent editor={editor} />
+    <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
+      <EditorContent editor={editor} className="overflow-y-auto flex-1 min-h-0 flex flex-col" />
     </div>
   );
 }

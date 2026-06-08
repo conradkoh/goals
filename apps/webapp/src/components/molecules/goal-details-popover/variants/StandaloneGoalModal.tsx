@@ -1,5 +1,5 @@
 /**
- * Standalone Goal Popover
+ * Standalone Goal Modal
  *
  * A self-contained modal that displays goal details with full interactivity.
  * Unlike the regular popovers which rely on WeekProvider being set up by a parent,
@@ -22,27 +22,28 @@ import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
-import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
+import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { WeekProvider } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
- * Props for the StandaloneGoalPopover component.
+ * Props for the StandaloneGoalModal component.
  *
  * @public
  */
-export interface StandaloneGoalPopoverProps {
+export interface StandaloneGoalModalProps {
   /** Whether the modal is open */
   open: boolean;
   /** Callback fired when the modal open state changes */
   onOpenChange: (open: boolean) => void;
   /** The goal ID to display, or null if no goal selected */
   goalId: Id<'goals'> | null;
-  /** Type of goal being displayed */
-  goalType: 'quarterly' | 'adhoc';
+  /** Category of goal being displayed */
+  goalCategory: 'standard' | 'adhoc';
   /** Year of the goal's quarter */
   year: number;
   /** Quarter number (1-4) */
@@ -62,16 +63,16 @@ export interface StandaloneGoalPopoverProps {
  * @param props - Component props
  * @returns Rendered modal with goal details, or null if no goalId
  */
-export function StandaloneGoalPopover({
+export function StandaloneGoalModal({
   open,
   onOpenChange,
   goalId,
-  goalType,
+  goalCategory,
   year,
   quarter,
   weekNumber: weekNumberProp,
   onComplete,
-}: StandaloneGoalPopoverProps) {
+}: StandaloneGoalModalProps) {
   const { sessionId } = useSession();
 
   const weekNumber = useMemo(() => {
@@ -94,33 +95,34 @@ export function StandaloneGoalPopover({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[450px] max-w-[calc(100vw-32px)] max-h-[85vh] overflow-y-auto p-5">
-        <DialogHeader>
-          <DialogTitle className="sr-only">Goal Details</DialogTitle>
+      <FixedSizeDialog>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Goal Details</DialogTitle>
         </DialogHeader>
+        <FixedSizeDialogContent className="flex flex-col gap-3">
+          {(weekData === undefined || goalDetails === undefined) && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
 
-        {(weekData === undefined || goalDetails === undefined) && (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        )}
+          {goalDetails === null && (
+            <div className="py-8 text-center text-muted-foreground">Goal not found</div>
+          )}
 
-        {goalDetails === null && (
-          <div className="py-8 text-center text-muted-foreground">Goal not found</div>
-        )}
-
-        {weekData && goalDetails && (
-          <WeekProvider weekData={{ ...weekData, year, quarter }}>
-            <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-              {goalType === 'quarterly' ? (
-                <QuarterlyGoalPopoverContent onComplete={onComplete} />
-              ) : (
-                <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
-              )}
-            </GoalProvider>
-          </WeekProvider>
-        )}
-      </DialogContent>
+          {weekData && goalDetails && (
+            <WeekProvider weekData={{ ...weekData, year, quarter }}>
+              <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
+                {goalCategory === 'standard' ? (
+                  <StandardGoalPopoverContent onComplete={onComplete} />
+                ) : (
+                  <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
+                )}
+              </GoalProvider>
+            </WeekProvider>
+          )}
+        </FixedSizeDialogContent>
+      </FixedSizeDialog>
     </Dialog>
   );
 }

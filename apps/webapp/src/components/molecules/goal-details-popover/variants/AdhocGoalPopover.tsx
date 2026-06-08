@@ -5,7 +5,9 @@ import { useCallback } from 'react';
 import {
   AdhocSubGoalsList,
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsSection,
   GoalDisplayProvider,
   GoalDomainDisplay,
@@ -23,6 +25,7 @@ import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
@@ -39,6 +42,10 @@ export interface AdhocGoalPopoverProps {
   domain?: Doc<'domains'> | null;
   /** Week number for the domain popover context. When provided, clicking domain shows popover. */
   weekNumber?: number;
+  /** Whether the goal is in backlog */
+  isBacklog?: boolean;
+  /** Handler for toggling backlog status */
+  onToggleBacklog?: (isBacklog: boolean) => void;
   /** Child adhoc goals (sub-tasks) to display */
   subGoals?: AdhocGoalWithChildren[];
   /** Current nesting depth (0 = root level) */
@@ -74,6 +81,8 @@ export function AdhocGoalPopover({
   titleClassName,
   domain,
   weekNumber,
+  isBacklog = false,
+  onToggleBacklog,
   subGoals,
   depth = 0,
   onChildCompleteChange,
@@ -95,6 +104,8 @@ export function AdhocGoalPopover({
           isComplete={isComplete}
           domain={domain}
           weekNumber={weekNumber}
+          isBacklog={isBacklog}
+          onToggleBacklog={onToggleBacklog}
           subGoals={subGoals}
           depth={depth}
           onChildCompleteChange={onChildCompleteChange}
@@ -127,6 +138,8 @@ function AdhocGoalPopoverContentInner({
   isComplete,
   domain,
   weekNumber,
+  isBacklog = false,
+  onToggleBacklog,
   subGoals,
   depth = 0,
   onChildCompleteChange,
@@ -150,16 +163,25 @@ function AdhocGoalPopoverContentInner({
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
+      <GoalBreadcrumb domain={domain} />
       <GoalHeader
         title={goal.title}
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
-        actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+        actionMenu={
+          <GoalActionMenuNew
+            onSave={onSave}
+            goalType={GoalType.Adhoc}
+            isBacklog={isBacklog}
+            onToggleBacklog={onToggleBacklog}
+          />
+        }
         statusControls={<GoalStatusIcons goalId={goal._id} />}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
 
+      <GoalCreatedDate createdAt={goal._creationTime} />
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.adhoc?.dueDate && (
@@ -167,13 +189,15 @@ function AdhocGoalPopoverContentInner({
       )}
 
       {/* Tabs for Details and Log */}
-      <Tabs defaultValue="details" className="mt-4">
+      {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
+      <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="log">Log</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details" className="mt-4">
+        {/* overflow-y-auto allows Details content to scroll if it overflows */}
+        <TabsContent value="details" className="mt-4 overflow-y-auto">
           {goal.details && (
             <GoalDetailsSection
               title={goal.title}
@@ -197,7 +221,8 @@ function AdhocGoalPopoverContentInner({
           )}
         </TabsContent>
 
-        <TabsContent value="log" className="mt-4">
+        {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
+        <TabsContent value="log" className="mt-4 flex flex-col">
           <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
         </TabsContent>
       </Tabs>

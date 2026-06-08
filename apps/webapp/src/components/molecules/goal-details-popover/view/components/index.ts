@@ -4,9 +4,11 @@
  */
 
 export { AdhocSubGoalsList, type AdhocSubGoalsListProps } from './AdhocSubGoalsList';
+export { GoalBreadcrumb, type GoalBreadcrumbProps } from './GoalBreadcrumb';
 export { GoalActionMenuNew, type GoalActionMenuNewProps } from './GoalActionMenuNew';
 export { GoalChildrenSection, type GoalChildrenSectionProps } from './GoalChildrenSection';
 export { GoalCompletionDate, type GoalCompletionDateProps } from './GoalCompletionDate';
+export { GoalCreatedDate, type GoalCreatedDateProps } from './GoalCreatedDate';
 export {
   GoalDetailsChildrenList,
   type GoalDetailsChildrenListProps,

@@ -3,8 +3,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -30,6 +32,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
@@ -152,6 +155,7 @@ function WeeklyGoalPopoverContentInner({
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { year, quarter, weekNumber } = useWeek();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
@@ -166,26 +170,30 @@ function WeeklyGoalPopoverContentInner({
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
+      <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} />
       <GoalHeader
         title={goal.title}
         isComplete={isComplete}
         onToggleComplete={onToggleComplete}
         statusControls={<GoalStatusIcons goalId={goal._id} />}
-        actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={false} />}
+        actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
       />
 
+      <GoalCreatedDate createdAt={goal._creationTime} />
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
       {/* Tabs for Details and Log */}
-      <Tabs defaultValue="details" className="mt-4">
+      {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
+      <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="log">Log</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="details" className="mt-4">
+        {/* overflow-y-auto allows Details content to scroll if it overflows */}
+        <TabsContent value="details" className="mt-4 overflow-y-auto">
           {goal.details && (
             <GoalDetailsSection
               title={goal.title}
@@ -235,7 +243,8 @@ function WeeklyGoalPopoverContentInner({
           />
         </TabsContent>
 
-        <TabsContent value="log" className="mt-4">
+        {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
+        <TabsContent value="log" className="mt-4 flex flex-col">
           <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
         </TabsContent>
       </Tabs>

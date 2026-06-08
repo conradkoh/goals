@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
-import { QuarterlyGoalPopoverContent } from './QuarterlyGoalPopoverContent';
+import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 import { WeeklyGoalPageContent } from './WeeklyGoalPageContent';
 
 import { Button } from '@/components/ui/button';
@@ -242,7 +242,7 @@ export function GoalPageContent({
               {/* Goal Content based on type */}
               <WeekProvider weekData={{ ...weekData, year, quarter }}>
                 <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-                  {goalType === 'quarterly' && <QuarterlyGoalPopoverContent />}
+                  {goalType === 'quarterly' && <StandardGoalPopoverContent />}
                   {goalType === 'weekly' && <WeeklyGoalPageContent />}
                   {goalType === 'adhoc' && <AdhocGoalPopoverContent weekNumber={weekNumber} />}
                   {goalType === 'daily' && (

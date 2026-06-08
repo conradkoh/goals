@@ -19,8 +19,12 @@ import { usePendingGoalStatus } from '@/contexts/GoalStatusContext';
 export interface PendingStatusDialogProps {
   /** Unique identifier of the goal to manage pending status for */
   goalId: Id<'goals'>;
-  /** Trigger element that opens the dialog when clicked */
-  children: React.ReactNode;
+  /** Trigger element that opens the dialog when clicked (optional in controlled mode) */
+  children?: React.ReactNode;
+  /** Controlled open state (optional - uses internal state if not provided) */
+  open?: boolean;
+  /** Handler for open state changes (optional - uses internal state if not provided) */
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -28,18 +32,39 @@ export interface PendingStatusDialogProps {
  * Allows users to set, update, or clear the pending status with an optional description.
  * Supports Cmd+Enter keyboard shortcut to save.
  *
+ * Can be used in two modes:
+ * 1. Trigger mode: Pass children as the trigger element
+ * 2. Controlled mode: Pass open and onOpenChange props
+ *
  * @example
  * ```tsx
+ * // Trigger mode
  * <PendingStatusDialog goalId={goal._id}>
  *   <button>Mark as Pending</button>
  * </PendingStatusDialog>
+ *
+ * // Controlled mode
+ * <PendingStatusDialog
+ *   goalId={goal._id}
+ *   open={isOpen}
+ *   onOpenChange={setIsOpen}
+ * />
  * ```
  */
-export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId, children }) => {
+export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({
+  goalId,
+  children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}) => {
   const { isPending, pendingDescription, setPendingStatus, clearPendingStatus } =
     usePendingGoalStatus(goalId);
 
-  const [isOpen, setIsOpen] = useState(false);
+  // Use controlled state if provided, otherwise use internal state
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = controlledOnOpenChange || setInternalOpen;
+
   const [description, setDescription] = useState(pendingDescription || '');
 
   // Update description when pendingDescription changes
@@ -53,19 +78,22 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
   const handleSave = useCallback(async () => {
     setPendingStatus(description.trim());
     setIsOpen(false);
-  }, [description, setPendingStatus]);
+  }, [description, setPendingStatus, setIsOpen]);
 
   /** Clears the pending status and closes the dialog */
   const handleClear = useCallback(async () => {
     await clearPendingStatus();
     setDescription('');
     setIsOpen(false);
-  }, [clearPendingStatus]);
+  }, [clearPendingStatus, setIsOpen]);
 
   /** Handles dialog open/close state changes */
-  const handleOpenChange = useCallback((open: boolean) => {
-    setIsOpen(open);
-  }, []);
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setIsOpen(open);
+    },
+    [setIsOpen]
+  );
 
   // Handle keyboard shortcuts (Cmd+Enter to save)
   useEffect(() => {
@@ -87,7 +115,7 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({ goalId
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

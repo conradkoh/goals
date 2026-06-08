@@ -13,6 +13,7 @@ import type * as appinfo from "../appinfo.js";
 import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as auth_google from "../auth/google.js";
+import type * as bff_focus from "../bff/focus.js";
 import type * as checklists from "../checklists.js";
 import type * as cleanupTasks from "../cleanupTasks.js";
 import type * as crypto from "../crypto.js";
@@ -26,6 +27,7 @@ import type * as goalLogs from "../goalLogs.js";
 import type * as migration from "../migration.js";
 import type * as pendingGoals from "../pendingGoals.js";
 import type * as presentations from "../presentations.js";
+import type * as scratchpad from "../scratchpad.js";
 import type * as serviceDesk from "../serviceDesk.js";
 import type * as system_auth_google from "../system/auth/google.js";
 
@@ -41,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   attendance: typeof attendance;
   auth: typeof auth;
   "auth/google": typeof auth_google;
+  "bff/focus": typeof bff_focus;
   checklists: typeof checklists;
   cleanupTasks: typeof cleanupTasks;
   crypto: typeof crypto;
@@ -54,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   migration: typeof migration;
   pendingGoals: typeof pendingGoals;
   presentations: typeof presentations;
+  scratchpad: typeof scratchpad;
   serviceDesk: typeof serviceDesk;
   "system/auth/google": typeof system_auth_google;
 }>;

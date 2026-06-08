@@ -1,8 +1,8 @@
 /**
- * Quarterly Goal Popover Content
+ * Standard Goal Popover Content
  *
- * Renders the full quarterly goal content for use in standalone modals.
- * This is the same content as QuarterlyGoalPopover but without the trigger/popover wrapper.
+ * Renders the full standard (non-adhoc) goal content for use in standalone modals.
+ * Used for quarterly, weekly, and daily goals.
  *
  * @module
  */
@@ -11,8 +11,10 @@ import { useState, useCallback } from 'react';
 
 import {
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -26,20 +28,22 @@ import {
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
- * Props for the QuarterlyGoalPopoverContent component.
+ * Props for the StandardGoalPopoverContent component.
  *
  * @public
  */
-export interface QuarterlyGoalPopoverContentProps {
+export interface StandardGoalPopoverContentProps {
   /** Callback fired when the goal is marked as complete */
   onComplete?: () => void;
 }
@@ -49,7 +53,7 @@ export interface QuarterlyGoalPopoverContentProps {
  *
  * @internal
  */
-interface QuarterlyGoalPopoverContentInnerProps {
+interface StandardGoalPopoverContentInnerProps {
   /** Whether the goal is currently marked as complete */
   isComplete: boolean;
   /** Whether the goal is starred for this week */
@@ -87,7 +91,7 @@ interface QuarterlyGoalPopoverContentInnerProps {
  * @param props - Component props
  * @returns Rendered quarterly goal content
  */
-export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopoverContentProps) {
+export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, updateQuarterlyGoalStatus } =
     useWeek();
@@ -168,7 +172,7 @@ export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopover
   return (
     <GoalEditProvider>
       <GoalDisplayProvider>
-        <QuarterlyGoalPopoverContentInner
+        <StandardGoalPopoverContentInner
           isComplete={isComplete}
           isStarred={isStarred}
           isPinned={isPinned}
@@ -195,7 +199,7 @@ export function QuarterlyGoalPopoverContent({ onComplete }: QuarterlyGoalPopover
  * @param props - Component props
  * @returns Rendered goal content with edit capabilities
  */
-function QuarterlyGoalPopoverContentInner({
+function StandardGoalPopoverContentInner({
   isComplete,
   isStarred,
   isPinned,
@@ -208,44 +212,52 @@ function QuarterlyGoalPopoverContentInner({
   newWeeklyGoalTitle,
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
-}: QuarterlyGoalPopoverContentInnerProps) {
+}: StandardGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
+  const { year, quarter, weekNumber } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <>
       <FireGoalsProvider>
+        <GoalBreadcrumb quarter={quarter} year={year} weekNumber={weekNumber} />
         <GoalHeader
           title={goal.title}
           isComplete={isComplete}
           onToggleComplete={onToggleComplete}
           statusControls={
-            <GoalStarPinContainer>
-              <GoalStarPin
-                value={{ isStarred, isPinned }}
-                onStarred={onToggleStar}
-                onPinned={onTogglePin}
-              />
-            </GoalStarPinContainer>
+            <div className="flex items-center gap-0.5">
+              <GoalStatusIcons goalId={goal._id} />
+              <GoalStarPinContainer>
+                <GoalStarPin
+                  value={{ isStarred, isPinned }}
+                  onStarred={onToggleStar}
+                  onPinned={onTogglePin}
+                />
+              </GoalStarPinContainer>
+            </div>
           }
-          actionMenu={<GoalActionMenuNew onSave={onSave} isQuarterlyGoal={true} />}
+          actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Quarterly} />}
         />
 
         <GoalStatusIndicators isStarred={isStarred} isPinned={isPinned} />
 
+        <GoalCreatedDate createdAt={goal._creationTime} />
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
         {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
 
         {/* Tabs for Details and Log */}
-        <Tabs defaultValue="details" className="mt-4">
+        {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
+        <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="log">Log</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="mt-4">
+          {/* overflow-y-auto allows Details content to scroll if it overflows */}
+          <TabsContent value="details" className="mt-4 overflow-y-auto">
             {goal.details && (
               <GoalDetailsSection
                 title={goal.title}
@@ -275,7 +287,8 @@ function QuarterlyGoalPopoverContentInner({
             />
           </TabsContent>
 
-          <TabsContent value="log" className="mt-4">
+          {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
+          <TabsContent value="log" className="mt-4 flex flex-col">
             <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
           </TabsContent>
         </Tabs>

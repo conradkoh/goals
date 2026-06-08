@@ -39,9 +39,8 @@ This document uses RFC 2119 terminology:
 1. You MUST examine the codebase to identify available validation mechanisms:
    - Check `package.json` for scripts related to: `typecheck`, `test`, `lint`, `build`
    - Identify the testing framework (vitest, jest, bun:test, or none)
-   - Identify the linting tool (eslint, biome, or none)
-   - Check for monorepo tools (nx, turborepo, pnpm workspaces, npm workspaces)
-   
+   - Identify the linting tool (eslint, prettier, or none)
+   - Check for monorepo tools (turborepo, pnpm workspaces, npm workspaces)
 2. You MUST NOT assume validation tools exist
 3. You MUST NOT execute validation commands that are not configured in the project
 
@@ -58,8 +57,7 @@ This document uses RFC 2119 terminology:
 # Examples (adapt to your codebase):
 npm run typecheck          # If script exists
 pnpm typecheck             # If using pnpm
-npx nx run-many -t typecheck  # If using Nx
-npx turbo typecheck        # If using Turborepo
+pnpm typecheck             # If using Turborepo
 npx tsc --noEmit           # Direct TypeScript check
 ```
 
@@ -77,8 +75,7 @@ npx tsc --noEmit           # Direct TypeScript check
 # Examples (adapt to your codebase):
 npm test                   # If script exists
 pnpm test                  # If using pnpm
-npx nx run-many -t test    # If using Nx
-npx turbo test             # If using Turborepo
+pnpm test                  # If using Turborepo
 npx vitest run             # If using Vitest
 npx jest                   # If using Jest
 bun test                   # If using Bun
@@ -88,8 +85,8 @@ bun test                   # If using Bun
 
 **Execute ONLY if linting is configured in the project.**
 
-1. You MUST verify linting is configured (check for eslint config, biome.json, etc.)
-2. You MUST identify the linting tool in use (eslint, biome, etc.)
+1. You MUST verify linting is configured (check for eslint config, prettier config, etc.)
+2. You MUST identify the linting tool in use (eslint, prettier, etc.)
 3. If linting exists, you MUST run linting
 4. You MUST resolve all linting errors before proceeding
 5. You SHOULD use available package.json scripts or appropriate commands:
@@ -98,10 +95,8 @@ bun test                   # If using Bun
 # Examples (adapt to your codebase):
 npm run lint               # If script exists
 pnpm lint                  # If using pnpm
-npx nx run-many -t lint    # If using Nx
-npx turbo lint             # If using Turborepo
+pnpm lint                  # If using Turborepo
 npx eslint .               # If using ESLint
-npx biome check .          # If using Biome
 ```
 
 #### Build Verification (OPTIONAL)
@@ -116,8 +111,7 @@ npx biome check .          # If using Biome
 # Examples (adapt to your codebase):
 npm run build              # If script exists
 pnpm build                 # If using pnpm
-npx nx run-many -t build   # If using Nx
-npx turbo build            # If using Turborepo
+pnpm build                 # If using Turborepo
 ```
 
 #### Validation Failures
@@ -137,7 +131,6 @@ npx turbo build            # If using Turborepo
    - Uses imperative mood (e.g., "Add feature" not "Added feature")
    - Is 1-2 sentences maximum for the subject line
    - Accurately reflects the nature of changes (add, update, fix, refactor, etc.)
-   
 2. You MUST NOT use generic messages like "Update files" or "Fix issues"
 
 3. You SHOULD review recent commit history to match the repository's commit style:
@@ -173,10 +166,9 @@ git status
 1. If the commit fails due to pre-commit hook changes:
    - You MAY retry the commit ONCE to include automated changes
    - If it fails again, you MUST investigate the pre-commit hook requirements
-   
 2. If the commit succeeds but pre-commit hooks modified files:
    - You MUST amend the commit to include the hook modifications:
-   
+
    ```bash
    git add <modified-files>
    git commit --amend --no-edit

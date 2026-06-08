@@ -185,6 +185,8 @@ export function AdhocGoalItem({
                 onToggleComplete={handleToggleComplete}
                 domain={goal.domain}
                 weekNumber={goal.adhoc?.weekNumber}
+                isBacklog={'isBacklog' in goal ? goal.isBacklog : false}
+                onToggleBacklog={handleToggleBacklog}
                 subGoals={fullChildren}
                 depth={depth}
                 onChildCompleteChange={onCompleteChange}

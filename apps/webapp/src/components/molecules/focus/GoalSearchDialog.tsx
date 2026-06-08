@@ -13,6 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { fuzzySearchGoals, type GoalSearchItem } from '@/hooks/useGoalFuzzySearch';
 
 /**
  * Props for the GoalSearchDialog component.
@@ -139,6 +140,12 @@ export function GoalSearchDialog({
     router.push('/app/documents');
   }, [onOpenChange, router]);
 
+  useEffect(() => {
+    if (open) {
+      setSearchValue('');
+    }
+  }, [open]);
+
   // Refocus search input when modal closes
   useEffect(() => {
     if (open && !isGoalModalOpen) {
@@ -262,24 +269,14 @@ export function GoalSearchDialog({
   }, [weeklyGoals, dailyGoals, quarterlyGoals, domains, adhocGoals]);
 
   /**
-   * Filters items based on search input value.
+   * Filters items based on search input value using fuzzy search.
+   * Uses fuse.js for typo-tolerant, VSCode-style matching.
    *
    * @internal
    */
   const filteredItems = useMemo(() => {
-    if (!searchValue.trim()) {
-      return searchItems;
-    }
-
-    const searchLower = searchValue.toLowerCase();
-    return searchItems.filter((item) => {
-      const titleMatch = item.label.toLowerCase().includes(searchLower);
-      const parentMatch = item.parentTitle?.toLowerCase().includes(searchLower);
-      const quarterlyMatch = item.quarterlyTitle?.toLowerCase().includes(searchLower);
-      const dayMatch = item.dayOfWeek?.toLowerCase().includes(searchLower);
-      const domainMatch = item.domainName?.toLowerCase().includes(searchLower);
-      return titleMatch || parentMatch || quarterlyMatch || dayMatch || domainMatch;
-    });
+    // Cast _SearchItem[] to GoalSearchItem[] - they have compatible structures
+    return fuzzySearchGoals(searchItems as GoalSearchItem[], searchValue);
   }, [searchItems, searchValue]);
 
   /**

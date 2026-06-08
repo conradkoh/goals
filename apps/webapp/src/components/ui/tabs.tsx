@@ -28,7 +28,8 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        'bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-[3px]',
+        // shrink-0 ensures tab list never shrinks when content overflows
+        'bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center p-[3px] shrink-0',
         className
       )}
       {...props}
@@ -53,7 +54,8 @@ function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn('flex-1 outline-none', className)}
+      // flex-1 min-h-0: takes remaining space and can shrink below content size for scrolling
+      className={cn('flex-1 min-h-0 outline-none', className)}
       {...props}
     />
   );

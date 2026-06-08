@@ -6,6 +6,7 @@ import { useCallback, useMemo } from 'react';
 import {
   AdhocSubGoalsList,
   GoalActionMenuNew,
+  GoalBreadcrumb,
   GoalCompletionDate,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -19,11 +20,13 @@ import {
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
 import { GoalLogTab } from '@/components/molecules/goal-log';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { GoalType } from '@/domain/goal-actions';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
@@ -151,10 +154,7 @@ export function AdhocGoalQuickViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh] overflow-hidden flex flex-col p-6"
-        onEscapeKeyDown={handleEscapeKeyDown}
-      >
+      <FixedSizeDialog onEscapeKeyDown={handleEscapeKeyDown}>
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>
@@ -167,7 +167,7 @@ export function AdhocGoalQuickViewModal({
             </GoalDisplayProvider>
           </GoalEditProvider>
         </GoalProvider>
-      </DialogContent>
+      </FixedSizeDialog>
     </Dialog>
   );
 }
@@ -321,24 +321,25 @@ function AdhocGoalQuickViewContent({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle className="sr-only">{goal.title}</DialogTitle>
+      <DialogHeader className="sr-only">
+        <DialogTitle>{goal.title}</DialogTitle>
       </DialogHeader>
-      <div className="overflow-y-auto flex-1 pr-2">
+      <FixedSizeDialogContent>
         <FireGoalsProvider>
+          <GoalBreadcrumb domain={adhocGoalProp.domain ?? null} />
           <GoalHeader
             title={goal.title}
             isComplete={isComplete}
             onToggleComplete={handleToggleComplete}
-            statusControls={
-              <GoalStatusIcons
-                goalId={goal._id}
-                showBacklog
+            statusControls={<GoalStatusIcons goalId={goal._id} />}
+            actionMenu={
+              <GoalActionMenuNew
+                onSave={handleSave}
+                goalType={GoalType.Adhoc}
                 isBacklog={adhocGoalProp.isBacklog || false}
                 onToggleBacklog={handleToggleBacklog}
               />
             }
-            actionMenu={<GoalActionMenuNew onSave={handleSave} isQuarterlyGoal={false} />}
           />
 
           {adhocGoalProp.domain && (
@@ -388,7 +389,7 @@ function AdhocGoalQuickViewContent({
             </TabsContent>
           </Tabs>
         </FireGoalsProvider>
-      </div>
+      </FixedSizeDialogContent>
 
       <GoalEditModal
         isOpen={isEditing}
