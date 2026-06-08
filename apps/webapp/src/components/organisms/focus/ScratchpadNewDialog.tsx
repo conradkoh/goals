@@ -50,7 +50,7 @@ export function ScratchpadNewDialog({
             onClick={handleClearScratchpad}
           >
             <FileX className="mr-3 h-4 w-4 text-muted-foreground" />
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start text-left min-w-0 whitespace-normal">
               <span className="font-medium text-sm">Clear Scratchpad</span>
               <span className="text-xs text-muted-foreground">
                 Archive current content and start fresh
@@ -64,7 +64,7 @@ export function ScratchpadNewDialog({
             disabled={!hasCompletedItems}
           >
             <Eraser className="mr-3 h-4 w-4 text-muted-foreground" />
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start text-left min-w-0 whitespace-normal">
               <span className="font-medium text-sm">Remove Completed Items</span>
               <span className="text-xs text-muted-foreground">
                 Remove checked items from the scratchpad
