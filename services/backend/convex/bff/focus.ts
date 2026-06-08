@@ -23,10 +23,13 @@ export type FocusedGoalItem = {
   depth: number;
   indentLevel: number;
   breadcrumb: BreadcrumbSegment[];
+  isStarred?: boolean;
+  isPinned?: boolean;
 };
 
 export type FocusedViewData = {
   urgent: FocusedGoalItem[];
+  quarterlyGoals: FocusedGoalItem[];
   weeklyGoals: FocusedGoalItem[];
   dailyGoals: FocusedGoalItem[];
   adhocTasks: FocusedGoalItem[];
@@ -45,16 +48,78 @@ export const getFocusedViewData = query({
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
 
-    const [urgent, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
+    const [urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
+      getQuarterlyGoals(ctx, { userId, year, quarter, weekNumber }),
       getWeeklyGoals(ctx, { userId, year, quarter, weekNumber }),
       getDailyGoalsForDay(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
     ]);
 
-    return { urgent, weeklyGoals, dailyGoals, adhocTasks };
+    return { urgent, quarterlyGoals, weeklyGoals, dailyGoals, adhocTasks };
   },
 });
+
+// ── Quarterly Goals ───────────────────────────────────────────────────────────
+
+async function getQuarterlyGoals(
+  ctx: QueryCtx,
+  args: {
+    userId: Id<'users'>;
+    year: number;
+    quarter: number;
+    weekNumber: number;
+  }
+): Promise<FocusedGoalItem[]> {
+  const { userId, year, quarter, weekNumber } = args;
+
+  const goals = await ctx.db
+    .query('goals')
+    .withIndex('by_user_and_year_and_quarter', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter)
+    )
+    .collect();
+
+  const weekStates = await ctx.db
+    .query('goalStateByWeek')
+    .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', weekNumber)
+    )
+    .collect();
+
+  const stateByGoalId = new Map(weekStates.map((s) => [s.goalId.toString(), s]));
+
+  return goals
+    .filter((g) => g.depth === 0 && !g.adhoc && !g.isBacklog && !g.isComplete)
+    .sort((a, b) => {
+      const aState = stateByGoalId.get(a._id.toString());
+      const bState = stateByGoalId.get(b._id.toString());
+      const aStar = aState?.isStarred ? 1 : 0;
+      const bStar = bState?.isStarred ? 1 : 0;
+      if (aStar !== bStar) return bStar - aStar;
+      const aPin = aState?.isPinned ? 1 : 0;
+      const bPin = bState?.isPinned ? 1 : 0;
+      if (aPin !== bPin) return bPin - aPin;
+      return a._creationTime - b._creationTime;
+    })
+    .map((g) => {
+      const state = stateByGoalId.get(g._id.toString());
+      return {
+        _id: g._id,
+        title: g.title,
+        isComplete: g.isComplete ?? false,
+        isAdhoc: false,
+        year: g.year,
+        quarter: g.quarter,
+        weekNumber: undefined,
+        depth: 0,
+        indentLevel: 0,
+        breadcrumb: [],
+        isStarred: state?.isStarred ?? false,
+        isPinned: state?.isPinned ?? false,
+      };
+    });
+}
 
 // ── Urgent Goals ──────────────────────────────────────────────────────────────
 
@@ -90,30 +155,27 @@ async function getUrgentGoals(
     .filter((g) => g.depth !== 0 || g.adhoc)
     .filter((g) => !g.isBacklog); // Exclude backlog goals from urgent section
 
-  // For daily goals, filter by day of week
-  const dailyGoals = filtered.filter((g) => g.depth === 2 && !g.adhoc);
-  const dailyGoalStates = await Promise.all(
-    dailyGoals.map(async (g) => {
-      const state = await ctx.db
-        .query('goalStateByWeek')
-        .withIndex('by_user_and_goal_and_year_and_quarter_and_week', (q) =>
-          q
-            .eq('userId', userId)
-            .eq('goalId', g._id)
-            .eq('year', year)
-            .eq('quarter', quarter)
-            .eq('weekNumber', weekNumber)
-        )
-        .first();
-      return { goalId: g._id, dayOfWeek: state?.daily?.dayOfWeek ?? null };
-    })
-  );
+  // Fetch ALL goalStateByWeek entries for the current week in a single indexed query,
+  // then filter in memory. Avoids N+1 lookups when the user has many fire goals.
+  const weekStates = await ctx.db
+    .query('goalStateByWeek')
+    .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+      q.eq('userId', userId).eq('year', year).eq('quarter', quarter).eq('weekNumber', weekNumber)
+    )
+    .collect();
 
-  const dailyGoalDayMap = new Map(dailyGoalStates.map((s) => [s.goalId.toString(), s.dayOfWeek]));
+  const goalStateMap = new Map(weekStates.map((s) => [s.goalId.toString(), s]));
 
+  // Only include non-adhoc goals that have a state for the current week
+  filtered = filtered.filter((g) => {
+    if (g.adhoc) return true;
+    return goalStateMap.has(g._id.toString());
+  });
+
+  // For daily goals, additionally filter by day of week
   filtered = filtered.filter((g) => {
     if (g.depth === 2 && !g.adhoc) {
-      return dailyGoalDayMap.get(g._id.toString()) === dayOfWeek;
+      return goalStateMap.get(g._id.toString())?.daily?.dayOfWeek === dayOfWeek;
     }
     return true;
   });

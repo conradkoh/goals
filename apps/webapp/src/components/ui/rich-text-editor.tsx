@@ -7,7 +7,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, useRef } from 'react';
+import { useEffect, useImperativeHandle, useRef } from 'react';
 
 import styles from './rich-text-editor.module.css';
 
@@ -297,6 +297,7 @@ const MarkdownTaskListPaste = Extension.create({
 /** Imperative handle for pushing external content into the editor without triggering onChange. */
 export interface RichTextEditorHandle {
   setContent: (html: string) => void;
+  getContent: () => string;
 }
 
 interface RichTextEditorProps {
@@ -416,20 +417,29 @@ export function RichTextEditor({
   });
 
   // Expose imperative handle for uncontrolled mode
-  useEffect(() => {
-    if (!editorRef || !editor) return;
-    editorRef.current = {
+  useImperativeHandle(
+    editorRef,
+    () => ({
       setContent: (html: string) => {
-        if (editor.isDestroyed) return;
+        if (!editor || editor.isDestroyed) return;
         isExternalUpdateRef.current = true;
         editor.commands.setContent(html || '');
         isExternalUpdateRef.current = false;
       },
-    };
+      getContent: () => {
+        if (!editor || editor.isDestroyed) return '';
+        return stripTrailingEmptyParagraphs(editor.getHTML());
+      },
+    }),
+    [editor]
+  );
+
+  useEffect(() => {
+    if (!editorRef) return;
     return () => {
       editorRef.current = null;
     };
-  }, [editor, editorRef]);
+  }, [editorRef]);
 
   // Controlled mode: sync value prop → editor (only when editorRef is NOT provided)
   useEffect(() => {

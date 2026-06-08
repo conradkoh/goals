@@ -12,6 +12,7 @@ import {
 } from '@/components/molecules/goal-details-popover';
 import { Spinner } from '@/components/ui/spinner';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ export const DailyGoalListContainer = ({
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const { isTouchDevice } = useDeviceScreenInfo();
 
   const handleSubmit = async () => {
     if (!newGoalTitle.trim()) return;
@@ -99,6 +101,9 @@ export const DailyGoalListContainer = ({
               onEscape={handleEscape}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => {
+                if (isTouchDevice) {
+                  return;
+                }
                 if (!newGoalTitle) {
                   setIsInputFocused(false);
                   setIsHovering(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
+import { CalendarRange } from 'lucide-react';
 
 import { FocusedGoalListItem } from './FocusedGoalListItem';
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -17,7 +18,11 @@ export function FocusedWeeklyGoalsSection({
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
-    <FocusedGoalSection title="Weekly Goals" count={incompleteCount}>
+    <FocusedGoalSection
+      title="Weekly Goals"
+      count={incompleteCount}
+      icon={<CalendarRange className="h-3.5 w-3.5 text-muted-foreground" />}
+    >
       {goals.length === 0 ? (
         <p className="px-4 py-3 text-sm text-muted-foreground">No weekly goals</p>
       ) : (
