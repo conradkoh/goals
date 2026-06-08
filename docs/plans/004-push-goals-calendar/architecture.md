@@ -9,16 +9,19 @@ This feature enhances the existing goal moving UI by adding a calendar picker co
 ### Existing Infrastructure
 
 **Backend Mutations (already exist):**
+
 - `moveGoalsFromWeek` - Move goals between weeks
 - `moveGoalsFromDay` - Move goals between days
 - `moveWeeklyGoalToWeek` - Move weekly goal to specific week
 
 **Frontend Hooks (already exist):**
+
 - `useMoveWeeklyGoal` - Hook for moving weekly goals
 - `usePullGoals` - Hook for pulling goals forward
 - `useMoveGoalsForQuarter` - Quarter-level moves
 
 **UI Components (already exist):**
+
 - `MoveGoalToWeekModal` - Modal with dropdown select (can be enhanced)
 - `Calendar` - react-day-picker based calendar component
 
@@ -40,13 +43,13 @@ Replace/enhance the dropdown in `MoveGoalToWeekModal` with a calendar picker:
 
 ## Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Approach | Enhance existing modal | Reuse existing hooks and logic |
-| Calendar lib | react-day-picker (existing) | Already in project, styled |
-| Week selection | Calendar with week highlight | Visual week boundaries |
-| Quick actions | Buttons above calendar | Fast access to common dates |
-| Constraints | Disable dates outside quarter | Preserve business rules |
+| Decision       | Choice                        | Rationale                      |
+| -------------- | ----------------------------- | ------------------------------ |
+| Approach       | Enhance existing modal        | Reuse existing hooks and logic |
+| Calendar lib   | react-day-picker (existing)   | Already in project, styled     |
+| Week selection | Calendar with week highlight  | Visual week boundaries         |
+| Quick actions  | Buttons above calendar        | Fast access to common dates    |
+| Constraints    | Disable dates outside quarter | Preserve business rules        |
 
 ## Component Changes
 
@@ -71,7 +74,7 @@ Replace dropdown with calendar:
       In 2 Weeks
     </Button>
   </div>
-  
+
   {/* Calendar */}
   <Calendar
     mode="single"
@@ -116,6 +119,7 @@ Goal moved, modal closes
 ### Week Selection Mode
 
 For weekly goals, the calendar should select whole weeks:
+
 - Highlight entire week when hovering
 - Clicking any day in a week selects that week
 - Show week number in the calendar
@@ -123,5 +127,6 @@ For weekly goals, the calendar should select whole weeks:
 ### Daily Goal Mode
 
 For daily goals, select individual days:
+
 - Standard single-day selection
 - Can extend to cross-week if within quarter

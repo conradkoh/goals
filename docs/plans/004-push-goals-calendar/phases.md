@@ -2,16 +2,17 @@
 
 ## Phase Overview
 
-| Phase | Description | Scope |
-|-------|-------------|-------|
-| Phase 1 | Date utility helpers | Backend/Frontend |
-| Phase 2 | Enhance MoveGoalToWeekModal with calendar | Frontend |
-| Phase 3 | Daily goal calendar support | Frontend |
-| Phase 4 | Quick action buttons | Frontend |
+| Phase   | Description                               | Scope            |
+| ------- | ----------------------------------------- | ---------------- |
+| Phase 1 | Date utility helpers                      | Backend/Frontend |
+| Phase 2 | Enhance MoveGoalToWeekModal with calendar | Frontend         |
+| Phase 3 | Daily goal calendar support               | Frontend         |
+| Phase 4 | Quick action buttons                      | Frontend         |
 
 ## Phase 1: Date Utility Helpers
 
 ### Objective
+
 Create utility functions for converting between calendar dates and week numbers.
 
 ### Tasks
@@ -25,16 +26,19 @@ Create utility functions for converting between calendar dates and week numbers.
    - Get all dates in a week
 
 ### Success Criteria
+
 - [ ] Can convert Date → week number
 - [ ] Can check if date is within quarter
 - [ ] Existing tests pass
 
 ### Files Changed
+
 - `apps/webapp/src/lib/date/iso-week.ts` (enhanced)
 
 ## Phase 2: Enhance MoveGoalToWeekModal
 
 ### Objective
+
 Replace dropdown select with calendar picker in the move goal modal.
 
 ### Tasks
@@ -56,17 +60,20 @@ Replace dropdown select with calendar picker in the move goal modal.
    - Keep loading states
 
 ### Success Criteria
+
 - [ ] Calendar shows in modal instead of dropdown
 - [ ] Selecting date moves goal correctly
 - [ ] Weeks outside quarter are disabled
 - [ ] Move modes still work
 
 ### Files Changed
+
 - `apps/webapp/src/components/molecules/goal-details-popover/view/components/MoveGoalToWeekModal.tsx` (modified)
 
 ## Phase 3: Daily Goal Calendar Support
 
 ### Objective
+
 Support calendar-based rescheduling for daily goals.
 
 ### Tasks
@@ -81,17 +88,20 @@ Support calendar-based rescheduling for daily goals.
    - Opens calendar modal
 
 ### Success Criteria
+
 - [ ] Daily goals can be moved via calendar
 - [ ] Accessible from action menu
 - [ ] Cross-week moves handled correctly
 
 ### Files Changed
+
 - New modal or enhanced existing
 - Daily goal action menu
 
 ## Phase 4: Quick Action Buttons
 
 ### Objective
+
 Add quick shortcuts for common rescheduling actions.
 
 ### Tasks
@@ -106,11 +116,13 @@ Add quick shortcuts for common rescheduling actions.
    - Click auto-selects and moves
 
 ### Success Criteria
+
 - [ ] Quick buttons visible in modal
 - [ ] Clicking button moves goal immediately
 - [ ] Feedback on success
 
 ### Files Changed
+
 - `MoveGoalToWeekModal.tsx` (modified)
 
 ## Dependencies
