@@ -289,7 +289,7 @@ export function FocusModeFocusedView() {
             />
 
             {/* Inline add task */}
-            <div className="px-4 py-3">
+            <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
               <div className="flex items-center gap-2 border-t border-border pt-3">
                 <Plus className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                 <Input
