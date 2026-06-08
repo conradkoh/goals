@@ -1,7 +1,7 @@
 'use client';
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
-import { Loader2 } from 'lucide-react';
+import { ListTodo, Loader2 } from 'lucide-react';
 
 import { FocusedGoalListItem } from './FocusedGoalListItem';
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -16,7 +16,10 @@ export function FocusedAdhocGoalsSection({
   onToggleComplete,
 }: FocusedAdhocGoalsSectionProps) {
   return (
-    <FocusedGoalSection title="Tasks">
+    <FocusedGoalSection
+      title="Tasks"
+      icon={<ListTodo className="h-3.5 w-3.5 text-muted-foreground" />}
+    >
       <div className="px-4 py-2">
         {goals === undefined ? (
           <div className="flex items-center justify-center h-16">

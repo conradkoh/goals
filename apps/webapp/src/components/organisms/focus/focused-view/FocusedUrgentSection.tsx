@@ -1,6 +1,7 @@
 'use client';
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
+import { Flame } from 'lucide-react';
 
 import { FocusedGoalListItem } from './FocusedGoalListItem';
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -21,6 +22,7 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
       count={incompleteCount}
       countColorClass="text-red-400"
       countDotColorClass="bg-red-400"
+      icon={<Flame className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />}
     >
       <div className="px-4 py-2">
         <ul className="space-y-1">

@@ -6,6 +6,7 @@ import {
   GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -178,6 +179,7 @@ function WeeklyGoalPopoverContentInner({
         actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
       />
 
+      <GoalCreatedDate createdAt={goal._creationTime} />
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}

@@ -19,6 +19,7 @@ interface FocusedGoalListItemProps {
   incompleteClassName?: string;
   /** Nesting depth for visual indentation (0 = root) */
   indentLevel?: number;
+  leadingIndicator?: React.ReactNode;
 }
 
 export function FocusedGoalListItem({
@@ -32,6 +33,7 @@ export function FocusedGoalListItem({
   onToggleComplete,
   incompleteClassName,
   indentLevel = 0,
+  leadingIndicator,
 }: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -46,6 +48,7 @@ export function FocusedGoalListItem({
           onCheckedChange={(checked) => onToggleComplete(goalId, Boolean(checked))}
           className="flex-shrink-0"
         />
+        {leadingIndicator && <span className="flex-shrink-0">{leadingIndicator}</span>}
         <button
           type="button"
           onClick={() => setPopoverOpen(true)}

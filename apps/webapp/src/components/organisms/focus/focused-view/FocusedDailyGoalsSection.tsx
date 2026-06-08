@@ -1,6 +1,7 @@
 'use client';
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
+import { Sun } from 'lucide-react';
 
 import { FocusedGoalListItem } from './FocusedGoalListItem';
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -19,7 +20,11 @@ export function FocusedDailyGoalsSection({
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
-    <FocusedGoalSection title="Daily Goals" count={incompleteCount}>
+    <FocusedGoalSection
+      title="Daily Goals"
+      count={incompleteCount}
+      icon={<Sun className="h-3.5 w-3.5 text-muted-foreground" />}
+    >
       <div className="px-4 py-2">
         <ul className="space-y-1">
           {goals.map((goal) => (

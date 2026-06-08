@@ -5,6 +5,7 @@ import {
   GoalActionMenuNew,
   GoalBreadcrumb,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsSection,
   GoalDisplayProvider,
   GoalDomainDisplay,
@@ -133,6 +134,7 @@ function DailyGoalPopoverContentInner({
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
 
+      <GoalCreatedDate createdAt={goal._creationTime} />
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}

@@ -24,20 +24,13 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   FocusedAdhocGoalsSection,
   FocusedDailyGoalsSection,
+  FocusedQuarterlyGoalsSection,
   FocusedUrgentSection,
   FocusedWeeklyGoalsSection,
 } from '@/components/organisms/focus/focused-view';
+import { removeCompletedItemsFromEditor } from '@/components/organisms/focus/removeCompletedItems';
 import { ScratchpadHistoryDialog } from '@/components/organisms/focus/ScratchpadHistoryDialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ScratchpadNewDialog } from '@/components/organisms/focus/ScratchpadNewDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -71,9 +64,15 @@ export function FocusModeFocusedView() {
     handleContentChange,
     handleNewClick,
     handleArchiveConfirm,
-    showArchiveConfirm,
-    setShowArchiveConfirm,
+    handleRemoveCompletedItems,
+    showNewDialog,
+    setShowNewDialog,
   } = useScratchpad();
+
+  const hasCompletedItems = (() => {
+    const content = editorRef.current?.getContent() ?? '';
+    return content.includes('data-checked="true"');
+  })();
 
   // ── Today's date (refreshes every 10s) ──────────────────────────────────
   const [currentDate, setCurrentDate] = useState<DateTime>(() => DateTime.now());
@@ -166,6 +165,18 @@ export function FocusModeFocusedView() {
     }
   }, [newTaskTitle, createAdhocGoal, year, weekNumber, dayOfWeek]);
 
+  // ── Scratchpad actions ───────────────────────────────────────────────────
+  const onClearScratchpad = useCallback(() => {
+    handleArchiveConfirm();
+  }, [handleArchiveConfirm]);
+
+  const onRemoveCompletedItems = useCallback(() => {
+    const cleanedContent = removeCompletedItemsFromEditor(editorRef);
+    if (cleanedContent !== null) {
+      handleRemoveCompletedItems(cleanedContent);
+    }
+  }, [editorRef, handleRemoveCompletedItems]);
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col md:flex-row gap-0 h-full md:overflow-hidden">
@@ -257,6 +268,11 @@ export function FocusModeFocusedView() {
               onToggleComplete={handleUrgentCompleteChange}
             />
 
+            <FocusedQuarterlyGoalsSection
+              goals={focusedViewData.quarterlyGoals}
+              onToggleComplete={handleNormalGoalCompleteChange}
+            />
+
             <FocusedWeeklyGoalsSection
               goals={focusedViewData.weeklyGoals}
               onToggleComplete={handleNormalGoalCompleteChange}
@@ -273,7 +289,7 @@ export function FocusModeFocusedView() {
             />
 
             {/* Inline add task */}
-            <div className="px-4 py-3">
+            <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
               <div className="flex items-center gap-2 border border-border/60 rounded-md bg-background/50 px-3 py-2 transition-colors hover:bg-background/80 focus-within:bg-background focus-within:border-border">
                 <button
                   type="button"
@@ -305,21 +321,13 @@ export function FocusModeFocusedView() {
 
       <ScratchpadHistoryDialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
 
-      <AlertDialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Archive &amp; Start Fresh</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will archive your current scratchpad content and start a new one. You can find
-              archived content in your history.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchiveConfirm}>Archive</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ScratchpadNewDialog
+        open={showNewDialog}
+        onOpenChange={setShowNewDialog}
+        onClearScratchpad={onClearScratchpad}
+        onRemoveCompletedItems={onRemoveCompletedItems}
+        hasCompletedItems={hasCompletedItems}
+      />
     </div>
   );
 }
