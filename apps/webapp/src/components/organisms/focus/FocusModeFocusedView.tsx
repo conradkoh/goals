@@ -23,10 +23,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   FocusedAdhocGoalsSection,
-  FocusedDailyGoalsSection,
   FocusedQuarterlyGoalsSection,
   FocusedUrgentSection,
-  FocusedWeeklyGoalsSection,
 } from '@/components/organisms/focus/focused-view';
 import { removeCompletedItemsFromEditor } from '@/components/organisms/focus/removeCompletedItems';
 import { ScratchpadHistoryDialog } from '@/components/organisms/focus/ScratchpadHistoryDialog';
@@ -270,16 +268,6 @@ export function FocusModeFocusedView() {
 
             <FocusedQuarterlyGoalsSection
               goals={focusedViewData.quarterlyGoals}
-              onToggleComplete={handleNormalGoalCompleteChange}
-            />
-
-            <FocusedWeeklyGoalsSection
-              goals={focusedViewData.weeklyGoals}
-              onToggleComplete={handleNormalGoalCompleteChange}
-            />
-
-            <FocusedDailyGoalsSection
-              goals={focusedViewData.dailyGoals}
               onToggleComplete={handleNormalGoalCompleteChange}
             />
 
