@@ -5,6 +5,7 @@ import {
   GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalCreatedDate,
   GoalDetailsChildrenList,
   GoalDetailsSection,
   GoalDisplayProvider,
@@ -201,6 +202,7 @@ function QuarterlyGoalPopoverContentInner({
 
       <GoalStatusIndicators isStarred={isStarred} isPinned={isPinned} />
 
+      <GoalCreatedDate createdAt={goal._creationTime} />
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
