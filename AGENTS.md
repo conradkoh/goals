@@ -21,7 +21,7 @@ A quick reference for working with the Next.js + Convex monorepo.
 
 Use semantic, theme-aware colors — never hard-coded light-only values.
 
-See **[docs/application/design/theme.md](docs/application/design/theme.md)** — the source of truth for color tokens, dark-mode variants, and testing guidance.
+See **[docs/design/design-guidelines.md](docs/design/design-guidelines.md)** — the source of truth for color tokens, dark-mode variants, and testing guidance.
 
 ### UI Components & Icons
 
