@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
@@ -134,7 +134,7 @@ button,
 input,
 .card,
 .border,
-[class*="border-"] {
+[class*='border-'] {
   transition:
     border-color var(--theme-transition-duration) var(--theme-transition-ease),
     box-shadow var(--theme-transition-duration) var(--theme-transition-ease);
@@ -163,7 +163,7 @@ input,
 :root {
   /* V2 Industrial: Sharp corners */
   --radius: 0;
-  
+
   /* V2 Industrial: Neutral Glass theme colors */
   --background: #f5f5f5;
   --foreground: #171717;
@@ -184,20 +184,20 @@ input,
   --border: rgba(23, 23, 23, 0.15);
   --input: rgba(23, 23, 23, 0.1);
   --ring: #171717;
-  
+
   /* V2 Industrial: Status colors (light mode - darker for contrast) */
   --success: #15803d;
   --warning: #b45309;
   --error: #b91c1c;
   --info: #1d4ed8;
-  
+
   /* Chart colors */
   --chart-1: #ea580c;
   --chart-2: #0d9488;
   --chart-3: #1e40af;
   --chart-4: #ca8a04;
   --chart-5: #c2410c;
-  
+
   /* Sidebar */
   --sidebar: rgba(255, 255, 255, 0.6);
   --sidebar-foreground: #171717;
@@ -234,20 +234,20 @@ input,
   --border: rgba(250, 250, 250, 0.1);
   --input: rgba(250, 250, 250, 0.15);
   --ring: #fafafa;
-  
+
   /* V2 Industrial: Status colors (dark mode - brighter for visibility) */
   --success: #34d399;
   --warning: #fbbf24;
   --error: #f87171;
   --info: #60a5fa;
-  
+
   /* Chart colors */
   --chart-1: #6366f1;
   --chart-2: #22d3ee;
   --chart-3: #fbbf24;
   --chart-4: #a855f7;
   --chart-5: #f43f5e;
-  
+
   /* Sidebar */
   --sidebar: rgba(24, 24, 27, 0.5);
   --sidebar-foreground: #fafafa;
@@ -263,6 +263,11 @@ input,
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -274,7 +279,7 @@ input,
   }
   /* add cursor pointer to all buttons */
   button:not([disabled]),
-  [role="button"]:not([disabled]) {
+  [role='button']:not([disabled]) {
     cursor: pointer;
   }
 }
@@ -360,88 +365,88 @@ input,
   /* ============================================
      V2 INDUSTRIAL DESIGN SYSTEM - Utility Classes
      ============================================ */
-  
+
   /* Industrial Typography */
   .text-industrial-header {
     @apply text-sm font-bold uppercase tracking-wider;
   }
-  
+
   .text-industrial-label {
     @apply text-[10px] font-bold uppercase tracking-wider text-muted-foreground;
   }
-  
+
   .text-industrial-metric {
     @apply text-lg font-bold tracking-tight tabular-nums;
   }
-  
+
   .text-industrial-status {
     @apply text-[10px] font-bold font-mono;
   }
-  
+
   .text-industrial-title {
     @apply text-2xl font-bold uppercase tracking-tight;
   }
-  
+
   /* Industrial Borders */
   .border-industrial {
     @apply border-2;
   }
-  
+
   .border-b-industrial {
     @apply border-b-2;
   }
-  
+
   .border-t-industrial {
     @apply border-t-2;
   }
-  
+
   /* Industrial Indicators (square, not round) */
   .indicator-industrial {
     @apply w-1.5 h-1.5;
   }
-  
+
   .indicator-industrial-lg {
     @apply w-2 h-2;
   }
-  
+
   /* Industrial Status Colors */
   .text-status-success {
     color: var(--success);
   }
-  
+
   .text-status-warning {
     color: var(--warning);
   }
-  
+
   .text-status-error {
     color: var(--error);
   }
-  
+
   .text-status-info {
     color: var(--info);
   }
-  
+
   .bg-status-success {
     background-color: var(--success);
   }
-  
+
   .bg-status-warning {
     background-color: var(--warning);
   }
-  
+
   .bg-status-error {
     background-color: var(--error);
   }
-  
+
   .bg-status-info {
     background-color: var(--info);
   }
-  
+
   /* Industrial Section Header */
   .section-header-industrial {
     @apply text-sm font-bold uppercase tracking-wider border-b-2 pb-2 mb-3;
   }
-  
+
   /* Industrial Card with glassmorphism */
   .card-industrial {
     @apply bg-card/60 backdrop-blur-sm border-2 border-border/10 p-4;

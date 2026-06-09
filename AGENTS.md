@@ -1,11 +1,3 @@
----
-
-description: Development guide for the Next.js + Convex monorepo
-globs: "\*\*"
-alwaysApply: true
-
----
-
 # Development Guidelines
 
 A quick reference for working with the Next.js + Convex monorepo.
@@ -15,36 +7,21 @@ A quick reference for working with the Next.js + Convex monorepo.
 ## Architecture
 
 - **apps/webapp** — Next.js frontend application
+  - `src/application/` — App-specific frontend code (see [README](apps/webapp/src/application/README.md))
 - **services/backend** — Convex backend
+  - `application/` — App-specific backend code (see [README](services/backend/application/README.md))
+- **docs** — Project documentation
+  - `application/` — App-specific documentation (see [README](docs/application/README.md))
 
 ---
 
 ## Frontend (apps/webapp)
 
-### Dark Mode — Critical for All Components
+### Theming & Dark Mode
 
-Use semantic colors that adapt to both light and dark modes:
+Use semantic, theme-aware colors — never hard-coded light-only values.
 
-| Purpose         | Preferred               | Avoid              |
-| --------------- | ----------------------- | ------------------ |
-| Primary text    | `text-foreground`       | `text-black`       |
-| Secondary text  | `text-muted-foreground` | `text-gray-600`    |
-| Card background | `bg-card`               | `bg-white`         |
-| Hover states    | `hover:bg-accent/50`    | `hover:bg-gray-50` |
-| Borders         | `border-border`         | `border-gray-200`  |
-
-**Brand/Status colors must include dark variants:**
-
-```tsx
-// Good
-bg-red-50 dark:bg-red-950/20
-text-red-600 dark:text-red-400
-
-// Bad - single mode only
-bg-red-50  // white text on light red in dark mode
-```
-
-**Testing**: Verify components in light mode, dark mode, and system mode.
+See **[docs/application/design/theme.md](docs/application/design/theme.md)** — the source of truth for color tokens, dark-mode variants, and testing guidance.
 
 ### UI Components & Icons
 
@@ -182,7 +159,10 @@ turbo run test --filter=webapp --filter=backend
 ```
 next-convex-starter-app/
 ├── apps/webapp/           # Next.js frontend
+│   └── src/application/   # App-specific frontend code
 ├── services/backend/      # Convex backend
+│   └── application/       # App-specific backend code
 ├── docs/                  # Documentation
+│   └── application/       # App-specific documentation
 └── scripts/               # Utility scripts
 ```

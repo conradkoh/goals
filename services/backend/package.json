@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "convex dev",
+    "dev": "CONVEX_NON_INTERACTIVE=true convex dev",
     "deploy": "convex deploy",
+    "migrate": "convex run migrations:runAll",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -14,15 +15,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "convex": "^1.31.2",
-    "convex-helpers": "^0.1.108",
+    "@convex-dev/aggregate": "^0.2.1",
+    "@convex-dev/migrations": "^0.3.4",
+    "convex": "^1.39.1",
+    "convex-helpers": "^0.1.118",
     "luxon": "^3.6.1",
     "zod": "^4.0.5"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@types/luxon": "^3.6.2",
-    "convex-test": "^0.0.41",
+    "convex-test": "^0.0.52",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "vitest": "^4.0.6"

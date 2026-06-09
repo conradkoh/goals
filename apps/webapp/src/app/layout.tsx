@@ -9,7 +9,7 @@ import { Navigation } from '@/components/Navigation';
 import { Toaster } from '@/components/ui/sonner';
 import { AppInfoProvider } from '@/modules/app/AppInfoProvider';
 import { AuthProvider } from '@/modules/auth/AuthProvider';
-import { ThemeProvider } from '@/modules/theme/ThemeProvider';
+import { ThemeProvider, themeScript } from '@/modules/theme/ThemeProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -60,14 +60,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        {/* React Grab for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ConvexClientProvider>
@@ -75,9 +70,11 @@ export default function RootLayout({
             <AppInfoProvider>
               <AuthProvider>
                 <ThemeProvider>
-                  <div className="flex flex-col h-screen overflow-hidden">
+                  <div className="flex h-dvh flex-col overflow-hidden">
                     <Navigation />
-                    <main className="flex-1 flex flex-col overflow-scroll">{children}</main>
+                    <main className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
+                      {children}
+                    </main>
                   </div>
                 </ThemeProvider>
               </AuthProvider>
@@ -85,6 +82,14 @@ export default function RootLayout({
           </ConvexQueryCacheProvider>
         </ConvexClientProvider>
         <Toaster />
+        {/* React Grab for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );

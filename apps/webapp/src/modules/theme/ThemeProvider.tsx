@@ -63,7 +63,8 @@ export function useIsDarkMode(): boolean {
 }
 
 // Script to prevent flash of incorrect theme
-const themeScript = `
+// Exported so layout.tsx can inject it via next/script before hydration
+export const themeScript = `
 (() => {
   window.__theme = {
     value: localStorage.getItem('theme') || 'system',
@@ -117,55 +118,40 @@ const themeScript = `
   // listen to updates from the system
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   mediaQuery.addEventListener('change', window.__theme.onThemeChange);
+
+  // Re-apply theme when page becomes visible again (e.g., after mobile background)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      window.__theme.onThemeChange();
+    }
+  });
 })();
 `;
 
 export function ThemeProvider({ children, targetSelector }: ThemeProviderProps) {
-  // Custom attribute to use for theme application
   const attribute = targetSelector ? 'data-theme' : 'class';
-  // Only render the provider client-side to avoid hydration mismatch
-  const [mounted, setMounted] = useState(false);
   const [theme, _setTheme] = useState<Theme | null>(null);
   const setTheme = useCallback((theme: Theme) => {
     _setTheme(theme);
     window.__theme.setTheme(theme);
   }, []);
 
-  useEffect(() => {
-    // Set mounted state to indicate hydration is complete
-    setMounted(true);
-    // Sync the theme from the window object to the react state
-    _setTheme(window.__theme.value);
-  }, []);
-
   // We need to use this component pattern for hydration safety
   return (
-    <>
-      {/* Inject script to handle theme before React hydration */}
-      {}
-      <script dangerouslySetInnerHTML={{ __html: themeScript }} suppressHydrationWarning />
-
-      {mounted ? (
-        <ThemeContext.Provider value={{ theme, setTheme }}>
-          <NextThemesProvider
-            attribute={attribute}
-            defaultTheme="system"
-            enableSystem
-            themes={['light', 'dark']}
-            enableColorScheme
-            storageKey="theme"
-            // If a target selector is provided, use it as the element to apply theme to
-            {...(targetSelector && { selector: targetSelector })}
-          >
-            {children}
-          </NextThemesProvider>
-        </ThemeContext.Provider>
-      ) : (
-        // During SSR and before hydration, just render children
-        // The script above will handle theme application
-        children
-      )}
-    </>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <NextThemesProvider
+        attribute={attribute}
+        defaultTheme="system"
+        enableSystem
+        themes={['light', 'dark']}
+        enableColorScheme
+        storageKey="theme"
+        // If a target selector is provided, use it as the element to apply theme to
+        {...(targetSelector && { selector: targetSelector })}
+      >
+        {children}
+      </NextThemesProvider>
+    </ThemeContext.Provider>
   );
 }
 

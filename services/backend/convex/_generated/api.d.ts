@@ -25,10 +25,12 @@ import type * as fireGoal from "../fireGoal.js";
 import type * as goal from "../goal.js";
 import type * as goalLogs from "../goalLogs.js";
 import type * as migration from "../migration.js";
+import type * as migrations from "../migrations.js";
 import type * as pendingGoals from "../pendingGoals.js";
 import type * as presentations from "../presentations.js";
 import type * as scratchpad from "../scratchpad.js";
 import type * as serviceDesk from "../serviceDesk.js";
+import type * as sessions from "../sessions.js";
 import type * as system_auth_google from "../system/auth/google.js";
 
 import type {
@@ -55,10 +57,12 @@ declare const fullApi: ApiFromModules<{
   goal: typeof goal;
   goalLogs: typeof goalLogs;
   migration: typeof migration;
+  migrations: typeof migrations;
   pendingGoals: typeof pendingGoals;
   presentations: typeof presentations;
   scratchpad: typeof scratchpad;
   serviceDesk: typeof serviceDesk;
+  sessions: typeof sessions;
   "system/auth/google": typeof system_auth_google;
 }>;
 
@@ -88,4 +92,7 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  aggregate: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"aggregate">;
+  migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+};

@@ -137,28 +137,42 @@ const useLocalStorageSession = (
 ): ReturnType<UseStorage<SessionId | undefined>> => {
   const [sessionId, setSessionId] = useState<SessionId>('' as string & { __SessionId: true });
 
-  useEffect(() => {
-    // Run only on the client
-    const prevSessionId = localStorage.getItem(key) as SessionId | null;
+  const [prevKey, setPrevKey] = useState(key);
+  const [prevNextSessionId, setPrevNextSessionId] = useState(nextSessionId);
+  if (prevKey !== key || prevNextSessionId !== nextSessionId) {
+    setPrevKey(key);
+    setPrevNextSessionId(nextSessionId);
+    const prevSessionId =
+      typeof window !== 'undefined' ? (localStorage.getItem(key) as SessionId | null) : null;
     if (prevSessionId == null) {
       if (nextSessionId) {
-        // No last session, create a new one and mark it has started
-        localStorage.setItem(key, nextSessionId);
-        setSessionId(nextSessionId); // If local storage has value, use it instead of the one passed in
-      } else {
-        // There is no next session id, do nothing
+        if (typeof window !== 'undefined') localStorage.setItem(key, nextSessionId);
+        setSessionId(nextSessionId);
       }
     } else {
-      setSessionId(prevSessionId); // Load the previous session
+      setSessionId(prevSessionId);
     }
-  }, [key, nextSessionId]);
+  }
+
+  // Initialize from localStorage on first client render
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && typeof window !== 'undefined') {
+    setInitialized(true);
+    const stored = localStorage.getItem(key) as SessionId | null;
+    if (stored != null) {
+      setSessionId(stored);
+    } else if (nextSessionId) {
+      localStorage.setItem(key, nextSessionId);
+      setSessionId(nextSessionId);
+    }
+  }
 
   const set = (_val: SessionId | undefined) => {
     // Do nothing - this doesn't seem to be called
   };
 
   return [
-    sessionId, // The value returned here will be used as the source of truth
+    sessionId,
     (v: SessionId | undefined) => {
       set(v);
     },

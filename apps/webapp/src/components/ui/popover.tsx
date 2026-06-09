@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
  * - Glassmorphism with backdrop-blur
  */
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" modal {...props} />;
+  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
 function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {

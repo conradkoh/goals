@@ -5,6 +5,7 @@ import importPlugin from 'eslint-plugin-import';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import reactYouMightNotNeedAnEffect from 'eslint-plugin-react-you-might-not-need-an-effect';
 import globals from 'globals';
 
 /**
@@ -16,6 +17,8 @@ import globals from 'globals';
  * Key Rules:
  * - @typescript-eslint/no-unused-vars - Detect unused variables
  * - @typescript-eslint/no-explicit-any - Warn on explicit any types
+ * - @typescript-eslint/no-non-null-assertion - Disallow force-unwrapping with `!`
+ * - @typescript-eslint/no-non-null-asserted-optional-chain - Disallow `foo?.bar!`
  * - no-param-reassign - Prevent parameter reassignment
  * - @typescript-eslint/prefer-as-const - Prefer const assertions
  * - @typescript-eslint/default-param-last - Require default parameters to be last
@@ -37,9 +40,14 @@ export default [
       '**/build/**',
       '**/.convex/**',
       '**/.git/**',
+      // Convex codegen (any package layout, including services/backend/convex/_generated)
       '**/convex/_generated/**',
+      'services/backend/convex/_generated/**',
     ],
   },
+
+  // React "You Might Not Need An Effect" — warns on common unnecessary useEffect patterns
+  reactYouMightNotNeedAnEffect.configs.recommended,
 
   // Base TypeScript configuration for all files
   {
@@ -90,6 +98,10 @@ export default [
 
       // Warn on explicit any types
       '@typescript-eslint/no-explicit-any': 'warn',
+
+      // Disallow force-unwrapping possibly null/undefined values (e.g. value!)
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'error',
 
       // ============================================
       // Code Style Rules
@@ -231,6 +243,8 @@ export default [
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
       '@typescript-eslint/prefer-as-const': 'off',
       '@typescript-eslint/default-param-last': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
