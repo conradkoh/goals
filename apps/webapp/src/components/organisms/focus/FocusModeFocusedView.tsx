@@ -238,7 +238,7 @@ export function FocusModeFocusedView() {
                 onChange={handleContentChange}
                 editorRef={editorRef}
                 placeholder="Start writing..."
-                className="min-h-[300px] md:min-h-0"
+                className="min-h-[300px] md:min-h-0 dark:prose-invert"
               />
             )}
           </div>
