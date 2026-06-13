@@ -90,7 +90,7 @@ export default function InstallationGuidePage() {
                     <Globe className="h-4 w-4 text-blue-600" />
                     Step 1: Visit the Website
                   </h3>
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Open Safari and navigate to{' '}
                     <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                       goals.duskfare.com
@@ -157,7 +157,7 @@ export default function InstallationGuidePage() {
                     <Download className="h-4 w-4 text-indigo-600" />
                     Step 1: Install Raycast
                   </h3>
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     If you don't already have Raycast installed:
                   </p>
                   <DocList>
@@ -252,7 +252,7 @@ export default function InstallationGuidePage() {
                     <Globe className="h-4 w-4 text-blue-600" />
                     Step 1: Visit the Website
                   </h3>
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Open Safari on your iOS device and navigate to{' '}
                     <span className="font-mono bg-muted px-1.5 py-0.5 rounded">
                       goals.duskfare.com

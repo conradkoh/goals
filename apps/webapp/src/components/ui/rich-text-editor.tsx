@@ -401,7 +401,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm text-sm max-w-none focus:outline-none min-h-[150px] h-full p-3 rounded-md border break-words [word-break:break-word]',
+          'prose prose-sm dark:prose-invert text-sm max-w-none focus:outline-none min-h-[150px] h-full p-3 rounded-md border break-words [word-break:break-word]',
           styles.prose,
           className
         ),
