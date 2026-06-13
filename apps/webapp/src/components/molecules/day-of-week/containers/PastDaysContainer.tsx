@@ -42,8 +42,8 @@ export const PastDaysContainer = ({
       <CollapsibleMinimalTrigger>
         <div className="flex justify-between w-full items-center">
           <span className="font-medium">Past Days</span>
-          <div className="flex items-center text-gray-600 text-sm whitespace-nowrap ml-2">
-            <Check className="w-3.5 h-3.5 mr-1 text-gray-400" />
+          <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm whitespace-nowrap ml-2">
+            <Check className="w-3.5 h-3.5 mr-1 text-gray-400 dark:text-gray-500" />
             <span>
               {completedTasks}/{totalTasks}
             </span>
