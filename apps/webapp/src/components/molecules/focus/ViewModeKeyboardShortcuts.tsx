@@ -1,6 +1,45 @@
 import { useEffect } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
+import { isTypingTarget } from '@/lib/keyboard/isTypingTarget';
+
+const VIEW_MODE_BY_KEY: Partial<Record<string, ViewMode>> = {
+  d: 'daily',
+  w: 'weekly',
+  q: 'quarterly',
+  f: 'focused',
+};
+
+function hasModifierKey(event: KeyboardEvent): boolean {
+  return event.metaKey || event.ctrlKey || event.altKey || event.shiftKey;
+}
+
+// fallow-ignore-next-line complexity
+function handleViewModeKeyDown(
+  e: KeyboardEvent,
+  onViewModeChange: (viewMode: ViewMode) => void,
+  onOpenQuarterJump?: () => void
+): void {
+  const key = e.key.toLowerCase();
+
+  if ((e.metaKey || e.ctrlKey) && key === 'k') {
+    e.preventDefault();
+    onOpenQuarterJump?.();
+    return;
+  }
+
+  if (isTypingTarget(document.activeElement) || hasModifierKey(e)) {
+    return;
+  }
+
+  const viewMode = VIEW_MODE_BY_KEY[key];
+  if (!viewMode) {
+    return;
+  }
+
+  e.preventDefault();
+  onViewModeChange(viewMode);
+}
 
 /**
  * Props for the ViewModeKeyboardShortcuts component.
@@ -38,38 +77,7 @@ export function ViewModeKeyboardShortcuts({
     if (!enabled) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + K: Open quarter jump dialog
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        onOpenQuarterJump?.();
-        return;
-      }
-
-      // Only trigger view mode shortcuts if no element is focused
-      if (document.activeElement !== document.body) return;
-
-      // Don't trigger view mode shortcuts if modifier keys are pressed
-      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
-
-      // View mode shortcuts
-      switch (e.key.toLowerCase()) {
-        case 'd':
-          e.preventDefault();
-          onViewModeChange('daily');
-          break;
-        case 'w':
-          e.preventDefault();
-          onViewModeChange('weekly');
-          break;
-        case 'q':
-          e.preventDefault();
-          onViewModeChange('quarterly');
-          break;
-        case 'f':
-          e.preventDefault();
-          onViewModeChange('focused');
-          break;
-      }
+      handleViewModeKeyDown(e, onViewModeChange, onOpenQuarterJump);
     };
 
     window.addEventListener('keydown', handleKeyDown);
