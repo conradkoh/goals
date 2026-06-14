@@ -26,7 +26,7 @@ describe('isTypingTarget', () => {
 
   it('returns true for contenteditable and combobox role', () => {
     const div = document.createElement('div');
-    div.contentEditable = 'true';
+    div.setAttribute('contenteditable', 'true');
     const combobox = document.createElement('div');
     combobox.setAttribute('role', 'combobox');
     expect(isTypingTarget(div)).toBe(true);
