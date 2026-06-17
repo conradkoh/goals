@@ -18,7 +18,7 @@ describe('ViewModeKeyboardShortcuts', () => {
   });
 
   function pressKey(key: string, init: KeyboardEventInit = {}) {
-    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }));
   }
 
   it('switches view when body is focused', () => {

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { isTypingTarget } from '@/lib/keyboard/isTypingTarget';
+import { setupPwaKeyboardFocusIfNeeded } from '@/lib/keyboard/setupPwaKeyboardFocus';
 
 const VIEW_MODE_BY_KEY: Partial<Record<string, ViewMode>> = {
   d: 'daily',
@@ -80,8 +81,14 @@ export function ViewModeKeyboardShortcuts({
       handleViewModeKeyDown(e, onViewModeChange, onOpenQuarterJump);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Capture on document is more reliable than bubble on window in standalone PWAs.
+    document.addEventListener('keydown', handleKeyDown, true);
+    const cleanupPwaFocus = setupPwaKeyboardFocusIfNeeded();
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+      cleanupPwaFocus?.();
+    };
   }, [onViewModeChange, enabled, onOpenQuarterJump]);
 
   return null;
