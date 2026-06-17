@@ -10,6 +10,12 @@ import { useQuarterWeekInfo } from './useQuarterWeekInfo';
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { DayOfWeek } from '@/lib/constants';
+import {
+  applyDashboardUrlUpdates,
+  buildUrlParamsForViewModeChange,
+  parseViewMode,
+  type DashboardUrlUpdates,
+} from '@/lib/dashboard/dashboardUrlParams';
 import { getWeeksInYear } from '@/lib/date/iso-week';
 
 export const useDashboard = () => {
@@ -53,14 +59,7 @@ interface DashboardContextValue {
   isFocusModeEnabled: boolean;
 
   // URL update functions
-  updateUrlParams: (params: {
-    week?: number;
-    day?: DayOfWeek;
-    viewMode?: ViewMode;
-    year?: number;
-    quarter?: number;
-    focusMode?: boolean;
-  }) => void;
+  updateUrlParams: (params: DashboardUrlUpdates) => void;
   handleViewModeChange: (newViewMode: ViewMode) => void;
   handleYearQuarterChange: (year: number, quarter: number) => void;
   handlePrevious: () => void;
@@ -103,8 +102,8 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   );
 
   // Get view mode from URL or use default based on screen size
-  const viewModeFromUrl = searchParams.get('view-mode') as ViewMode | null;
-  const viewMode = viewModeFromUrl || (isMobile ? 'focused' : 'quarterly');
+  const defaultViewMode: ViewMode = isMobile ? 'focused' : 'quarterly';
+  const viewMode = parseViewMode(searchParams.get('view-mode'), defaultViewMode);
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');
@@ -131,43 +130,21 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         ? false // No bounds in daily view - can navigate freely
         : false; // No bounds in weekly view - can navigate freely
 
+  const navigationDefaults = useMemo(
+    () => ({
+      year: currentYear,
+      quarter: currentQuarter,
+      week: currentWeekNumber,
+      day: currentDate.weekday as DayOfWeek,
+    }),
+    [currentYear, currentQuarter, currentWeekNumber, currentDate.weekday]
+  );
+
   // Update URL helper function
   const updateUrlParams = useCallback(
-    (params: {
-      week?: number;
-      day?: DayOfWeek;
-      viewMode?: ViewMode;
-      year?: number;
-      quarter?: number;
-      focusMode?: boolean;
-    }) => {
-      const newParams = new URLSearchParams(searchParams.toString());
-
-      if (params.week !== undefined) {
-        newParams.set('week', params.week.toString());
-      }
-
-      if (params.day !== undefined) {
-        newParams.set('day', params.day.toString());
-      }
-
-      if (params.viewMode !== undefined) {
-        newParams.set('view-mode', params.viewMode);
-      }
-
-      if (params.year !== undefined) {
-        newParams.set('year', params.year.toString());
-      }
-
-      if (params.quarter !== undefined) {
-        newParams.set('quarter', params.quarter.toString());
-      }
-
-      if (params.focusMode !== undefined) {
-        newParams.set('focus-mode', params.focusMode.toString());
-      }
-
-      router.push(`/app?${newParams.toString()}`);
+    (params: DashboardUrlUpdates) => {
+      const newParams = applyDashboardUrlUpdates(searchParams, params);
+      router.replace(`/app?${newParams.toString()}`, { scroll: false });
     },
     [router, searchParams]
   );
@@ -175,49 +152,18 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
   // Handle view mode changes
   const handleViewModeChange = useCallback(
     (newViewMode: ViewMode) => {
-      // Update URL with new view mode
-      const params: {
-        viewMode: ViewMode;
-        week?: number;
-        day?: DayOfWeek;
-        year?: number;
-        quarter?: number;
-      } = {
-        viewMode: newViewMode,
-      };
-
-      // Ensure year is always set when switching views
-      if (!searchParams.has('year')) {
-        params.year = currentYear;
+      if (newViewMode === viewMode) {
+        return;
       }
 
-      // If changing to weekly or daily view, ensure week parameter is set
-      if (newViewMode === 'weekly' || newViewMode === 'daily') {
-        if (!searchParams.has('week')) {
-          params.week = currentWeekNumber;
-        }
-      }
-
-      // If changing to daily view, ensure day parameter is set
-      if (newViewMode === 'daily' && !searchParams.has('day')) {
-        params.day = currentDate.weekday as DayOfWeek;
-      }
-
-      // If changing to quarterly view, ensure quarter parameter is set
-      if (newViewMode === 'quarterly' && !searchParams.has('quarter')) {
-        params.quarter = currentQuarter;
-      }
-
-      updateUrlParams(params);
+      const newParams = buildUrlParamsForViewModeChange(
+        searchParams,
+        newViewMode,
+        navigationDefaults
+      );
+      router.replace(`/app?${newParams.toString()}`, { scroll: false });
     },
-    [
-      updateUrlParams,
-      searchParams,
-      currentWeekNumber,
-      currentDate.weekday,
-      currentYear,
-      currentQuarter,
-    ]
+    [navigationDefaults, router, searchParams, viewMode]
   );
 
   // Handle year and quarter changes

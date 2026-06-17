@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { DashboardFocusView } from '@/components/organisms/DashboardFocusView';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
+import { buildMissingDashboardDefaults } from '@/lib/dashboard/dashboardUrlParams';
 
 /**
  * Main dashboard page displaying goals in quarterly, weekly, or daily views.
@@ -18,6 +19,8 @@ const DashboardPage = () => {
     selectedWeek,
     selectedDayOfWeek,
     viewMode,
+    currentYear,
+    currentQuarter,
     handleViewModeChange,
     handleYearQuarterChange,
     handlePrevious,
@@ -25,33 +28,33 @@ const DashboardPage = () => {
     updateUrlParams,
   } = useDashboard();
 
-  // Set default parameters when first loading the page
+  // Persist canonical defaults when first loading the page without navigation params.
   useEffect(() => {
-    const params: Record<string, string> = {};
-    let shouldUpdateUrl = false;
+    const missingDefaults = buildMissingDashboardDefaults(
+      searchParams,
+      viewMode,
+      {
+        year: currentYear,
+        quarter: currentQuarter,
+        week: currentWeekNumber,
+        day: selectedDayOfWeek,
+      },
+      isMobile
+    );
 
-    // Set default view mode if not present
-    if (!searchParams.get('view-mode')) {
-      params.viewMode = isMobile ? 'focused' : 'quarterly';
-      shouldUpdateUrl = true;
+    if (missingDefaults) {
+      updateUrlParams(missingDefaults);
     }
-
-    // Set default week if in weekly/daily mode and week not set
-    if ((viewMode === 'weekly' || viewMode === 'daily') && !searchParams.get('week')) {
-      params.week = currentWeekNumber.toString();
-      shouldUpdateUrl = true;
-    }
-
-    // Set default day if in daily mode and day not set
-    if (viewMode === 'daily' && !searchParams.get('day')) {
-      params.day = selectedDayOfWeek.toString();
-      shouldUpdateUrl = true;
-    }
-
-    if (shouldUpdateUrl) {
-      updateUrlParams(params);
-    }
-  }, [isMobile, searchParams, viewMode, currentWeekNumber, selectedDayOfWeek, updateUrlParams]);
+  }, [
+    isMobile,
+    searchParams,
+    viewMode,
+    currentWeekNumber,
+    selectedDayOfWeek,
+    currentYear,
+    currentQuarter,
+    updateUrlParams,
+  ]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
