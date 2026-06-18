@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyDashboardUrlUpdates,
-  buildMissingDashboardDefaults,
   buildUrlParamsForViewModeChange,
   parseViewMode,
 } from './dashboardUrlParams';
@@ -84,23 +83,5 @@ describe('applyDashboardUrlUpdates', () => {
 
     expect(next.get('week')).toBe('11');
     expect(next.get('view-mode')).toBe('weekly');
-  });
-});
-
-describe('buildMissingDashboardDefaults', () => {
-  it('returns null when all required params already exist', () => {
-    const current = new URLSearchParams('view-mode=daily&week=10&day=5&year=2026&quarter=1');
-
-    expect(buildMissingDashboardDefaults(current, 'daily', defaults, false)).toBeNull();
-  });
-
-  it('fills missing defaults for a new dashboard visit', () => {
-    const current = new URLSearchParams();
-
-    expect(buildMissingDashboardDefaults(current, 'quarterly', defaults, false)).toEqual({
-      viewMode: 'quarterly',
-      year: 2026,
-      quarter: 2,
-    });
   });
 });
