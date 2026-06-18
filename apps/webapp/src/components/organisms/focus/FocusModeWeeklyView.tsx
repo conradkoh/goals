@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { CalendarDays, ClipboardList, Rocket, Target } from 'lucide-react';
+import { useMemo, type ReactNode } from 'react';
 
 import { WeekCardDailyGoals } from '../WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '../WeekCardQuarterlyGoals';
@@ -19,6 +20,13 @@ interface FocusModeWeeklyViewProps {
 
 /** Props for the inner component - excludes weekData since it uses context */
 type FocusModeWeeklyViewInnerProps = Omit<FocusModeWeeklyViewProps, 'weekData'>;
+
+const SectionHeader = ({ icon, title }: { icon: ReactNode; title: string }) => (
+  <div className="flex items-center gap-2 font-semibold text-foreground">
+    <span className="text-muted-foreground">{icon}</span>
+    <span>{title}</span>
+  </div>
+);
 
 // Inner component that uses the week context
 // Gets goal data from useWeek() context which includes optimistic updates
@@ -46,21 +54,23 @@ const FocusModeWeeklyViewInner = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4">
         <div className="flex justify-between items-center mb-4">
-          <div className="font-semibold text-foreground">💭 Quarterly Goals</div>
+          <SectionHeader icon={<Target className="h-4 w-4" />} title="Quarterly Goals" />
           <JumpToCurrentButton onJumpToToday={onJumpToToday} />
         </div>
         {quarterlyGoalsComponent}
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
-        <div className="font-semibold text-foreground mb-4">🚀 Weekly Goals</div>
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4">
+        <SectionHeader icon={<Rocket className="h-4 w-4" />} title="Weekly Goals" />
+        <div className="mb-4" />
         {weeklyGoalsComponent}
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
-        <div className="font-semibold text-foreground mb-4">📋 Adhoc Tasks</div>
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4">
+        <SectionHeader icon={<ClipboardList className="h-4 w-4" />} title="Adhoc Tasks" />
+        <div className="mb-4" />
         <AdhocGoalsSection
           year={year}
           weekNumber={weekNumber}
@@ -69,8 +79,9 @@ const FocusModeWeeklyViewInner = ({
         />
       </div>
 
-      <div className="bg-white dark:bg-card rounded-lg shadow-sm p-4">
-        <div className="font-semibold text-foreground mb-4">🔍 Daily Goals</div>
+      <div className="bg-card rounded-lg border border-border shadow-sm p-4">
+        <SectionHeader icon={<CalendarDays className="h-4 w-4" />} title="Daily Goals" />
+        <div className="mb-4" />
         {dailyGoalsComponent}
       </div>
     </div>

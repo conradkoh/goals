@@ -139,7 +139,7 @@ function QuarterlyGoalItemContentInternal({
           onSave={handleSaveGoal}
           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
           titleClassName={cn(
-            'text-gray-600 dark:text-gray-300 flex items-center',
+            'text-muted-foreground flex items-center',
             getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
           )}
           onToggleComplete={handleToggleCompletion}

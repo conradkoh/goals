@@ -150,9 +150,7 @@ export const QuarterActionMenu = React.memo(
                       <History className="mr-2 h-4 w-4" />
                       <div className="flex flex-col w-full items-center">
                         <span>Pull Incomplete</span>
-                        <span className="text-gray-500 dark:text-gray-400 text-xs">
-                          from previous quarter
-                        </span>
+                        <span className="text-muted-foreground text-xs">from previous quarter</span>
                       </div>
                     </DropdownMenuItem>
                   </div>
