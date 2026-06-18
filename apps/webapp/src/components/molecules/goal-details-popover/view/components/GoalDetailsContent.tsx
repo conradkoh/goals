@@ -20,6 +20,8 @@ export interface GoalDetailsContentProps {
   className?: string;
   /** Whether to show the title above the content */
   showTitle?: boolean;
+  /** Whether to show the full-view expand action above the content */
+  showExpandAction?: boolean;
   /** Callback when task list items are checked/unchecked */
   onDetailsChange?: (newDetails: string) => void;
   /** If true, task list checkboxes are disabled */
@@ -46,6 +48,7 @@ export function GoalDetailsContent({
   details,
   className,
   showTitle = false,
+  showExpandAction = true,
   onDetailsChange,
   readOnly = false,
 }: GoalDetailsContentProps) {
@@ -55,20 +58,26 @@ export function GoalDetailsContent({
   return (
     <>
       <div className="space-y-3">
-        {showTitle && (
+        {(showTitle || showExpandAction) && (
           <div className="flex items-center justify-between gap-3 border-b-2 border-border px-4 py-3">
-            <h3 className="font-semibold text-base break-words flex-1">{title}</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs uppercase tracking-wider font-bold"
-              onClick={() => setIsFullViewOpen(true)}
-              title="Expand to full view"
-              aria-label="Expand goal details"
-            >
-              <Maximize2 className="h-3.5 w-3.5 mr-1" />
-              Expand
-            </Button>
+            {showTitle ? (
+              <h3 className="font-semibold text-base break-words flex-1">{title}</h3>
+            ) : (
+              <div className="flex-1" />
+            )}
+            {showExpandAction && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs uppercase tracking-wider font-bold"
+                onClick={() => setIsFullViewOpen(true)}
+                title="Expand to full view"
+                aria-label="Expand goal details"
+              >
+                <Maximize2 className="h-3.5 w-3.5 mr-1" />
+                Expand
+              </Button>
+            )}
           </div>
         )}
 
