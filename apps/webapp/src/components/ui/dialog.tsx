@@ -5,6 +5,7 @@ import { XIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { useAllowTouchSelection } from '@/hooks/useAllowTouchSelection';
+import { useKeyboardInsetHeight } from '@/hooks/useKeyboardInsetHeight';
 import { cn } from '@/lib/utils';
 
 /**
@@ -178,11 +179,12 @@ function DialogDescription({
 export const FullscreenDialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, onEscapeKeyDown, ...props }, ref) => {
+>(({ className, children, onEscapeKeyDown, style, ...props }, ref) => {
   // Fix iOS text selection handles not being draggable
   // Must be called before react-remove-scroll attaches its listeners
   // https://github.com/theKashey/react-remove-scroll/pull/144
   useAllowTouchSelection();
+  const keyboardInset = useKeyboardInsetHeight();
 
   return (
     <DialogPortal data-slot="dialog-portal">
@@ -194,6 +196,10 @@ export const FullscreenDialogContent = React.forwardRef<
           'fixed inset-0 z-50 m-auto grid gap-4 border-2 bg-background p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg',
           className
         )}
+        style={{
+          ...style,
+          paddingBottom: keyboardInset ? `${keyboardInset}px` : style?.paddingBottom,
+        }}
         onEscapeKeyDown={onEscapeKeyDown}
         {...props}
       >

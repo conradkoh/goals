@@ -478,6 +478,34 @@ export function RichTextEditor({
     };
   }, [editor]);
 
+  // Keep the caret visible above the on-screen keyboard on mobile when focusing.
+  useEffect(() => {
+    if (!editor) return;
+    const el = editor.view.dom as HTMLElement;
+
+    const scrollCaretIntoView = () => {
+      // Defer to next frame so the keyboard/viewport has begun resizing.
+      requestAnimationFrame(() => {
+        if (!editor || editor.isDestroyed) return;
+        const selection = window.getSelection();
+        const node =
+          selection && selection.rangeCount > 0
+            ? (selection.getRangeAt(0).startContainer as Node)
+            : null;
+        const target =
+          node && node.nodeType === Node.ELEMENT_NODE
+            ? (node as HTMLElement)
+            : (node?.parentElement ?? el);
+        target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
+    };
+
+    el.addEventListener('focus', scrollCaretIntoView, true);
+    return () => {
+      el.removeEventListener('focus', scrollCaretIntoView, true);
+    };
+  }, [editor]);
+
   return (
     <div className="relative min-w-0 h-full flex flex-col overflow-hidden">
       <EditorContent editor={editor} className="overflow-y-auto flex-1 min-h-0 flex flex-col" />
