@@ -173,7 +173,9 @@ const WeeklyGoal = ({
                     trigger={
                       <button
                         type="button"
-                        className="text-muted-foreground opacity-0 group-hover/title:opacity-100 transition-opacity hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                        aria-label="Edit weekly goal"
+                        title="Edit weekly goal"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>

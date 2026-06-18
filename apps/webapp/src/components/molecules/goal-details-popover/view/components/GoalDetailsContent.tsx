@@ -20,6 +20,8 @@ export interface GoalDetailsContentProps {
   className?: string;
   /** Whether to show the title above the content */
   showTitle?: boolean;
+  /** Whether to show the full-view expand action above the content */
+  showExpandAction?: boolean;
   /** Callback when task list items are checked/unchecked */
   onDetailsChange?: (newDetails: string) => void;
   /** If true, task list checkboxes are disabled */
@@ -28,7 +30,7 @@ export interface GoalDetailsContentProps {
 
 /**
  * Displays goal details content with an expandable full view dialog.
- * Shows HTML content in a scrollable container with an expand button on hover.
+ * Shows HTML content in a scrollable container with an always-visible expand action.
  * Supports interactive task lists with checkable items.
  *
  * @example
@@ -46,6 +48,7 @@ export function GoalDetailsContent({
   details,
   className,
   showTitle = false,
+  showExpandAction = true,
   onDetailsChange,
   readOnly = false,
 }: GoalDetailsContentProps) {
@@ -55,18 +58,30 @@ export function GoalDetailsContent({
   return (
     <>
       <div className="space-y-3">
-        {showTitle && (
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-base break-words flex-1">{title}</h3>
+        {(showTitle || showExpandAction) && (
+          <div className="flex items-center justify-between gap-3 border-b-2 border-border px-4 py-3">
+            {showTitle ? (
+              <h3 className="font-semibold text-base break-words flex-1">{title}</h3>
+            ) : (
+              <div className="flex-1" />
+            )}
+            {showExpandAction && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs uppercase tracking-wider font-bold"
+                onClick={() => setIsFullViewOpen(true)}
+                title="Expand to full view"
+                aria-label="Expand goal details"
+              >
+                <Maximize2 className="h-3.5 w-3.5 mr-1" />
+                Expand
+              </Button>
+            )}
           </div>
         )}
 
-        <div
-          className={cn(
-            'max-h-[300px] overflow-y-auto rounded-md pt-4 pb-4 px-3 relative group bg-muted/30',
-            className
-          )}
-        >
+        <div className={cn('overflow-y-auto rounded-md pt-4 pb-4 px-3 bg-muted/30', className)}>
           {hasInteractiveFeatures ? (
             <InteractiveHTML
               html={details}
@@ -80,11 +95,6 @@ export function GoalDetailsContent({
               className="text-sm prose prose-sm dark:prose-invert max-w-none"
             />
           )}
-
-          {/* Absolutely positioned expand button */}
-          <div className="absolute top-0 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
-            <_ExpandButton onClick={() => setIsFullViewOpen(true)} />
-          </div>
         </div>
       </div>
 
@@ -112,22 +122,5 @@ export function GoalDetailsContent({
         </FixedSizeDialog>
       </Dialog>
     </>
-  );
-}
-
-/**
- * Internal expand button component for triggering full view dialog.
- */
-function _ExpandButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="h-5 w-5 text-muted-foreground hover:text-foreground flex-shrink-0 rounded-full bg-background/80 backdrop-blur-sm shadow-sm"
-      onClick={onClick}
-      title="Expand to full view"
-    >
-      <Maximize2 className="h-3 w-3" />
-    </Button>
   );
 }

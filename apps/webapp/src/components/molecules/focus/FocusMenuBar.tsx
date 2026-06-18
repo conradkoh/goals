@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import type { ReactElement } from 'react';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import { DailyWeeklyActionMenu } from '@/components/molecules/focus/DailyWeeklyActionMenu';
@@ -173,16 +173,17 @@ export const FocusMenuBar = ({
   return (
     <>
       <div className="bg-background p-3 border-b">
-        <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 flex justify-center">
-          <div id="focus-menu-bar" className="flex items-center justify-center w-full">
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* ── Focused view: date label + view-switch dropdown ─────────── */}
-              {viewMode === 'focused' ? (
-                <>
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+        <div className="max-w-screen-2xl mx-auto px-2 sm:px-4 flex justify-between">
+          <div id="focus-menu-bar" className="flex items-center justify-between w-full gap-2">
+            {viewMode === 'focused' ? (
+              <Fragment>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold uppercase tracking-wider text-foreground">
                     Focus — {DateTime.now().toFormat('cccc, MMMM d')}
                   </span>
+                </div>
 
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   {/* Search button — opens command palette */}
                   {onOpenCommandPalette && (
                     <TooltipProvider>
@@ -193,7 +194,7 @@ export const FocusMenuBar = ({
                             size="icon"
                             onClick={onOpenCommandPalette}
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            aria-label="Search"
+                            aria-label="Open search"
                           >
                             <Search className="h-4 w-4" />
                           </Button>
@@ -208,7 +209,12 @@ export const FocusMenuBar = ({
                   {/* View-switch + actions dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        aria-label="Open focused view menu"
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -278,9 +284,11 @@ export const FocusMenuBar = ({
 
                   {/* Pull goals dialog must be in the DOM */}
                   {pullGoalsDialog}
-                </>
-              ) : (
-                <>
+                </div>
+              </Fragment>
+            ) : (
+              <Fragment>
+                <div className="min-w-0 flex-1 justify-start">
                   {/* Navigation with unified indicator */}
                   {showNavigation && (
                     <div className="flex items-center gap-0.5 sm:gap-1">
@@ -310,7 +318,9 @@ export const FocusMenuBar = ({
                       </Button>
                     </div>
                   )}
+                </div>
 
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   {/* Quarter Action Menu - with vertical dots icon and view mode options */}
                   {showQuarterActionMenu && (
                     <QuarterActionMenu
@@ -356,7 +366,7 @@ export const FocusMenuBar = ({
                             size="icon"
                             onClick={onOpenCommandPalette}
                             className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                            aria-label="Search"
+                            aria-label="Open search"
                           >
                             <Search className="h-4 w-4" />
                           </Button>
@@ -367,9 +377,9 @@ export const FocusMenuBar = ({
                       </Tooltip>
                     </TooltipProvider>
                   )}
-                </>
-              )}
-            </div>
+                </div>
+              </Fragment>
+            )}
           </div>
         </div>
       </div>

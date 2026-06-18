@@ -1,4 +1,5 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import { Target } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { QuarterlyGoalItem } from '@/components/molecules/goal-list-item';
@@ -118,9 +119,14 @@ export function QuarterlyGoalsQuickSection({ showHeader = true }: QuarterlyGoals
     return null;
   }
 
-  const triggerText = isExpanded
-    ? '💭 Quarterly Goals'
-    : `💭 Quarterly Goals (${starredAndPinnedGoals.length})`;
+  const triggerText = (
+    <div className="flex items-center gap-2">
+      <Target className="h-4 w-4 text-muted-foreground" />
+      <span>
+        {isExpanded ? 'Quarterly Goals' : `Quarterly Goals (${starredAndPinnedGoals.length})`}
+      </span>
+    </div>
+  );
 
   return (
     <div className="mb-4">

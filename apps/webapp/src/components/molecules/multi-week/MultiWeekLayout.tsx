@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useMutation } from 'convex/react';
+import { ClipboardList, CalendarDays, Rocket, Target } from 'lucide-react';
 import { DateTime } from 'luxon';
 import type React from 'react';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -92,7 +93,7 @@ const WeekCardContent = ({
       weekData={weekData}
     >
       <div className="space-y-2 md:space-y-4">
-        <WeekCardSection title="💭 Quarterly Goals">
+        <WeekCardSection title={<SectionTitle icon={<Target />} text="Quarterly Goals" />}>
           <WeekCardQuarterlyGoals
             weekNumber={week.weekNumber}
             year={week.year}
@@ -101,7 +102,7 @@ const WeekCardContent = ({
           />
         </WeekCardSection>
 
-        <WeekCardSection title="🚀 Weekly Goals">
+        <WeekCardSection title={<SectionTitle icon={<Rocket />} text="Weekly Goals" />}>
           <WeekCardWeeklyGoals
             weekNumber={week.weekNumber}
             year={week.year}
@@ -110,7 +111,7 @@ const WeekCardContent = ({
           />
         </WeekCardSection>
 
-        <WeekCardSection title="📋 Adhoc Tasks">
+        <WeekCardSection title={<SectionTitle icon={<ClipboardList />} text="Ad hoc Tasks" />}>
           <AdhocGoalsSection
             year={week.year}
             weekNumber={week.weekNumber}
@@ -119,7 +120,7 @@ const WeekCardContent = ({
           />
         </WeekCardSection>
 
-        <WeekCardSection title="🔍 Daily Goals">
+        <WeekCardSection title={<SectionTitle icon={<CalendarDays />} text="Daily Goals" />}>
           <WeekCardDailyGoals weekNumber={week.weekNumber} year={week.year} isLoading={isLoading} />
         </WeekCardSection>
       </div>
@@ -385,9 +386,16 @@ export const MultiWeekLayout = memo(() => {
 MultiWeekLayout.displayName = 'MultiWeekLayout';
 
 interface WeekCardSectionProps {
-  title: string;
+  title: React.ReactNode;
   children?: React.ReactNode;
 }
+
+const SectionTitle = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
+  <div className="flex items-center gap-2">
+    <span className="text-muted-foreground">{icon}</span>
+    <span>{text}</span>
+  </div>
+);
 
 const WeekCardSection = memo(({ title, children }: WeekCardSectionProps) => {
   return (

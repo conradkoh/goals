@@ -17,13 +17,15 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
   return (
     <FocusedGoalSection
       title="Urgent"
+      description="Needs attention today."
       count={incompleteCount}
-      countColorClass="text-red-400"
-      countDotColorClass="bg-red-400"
+      tone="urgent"
       icon={<Flame className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />}
     >
       {goals.length === 0 ? (
-        <p className="px-4 py-3 text-sm text-muted-foreground">No urgent goals</p>
+        <p className="px-4 py-3 text-sm text-muted-foreground">
+          No urgent goals. Mark goals urgent when they need immediate attention.
+        </p>
       ) : (
         <div className="px-4 py-2">
           <ul className="space-y-1">

@@ -74,7 +74,7 @@ export function GoalDetailsChildrenList({
 
   return (
     <div className="mt-3">
-      <h4 className="text-sm font-semibold mb-3 text-foreground bg-gray-50 dark:bg-gray-800 py-1.5 px-4 rounded-md">
+      <h4 className="text-sm font-semibold mb-3 text-foreground bg-muted/60 py-1.5 px-4 rounded-md">
         {title}
       </h4>
       <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={_handleDeleteGoal}>
@@ -93,7 +93,7 @@ export function GoalDetailsChildrenList({
                 {/* If the parent is a quarterly goal and we have grandchildren (daily goals), 
                     show them indented under their weekly parent */}
                 {isQuarterlyParent && child.children && child.children.length > 0 && (
-                  <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-gray-100 dark:border-gray-800 pl-3">
+                  <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-border pl-3">
                     {child.children.map((grandchild) => (
                       <GoalProvider key={grandchild._id} goal={grandchild}>
                         <DailyGoalTaskItem />

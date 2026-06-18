@@ -9,6 +9,7 @@ import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { toast } from '@/components/ui/use-toast';
 import { useAdhocGoals, useAdhocGoalsForWeek } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
 import type { DayOfWeek } from '@/lib/constants';
@@ -37,6 +38,15 @@ type _OptimisticAdhocGoal = Doc<'goals'> & {
   domain?: Doc<'domains'>;
   isOptimistic?: boolean;
   children?: _OptimisticAdhocGoal[];
+};
+
+const showErrorToast = (title: string, error: unknown) => {
+  console.error(title, error);
+  toast({
+    variant: 'destructive',
+    title,
+    description: 'Please try again.',
+  });
 };
 
 /**
@@ -185,7 +195,7 @@ export function AdhocGoalsSection({
       // Remove optimistic goal after successful creation
       setOptimisticGoals((prev) => prev.filter((g) => g._id !== tempId));
     } catch (error) {
-      console.error('Failed to create adhoc goal:', error);
+      showErrorToast('Could not create task', error);
       // Remove optimistic goal on error
       setOptimisticGoals((prev) => prev.filter((g) => g._id !== tempId));
     } finally {
@@ -201,7 +211,7 @@ export function AdhocGoalsSection({
     try {
       await updateAdhocGoal(goalId, { isComplete });
     } catch (error) {
-      console.error('Failed to update goal completion:', error);
+      showErrorToast('Could not update task', error);
     }
   };
 
@@ -215,7 +225,7 @@ export function AdhocGoalsSection({
     try {
       await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
     } catch (error) {
-      console.error('Failed to update adhoc goal:', error);
+      showErrorToast('Could not update task', error);
     }
   };
 
@@ -223,7 +233,7 @@ export function AdhocGoalsSection({
     try {
       await deleteAdhocGoal(goalId);
     } catch (error) {
-      console.error('Failed to delete adhoc goal:', error);
+      showErrorToast('Could not delete task', error);
     }
   };
 
@@ -244,7 +254,7 @@ export function AdhocGoalsSection({
         return next;
       });
     } catch (error) {
-      console.error('Failed to update backlog status:', error);
+      showErrorToast('Could not update backlog status', error);
       // On error, revert optimistic update
       setPendingBacklogChanges((prev) => {
         const next = new Map(prev);
@@ -260,7 +270,7 @@ export function AdhocGoalsSection({
       setSelectedDomainId(newDomainId);
       return newDomainId;
     } catch (error) {
-      console.error('Failed to create domain:', error);
+      showErrorToast('Could not create domain', error);
       throw error;
     }
   };
@@ -280,7 +290,7 @@ export function AdhocGoalsSection({
           parentId // parent goal ID for nesting
         );
       } catch (error) {
-        console.error('Failed to create subtask:', error);
+        showErrorToast('Could not create subtask', error);
         throw error;
       }
     },

@@ -18,19 +18,22 @@ export function FocusedQuarterlyGoalsSection({
   return (
     <FocusedGoalSection
       title="Quarterly Goals"
+      description="Star or pin goals to keep them visible here."
       count={goals.length}
       icon={<Target className="h-3.5 w-3.5 text-muted-foreground" />}
     >
       {goals.length === 0 ? (
-        <p className="px-4 py-3 text-sm text-muted-foreground">No quarterly goals</p>
+        <p className="px-4 py-3 text-sm text-muted-foreground">
+          No quarterly goals for this week. Switch to Quarterly view to create or pin goals.
+        </p>
       ) : (
         <div className="px-4 py-2">
           <ul className="space-y-1">
             {goals.map((goal) => {
               const indicator = goal.isStarred ? (
-                <Star className="h-3 w-3 fill-amber-400 text-amber-500 dark:text-amber-400" />
+                <Star className="h-3 w-3 fill-yellow-500 text-yellow-800 dark:text-yellow-400" />
               ) : goal.isPinned ? (
-                <Pin className="h-3 w-3 fill-blue-500 text-blue-500 dark:text-blue-400" />
+                <Pin className="h-3 w-3 fill-blue-500 text-blue-800 dark:text-blue-400" />
               ) : null;
               return (
                 <FocusedGoalListItem

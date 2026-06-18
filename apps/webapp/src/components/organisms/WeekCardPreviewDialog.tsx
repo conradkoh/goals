@@ -302,7 +302,7 @@ export const WeekCardPreviewDialog = ({
                 <span className="block">
                   There are no incomplete tasks from the last non-empty week to move to this week.
                 </span>
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8 text-muted-foreground">
                   <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <span className="block">
                     All tasks from the last non-empty week are complete!
