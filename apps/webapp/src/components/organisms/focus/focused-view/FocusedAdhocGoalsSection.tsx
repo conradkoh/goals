@@ -26,7 +26,9 @@ export function FocusedAdhocGoalsSection({
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : goals.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">No tasks for today.</p>
+          <p className="px-4 py-3 text-sm text-muted-foreground">
+            No tasks for today. Add one below to capture a quick action.
+          </p>
         ) : (
           <ul className="space-y-1">
             {goals.map((goal) => (

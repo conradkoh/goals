@@ -190,19 +190,19 @@ export function FocusModeFocusedView() {
               {/* Save status dot indicator */}
               {saveStatus === 'saving' && (
                 <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                   Saving
                 </span>
               )}
               {saveStatus === 'saved' && (
                 <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <span className="w-1.5 h-1.5 bg-emerald-400" />
+                  <span className="w-1.5 h-1.5 bg-success" />
                   Saved
                 </span>
               )}
               {saveStatus === 'error' && (
                 <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-destructive">
-                  <span className="w-1.5 h-1.5 bg-red-400" />
+                  <span className="w-1.5 h-1.5 bg-destructive" />
                   Error
                 </span>
               )}
