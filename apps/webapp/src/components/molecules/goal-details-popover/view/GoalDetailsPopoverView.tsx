@@ -122,8 +122,9 @@ export function GoalDetailsPopoverView({
               </DialogHeader>
               {/* Scrollable content area */}
               {/* pb-4 ensures content can scroll past keyboard on iOS */}
-              <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
-                {children}
+              <div className="overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
+                {/* Center content in a readable max-width column with horizontal padding */}
+                <div className="mx-auto w-full max-w-2xl space-y-3 px-1 sm:px-2">{children}</div>
               </div>
             </FullscreenDialogContent>
           ) : (
@@ -140,8 +141,9 @@ export function GoalDetailsPopoverView({
               </DialogHeader>
               {/* Scrollable content area */}
               {/* pb-4 ensures content can scroll past keyboard on iOS */}
-              <div className="space-y-3 overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
-                {children}
+              <div className="overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
+                {/* Center content in a readable max-width column with horizontal padding */}
+                <div className="mx-auto w-full max-w-2xl space-y-3 px-1 sm:px-2">{children}</div>
               </div>
             </DialogContent>
           )}
