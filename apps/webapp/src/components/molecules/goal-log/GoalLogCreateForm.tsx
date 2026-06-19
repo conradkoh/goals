@@ -195,7 +195,7 @@ export function GoalLogCreateForm({
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
         <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
         <div className="flex gap-2">
-          <Popover>
+          <Popover modal>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -368,7 +368,7 @@ export function GoalLogEditForm({
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
         <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
         <div className="flex gap-2">
-          <Popover>
+          <Popover modal>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"

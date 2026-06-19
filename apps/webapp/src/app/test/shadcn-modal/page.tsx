@@ -217,7 +217,7 @@ export default function ShadcnModalTestPage() {
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right">Date</Label>
                 <div className="col-span-3">
-                  <Popover>
+                  <Popover modal>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"

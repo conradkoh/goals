@@ -180,7 +180,7 @@ export function AdhocGoalForm({
 
       <div>
         <Label>Due Date (optional)</Label>
-        <Popover>
+        <Popover modal>
           <PopoverTrigger asChild>
             <Button
               variant="outline"

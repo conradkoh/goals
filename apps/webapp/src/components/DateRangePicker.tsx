@@ -144,7 +144,7 @@ export function DateRangePicker({
       </Button>
 
       <div className="flex-1">
-        <Popover open={isOpen} onOpenChange={handleOpenChange}>
+        <Popover modal open={isOpen} onOpenChange={handleOpenChange}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
