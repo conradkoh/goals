@@ -13,8 +13,10 @@ import { cn } from '@/lib/utils';
  * - 2px border
  * - Glassmorphism with backdrop-blur
  */
-function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+function Popover({ modal = true, ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+  // modal=true is required for date pickers (Calendar) to open inside Dialogs on Safari/iOS.
+  // See apps/webapp/src/app/test/shadcn-modal/page.tsx and commit 9b559e3.
+  return <PopoverPrimitive.Root data-slot="popover" modal={modal} {...props} />;
 }
 
 function PopoverTrigger({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
