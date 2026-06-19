@@ -231,7 +231,7 @@ export function GoalEditPopover({
       <div className="space-y-2">
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
         <label className="text-sm font-medium text-muted-foreground">Due Date</label>
-        <Popover>
+        <Popover modal>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
