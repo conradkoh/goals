@@ -23,6 +23,7 @@ interface FocusedGoalSectionProps {
   count?: number;
   tone?: FocusedGoalSectionTone;
   icon?: ReactNode;
+  action?: ReactNode;
   children: ReactNode;
 }
 
@@ -32,6 +33,7 @@ export function FocusedGoalSection({
   count,
   tone = 'muted',
   icon,
+  action,
   children,
 }: FocusedGoalSectionProps) {
   const styles = toneStyles[tone];
@@ -54,6 +56,7 @@ export function FocusedGoalSection({
             <span className={`text-[10px] font-bold tabular-nums ${styles.text}`}>{count}</span>
           </span>
         )}
+        {action && <div className="ml-auto">{action}</div>}
       </div>
       {children}
     </div>

@@ -21,6 +21,7 @@ import { History, Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
 
+import { CreateQuarterlyGoalDialog } from '@/components/molecules/focus/CreateQuarterlyGoalDialog';
 import {
   FocusedAdhocGoalsSection,
   FocusedQuarterlyGoalsSection,
@@ -52,6 +53,7 @@ import { getQuarterFromWeek } from '@/lib/date/iso-week';
 export function FocusModeFocusedView() {
   // ── History dialog ─────────────────────────────────────────────────────
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isCreateQuarterlyGoalOpen, setIsCreateQuarterlyGoalOpen] = useState(false);
 
   // ── Scratchpad ─────────────────────────────────────────────────────────
   const {
@@ -269,6 +271,15 @@ export function FocusModeFocusedView() {
             <FocusedQuarterlyGoalsSection
               goals={focusedViewData.quarterlyGoals}
               onToggleComplete={handleNormalGoalCompleteChange}
+              onAddGoal={() => setIsCreateQuarterlyGoalOpen(true)}
+            />
+
+            <CreateQuarterlyGoalDialog
+              open={isCreateQuarterlyGoalOpen}
+              onOpenChange={setIsCreateQuarterlyGoalOpen}
+              year={year}
+              quarter={quarter}
+              weekNumber={weekNumber}
             />
 
             <FocusedAdhocGoalsSection

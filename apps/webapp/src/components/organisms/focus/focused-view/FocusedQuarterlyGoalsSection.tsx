@@ -1,7 +1,7 @@
 'use client';
 
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
-import { Pin, Star, Target } from 'lucide-react';
+import { Pin, Plus, Star, Target } from 'lucide-react';
 
 import { FocusedGoalListItem } from './FocusedGoalListItem';
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -9,11 +9,13 @@ import { FocusedGoalSection } from './FocusedGoalSection';
 interface FocusedQuarterlyGoalsSectionProps {
   goals: FocusedGoalItem[];
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
+  onAddGoal?: () => void;
 }
 
 export function FocusedQuarterlyGoalsSection({
   goals,
   onToggleComplete,
+  onAddGoal,
 }: FocusedQuarterlyGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -21,6 +23,18 @@ export function FocusedQuarterlyGoalsSection({
       description="Star or pin goals to keep them visible here."
       count={goals.length}
       icon={<Target className="h-3.5 w-3.5 text-muted-foreground" />}
+      action={
+        onAddGoal ? (
+          <button
+            type="button"
+            onClick={onAddGoal}
+            className="h-5 w-5 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center"
+            aria-label="Add quarterly goal"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
+        ) : undefined
+      }
     >
       {goals.length === 0 ? (
         <p className="px-4 py-3 text-sm text-muted-foreground">
