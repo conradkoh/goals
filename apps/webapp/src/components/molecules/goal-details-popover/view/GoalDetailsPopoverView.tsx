@@ -103,16 +103,12 @@ export function GoalDetailsPopoverView({
           {preferFullscreenDialogs ? (
             <FullscreenDialogContent
               className={cn(
-                // Width: full width minus small margin, respecting safe areas
                 'w-[calc(100vw-16px)]',
                 'max-w-none',
-                // Height: use dvh (dynamic viewport height) for iOS Safari
-                // Falls back gracefully in browsers that don't support dvh
                 'h-[calc(100dvh-32px)]',
                 'max-h-none',
-                // Safe area padding for notch and home indicator
                 'pb-[env(safe-area-inset-bottom,0px)]',
-                'overflow-hidden flex flex-col p-4 sm:p-6',
+                'overflow-hidden flex flex-col',
                 contentClassName
               )}
               onEscapeKeyDown={onEscapeKeyDown}
@@ -120,18 +116,18 @@ export function GoalDetailsPopoverView({
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
               </DialogHeader>
-              {/* Scrollable content area */}
-              {/* pb-4 ensures content can scroll past keyboard on iOS */}
-              <div className="overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
-                {/* Center content in a readable max-width column with horizontal padding */}
-                <div className="mx-auto w-full max-w-2xl space-y-3 px-1 sm:px-2">{children}</div>
+              <div className="flex h-full flex-col px-4">
+                <div className="mx-auto w-full max-w-[min(48rem,100%)] flex-1 space-y-3 overflow-y-auto py-1 pb-4 overscroll-contain">
+                  {children}
+                </div>
               </div>
             </FullscreenDialogContent>
           ) : (
             <DialogContent
               className={cn(
-                'w-full max-w-[min(48rem,calc(100vw-32px))] max-h-[90vh]',
-                'overflow-hidden flex flex-col p-4 sm:p-6',
+                'max-w-[min(48rem,calc(100vw-16px))]',
+                'max-h-[90vh]',
+                'overflow-hidden flex flex-col',
                 contentClassName
               )}
               onEscapeKeyDown={onEscapeKeyDown}
@@ -139,11 +135,10 @@ export function GoalDetailsPopoverView({
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
               </DialogHeader>
-              {/* Scrollable content area */}
-              {/* pb-4 ensures content can scroll past keyboard on iOS */}
-              <div className="overflow-y-auto flex-1 py-1 pb-4 overscroll-contain">
-                {/* Center content in a readable max-width column with horizontal padding */}
-                <div className="mx-auto w-full max-w-2xl space-y-3 px-1 sm:px-2">{children}</div>
+              <div className="flex h-full flex-col px-4">
+                <div className="mx-auto w-full max-w-[min(48rem,100%)] flex-1 space-y-3 overflow-y-auto py-1 pb-4 overscroll-contain">
+                  {children}
+                </div>
               </div>
             </DialogContent>
           )}
