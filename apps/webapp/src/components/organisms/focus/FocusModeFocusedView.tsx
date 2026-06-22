@@ -287,14 +287,14 @@ export function FocusModeFocusedView() {
               onToggleComplete={handleAdhocCompleteChange}
             />
 
-            {/* Inline add task */}
-            <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-              <div className="flex items-center gap-2 border border-border/60 rounded-md bg-background/50 px-3 py-2 transition-colors hover:bg-background/80 focus-within:bg-background focus-within:border-border">
+            {/* Inline add task — match task row hover/padding */}
+            <div className="px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
+              <div className="group/goal-item -mx-1 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50 focus-within:bg-accent/50">
                 <button
                   type="button"
                   onClick={handleAddTask}
                   disabled={!newTaskTitle.trim() || isAddingTask}
-                  className="flex-shrink-0 h-5 w-5 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label="Add task"
                 >
                   <Plus className="h-3 w-3 text-muted-foreground" />
@@ -310,7 +310,7 @@ export function FocusModeFocusedView() {
                   }}
                   placeholder="Add a task..."
                   disabled={isAddingTask}
-                  className="h-6 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                  className="h-6 min-h-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm font-normal shadow-none focus-visible:border-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
                 />
               </div>
             </div>
