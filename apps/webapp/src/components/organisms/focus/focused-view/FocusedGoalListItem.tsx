@@ -3,6 +3,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useState } from 'react';
 
+import { FireIconButton } from '@/components/molecules/goal-action-icons';
 import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,8 @@ interface FocusedGoalListItemProps {
   /** Nesting depth for visual indentation (0 = root) */
   indentLevel?: number;
   leadingIndicator?: React.ReactNode;
+  /** Show urgent toggle on hover (always visible when already urgent). */
+  showFireToggle?: boolean;
 }
 
 export function FocusedGoalListItem({
@@ -34,13 +37,17 @@ export function FocusedGoalListItem({
   incompleteClassName,
   indentLevel = 0,
   leadingIndicator,
+  showFireToggle = true,
 }: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
     <>
       <li
-        className="flex items-center gap-2 py-1"
+        className={cn(
+          'group/goal-item flex items-center gap-2 rounded-sm py-1 transition-colors hover:bg-accent/50',
+          isComplete && 'opacity-60'
+        )}
         style={indentLevel > 0 ? { paddingLeft: `${indentLevel * 16}px` } : undefined}
       >
         <Checkbox
@@ -53,14 +60,15 @@ export function FocusedGoalListItem({
           type="button"
           onClick={() => setPopoverOpen(true)}
           className={cn(
-            'text-sm text-left flex-1 truncate transition-all duration-200',
+            'min-w-0 flex-1 truncate text-left text-sm transition-all duration-200',
             isComplete
-              ? 'line-through text-muted-foreground/60 opacity-60'
+              ? 'text-muted-foreground/60 line-through'
               : (incompleteClassName ?? 'text-foreground')
           )}
         >
           {title}
         </button>
+        {showFireToggle && <FireIconButton goalId={goalId} />}
       </li>
 
       <StandaloneGoalModal
