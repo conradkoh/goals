@@ -48,7 +48,7 @@ export const getFocusedViewData = query({
     const [urgent, quarterlyGoals, adhocTasks] = await Promise.all([
       getUrgentGoals(ctx, { userId, year, quarter, weekNumber, dayOfWeek }),
       getQuarterlyGoals(ctx, { userId, year, quarter, weekNumber }),
-      getAdhocTasksFlattened(ctx, { userId, year, weekNumber }),
+      getAdhocTasksFlattened(ctx, { userId, year }),
     ]);
 
     return { urgent, quarterlyGoals, adhocTasks };
@@ -214,10 +214,9 @@ async function getAdhocTasksFlattened(
   args: {
     userId: Id<'users'>;
     year: number;
-    weekNumber: number;
   }
 ): Promise<FocusedGoalItem[]> {
-  const { userId, year, weekNumber } = args;
+  const { userId, year } = args;
 
   // Get fire goals so we can exclude them from adhoc tasks
   const fireGoals = await ctx.db
@@ -229,15 +228,13 @@ async function getAdhocTasksFlattened(
 
   const allAdhocGoals = await ctx.db
     .query('goals')
-    .withIndex('by_user_and_adhoc_year_week', (q) =>
-      q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNumber)
-    )
+    .withIndex('by_user_and_adhoc_year_week', (q) => q.eq('userId', userId).eq('year', year))
     .collect();
 
-  // Filter out backlog goals — they should not appear in the focused view
-  // Also filter out fire goals — urgent goals should only appear in the urgent section
+  // Include all incomplete adhoc goals for the year, regardless of assigned week.
+  // Exclude backlog goals and fire goals (urgent section owns those).
   const adhocGoals = allAdhocGoals.filter(
-    (g) => !g.isBacklog && !fireGoalIds.has(g._id.toString())
+    (g) => !g.isComplete && !g.isBacklog && !fireGoalIds.has(g._id.toString())
   );
 
   // Resolve domains
@@ -269,11 +266,14 @@ async function getAdhocTasksFlattened(
   }
 
   for (const goal of goalMap.values()) {
-    if (goal.parentId && goalMap.has(goal.parentId)) {
-      goalMap.get(goal.parentId)!.children.push(goal);
-    } else {
-      rootGoals.push(goal);
+    if (goal.parentId) {
+      const parent = goalMap.get(goal.parentId);
+      if (parent) {
+        parent.children.push(goal);
+        continue;
+      }
     }
+    rootGoals.push(goal);
   }
 
   // Flatten with indent levels
@@ -305,6 +305,13 @@ async function getAdhocTasksFlattened(
       flattenNode(child, indentLevel + 1, node.title);
     }
   }
+
+  rootGoals.sort((a, b) => {
+    const weekA = a.adhoc?.weekNumber ?? 0;
+    const weekB = b.adhoc?.weekNumber ?? 0;
+    if (weekA !== weekB) return weekA - weekB;
+    return 0;
+  });
 
   for (const root of rootGoals) {
     flattenNode(root, 0);
