@@ -117,6 +117,9 @@ async function getQuarterlyGoals(
 }
 
 // ── Urgent Goals ──────────────────────────────────────────────────────────────
+// Focus view Urgent section: all incomplete fire goals for the year.
+// Adhoc fire goals are year-scoped (assignment week is metadata, not visibility).
+// Quarterly/weekly/daily fire goals still require goalStateByWeek for the current week/day.
 
 async function getUrgentGoals(
   ctx: QueryCtx,
@@ -141,14 +144,15 @@ async function getUrgentGoals(
 
   let filtered = goalDocs
     .filter((g) => g !== null)
+    .filter((g) => !g.isComplete)
     .filter((g) => {
       if (g.adhoc) {
-        return g.year === year && g.adhoc.weekNumber === weekNumber;
+        return g.year === year;
       }
       return g.year === year && g.quarter === quarter;
     })
     .filter((g) => g.depth !== 0 || g.adhoc)
-    .filter((g) => !g.isBacklog); // Exclude backlog goals from urgent section
+    .filter((g) => !g.isBacklog);
 
   // Fetch ALL goalStateByWeek entries for the current week in a single indexed query,
   // then filter in memory. Avoids N+1 lookups when the user has many fire goals.
@@ -195,6 +199,8 @@ async function getUrgentGoals(
 }
 
 // ── Adhoc Tasks ───────────────────────────────────────────────────────────────
+// Focus view Tasks section: incomplete adhoc inbox for the year (all weeks).
+// Excludes backlog and fire goals (urgent section owns those).
 
 type AdhocNode = {
   _id: Id<'goals'>;
@@ -226,16 +232,14 @@ async function getAdhocTasksFlattened(
 
   const fireGoalIds = new Set(fireGoals.map((fg) => fg.goalId.toString()));
 
-  const allAdhocGoals = await ctx.db
-    .query('goals')
-    .withIndex('by_user_and_adhoc_year_week', (q) => q.eq('userId', userId).eq('year', year))
-    .collect();
-
-  // Include all incomplete adhoc goals for the year, regardless of assigned week.
-  // Exclude backlog goals and fire goals (urgent section owns those).
-  const adhocGoals = allAdhocGoals.filter(
-    (g) => !g.isComplete && !g.isBacklog && !fireGoalIds.has(g._id.toString())
-  );
+  const adhocGoals = (
+    await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_adhoc_year_and_complete', (q) =>
+        q.eq('userId', userId).eq('year', year).eq('isComplete', false)
+      )
+      .collect()
+  ).filter((g) => !g.isBacklog && !fireGoalIds.has(g._id.toString()));
 
   // Resolve domains
   const domainIds = [

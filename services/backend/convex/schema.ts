@@ -314,6 +314,13 @@ export default defineSchema({
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
     .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
     .index('by_user_and_adhoc_year_week', ['userId', 'year', 'adhoc.weekNumber'])
+    // Prefix (userId + year + isComplete) returns incomplete adhoc goals for inbox-style reads.
+    .index('by_user_and_adhoc_year_and_complete', [
+      'userId',
+      'year',
+      'isComplete',
+      'adhoc.weekNumber',
+    ])
     .index('by_user_and_domain', ['userId', 'domainId']),
 
   /**
