@@ -45,10 +45,10 @@ export function FocusedGoalListItem({
     <>
       <li
         className={cn(
-          'group/goal-item flex items-center gap-2 rounded-sm py-1 transition-colors hover:bg-accent/50',
+          'group/goal-item -mx-1 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50',
           isComplete && 'opacity-60'
         )}
-        style={indentLevel > 0 ? { paddingLeft: `${indentLevel * 16}px` } : undefined}
+        style={indentLevel > 0 ? { paddingLeft: `${8 + indentLevel * 16}px` } : undefined}
       >
         <Checkbox
           checked={isComplete}
