@@ -13,6 +13,7 @@ import {
   type WeeklyGoalWithState,
   type WeekStateToCopy,
 } from './types';
+import { getPreviousISOWeek, isFirstWeekOfQuarter, timePeriodFromISOWeek } from './weekPeriod';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../../convex/_generated/server';
 
@@ -22,11 +23,18 @@ import type { MutationCtx } from '../../../convex/_generated/server';
  * @param args - The arguments for the mutation
  * @returns The result of the mutation
  */
+function normalizeTimePeriod(period: TimePeriod): TimePeriod {
+  const normalized = timePeriodFromISOWeek(period.year, period.weekNumber);
+  return { ...period, quarter: normalized.quarter };
+}
+
 export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   ctx: MutationCtx,
   args: T
 ): Promise<MoveGoalsFromWeekResult<T>> {
-  const { userId, from, to, dryRun } = args;
+  const { userId, dryRun } = args;
+  const from = normalizeTimePeriod(args.from);
+  const to = normalizeTimePeriod(args.to);
 
   // Pre-fetch all required data
   const previousWeekGoals = await getGoalsForWeek(ctx, userId, from);
@@ -170,31 +178,34 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
   ctx: MutationCtx,
   args: MoveGoalsFromWeekArgs
 ): Promise<DryRunResult | MoveGoalsFromWeekResult<typeof args>> {
-  const { userId, to, dryRun } = args;
+  const { userId, dryRun } = args;
+  const to = normalizeTimePeriod(args.to);
 
-  // We'll scan backwards up to 13 weeks (roughly a quarter) but perform only a
-  // very cheap existence check per week using .first() on the indexed query.
-  // Only when we find a candidate with any goal state do we run the heavier
-  // moveGoalsFromWeekUsecase dry run (which loads related goal docs, etc.).
-  let candidate: TimePeriod = {
-    year: to.year,
-    quarter: to.quarter,
-    weekNumber: to.weekNumber - 1,
-  };
-
-  const maxWeeksToSearch = 13;
-  for (let i = 0; i < maxWeeksToSearch; i++) {
-    // Handle quarter/year boundary rollover
-    if (candidate.weekNumber < 1) {
-      let prevQuarter = candidate.quarter - 1;
-      let prevYear = candidate.year;
-      if (prevQuarter < 1) {
-        prevQuarter = 4;
-        prevYear -= 1;
-      }
-      candidate = { year: prevYear, quarter: prevQuarter, weekNumber: 13 };
+  // Don't pull across quarter boundaries — matches frontend guard on first week of quarter.
+  if (isFirstWeekOfQuarter(to.weekNumber)) {
+    const emptyBase = {
+      weekStatesToCopy: [],
+      dailyGoalsToMove: [],
+      quarterlyGoalsToUpdate: [],
+      adhocGoalsToMove: [],
+    };
+    if (dryRun) {
+      return { ...emptyBase, isDryRun: true, canPull: false, skippedGoals: [] } as DryRunResult;
     }
+    return {
+      ...emptyBase,
+      weekStatesCopied: 0,
+      dailyGoalsMoved: 0,
+      quarterlyGoalsUpdated: 0,
+      adhocGoalsMoved: 0,
+    };
+  }
 
+  // Scan backwards up to 13 weeks with correct ISO year/quarter at boundaries.
+  let candidate = getPreviousISOWeek(to);
+  const maxWeeksToSearch = 13;
+
+  for (let i = 0; i < maxWeeksToSearch; i++) {
     // Cheap existence probe: check for both regular goals and adhoc goals
     const [regularGoalProbe, adhocGoalProbe] = await Promise.all([
       ctx.db
@@ -220,9 +231,6 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
     ]);
 
     if (regularGoalProbe || adhocGoalProbe) {
-      // Now run the dry run for this specific week to determine if there is
-      // actually movable content (canPull logic encapsulated there). This keeps
-      // correctness identical while avoiding heavy processing for empty weeks.
       const preview = await moveGoalsFromWeekUsecase(ctx, {
         userId,
         from: candidate,
@@ -230,10 +238,6 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
         dryRun: true as const,
       });
 
-      // A week is considered "non-empty" if:
-      // 1. There are goals that can be pulled (canPull = true), OR
-      // 2. There are goals that would be skipped (already moved)
-      // This prevents scanning past weeks that have been partially processed
       const hasContent =
         preview.canPull || (preview.skippedGoals && preview.skippedGoals.length > 0);
 
@@ -246,10 +250,9 @@ export async function moveGoalsFromLastNonEmptyWeekUsecase(
           dryRun: false as const,
         });
       }
-      // If the week has states but none are movable and none are skipped, keep scanning backwards.
     }
 
-    candidate = { ...candidate, weekNumber: candidate.weekNumber - 1 };
+    candidate = getPreviousISOWeek(candidate);
   }
 
   // No candidate week produced movable content.

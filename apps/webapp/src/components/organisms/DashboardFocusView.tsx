@@ -117,7 +117,12 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
   // based on year/quarter only, which means it doesn't update when crossing week boundaries.
   // Instead, we get it from useCurrentWeekInfo which properly updates at midnight.
   useQuarterWeekInfo(selectedYear, selectedQuarter as 1 | 2 | 3 | 4);
-  const { weekday: currentDay, weekNumber: currentWeekNumber } = useCurrentWeekInfo();
+  const {
+    weekday: currentDay,
+    weekNumber: currentWeekNumber,
+    weekYear: currentYear,
+    weekQuarter: currentQuarter,
+  } = useCurrentWeekInfo();
 
   // State for dialogs
   const [isQuarterJumpOpen, setIsQuarterJumpOpen] = useState(false);
@@ -152,11 +157,19 @@ export const DashboardFocusView: React.FC<DashboardFocusViewProps> = ({
     isPulling: isPullingGoals,
     handlePullGoals,
     dialog: pullGoalsDialog,
-  } = usePullGoals({
-    weekNumber: selectedWeekNumber,
-    year: selectedYear,
-    quarter: selectedQuarter,
-  });
+  } = usePullGoals(
+    viewMode === 'focused'
+      ? {
+          weekNumber: currentWeekNumber,
+          year: currentYear,
+          quarter: currentQuarter,
+        }
+      : {
+          weekNumber: selectedWeekNumber,
+          year: selectedYear,
+          quarter: selectedQuarter,
+        }
+  );
 
   /**
    * Determine if pull goals should be shown based on current view context.

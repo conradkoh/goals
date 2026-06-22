@@ -13,12 +13,13 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
+import { getQuarterFromWeek, isFirstWeekOfQuarter } from '@/lib/date/iso-week';
 import { useSession } from '@/modules/auth/useSession';
 
 interface UsePullGoalsProps {
   weekNumber: number;
   year: number;
-  quarter: number;
+  quarter?: number;
 }
 
 interface PullGoalsPreviewData {
@@ -42,11 +43,7 @@ interface UsePullGoalsReturn {
  *
  * This combines both operations into a single "Pull goals" action.
  */
-export const usePullGoals = ({
-  weekNumber,
-  year,
-  quarter,
-}: UsePullGoalsProps): UsePullGoalsReturn => {
+export const usePullGoals = ({ weekNumber, year }: UsePullGoalsProps): UsePullGoalsReturn => {
   const { sessionId } = useSession();
   const { moveGoalsFromDay } = useGoalActions();
   const moveGoalsFromLastNonEmptyWeekMutation = useMutation(api.goal.moveGoalsFromLastNonEmptyWeek);
@@ -59,11 +56,14 @@ export const usePullGoals = ({
   // Get current day info
   const { weekday: currentDayOfWeek } = useCurrentDateInfo();
 
+  // Quarter is derived from the ISO week number — URL quarter can drift out of sync.
+  const targetQuarter = getQuarterFromWeek(weekNumber);
+
   // Check if it's Monday (first day of week)
   const isMonday = currentDayOfWeek === DayOfWeek.MONDAY;
 
-  // Check if it's the first week of the quarter (don't pull from previous quarter)
-  const isFirstWeekOfQuarter = weekNumber === 1;
+  // First ISO week of the quarter — don't pull from the previous quarter
+  const isFirstWeekOfQuarterForTarget = isFirstWeekOfQuarter(weekNumber);
 
   // Get all past days of the current week (before today)
   const getPastDaysOfWeek = useCallback((): DayOfWeek[] => {
@@ -84,11 +84,11 @@ export const usePullGoals = ({
     try {
       // Step 1: Preview goals from last non-empty week → Monday
       // IMPORTANT: Only pull from previous weeks within the same quarter (not from previous quarter)
-      if (!isFirstWeekOfQuarter) {
+      if (!isFirstWeekOfQuarterForTarget) {
         const weekPreviewData = await moveGoalsFromLastNonEmptyWeekMutation({
           sessionId,
           to: {
-            quarter,
+            quarter: targetQuarter,
             weekNumber,
             year,
             dayOfWeek: DayOfWeek.MONDAY, // Always pull to Monday first
@@ -156,13 +156,13 @@ export const usePullGoals = ({
           const dayPreviewData = await moveGoalsFromDay({
             from: {
               year,
-              quarter,
+              quarter: targetQuarter,
               weekNumber,
               dayOfWeek: pastDay,
             },
             to: {
               year,
-              quarter,
+              quarter: targetQuarter,
               weekNumber,
               dayOfWeek: currentDayOfWeek,
             },
@@ -191,11 +191,11 @@ export const usePullGoals = ({
     }
   }, [
     sessionId,
-    quarter,
+    targetQuarter,
     weekNumber,
     year,
     isMonday,
-    isFirstWeekOfQuarter,
+    isFirstWeekOfQuarterForTarget,
     currentDayOfWeek,
     getPastDaysOfWeek,
     moveGoalsFromLastNonEmptyWeekMutation,
@@ -211,11 +211,11 @@ export const usePullGoals = ({
 
       // Step 1: Pull from last non-empty week → Monday
       // IMPORTANT: Only pull from previous weeks within the same quarter (not from previous quarter)
-      if (!isFirstWeekOfQuarter) {
+      if (!isFirstWeekOfQuarterForTarget) {
         await moveGoalsFromLastNonEmptyWeekMutation({
           sessionId,
           to: {
-            quarter,
+            quarter: targetQuarter,
             weekNumber,
             year,
             dayOfWeek: DayOfWeek.MONDAY,
@@ -235,13 +235,13 @@ export const usePullGoals = ({
           await moveGoalsFromDay({
             from: {
               year,
-              quarter,
+              quarter: targetQuarter,
               weekNumber,
               dayOfWeek: pastDay,
             },
             to: {
               year,
-              quarter,
+              quarter: targetQuarter,
               weekNumber,
               dayOfWeek: currentDayOfWeek,
             },
@@ -264,11 +264,11 @@ export const usePullGoals = ({
     }
   }, [
     sessionId,
-    quarter,
+    targetQuarter,
     weekNumber,
     year,
     isMonday,
-    isFirstWeekOfQuarter,
+    isFirstWeekOfQuarterForTarget,
     currentDayOfWeek,
     getPastDaysOfWeek,
     moveGoalsFromLastNonEmptyWeekMutation,
@@ -284,6 +284,11 @@ export const usePullGoals = ({
       const previewResult = await handlePreviewGoals();
 
       if (!previewResult || previewResult.totalTasks === 0) {
+        toast({
+          title: 'Nothing to pull',
+          description:
+            'No incomplete goals were found from the previous week or earlier days this week.',
+        });
         return;
       }
 

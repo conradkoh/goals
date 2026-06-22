@@ -1159,3 +1159,118 @@ describe('deleteGoal', () => {
     expect(weeklyGoals.length).toBe(0);
   });
 });
+
+describe('moveGoalsFromLastNonEmptyWeek', () => {
+  test('pulls incomplete adhoc goals from the immediately previous week', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+    const year = 2026;
+
+    const adhocGoalId = await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Carry over adhoc task',
+      year,
+      weekNumber: 25,
+    });
+
+    const preview = (await ctx.mutation(api.goal.moveGoalsFromLastNonEmptyWeek, {
+      sessionId,
+      to: {
+        year,
+        quarter: 2,
+        weekNumber: 26,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      dryRun: true,
+    })) as { canPull: boolean; adhocGoalsToMove: { id: Id<'goals'> }[] };
+
+    expect(preview.canPull).toBe(true);
+    expect(preview.adhocGoalsToMove.map((g) => g.id)).toContain(adhocGoalId);
+
+    const moveResult = (await ctx.mutation(api.goal.moveGoalsFromLastNonEmptyWeek, {
+      sessionId,
+      to: {
+        year,
+        quarter: 2,
+        weekNumber: 26,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      dryRun: false,
+    })) as { adhocGoalsMoved: number };
+
+    expect(moveResult.adhocGoalsMoved).toBe(1);
+  });
+
+  test('finds previous-week goals when caller passes a mismatched quarter', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+    const year = 2026;
+
+    const adhocGoalId = await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Mismatched quarter metadata',
+      year,
+      weekNumber: 25,
+    });
+
+    const preview = (await ctx.mutation(api.goal.moveGoalsFromLastNonEmptyWeek, {
+      sessionId,
+      to: {
+        year,
+        quarter: 1,
+        weekNumber: 26,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      dryRun: true,
+    })) as { canPull: boolean; adhocGoalsToMove: { id: Id<'goals'> }[] };
+
+    expect(preview.canPull).toBe(true);
+    expect(preview.adhocGoalsToMove.map((g) => g.id)).toContain(adhocGoalId);
+  });
+
+  test('moveGoalsFromWeek normalizes quarter metadata when source week spans quarters', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+    const year = 2026;
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q1 quarterly goal',
+      year,
+      quarter: 1,
+      weekNumber: 13,
+    });
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Week 13 weekly goal',
+      parentId: quarterlyGoalId,
+      weekNumber: 13,
+    });
+    await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Week 13 daily goal',
+      parentId: weeklyGoalId,
+      weekNumber: 13,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    const preview = (await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: {
+        year,
+        quarter: 2,
+        weekNumber: 13,
+      },
+      to: {
+        year,
+        quarter: 2,
+        weekNumber: 14,
+        dayOfWeek: DayOfWeek.MONDAY,
+      },
+      dryRun: true,
+    })) as unknown as { canPull: boolean; dailyGoalsToMove: unknown[] };
+
+    expect(preview.canPull).toBe(true);
+    expect(preview.dailyGoalsToMove.length).toBeGreaterThan(0);
+  });
+});

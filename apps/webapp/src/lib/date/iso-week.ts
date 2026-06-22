@@ -155,6 +155,16 @@ export function getQuarterFromWeek(weekNumber: number): 1 | 2 | 3 | 4 {
   return 4;
 }
 
+/** First ISO week of the quarter that contains `weekNumber`. */
+function getFirstWeekOfQuarter(weekNumber: number): number {
+  const quarter = getQuarterFromWeek(weekNumber);
+  return (quarter - 1) * 13 + 1;
+}
+
+export function isFirstWeekOfQuarter(weekNumber: number): boolean {
+  return weekNumber === getFirstWeekOfQuarter(weekNumber);
+}
+
 /**
  * Get ISO week-based date information for a given DateTime
  *
