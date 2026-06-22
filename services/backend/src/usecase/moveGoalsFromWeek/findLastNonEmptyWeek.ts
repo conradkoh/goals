@@ -1,4 +1,5 @@
-import { getGoalsForWeek } from './moveGoalsFromWeek';
+// fallow-ignore-file unused-file
+import { getGoalsForWeek } from './moveHierarchicalGoalsFromWeek';
 import { GoalDepth, type TimePeriod } from './types';
 import type { Id } from '../../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../../convex/_generated/server';

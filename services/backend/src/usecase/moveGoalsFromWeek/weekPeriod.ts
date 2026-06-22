@@ -11,6 +11,7 @@ function getQuarterFromWeekNumber(weekNumber: number): 1 | 2 | 3 | 4 {
 }
 
 /** Build a time period with quarter derived from the ISO week number. */
+// fallow-ignore-next-line unused-export
 export function timePeriodFromISOWeek(weekYear: number, weekNumber: number): TimePeriod {
   return {
     year: weekYear,
@@ -38,4 +39,10 @@ export function getPreviousISOWeek(period: TimePeriod): TimePeriod {
   }).minus({ weeks: 1 });
 
   return timePeriodFromISOWeek(dt.weekYear, dt.weekNumber);
+}
+
+/** Normalize quarter metadata from ISO week number (caller quarter may be stale). */
+export function normalizeTimePeriod(period: TimePeriod): TimePeriod {
+  const normalized = timePeriodFromISOWeek(period.year, period.weekNumber);
+  return { ...period, quarter: normalized.quarter };
 }

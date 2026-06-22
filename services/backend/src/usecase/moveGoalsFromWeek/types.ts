@@ -67,12 +67,39 @@ export type AdhocGoalToMove = {
   domain?: Doc<'domains'>;
 };
 
-// Result types
-export type ProcessGoalResult = {
+// Hierarchical (quarterly / weekly / daily) processing types
+export type HierarchicalProcessResult = {
   weekStatesToCopy: WeekStateToCopy[];
   dailyGoalsToMove: DailyGoalToMove[];
   quarterlyGoalsToUpdate: QuarterlyGoalToUpdate[];
+};
+
+export type HierarchicalDryRunPreview = {
+  canPull: boolean;
+  weekStatesToCopy: WeekStateSummary[];
+  dailyGoalsToMove: DailyGoalSummary[];
+  quarterlyGoalsToUpdate: QuarterlyGoalSummary[];
+  skippedGoals: SkippedGoalSummary[];
+};
+
+export type HierarchicalUpdateResult = HierarchicalDryRunPreview & {
+  weekStatesCopied: number;
+  dailyGoalsMoved: number;
+  quarterlyGoalsUpdated: number;
+};
+
+// Adhoc processing types
+export type AdhocProcessResult = {
   adhocGoalsToMove: AdhocGoalToMove[];
+};
+
+export type AdhocDryRunPreview = {
+  canPull: boolean;
+  adhocGoalsToMove: AdhocGoalSummary[];
+};
+
+export type AdhocUpdateResult = AdhocDryRunPreview & {
+  adhocGoalsMoved: number;
 };
 
 export type WeekStateToCopy = {
@@ -84,11 +111,6 @@ export type WeekStateToCopy = {
 };
 
 // Summary types used in API responses
-export type GoalSummary = {
-  id: Id<'goals'>;
-  title: string;
-};
-
 export type WeekStateSummary = {
   title: string;
   carryOver: CarryOver;
