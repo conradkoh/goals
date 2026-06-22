@@ -17,7 +17,7 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
-import { History, Loader2, Plus } from 'lucide-react';
+import { History, Loader2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -31,7 +31,6 @@ import { removeCompletedItemsFromEditor } from '@/components/organisms/focus/rem
 import { ScratchpadHistoryDialog } from '@/components/organisms/focus/ScratchpadHistoryDialog';
 import { ScratchpadNewDialog } from '@/components/organisms/focus/ScratchpadNewDialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
@@ -285,35 +284,11 @@ export function FocusModeFocusedView() {
             <FocusedAdhocGoalsSection
               goals={focusedViewData.adhocTasks}
               onToggleComplete={handleAdhocCompleteChange}
+              addTaskValue={newTaskTitle}
+              onAddTaskChange={setNewTaskTitle}
+              onAddTaskSubmit={handleAddTask}
+              isAddingTask={isAddingTask}
             />
-
-            {/* Inline add task — match task row hover/padding */}
-            <div className="px-4 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]">
-              <div className="group/goal-item -mx-1 flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50 focus-within:bg-accent/50">
-                <button
-                  type="button"
-                  onClick={handleAddTask}
-                  disabled={!newTaskTitle.trim() || isAddingTask}
-                  className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-muted transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Add task"
-                >
-                  <Plus className="h-3 w-3 text-muted-foreground" />
-                </button>
-                <Input
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddTask();
-                    }
-                  }}
-                  placeholder="Add a task..."
-                  disabled={isAddingTask}
-                  className="h-6 min-h-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm font-normal shadow-none focus-visible:border-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
-                />
-              </div>
-            </div>
           </WeekProvider>
         )}
       </div>

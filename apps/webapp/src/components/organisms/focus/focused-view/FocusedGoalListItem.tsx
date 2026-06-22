@@ -25,6 +25,7 @@ interface FocusedGoalListItemProps {
   showFireToggle?: boolean;
 }
 
+// fallow-ignore-next-line complexity
 export function FocusedGoalListItem({
   goalId,
   title,
@@ -60,7 +61,7 @@ export function FocusedGoalListItem({
           type="button"
           onClick={() => setPopoverOpen(true)}
           className={cn(
-            'min-w-0 flex-1 truncate text-left text-sm transition-all duration-200',
+            'min-w-0 flex-1 truncate p-0 text-left text-sm transition-all duration-200',
             isComplete
               ? 'text-muted-foreground/60 line-through'
               : (incompleteClassName ?? 'text-foreground')
