@@ -130,7 +130,7 @@ export function SafeHTML({
   return (
     <div
       className={cn(
-        'prose prose-sm dark:prose-invert max-w-none break-words overflow-wrap-anywhere',
+        'prose prose-sm dark:prose-invert max-w-none break-words overflow-wrap-anywhere min-w-0 overflow-hidden',
         styles.prose,
         className
       )}
