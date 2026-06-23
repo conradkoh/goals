@@ -81,7 +81,12 @@ export function GoalDetailsContent({
           </div>
         )}
 
-        <div className={cn('overflow-y-auto rounded-md pt-4 pb-4 px-3 bg-muted/30', className)}>
+        <div
+          className={cn(
+            'min-w-0 overflow-x-hidden overflow-y-auto rounded-md pt-4 pb-4 px-3 bg-muted/30',
+            className
+          )}
+        >
           {hasInteractiveFeatures ? (
             <InteractiveHTML
               html={details}
