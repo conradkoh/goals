@@ -184,6 +184,31 @@ describe('removeCompletedItems', () => {
     expect(result).toContain('End of list.');
     expect(result).not.toContain('Done task');
   });
+
+  it('handles TipTap task list HTML format with data-type and class attributes', () => {
+    const html =
+      '<ul class="task-list my-2" data-type="taskList"><li class="task-item flex gap-2" data-type="taskItem" data-checked="true"><p><span>Checked item</span></p></li><li class="task-item flex gap-2" data-type="taskItem" data-checked="false"><p><span>Unchecked item</span></p></li></ul>';
+    const result = removeCompletedItems(html);
+    expect(result).not.toContain('Checked item');
+    expect(result).toContain('Unchecked item');
+  });
+
+  it('removes TipTap task items with data-checked="true" and nested <p> content', () => {
+    const html =
+      '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Done</p></li><li data-type="taskItem" data-checked="false"><p>Todo</p></li></ul>';
+    const result = removeCompletedItems(html);
+    expect(result).not.toContain('Done');
+    expect(result).toContain('Todo');
+  });
+
+  it('cleans up empty paragraphs that remain after TipTap task item removal', () => {
+    const html =
+      '<p>Header</p><ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Done</p></li></ul><p>Footer</p>';
+    const result = removeCompletedItems(html);
+    expect(result).toContain('Header');
+    expect(result).toContain('Footer');
+    expect(result).not.toContain('Done');
+  });
 });
 
 describe('removeCompletedItemsFromEditor', () => {
@@ -200,5 +225,34 @@ describe('removeCompletedItemsFromEditor', () => {
     const mockRef = { current: mockEditor };
     const result = removeCompletedItemsFromEditor(mockRef as any);
     expect(result).not.toContain('Done');
+  });
+
+  it('returns cleaned content using TipTap-style HTML from editor', () => {
+    const mockEditor = {
+      getContent: vi
+        .fn()
+        .mockReturnValue(
+          '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Done</p></li><li data-type="taskItem" data-checked="false"><p>Todo</p></li></ul>'
+        ),
+    };
+    const mockRef = { current: mockEditor };
+    const result = removeCompletedItemsFromEditor(mockRef as any);
+    expect(result).not.toContain('Done');
+    expect(result).toContain('Todo');
+  });
+
+  it('returns null when editor has no completed items (none to remove)', () => {
+    const mockEditor = {
+      getContent: vi
+        .fn()
+        .mockReturnValue(
+          '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>Todo 1</p></li><li data-type="taskItem" data-checked="false"><p>Todo 2</p></li></ul>'
+        ),
+    };
+    const mockRef = { current: mockEditor };
+    const result = removeCompletedItemsFromEditor(mockRef as any);
+    expect(result).not.toBeNull();
+    expect(result).toContain('Todo 1');
+    expect(result).toContain('Todo 2');
   });
 });

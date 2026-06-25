@@ -149,30 +149,34 @@ export function useScratchpad() {
     async (cleanedContent: string) => {
       setShowNewDialog(false);
       cancelPendingSave();
+      pendingContentRef.current = null;
+      // Prevent the subscription useEffect from applying the intermediate
+      // empty state that archiveScratchpad pushes to the server.
+      isSavingRef.current = true;
 
       try {
+        // Archive current content first so the full snapshot is preserved
+        await archiveScratchpad({});
+
+        // Then save the cleaned content as the new scratchpad state.
+        // expectedVersion is omitted because archiveScratchpad just advanced
+        // the version — we don't know the new value without a re-fetch.
         const result = await upsertScratchpad({
           content: cleanedContent,
-          expectedVersion: lastKnownVersionRef.current,
         });
 
-        if (result.conflict) {
-          console.warn(
-            'Scratchpad save conflict: server version diverged. Accepting server state.'
-          );
-          return;
-        }
-
+        editorRef.current?.setContent(cleanedContent);
         lastKnownVersionRef.current = result.version;
-        pendingContentRef.current = null;
+        isSavingRef.current = false;
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2000);
       } catch (error) {
+        isSavingRef.current = false;
         console.error('Failed to remove completed items:', error);
         setSaveStatus('error');
       }
     },
-    [upsertScratchpad, cancelPendingSave]
+    [archiveScratchpad, upsertScratchpad, cancelPendingSave]
   );
 
   return {
