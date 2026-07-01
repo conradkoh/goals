@@ -144,25 +144,19 @@ export function FocusModeFocusedView() {
 
   // ── Add task ─────────────────────────────────────────────────────────────
   const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [isAddingTask, setIsAddingTask] = useState(false);
 
-  const handleAddTask = useCallback(async () => {
+  const handleAddTask = useCallback(() => {
     const title = newTaskTitle.trim();
     if (!title) return;
-    setIsAddingTask(true);
-    try {
-      await createAdhocGoal({
-        title,
-        year,
-        weekNumber,
-        dayOfWeek,
-      });
-      setNewTaskTitle('');
-    } catch (error) {
+    setNewTaskTitle('');
+    createAdhocGoal({
+      title,
+      year,
+      weekNumber,
+      dayOfWeek,
+    }).catch((error) => {
       console.error('Failed to create task:', error);
-    } finally {
-      setIsAddingTask(false);
-    }
+    });
   }, [newTaskTitle, createAdhocGoal, year, weekNumber, dayOfWeek]);
 
   // ── Scratchpad actions ───────────────────────────────────────────────────
@@ -293,7 +287,7 @@ export function FocusModeFocusedView() {
                 <button
                   type="button"
                   onClick={handleAddTask}
-                  disabled={!newTaskTitle.trim() || isAddingTask}
+                  disabled={!newTaskTitle.trim()}
                   className="flex-shrink-0 h-5 w-5 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Add task"
                 >
@@ -309,7 +303,6 @@ export function FocusModeFocusedView() {
                     }
                   }}
                   placeholder="Add a task..."
-                  disabled={isAddingTask}
                   className="h-6 text-sm border-0 bg-transparent px-0 focus-visible:ring-0 placeholder:text-muted-foreground/60"
                 />
               </div>
