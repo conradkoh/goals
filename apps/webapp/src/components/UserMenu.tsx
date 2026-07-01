@@ -103,11 +103,7 @@ function _renderLogoutConfirmDialog(
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
+          <AlertDialogAction onClick={handleLogout} disabled={isLoggingOut} variant="destructive">
             {isLoggingOut ? 'Logging out...' : 'Log out'}
           </AlertDialogAction>
         </AlertDialogFooter>
