@@ -223,7 +223,7 @@ export const GoalDeletePreviewDialog = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onDeleteGoals} className="bg-red-500 hover:bg-red-600">
+          <AlertDialogAction onClick={onDeleteGoals} variant="destructive">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

@@ -346,7 +346,7 @@ export function NameEditForm() {
             <AlertDialogAction
               onClick={handleDisconnect}
               disabled={disconnectDialog.isDisconnecting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
             >
               {disconnectDialog.isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
             </AlertDialogAction>
