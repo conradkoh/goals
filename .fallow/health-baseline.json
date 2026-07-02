@@ -1,0 +1,1303 @@
+{
+  "finding_counts": {
+    "apps/webapp/scripts/generate-icons.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/app/api/auth/google/callback/page.tsx": {
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/app/app/admin/google-auth/page.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/webapp/src/app/app/admin/page.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/app/documents/[documentId]/page.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/app/documents/page.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/app/goal/[goalId]/quarterly-summary/page.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/app/goal/quarterly-summary/QuarterlySummaryContext.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/app/app/goal/quarterly-summary/SelectorPanels.tsx": {
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/app/app/profile/page.tsx": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/app/app/quarterly-pull-preview/goals/[goalId]/page.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/docs/installation/page.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/login/[loginRequestId]/page.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/login/google/components/GoogleCallback.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/app/recover/page.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/CallbackErrorCard.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/CallbackSuccessCard.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/AddTaskInput.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/CreateGoalInput.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/CreateInput/view/CreateInputView.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/DomainBadge.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/DomainPill/index.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/DomainPill/lib/colors.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/DomainSelector.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/webapp/src/components/atoms/GoalEditPopover.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/GoalSelector.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/atoms/PendingStatusDialog.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/AdhocGoalForm.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/AdhocGoalsList.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/DomainPopover.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/day-of-week/components/DayHeader.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/day-of-week/components/QuarterlyGoalHeader.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/day-of-week/components/TaskMovePreview.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/day-of-week/containers/DayContainer.tsx": {
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/dnd/DroppableQuarterlyGoal.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/dnd/DroppableWeekColumn.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/documents/DocumentCard.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/CreateAdhocGoalDialog.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/DailyWeeklyActionMenu.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/FocusMenuBar.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/GoalSearchDialog.tsx": {
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/JumpToCurrentButton.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/focus/QuarterJumpDialog.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-action-icons/variants/AdhocGoalActionIcons.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/GoalPageContent.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPullPreviewContent.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/StandaloneGoalModal.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/StandardGoalPopoverContent.tsx": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/GoalDetailsPopoverView.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalActionMenuNew.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalBreadcrumb.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalChildrenSection.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsChildrenList.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsContent.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDueDateDisplay.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalEditModal.tsx": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalStatusIndicators.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/MoveGoalToWeekModal.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-list-item/variants/AdhocGoalItem.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-list-item/variants/DailyGoalItem.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-list-item/variants/QuarterlyGoalItem.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-list-item/view/components/GoalActionButtons.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-list-item/view/components/GoalPendingIndicator.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-log/GoalLogCreateForm.tsx": {
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-log/GoalLogEntry.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-log/GoalLogList.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/goal-log/GoalLogTab.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/multi-week/MultiWeekGrid.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/multi-week/MultiWeekLayout.tsx": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/quarter/QuarterActionMenu.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarter/QuarterGoalMovePreview.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/AdhocDomainSelector.tsx": {
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/DailySummaryItem.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/QuarterSummaryResults.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/QuarterlyGoalSelector.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/QuarterlyGoalSummaryView.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/QuarterlySummaryMarkdownView.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/WeeklySummarySection.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/molecules/quarterly-summary/WeeklyTaskItem.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/AdhocGoalList.tsx": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/organisms/DailyGoalGroup.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/DailyGoalList.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/DashboardFocusView.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/GoalDeletePreviewDialog.tsx": {
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/organisms/WeekCardDailyGoals.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "apps/webapp/src/components/organisms/WeekCardPreviewDialog.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/WeekCardQuarterlyGoals.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/WeekCardWeeklyGoals.tsx": {
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/AdhocGoalsSection.tsx": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/FocusModeDailyViewDailyGoals.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/FocusModeFocusedView.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/OnFireGoalsSection.tsx": {
+      "crap_high": {
+        "count": 3
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/PendingGoalsSection.tsx": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/QuarterlyGoalsQuickSection.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/ScratchpadHistoryDialog.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/focused-view/FocusedGoalListItem.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/focused-view/FocusedGoalSection.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/components/organisms/focus/removeCompletedItems.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useClipboard.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useDashboard.tsx": {
+      "complexity_high": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/hooks/useFormSubmitShortcut.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useFuzzySearch.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useGoalActions.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useGoalFuzzySearch.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useGoalLogs.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useMoveGoalsForQuarter.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useMoveWeeklyGoal.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useOptimistic.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/usePullGoals.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/hooks/useQuarterWeekInfo.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useScratchpad.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/hooks/useWeek.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/lib/date/getDueDateStyle.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/lib/html-to-markdown.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/lib/markdown/quarterlyMarkdown.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 5
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 6
+      }
+    },
+    "apps/webapp/src/lib/scroll/useCenteredScroll.ts": {
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/lib/utils.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/attendance/components/Attendance.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/modules/attendance/components/AttendanceCopyDialog.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/modules/attendance/components/AttendanceDialog.tsx": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/attendance/hooks/useAttendanceData.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/modules/auth/AuthProvider.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/auth/GoogleLoginButton.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/auth/LoginCodeGenerator.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/auth/LoginWithCode.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/checklist/checklist.tsx": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/checklist/use-checklist-sync.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/discussion/discussion-conclusion.tsx": {
+      "crap_high": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/modules/discussion/discussion-form.tsx": {
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/modules/discussion/discussion.tsx": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "apps/webapp/src/modules/discussion/use-discussion-sync.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/password-protection/PasswordProtect.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/password-protection/PasswordProtectContext.tsx": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/password-protection/PasswordProtectedConditionalRender.tsx": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/password-protection/password-utils.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/presentation/presentation-container.tsx": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/presentation/presentation-controls.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "apps/webapp/src/modules/presentation/use-presentation-sync.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 3
+      }
+    },
+    "apps/webapp/src/modules/profile/NameEditForm.tsx": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "scripts/setup.js": {
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/adhocGoal.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/appinfo.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/attendance.ts": {
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/auth.ts": {
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 6
+      }
+    },
+    "services/backend/convex/auth/google.ts": {
+      "complexity_critical": {
+        "count": 2
+      },
+      "crap_critical": {
+        "count": 5
+      },
+      "crap_high": {
+        "count": 4
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/bff/focus.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 2
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "services/backend/convex/dashboard.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 3
+      },
+      "crap_high": {
+        "count": 5
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "services/backend/convex/documents.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/domain.ts": {
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/fireGoal.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/goal.ts": {
+      "complexity_critical": {
+        "count": 3
+      },
+      "crap_critical": {
+        "count": 7
+      },
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 7
+      }
+    },
+    "services/backend/convex/goalLogs.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 2
+      }
+    },
+    "services/backend/convex/migration.ts": {
+      "crap_high": {
+        "count": 2
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/pendingGoals.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/scratchpad.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/sessions.ts": {
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/convex/system/auth/google.ts": {
+      "crap_critical": {
+        "count": 2
+      }
+    },
+    "services/backend/src/usecase/getWeekDetails.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/goal/create-goal/createGoalWithCarryOver.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/moveGoalsFromQuarter/findExistingGoalByRootId.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/moveGoalsFromWeek/findLastNonEmptyWeek.ts": {
+      "complexity_high": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/moveGoalsFromWeek/moveGoalsFromWeek.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      },
+      "crap_high": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
+    "services/backend/src/usecase/moveGoalsFromWeek/optimizedLastNonEmptyWeek.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/quarter/getQuarterWeeks.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "services/backend/src/usecase/requireLogin.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/src/util/isoWeek.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "services/backend/src/util/path.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    }
+  },
+  "runtime_coverage_findings": [],
+  "target_keys": [
+    "services/backend/src/usecase/quarter/debugQuarterCalculations.ts:circular dependency",
+    "services/backend/application/auth/requirePermission.ts:dead code",
+    "apps/webapp/src/components/organisms/DailyGoalList.tsx:dead code",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/DailyGoalItem.tsx:circular dependency",
+    "apps/webapp/src/application/auth/resolve.ts:dead code",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/AdhocGoalItem.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/WeeklyGoalItem.tsx:circular dependency",
+    "services/backend/application/auth/resolve.ts:dead code",
+    "apps/webapp/src/hooks/useCurrentDateTime.tsx:dead code",
+    "apps/webapp/src/components/molecules/goal-list-item/view/GoalListItemView.tsx:dead code",
+    "services/backend/src/util/isoWeek.ts:dead code",
+    "services/backend/convex/bff/focus.ts:complexity",
+    "apps/webapp/src/hooks/useGoalFuzzySearch.ts:dead code",
+    "services/backend/modules/auth/accessControl.ts:dead code",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/StandardGoalPopoverContent.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/StandaloneGoalModal.tsx:circular dependency",
+    "services/backend/src/usecase/moveGoalsFromWeek/moveGoalsFromWeek.ts:dead code",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/GoalPageContent.tsx:circular dependency",
+    "services/backend/convex/adhocGoal.ts:complexity",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/modules/attendance/components/AttendanceDialog.tsx:complexity",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/QuarterlyGoalItem.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsChildrenList.tsx:circular dependency",
+    "apps/webapp/src/lib/html-to-markdown.ts:untested risk",
+    "apps/webapp/src/modules/presentation/presentation-controls.tsx:complexity",
+    "apps/webapp/src/modules/checklist/use-checklist-sync.ts:complexity",
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalBreadcrumb.tsx:circular dependency",
+    "apps/webapp/src/modules/presentation/use-presentation-sync.ts:complexity",
+    "services/backend/convex/auth/google.ts:complexity"
+  ]
+}
