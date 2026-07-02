@@ -5,6 +5,8 @@ import { DayOfWeek } from '../src/constants';
 import type { Doc, Id } from './_generated/dataModel';
 import { type MutationCtx, mutation, type QueryCtx, query } from './_generated/server';
 import { requireLogin } from '../src/usecase/requireLogin';
+import { initiativeIdGoalPatch } from '../src/util/goalInitiative';
+import { propagateInitiativeToDescendants } from '../src/util/propagateInitiativeToDescendants';
 
 /**
  * Maximum nesting depth for adhoc goals.
@@ -243,6 +245,7 @@ export const updateAdhocGoal = mutation({
     title: v.optional(v.string()),
     details: v.optional(v.string()),
     domainId: v.optional(v.union(v.id('domains'), v.null())),
+    initiativeId: v.optional(v.union(v.id('initiatives'), v.null())),
     weekNumber: v.optional(v.number()),
     dayOfWeek: v.optional(
       v.union(
@@ -266,6 +269,7 @@ export const updateAdhocGoal = mutation({
       title,
       details,
       domainId,
+      initiativeId,
       weekNumber,
       dayOfWeek: _dayOfWeek,
       dueDate,
@@ -321,6 +325,16 @@ export const updateAdhocGoal = mutation({
       }
     }
 
+    if (initiativeId !== undefined && initiativeId !== null) {
+      const initiative = await ctx.db.get('initiatives', initiativeId);
+      if (!initiative || initiative.userId !== userId) {
+        throw new ConvexError({
+          code: 'NOT_FOUND',
+          message: 'Initiative not found or you do not have permission to use it',
+        });
+      }
+    }
+
     // Prepare goal updates
     const goalUpdates: Partial<Doc<'goals'>> = {};
     if (title !== undefined) goalUpdates.title = title.trim();
@@ -328,6 +342,9 @@ export const updateAdhocGoal = mutation({
     if (domainId !== undefined) {
       // Update domain at goal level
       goalUpdates.domainId = domainId === null ? undefined : domainId;
+    }
+    if (initiativeId !== undefined) {
+      goalUpdates.initiativeId = initiativeIdGoalPatch(initiativeId).initiativeId;
     }
     if (isComplete !== undefined) {
       goalUpdates.isComplete = isComplete;
@@ -367,6 +384,18 @@ export const updateAdhocGoal = mutation({
     }
 
     await ctx.db.patch('goals', goalId, goalUpdates);
+
+    if (initiativeId !== undefined) {
+      const updatedGoal = await ctx.db.get('goals', goalId);
+      if (updatedGoal) {
+        await propagateInitiativeToDescendants(
+          ctx,
+          updatedGoal,
+          userId,
+          initiativeId === null ? undefined : initiativeId
+        );
+      }
+    }
 
     // Update adhoc goal state if completion status changed
     if (isComplete !== undefined) {
