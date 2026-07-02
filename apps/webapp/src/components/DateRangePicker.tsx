@@ -21,6 +21,7 @@ interface DateRangePickerProps {
   className?: string;
   disabled?: boolean;
   placeholder?: string;
+  allowFutureDates?: boolean;
 }
 
 export function DateRangePicker({
@@ -29,6 +30,7 @@ export function DateRangePicker({
   className,
   disabled = false,
   placeholder = 'Select date range',
+  allowFutureDates = false,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [tempRange, setTempRange] = React.useState<DateRange>(value);
@@ -169,8 +171,8 @@ export function DateRangePicker({
                     onSelect={handleStartDateSelect}
                     defaultMonth={tempRange.startDate}
                     disabled={(date) => {
-                      // Disable future dates
-                      return date > new Date();
+                      if (!allowFutureDates && date > new Date()) return true;
+                      return false;
                     }}
                     initialFocus
                   />
@@ -183,8 +185,8 @@ export function DateRangePicker({
                     onSelect={handleEndDateSelect}
                     defaultMonth={tempRange.endDate}
                     disabled={(date) => {
-                      // Disable future dates and dates before start date
-                      return date > new Date() || date < tempRange.startDate;
+                      if (!allowFutureDates && date > new Date()) return true;
+                      return date < tempRange.startDate;
                     }}
                   />
                 </div>

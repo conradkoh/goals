@@ -24,6 +24,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CreateQuarterlyGoalDialog } from '@/components/molecules/focus/CreateQuarterlyGoalDialog';
 import {
   FocusedAdhocGoalsSection,
+  FocusedInitiativesSection,
   FocusedQuarterlyGoalsSection,
   FocusedUrgentSection,
 } from '@/components/organisms/focus/focused-view';
@@ -33,10 +34,12 @@ import { ScratchpadNewDialog } from '@/components/organisms/focus/ScratchpadNewD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { useInitiatives } from '@/hooks/useInitiatives';
 import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
+import { useSession } from '@/modules/auth/useSession';
 
 // ============================================================================
 // FocusModeFocusedView
@@ -51,6 +54,17 @@ import { getQuarterFromWeek } from '@/lib/date/iso-week';
  * ```
  */
 export function FocusModeFocusedView() {
+  const { sessionId } = useSession();
+  const {
+    initiatives,
+    createInitiative,
+    updateInitiative,
+    deleteInitiative,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useInitiatives(sessionId);
+
   // ── History dialog ─────────────────────────────────────────────────────
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCreateQuarterlyGoalOpen, setIsCreateQuarterlyGoalOpen] = useState(false);
@@ -260,6 +274,20 @@ export function FocusModeFocusedView() {
             <FocusedUrgentSection
               goals={focusedViewData.urgent}
               onToggleComplete={handleUrgentCompleteChange}
+            />
+
+            <FocusedInitiativesSection
+              initiatives={initiatives}
+              onCreate={async (args) => {
+                await createInitiative(args);
+              }}
+              onUpdate={async (id, args) => {
+                await updateInitiative(id, args);
+              }}
+              onDelete={async (id) => {
+                await deleteInitiative(id);
+              }}
+              isSubmitting={isCreating || isUpdating || isDeleting}
             />
 
             <FocusedQuarterlyGoalsSection
