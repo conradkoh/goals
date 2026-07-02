@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/fixed-size-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -163,10 +164,14 @@ export function DomainPopover({
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => {
     try {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     } catch (error) {
       console.error('Failed to update adhoc goal:', error);
     }

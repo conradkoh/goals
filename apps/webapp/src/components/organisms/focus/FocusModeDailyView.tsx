@@ -11,6 +11,7 @@ import { PendingGoalsSection } from '@/components/organisms/focus/PendingGoalsSe
 import { QuarterlyGoalsQuickSection } from '@/components/organisms/focus/QuarterlyGoalsQuickSection';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek, type WeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 
@@ -119,13 +120,23 @@ const FocusModeDailyViewInner = ({
 
   // Handlers for the OnFireGoalsSection
   const handleUpdateGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+    async (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
-          title,
-          details,
-          dueDate,
+          ...buildStructuredGoalMutationArgs({
+            title,
+            details,
+            dueDate,
+            initiativeId,
+          }),
         });
       } catch (error) {
         console.error('Failed to update goal:', error);

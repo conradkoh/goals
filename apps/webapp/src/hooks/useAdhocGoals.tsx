@@ -81,6 +81,7 @@ export function useAdhocGoals(sessionId: SessionId) {
       title?: string;
       details?: string;
       domainId?: Id<'domains'> | null;
+      initiativeId?: Id<'initiatives'> | null;
       weekNumber?: number;
       dayOfWeek?: DayOfWeek;
       dueDate?: number;

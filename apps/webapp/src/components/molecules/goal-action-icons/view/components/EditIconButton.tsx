@@ -14,8 +14,12 @@ export interface EditIconButtonProps {
   initialDueDate?: number;
   /** Initial domain ID */
   initialDomainId?: Id<'domains'> | null;
+  /** Initial initiative ID */
+  initialInitiativeId?: Id<'initiatives'> | null;
   /** Whether to show domain selector in edit popover */
   showDomainSelector?: boolean;
+  /** Whether to show initiative selector in edit popover */
+  showInitiativeSelector?: boolean;
   /** Handler for saving goal edits */
   onSave: GoalSaveHandler;
   /** Handler for tracking pending updates */
@@ -42,7 +46,9 @@ export function EditIconButton({
   details,
   initialDueDate,
   initialDomainId,
+  initialInitiativeId,
   showDomainSelector = false,
+  showInitiativeSelector = true,
   onSave,
   onUpdatePending,
   trigger,
@@ -53,7 +59,9 @@ export function EditIconButton({
       details={details}
       initialDueDate={initialDueDate}
       initialDomainId={initialDomainId}
+      initialInitiativeId={initialInitiativeId}
       showDomainSelector={showDomainSelector}
+      showInitiativeSelector={showInitiativeSelector}
       onSave={onSave}
       onUpdatePending={onUpdatePending}
       trigger={

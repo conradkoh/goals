@@ -13,7 +13,9 @@ export interface QuarterlyGoalHeaderProps {
     goalId: Id<'goals'>,
     title: string,
     details?: string,
-    dueDate?: number
+    dueDate?: number,
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
 }
 
@@ -36,8 +38,14 @@ export const QuarterlyGoalHeader = ({ goal, onUpdateGoal }: QuarterlyGoalHeaderP
   );
 
   const handleSaveGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(goal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await onUpdateGoal(goal._id, title, details, dueDate, undefined, initiativeId);
     },
     [goal._id, onUpdateGoal]
   );

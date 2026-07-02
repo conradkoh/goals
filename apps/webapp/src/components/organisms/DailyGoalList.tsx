@@ -16,6 +16,7 @@ import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeekType } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { GoalUpdateHandler } from '@/models/goal-handlers';
 
 export interface DailyGoalListProps {
   goals: GoalWithDetailsAndChildren[];
@@ -37,12 +38,7 @@ export const DailyGoalList = ({ goals, className }: DailyGoalListProps) => {
 
 export interface DailyGoalListContainerProps {
   goals: GoalWithDetailsAndChildren[];
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   className?: string;
@@ -129,12 +125,7 @@ export const DailyGoalListContainer = ({
 export interface DailyGoalGroupHeaderProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
 }
 
 export const DailyGoalGroupHeader = ({
@@ -160,15 +151,27 @@ export const DailyGoalGroupHeader = ({
   );
 
   const handleSaveWeeklyGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await onUpdateGoal(weeklyGoal._id, title, details, dueDate, undefined, initiativeId);
     },
     [weeklyGoal._id, onUpdateGoal]
   );
 
   const handleSaveQuarterlyGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await onUpdateGoal(quarterlyGoal._id, title, details, dueDate, undefined, initiativeId);
     },
     [quarterlyGoal._id, onUpdateGoal]
   );
@@ -213,12 +216,7 @@ export interface DailyGoalGroupContainerProps {
   weeklyGoal: GoalWithDetailsAndChildren;
   quarterlyGoal: GoalWithDetailsAndChildren;
   dayOfWeek: DayOfWeekType;
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateGoal: (title: string) => Promise<void>;
   isCreating?: boolean;
@@ -249,8 +247,15 @@ export const DailyGoalGroupContainer = ({
   );
 
   const handleUpdateGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(goalId, title, details, dueDate);
+    (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      return onUpdateGoal(goalId, title, details, dueDate, undefined, initiativeId);
     },
     [onUpdateGoal]
   );

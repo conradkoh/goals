@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals, useAdhocGoalsForWeek } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
 import type { DayOfWeek } from '@/lib/constants';
@@ -220,10 +221,14 @@ export function AdhocGoalsSection({
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => {
     try {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     } catch (error) {
       showErrorToast('Could not update task', error);
     }

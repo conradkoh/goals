@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import { buildAdhocDetailsOnlyArgs, buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useSession } from '@/modules/auth/useSession';
@@ -207,13 +208,17 @@ function AdhocGoalQuickViewContent({
    * @internal
    */
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number, domainId?: Id<'domains'> | null) => {
-      await updateAdhocGoal(goal._id, {
-        title,
-        details,
-        dueDate,
-        domainId: domainId === null ? null : domainId,
-      });
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [goal._id, updateAdhocGoal]
   );
@@ -247,9 +252,9 @@ function AdhocGoalQuickViewContent({
    */
   const handleDetailsChange = useCallback(
     (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+      updateAdhocGoal(goal._id, buildAdhocDetailsOnlyArgs(newDetails));
     },
-    [goal.title, goal.adhoc?.dueDate, goal.domainId, handleSave]
+    [goal._id, updateAdhocGoal]
   );
 
   /**
@@ -273,9 +278,13 @@ function AdhocGoalQuickViewContent({
       title: string,
       details?: string,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [updateAdhocGoal]
   );

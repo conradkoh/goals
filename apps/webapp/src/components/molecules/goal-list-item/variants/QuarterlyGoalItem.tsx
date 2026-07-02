@@ -102,8 +102,21 @@ function QuarterlyGoalItemContentInternal({
   );
 
   const handleSaveGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number, _domainId?: Id<'domains'> | null) => {
-      const updatePromise = onUpdateGoal(goal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      const updatePromise = onUpdateGoal(
+        goal._id,
+        title,
+        details,
+        dueDate,
+        undefined,
+        initiativeId
+      );
       setPendingUpdate(updatePromise);
       return updatePromise;
     },

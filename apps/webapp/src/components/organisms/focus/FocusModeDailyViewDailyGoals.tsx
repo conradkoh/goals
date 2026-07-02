@@ -8,6 +8,7 @@ import {
   DayContainer,
   wasCompletedToday,
 } from '@/components/molecules/day-of-week/containers/DayContainer';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek, DayOfWeekType } from '@/lib/constants';
 
@@ -261,8 +262,23 @@ export const FocusModeDailyViewDailyGoals = ({
    * @returns Promise resolving when update is complete
    */
   const handleUpdateGoalTitle = useCallback(
-    (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-      return updateQuarterlyGoalTitle({ goalId, title, details, dueDate });
+    (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      return updateQuarterlyGoalTitle({
+        goalId,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
+      });
     },
     [updateQuarterlyGoalTitle]
   );

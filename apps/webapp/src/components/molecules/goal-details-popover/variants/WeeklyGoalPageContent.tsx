@@ -8,6 +8,7 @@
  */
 
 import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
 import { DateTime } from 'luxon';
 import { useMemo, useState, useCallback } from 'react';
@@ -39,6 +40,7 @@ import {
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
@@ -84,14 +86,23 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
   const hasChildren = goal.children && goal.children.length > 0;
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       if (!sessionId) return;
       await updateGoalTitleMutation({
         sessionId,
         goalId: goal._id,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [goal._id, sessionId, updateGoalTitleMutation]

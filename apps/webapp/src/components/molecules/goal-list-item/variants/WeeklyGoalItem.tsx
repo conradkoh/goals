@@ -1,3 +1,4 @@
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback } from 'react';
 
 import {
@@ -82,8 +83,21 @@ function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
    * Handles updating the goal title and details.
    */
   const handleUpdateGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      const updatePromise = onUpdateGoal(goal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      const updatePromise = onUpdateGoal(
+        goal._id,
+        title,
+        details,
+        dueDate,
+        undefined,
+        initiativeId
+      );
       setPendingUpdate(updatePromise);
       return updatePromise;
     },

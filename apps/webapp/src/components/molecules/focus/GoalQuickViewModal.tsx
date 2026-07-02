@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { resolveGoalType } from '@/domain/goal-actions';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
@@ -136,12 +137,21 @@ function GoalQuickViewContentInternal({
   const hasChildren = goal.children && goal.children.length > 0;
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       await goalActions.updateQuarterlyGoalTitle({
         goalId: goal._id,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [goal._id, goalActions]

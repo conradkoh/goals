@@ -1,3 +1,4 @@
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback } from 'react';
 
 import {
@@ -117,8 +118,21 @@ function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInterna
    * Handles updating the goal title and details.
    */
   const handleUpdateGoal = useCallback(
-    async (newTitle: string, newDetails?: string, dueDate?: number) => {
-      const updatePromise = onUpdateGoal(goal._id, newTitle, newDetails, dueDate);
+    async (
+      newTitle: string,
+      newDetails?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      const updatePromise = onUpdateGoal(
+        goal._id,
+        newTitle,
+        newDetails,
+        dueDate,
+        undefined,
+        initiativeId
+      );
       setPendingUpdate(updatePromise);
       return updatePromise;
     },

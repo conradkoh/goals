@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 
 /**
  * Props for the AdhocGoalList component.
@@ -40,6 +41,7 @@ export interface AdhocGoalListProps {
       title?: string;
       details?: string;
       domainId?: Id<'domains'> | null;
+      initiativeId?: Id<'initiatives'> | null;
       weekNumber?: number;
       dayOfWeek?: DayOfWeek;
       dueDate?: number;
@@ -164,12 +166,16 @@ export function AdhocGoalList({
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => {
     if (!onUpdateGoal) return;
 
     try {
-      await onUpdateGoal(goalId, { title, details, dueDate, domainId });
+      await onUpdateGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     } catch (error) {
       console.error('Failed to update adhoc goal:', error);
     }

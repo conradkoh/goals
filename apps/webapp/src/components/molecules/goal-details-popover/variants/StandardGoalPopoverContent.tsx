@@ -7,6 +7,7 @@
  * @module
  */
 
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useState, useCallback } from 'react';
 
 import {
@@ -34,6 +35,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import {
+  buildStructuredDetailsOnlyArgs,
+  buildStructuredGoalMutationArgs,
+} from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
 import { useWeek } from '@/hooks/useWeek';
@@ -138,12 +143,21 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
   }, [newWeeklyGoalTitle, goal._id, createWeeklyGoalOptimistic]);
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       await goalActions.updateQuarterlyGoalTitle({
         goalId: goal._id,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [goal._id, goalActions]
@@ -162,9 +176,10 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
 
   const handleDetailsChange = useCallback(
     (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.dueDate);
+      const fields = buildStructuredDetailsOnlyArgs(goal, newDetails);
+      handleSave(fields.title, fields.details, fields.dueDate);
     },
-    [goal.title, goal.dueDate, handleSave]
+    [goal, handleSave]
   );
 
   const hasChildren = goal.children && goal.children.length > 0;

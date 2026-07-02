@@ -155,9 +155,9 @@ function AdhocGoalPopoverContentInner({
   // Handler for updating goal details when task list items are toggled
   const handleDetailsChange = useCallback(
     (newDetails: string) => {
-      onSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+      onSave(goal.title, newDetails, goal.adhoc?.dueDate);
     },
-    [onSave, goal.title, goal.adhoc?.dueDate, goal.domainId]
+    [onSave, goal.title, goal.adhoc?.dueDate]
   );
 
   // Shared content for both popover and fullscreen modes

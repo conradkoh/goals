@@ -30,6 +30,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { type GoalWithOptimisticStatus, useWeek } from '@/hooks/useWeek';
 import { getDueDateStyle } from '@/lib/date/getDueDateStyle';
@@ -66,7 +67,9 @@ const WeeklyGoal = ({
     goalId: Id<'goals'>,
     title: string,
     details?: string,
-    dueDate?: number
+    dueDate?: number,
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
 }) => {
   const { goal } = useGoalContext();
@@ -147,8 +150,8 @@ const WeeklyGoal = ({
 
             {/* View Mode - WeeklyGoalPopover gets goal from context */}
             <WeeklyGoalPopover
-              onSave={async (title, details, dueDate) => {
-                await onUpdateGoal(goal._id, title, details, dueDate);
+              onSave={async (title, details, dueDate, _domainId, initiativeId) => {
+                await onUpdateGoal(goal._id, title, details, dueDate, undefined, initiativeId);
               }}
               triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
               titleClassName={cn(
@@ -167,9 +170,17 @@ const WeeklyGoal = ({
                     title={goal.title}
                     details={goal.details}
                     initialDueDate={goal.dueDate}
-                    onSave={async (title, details, dueDate) => {
-                      await onUpdateGoal(goal._id, title, details, dueDate);
+                    onSave={async (title, details, dueDate, _domainId, initiativeId) => {
+                      await onUpdateGoal(
+                        goal._id,
+                        title,
+                        details,
+                        dueDate,
+                        undefined,
+                        initiativeId
+                      );
                     }}
+                    initialInitiativeId={goal.initiativeId ?? null}
                     trigger={
                       <button
                         type="button"
@@ -234,7 +245,9 @@ const WeeklyGoalGroup = ({
     goalId: Id<'goals'>,
     title: string,
     details?: string,
-    dueDate?: number
+    dueDate?: number,
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
 }) => {
   const [isCreating, setIsCreating] = useState(false);
@@ -357,13 +370,23 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
     }, [quarterlyGoals]);
 
     const handleUpdateWeeklyGoal = useCallback(
-      async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+      async (
+        goalId: Id<'goals'>,
+        title: string,
+        details?: string,
+        dueDate?: number,
+        _domainId?: Id<'domains'> | null,
+        initiativeId?: Id<'initiatives'> | null
+      ) => {
         try {
           await updateQuarterlyGoalTitle({
             goalId,
-            title,
-            details,
-            dueDate,
+            ...buildStructuredGoalMutationArgs({
+              title,
+              details,
+              dueDate,
+              initiativeId,
+            }),
           });
         } catch (error) {
           console.error('Failed to update weekly goal:', error);
@@ -442,8 +465,15 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                     >
                       <GoalProvider goal={goal}>
                         <QuarterlyGoalPopover
-                          onSave={async (title, details, dueDate) => {
-                            await handleUpdateWeeklyGoal(goal._id, title, details, dueDate);
+                          onSave={async (title, details, dueDate, _domainId, initiativeId) => {
+                            await handleUpdateWeeklyGoal(
+                              goal._id,
+                              title,
+                              details,
+                              dueDate,
+                              undefined,
+                              initiativeId
+                            );
                           }}
                           triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full font-semibold"
                           titleClassName={cn(

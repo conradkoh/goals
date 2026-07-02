@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { useGoalStatus } from '@/contexts/GoalStatusContext';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useWeek } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
@@ -177,8 +178,15 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
   }, [pendingGoals, adhocGoals, weekNumber]);
 
   const handleUpdateGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(goalId, title, details, dueDate);
+    async (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await onUpdateGoal(goalId, title, details, dueDate, undefined, initiativeId);
     },
     [onUpdateGoal]
   );
@@ -189,9 +197,13 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
       title: string,
       details?: string,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [updateAdhocGoal]
   );

@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
+import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,6 +15,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { toast } from '@/components/ui/use-toast';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import { useInitiatives } from '@/hooks/useInitiatives';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -27,7 +29,8 @@ export interface GoalEditModalProps {
     title: string,
     details: string | undefined,
     dueDate: number | undefined,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
   /** Callback when modal is closed */
   onClose: () => void;
@@ -49,10 +52,14 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
   const [editDetails, setEditDetails] = useState('');
   const [editDueDate, setEditDueDate] = useState<Date | undefined>(undefined);
   const [editDomainId, setEditDomainId] = useState<Id<'domains'> | null | undefined>(undefined);
+  const [editInitiativeId, setEditInitiativeId] = useState<Id<'initiatives'> | null | undefined>(
+    undefined
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
+  const { initiatives } = useInitiatives(sessionId);
 
   // Check if the goal is an adhoc goal (depth === -1)
   const isAdhocGoal = goal?.depth === -1;
@@ -64,6 +71,7 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
       setEditDetails(goal.details || '');
       setEditDueDate(goal.dueDate ? new Date(goal.dueDate) : undefined);
       setEditDomainId(goal.domainId || null);
+      setEditInitiativeId(goal.initiativeId ?? null);
       setHasInitialized(true);
     }
   }, [isOpen, goal, hasInitialized]);
@@ -92,13 +100,14 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
 
     setIsSubmitting(true);
     try {
-      await onSave(trimmedTitle, editDetails, dueDateTimestamp, editDomainId);
+      await onSave(trimmedTitle, editDetails, dueDateTimestamp, editDomainId, editInitiativeId);
       onClose();
       // Clear form state after successful save
       setEditTitle('');
       setEditDetails('');
       setEditDueDate(undefined);
       setEditDomainId(undefined);
+      setEditInitiativeId(undefined);
       setHasInitialized(false);
     } catch (error) {
       console.error('[GoalEditModal] Failed to save goal:', error);
@@ -110,7 +119,17 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
     } finally {
       setIsSubmitting(false);
     }
-  }, [goal, isSubmitting, editTitle, editDueDate, editDetails, editDomainId, onSave, onClose]);
+  }, [
+    goal,
+    isSubmitting,
+    editTitle,
+    editDueDate,
+    editDetails,
+    editDomainId,
+    editInitiativeId,
+    onSave,
+    onClose,
+  ]);
 
   const handleKeyDown = useFormSubmitShortcut({
     onSubmit: handleSave,
@@ -187,6 +206,17 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
                 )}
               </PopoverContent>
             </Popover>
+          </div>
+          <div className="space-y-2">
+            {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with InitiativeSelector below */}
+            <label className="text-sm font-medium">Initiative</label>
+            <InitiativeSelector
+              initiatives={initiatives}
+              selectedInitiativeId={editInitiativeId === null ? null : editInitiativeId}
+              onInitiativeChange={(id) => setEditInitiativeId(id as Id<'initiatives'> | null)}
+              placeholder="Tag to an initiative..."
+              className="w-full"
+            />
           </div>
           {isAdhocGoal && (
             <div className="space-y-2">
