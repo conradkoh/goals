@@ -33,9 +33,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
-import { buildAdhocDetailsOnlyArgs, buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -151,12 +152,7 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
 
   const isBacklog = (goal as unknown as { isBacklog?: boolean }).isBacklog || false;
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      updateAdhocGoal(goal._id, buildAdhocDetailsOnlyArgs(newDetails));
-    },
-    [goal._id, updateAdhocGoal]
-  );
+  const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
 
   const handleChildCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {

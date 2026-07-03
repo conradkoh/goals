@@ -35,12 +35,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
-import {
-  buildStructuredDetailsOnlyArgs,
-  buildStructuredGoalMutationArgs,
-} from '@/domain/goal-updates';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
@@ -174,13 +172,7 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
     }
   }, [goal._id, weekNumber, isComplete, goalActions, onComplete]);
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      const fields = buildStructuredDetailsOnlyArgs(goal, newDetails);
-      handleSave(fields.title, fields.details, fields.dueDate);
-    },
-    [goal, handleSave]
-  );
+  const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
 
   const hasChildren = goal.children && goal.children.length > 0;
 

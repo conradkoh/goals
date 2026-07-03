@@ -37,6 +37,7 @@ import { resolveGoalType } from '@/domain/goal-actions';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 
@@ -165,13 +166,7 @@ function GoalQuickViewContentInternal({
     });
   }, [goal._id, weekNumber, isComplete, goalActions]);
 
-  // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.dueDate);
-    },
-    [goal.title, goal.dueDate, handleSave]
-  );
+  const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
 
   // Handler for creating weekly goals (from quarterly goal)
   const handleCreateWeeklyGoal = useCallback(async () => {

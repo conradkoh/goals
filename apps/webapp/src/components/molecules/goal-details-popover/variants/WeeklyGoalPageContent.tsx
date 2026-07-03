@@ -42,6 +42,7 @@ import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -119,12 +120,7 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
     }
   }, [goal._id, weekNumber, isComplete, toggleGoalCompletion, onComplete]);
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.dueDate);
-    },
-    [goal.title, goal.dueDate, handleSave]
-  );
+  const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
 
   const handleCreateDailyGoal = useCallback(async () => {
     const trimmedTitle = newDailyGoalTitle.trim();

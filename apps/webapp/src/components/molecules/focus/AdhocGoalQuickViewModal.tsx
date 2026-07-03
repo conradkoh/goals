@@ -27,9 +27,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
-import { buildAdhocDetailsOnlyArgs, buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -246,16 +247,7 @@ function AdhocGoalQuickViewContent({
     [goal._id, updateAdhocGoal]
   );
 
-  /**
-   * Updates goal details when task list checkboxes are toggled.
-   * @internal
-   */
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      updateAdhocGoal(goal._id, buildAdhocDetailsOnlyArgs(newDetails));
-    },
-    [goal._id, updateAdhocGoal]
-  );
+  const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
 
   /**
    * Toggles completion status for a child adhoc goal.
