@@ -6,7 +6,7 @@ import { Flag, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react';
 
-import { DateRangePicker, type DateRange } from '@/components/DateRangePicker';
+import { DatePicker } from '@/components/DatePicker';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { normalizeInitiativeDateRange } from '@/lib/date/initiative-dates';
+import { normalizeInitiativeDates } from '@/lib/date/initiative-dates';
 
 // fallow-ignore-next-line complexity
 function getInitiativeErrorDetails(error: unknown): { code?: string; message?: string } {
@@ -55,25 +55,30 @@ export interface InitiativeFormDialogProps {
     title: string;
     description?: string;
     startDate: number;
-    endDate: number;
+    endDate?: number;
   }) => Promise<void>;
   onUpdate: (
     initiativeId: Id<'initiatives'>,
-    args: { title: string; description?: string; startDate: number; endDate: number }
+    args: { title: string; description?: string; startDate: number; endDate: number | null }
   ) => Promise<void>;
   onDelete?: (initiativeId: Id<'initiatives'>) => Promise<void>;
   isSubmitting?: boolean;
 }
 
-function getDefaultDateRange(): DateRange {
+type InitiativeFormDates = {
+  startDate: Date;
+  endDate: Date | undefined;
+};
+
+function getDefaultDates(): InitiativeFormDates {
   const today = DateTime.now().startOf('day').toJSDate();
-  return { startDate: today, endDate: today };
+  return { startDate: today, endDate: undefined };
 }
 
-function initiativeToDateRange(initiative: Doc<'initiatives'>): DateRange {
+function initiativeToDates(initiative: Doc<'initiatives'>): InitiativeFormDates {
   return {
     startDate: DateTime.fromMillis(initiative.startDate).toJSDate(),
-    endDate: DateTime.fromMillis(initiative.endDate).toJSDate(),
+    endDate: initiative.endDate ? DateTime.fromMillis(initiative.endDate).toJSDate() : undefined,
   };
 }
 
@@ -90,7 +95,8 @@ export function InitiativeFormDialog({
   const isEditMode = Boolean(initiative);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
+  const [startDate, setStartDate] = useState<Date>(getDefaultDates().startDate);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -98,7 +104,9 @@ export function InitiativeFormDialog({
     if (!open) {
       setTitle('');
       setDescription('');
-      setDateRange(getDefaultDateRange());
+      const defaults = getDefaultDates();
+      setStartDate(defaults.startDate);
+      setEndDate(defaults.endDate);
       setShowDeleteConfirm(false);
       return;
     }
@@ -106,11 +114,15 @@ export function InitiativeFormDialog({
     if (initiative) {
       setTitle(initiative.title);
       setDescription(initiative.description ?? '');
-      setDateRange(initiativeToDateRange(initiative));
+      const dates = initiativeToDates(initiative);
+      setStartDate(dates.startDate);
+      setEndDate(dates.endDate);
     } else {
       setTitle('');
       setDescription('');
-      setDateRange(getDefaultDateRange());
+      const defaults = getDefaultDates();
+      setStartDate(defaults.startDate);
+      setEndDate(defaults.endDate);
     }
   }, [open, initiative]);
 
@@ -126,21 +138,26 @@ export function InitiativeFormDialog({
     const trimmedTitle = title.trim();
     if (!trimmedTitle || isSubmitting) return;
 
-    const { startDate, endDate } = normalizeInitiativeDateRange(
-      dateRange.startDate,
-      dateRange.endDate
-    );
-    const payload = {
-      title: trimmedTitle,
-      description: description.trim() || undefined,
+    const { startDate: normalizedStart, endDate: normalizedEnd } = normalizeInitiativeDates(
       startDate,
-      endDate,
-    };
+      endDate
+    );
 
     try {
       if (isEditMode && initiative) {
-        await onUpdate(initiative._id, payload);
+        await onUpdate(initiative._id, {
+          title: trimmedTitle,
+          description: description.trim() || undefined,
+          startDate: normalizedStart,
+          endDate: endDate === undefined ? null : (normalizedEnd ?? null),
+        });
       } else {
+        const payload = {
+          title: trimmedTitle,
+          description: description.trim() || undefined,
+          startDate: normalizedStart,
+          ...(normalizedEnd !== undefined ? { endDate: normalizedEnd } : {}),
+        };
         await onCreate(payload);
       }
       handleOpenChange(false);
@@ -188,7 +205,7 @@ export function InitiativeFormDialog({
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? 'Update this initiative’s title, description, or date range.'
+                ? 'Update this initiative’s title, description, or dates.'
                 : 'Group goals across quarters with a date-bounded initiative.'}
             </DialogDescription>
           </DialogHeader>
@@ -214,12 +231,27 @@ export function InitiativeFormDialog({
               />
             </div>
             <div className="grid gap-2">
-              <Label>Date range</Label>
-              <DateRangePicker
-                value={dateRange}
-                onChange={setDateRange}
+              <Label>Start date</Label>
+              <DatePicker
+                value={startDate}
+                onChange={(date) => {
+                  if (!date) return;
+                  setStartDate(date);
+                  if (endDate && endDate < date) setEndDate(undefined);
+                }}
                 allowFutureDates
-                placeholder="Select initiative dates"
+                placeholder="Select start date"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>End date (optional)</Label>
+              <DatePicker
+                value={endDate}
+                onChange={setEndDate}
+                allowFutureDates
+                clearable
+                minDate={startDate}
+                placeholder="No end date"
               />
             </div>
           </div>

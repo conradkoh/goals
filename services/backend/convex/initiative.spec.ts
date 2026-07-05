@@ -42,6 +42,41 @@ describe('initiative', () => {
     ).rejects.toThrow(ConvexError);
   });
 
+  test('createInitiative without endDate succeeds', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Ongoing Initiative',
+      startDate: 1_700_000_000_000,
+    });
+
+    const initiative = await ctx.run(async (dbCtx) => dbCtx.db.get('initiatives', initiativeId));
+    expect(initiative?.endDate).toBeUndefined();
+  });
+
+  test('updateInitiative with endDate null clears end date', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Bounded Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_086_400_000,
+    });
+
+    await ctx.mutation(api.initiative.updateInitiative, {
+      sessionId,
+      initiativeId,
+      endDate: null,
+    });
+
+    const initiative = await ctx.run(async (dbCtx) => dbCtx.db.get('initiatives', initiativeId));
+    expect(initiative?.endDate).toBeUndefined();
+  });
+
   test('updateInitiative rejects empty title', async () => {
     const ctx = convexTest(schema);
     const sessionId = await createTestSession(ctx);

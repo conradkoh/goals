@@ -286,7 +286,7 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     startDate: v.number(), // Unix ms (start of day)
-    endDate: v.number(), // Unix ms (end of day)
+    endDate: v.optional(v.number()), // Unix ms (end of day); omitted = ongoing
   }).index('by_user', ['userId']),
 
   /**

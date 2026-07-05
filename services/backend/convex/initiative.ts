@@ -27,7 +27,7 @@ function buildInitiativeUpdates(
     title?: string;
     description?: string;
     startDate?: number;
-    endDate?: number;
+    endDate?: number | null;
   },
   initiative: Doc<'initiatives'>
 ): Partial<Doc<'initiatives'>> {
@@ -35,11 +35,18 @@ function buildInitiativeUpdates(
   if (args.title !== undefined) updates.title = args.title.trim();
   if (args.description !== undefined) updates.description = args.description?.trim();
   if (args.startDate !== undefined) updates.startDate = args.startDate;
-  if (args.endDate !== undefined) updates.endDate = args.endDate;
+  if (args.endDate !== undefined) {
+    updates.endDate = args.endDate === null ? undefined : args.endDate;
+  }
 
   const nextStart = args.startDate ?? initiative.startDate;
-  const nextEnd = args.endDate ?? initiative.endDate;
-  if (nextStart > nextEnd) {
+  const nextEnd =
+    args.endDate !== undefined
+      ? args.endDate === null
+        ? undefined
+        : args.endDate
+      : initiative.endDate;
+  if (nextEnd !== undefined && nextStart > nextEnd) {
     throw new ConvexError({
       code: 'INVALID_ARGUMENT',
       message: 'Start date must be on or before end date',
@@ -61,8 +68,9 @@ export const createInitiative = mutation({
     title: v.string(),
     description: v.optional(v.string()),
     startDate: v.number(),
-    endDate: v.number(),
+    endDate: v.optional(v.number()),
   },
+  // fallow-ignore-next-line complexity
   handler: async (ctx, args): Promise<Id<'initiatives'>> => {
     const { sessionId, title, description, startDate, endDate } = args;
     const user = await requireLogin(ctx, sessionId);
@@ -75,7 +83,7 @@ export const createInitiative = mutation({
         message: 'Initiative title cannot be empty',
       });
     }
-    if (startDate > endDate) {
+    if (endDate !== undefined && startDate > endDate) {
       throw new ConvexError({
         code: 'INVALID_ARGUMENT',
         message: 'Start date must be on or before end date',
@@ -87,7 +95,7 @@ export const createInitiative = mutation({
       title: trimmedTitle,
       description: description?.trim(),
       startDate,
-      endDate,
+      ...(endDate !== undefined ? { endDate } : {}),
     });
   },
 });
@@ -99,7 +107,7 @@ export const updateInitiative = mutation({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     startDate: v.optional(v.number()),
-    endDate: v.optional(v.number()),
+    endDate: v.optional(v.union(v.number(), v.null())),
   },
   handler: async (ctx, args): Promise<void> => {
     const { sessionId, initiativeId, title, description, startDate, endDate } = args;

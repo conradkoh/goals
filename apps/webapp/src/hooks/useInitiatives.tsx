@@ -19,7 +19,7 @@ export function useInitiatives(sessionId: SessionId) {
     title: string;
     description?: string;
     startDate: number;
-    endDate: number;
+    endDate?: number;
   }): Promise<Id<'initiatives'>> => {
     setIsCreating(true);
     try {
@@ -35,7 +35,7 @@ export function useInitiatives(sessionId: SessionId) {
       title?: string;
       description?: string;
       startDate?: number;
-      endDate?: number;
+      endDate?: number | null;
     }
   ): Promise<void> => {
     setIsUpdating(true);
