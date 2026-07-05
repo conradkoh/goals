@@ -4,7 +4,7 @@ import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { ConvexError } from 'convex/values';
 import { Flag, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { DatePicker } from '@/components/DatePicker';
 import {
@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { normalizeInitiativeDates } from '@/lib/date/initiative-dates';
 
 // fallow-ignore-next-line complexity
@@ -134,9 +135,9 @@ export function InitiativeFormDialog({
   };
 
   // fallow-ignore-next-line complexity
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     const trimmedTitle = title.trim();
-    if (!trimmedTitle || isSubmitting) return;
+    if (!trimmedTitle || isSubmitting || isDeleting) return;
 
     const { startDate: normalizedStart, endDate: normalizedEnd } = normalizeInitiativeDates(
       startDate,
@@ -160,7 +161,8 @@ export function InitiativeFormDialog({
         };
         await onCreate(payload);
       }
-      handleOpenChange(false);
+      setShowDeleteConfirm(false);
+      onOpenChange(false);
     } catch (error) {
       console.error('Failed to save initiative:', error);
       toast({
@@ -169,6 +171,30 @@ export function InitiativeFormDialog({
         description: getInitiativeErrorDetails(error).message ?? 'Please try again.',
       });
     }
+  }, [
+    title,
+    isSubmitting,
+    isDeleting,
+    startDate,
+    endDate,
+    isEditMode,
+    initiative,
+    onUpdate,
+    onCreate,
+    onOpenChange,
+    description,
+  ]);
+
+  const isSubmitDisabled = !title.trim() || isSubmitting || isDeleting;
+
+  const handleFormShortcut = useFormSubmitShortcut({
+    onSubmit: () => void handleSubmit(),
+    disabled: isSubmitDisabled,
+  });
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    void handleSubmit();
   };
 
   // fallow-ignore-next-line complexity
@@ -209,80 +235,84 @@ export function InitiativeFormDialog({
                 : 'Group goals across quarters with a date-bounded initiative.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="initiative-title">Title</Label>
-              <Input
-                id="initiative-title"
-                placeholder="What are you focusing on?"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                autoFocus
-              />
+          <form onSubmit={handleFormSubmit} onKeyDown={handleFormShortcut}>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="initiative-title">Title</Label>
+                <Input
+                  id="initiative-title"
+                  placeholder="What are you focusing on?"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="initiative-description">Description (optional)</Label>
+                <Textarea
+                  id="initiative-description"
+                  placeholder="Add context for this initiative..."
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  onKeyDown={handleFormShortcut}
+                  rows={3}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Start date</Label>
+                <DatePicker
+                  value={startDate}
+                  onChange={(date) => {
+                    if (!date) return;
+                    setStartDate(date);
+                    if (endDate && endDate < date) setEndDate(undefined);
+                  }}
+                  allowFutureDates
+                  placeholder="Select start date"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>End date (optional)</Label>
+                <DatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  allowFutureDates
+                  clearable
+                  minDate={startDate}
+                  placeholder="No end date"
+                />
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="initiative-description">Description (optional)</Label>
-              <Textarea
-                id="initiative-description"
-                placeholder="Add context for this initiative..."
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                rows={3}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Start date</Label>
-              <DatePicker
-                value={startDate}
-                onChange={(date) => {
-                  if (!date) return;
-                  setStartDate(date);
-                  if (endDate && endDate < date) setEndDate(undefined);
-                }}
-                allowFutureDates
-                placeholder="Select start date"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>End date (optional)</Label>
-              <DatePicker
-                value={endDate}
-                onChange={setEndDate}
-                allowFutureDates
-                clearable
-                minDate={startDate}
-                placeholder="No end date"
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2">
-            {isEditMode && onDelete ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isSubmitting || isDeleting}
-              >
-                <Trash2 className="h-4 w-4 mr-1.5" />
-                Delete
-              </Button>
-            ) : (
-              <span />
-            )}
-            <div className="flex gap-2 sm:ml-auto">
-              <Button
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isSubmitting || isDeleting}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit} disabled={!title.trim() || isSubmitting || isDeleting}>
-                {isSubmitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Initiative'}
-              </Button>
-            </div>
-          </DialogFooter>
+            <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2">
+              {isEditMode && onDelete ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-1.5" />
+                  Delete
+                </Button>
+              ) : (
+                <span />
+              )}
+              <div className="flex gap-2 sm:ml-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isSubmitting || isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitDisabled}>
+                  {isSubmitting ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Initiative'}
+                </Button>
+              </div>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 

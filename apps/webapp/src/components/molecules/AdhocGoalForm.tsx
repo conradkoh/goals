@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { cn } from '@/lib/utils';
 
 /**
@@ -89,8 +90,8 @@ export function AdhocGoalForm({
   /**
    * Handles form submission.
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     if (!title.trim()) return;
 
@@ -110,6 +111,11 @@ export function AdhocGoalForm({
     }
   };
 
+  const handleFormShortcut = useFormSubmitShortcut({
+    onSubmit: () => void handleSubmit(),
+    disabled: !title.trim() || isSubmitting,
+  });
+
   /**
    * Handles creating a new domain from within the selector.
    */
@@ -123,7 +129,11 @@ export function AdhocGoalForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={cn('space-y-4', className)}>
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={handleFormShortcut}
+      className={cn('space-y-4', className)}
+    >
       <div>
         <Label htmlFor="title">Title *</Label>
         <Input
@@ -141,6 +151,7 @@ export function AdhocGoalForm({
           id="details"
           value={details}
           onChange={(e) => setDetails(e.target.value)}
+          onKeyDown={handleFormShortcut}
           placeholder="Add more details about this task..."
           rows={3}
         />
