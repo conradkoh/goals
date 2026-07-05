@@ -210,6 +210,38 @@ function sortGoalsByGroup(group: InitiativeGoalGroup, goals: Doc<'goals'>[]): Do
   );
 }
 
+export const getInitiativeGoalCounts = query({
+  args: { ...SessionIdArg },
+  handler: async (ctx, args): Promise<Record<string, { total: number; open: number }>> => {
+    const { sessionId } = args;
+    const user = await requireLogin(ctx, sessionId);
+
+    const initiatives = await ctx.db
+      .query('initiatives')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    const counts: Record<string, { total: number; open: number }> = {};
+
+    await Promise.all(
+      initiatives.map(async (initiative) => {
+        const goals = await ctx.db
+          .query('goals')
+          .withIndex('by_user_and_initiative', (q) =>
+            q.eq('userId', user._id).eq('initiativeId', initiative._id)
+          )
+          .collect();
+        counts[initiative._id] = {
+          total: goals.length,
+          open: goals.filter((g) => !g.isComplete).length,
+        };
+      })
+    );
+
+    return counts;
+  },
+});
+
 export const getGoalsByInitiative = query({
   args: {
     ...SessionIdArg,

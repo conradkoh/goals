@@ -400,4 +400,54 @@ describe('initiative', () => {
       })
     ).rejects.toThrow(ConvexError);
   });
+
+  test('getInitiativeGoalCounts returns total and open counts per initiative', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Counted Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Open Goal',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+    const doneGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Done Goal',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    await ctx.mutation(api.dashboard.updateQuarterlyGoalTitle, {
+      sessionId,
+      goalId: quarterlyGoalId,
+      title: 'Open Goal',
+      initiativeId,
+    });
+    await ctx.mutation(api.dashboard.updateQuarterlyGoalTitle, {
+      sessionId,
+      goalId: doneGoalId,
+      title: 'Done Goal',
+      initiativeId,
+    });
+    await ctx.mutation(api.dashboard.toggleGoalCompletion, {
+      sessionId,
+      goalId: doneGoalId,
+      weekNumber: 1,
+      isComplete: true,
+    });
+
+    const counts = await ctx.query(api.initiative.getInitiativeGoalCounts, { sessionId });
+
+    expect(counts[initiativeId]).toEqual({ total: 2, open: 1 });
+  });
 });

@@ -4,9 +4,14 @@ import { api } from '@workspace/backend/convex/_generated/api';
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { CheckCircle2, Circle, Flag, Pencil } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+  CollapsibleMinimal,
+  CollapsibleMinimalContent,
+  CollapsibleMinimalTrigger,
+} from '@/components/ui/collapsible-minimal';
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   FixedSizeDialog,
@@ -16,11 +21,16 @@ import {
 } from '@/components/ui/fixed-size-dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatInitiativeDateRange, getInitiativeDateStatus } from '@/lib/date/initiative-dates';
 import {
-  formatInitiativeDateRange,
-  getInitiativeDateStatus,
-  type InitiativeDateStatus,
-} from '@/lib/date/initiative-dates';
+  formatInitiativeGoalsTabLabel,
+  getDefaultInitiativeGoalsTab,
+  getEmptyTabMessage,
+  getOpenWorkSummary,
+  partitionGoalsOpenCompleted,
+  type InitiativeGoalsTab,
+} from '@/lib/initiative/initiative-details-goals';
+import { initiativeStatusBadge } from '@/lib/initiative/initiative-status-badge';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -30,18 +40,6 @@ export interface InitiativeDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onEdit: (initiative: Doc<'initiatives'>) => void;
 }
-
-const statusBadge: Record<InitiativeDateStatus, { label: string; className: string }> = {
-  active: {
-    label: 'Active',
-    className: 'bg-green-50 text-green-800 dark:bg-green-950/30 dark:text-green-400',
-  },
-  upcoming: {
-    label: 'Upcoming',
-    className: 'bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400',
-  },
-  ended: { label: 'Ended', className: 'bg-muted text-muted-foreground' },
-};
 
 function formatQuarterlyGoalLabel(goal: Doc<'goals'>): string {
   return `Q${goal.quarter} ${goal.year}`;
@@ -83,6 +81,7 @@ function GoalListItem({ goal, contextLabel }: { goal: Doc<'goals'>; contextLabel
   );
 }
 
+// fallow-ignore-next-line complexity
 function GoalTabPanel({
   goals,
   emptyMessage,
@@ -95,12 +94,37 @@ function GoalTabPanel({
   if (goals.length === 0) {
     return <p className="px-4 py-8 text-sm text-center text-muted-foreground">{emptyMessage}</p>;
   }
+
+  const { open, completed } = partitionGoalsOpenCompleted(goals);
+
+  if (open.length === 0) {
+    return <p className="px-4 py-8 text-sm text-center text-muted-foreground">{emptyMessage}</p>;
+  }
+
   return (
-    <ul className="space-y-1 overflow-y-auto px-2">
-      {goals.map((goal) => (
-        <GoalListItem key={goal._id} goal={goal} contextLabel={getContextLabel(goal)} />
-      ))}
-    </ul>
+    <div className="space-y-2">
+      <ul className="space-y-1 overflow-y-auto px-2">
+        {open.map((goal) => (
+          <GoalListItem key={goal._id} goal={goal} contextLabel={getContextLabel(goal)} />
+        ))}
+      </ul>
+      {completed.length > 0 && (
+        <div className="px-2 pb-2">
+          <CollapsibleMinimal>
+            <CollapsibleMinimalTrigger>
+              {completed.length} completed goal{completed.length === 1 ? '' : 's'}
+            </CollapsibleMinimalTrigger>
+            <CollapsibleMinimalContent>
+              <ul className="space-y-1">
+                {completed.map((goal) => (
+                  <GoalListItem key={goal._id} goal={goal} contextLabel={getContextLabel(goal)} />
+                ))}
+              </ul>
+            </CollapsibleMinimalContent>
+          </CollapsibleMinimal>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -116,6 +140,14 @@ export function InitiativeDetailsDialog({
     api.initiative.getGoalsByInitiative,
     open && initiative ? { sessionId, initiativeId: initiative._id } : 'skip'
   );
+  const [activeTab, setActiveTab] = useState<InitiativeGoalsTab>('quarterly');
+
+  useEffect(() => {
+    if (!open) return;
+    if (goalsByType) {
+      setActiveTab(getDefaultInitiativeGoalsTab(goalsByType));
+    }
+  }, [open, initiative?._id, goalsByType]);
 
   const totalCount = useMemo(() => {
     if (!goalsByType) return 0;
@@ -127,10 +159,24 @@ export function InitiativeDetailsDialog({
     );
   }, [goalsByType]);
 
+  const openWorkSummary = useMemo(() => {
+    if (!goalsByType) return null;
+    return getOpenWorkSummary(goalsByType);
+  }, [goalsByType]);
+
+  const titleCountLabel = useMemo(() => {
+    if (!openWorkSummary) return null;
+    if (openWorkSummary.totalOpen > 0) {
+      return `${openWorkSummary.totalOpen} open`;
+    }
+    if (totalCount > 0) return `${totalCount} done`;
+    return null;
+  }, [openWorkSummary, totalCount]);
+
   if (!initiative) return null;
 
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
-  const badge = statusBadge[status];
+  const badge = initiativeStatusBadge[status];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,7 +188,9 @@ export function InitiativeDetailsDialog({
           <div className="flex items-center gap-2 min-w-0">
             <Flag className="h-4 w-4 text-primary flex-shrink-0" />
             <span className="truncate">{initiative.title}</span>
-            <span className="text-xs font-normal text-muted-foreground">({totalCount})</span>
+            {titleCountLabel && (
+              <span className="text-xs font-normal text-muted-foreground">({titleCountLabel})</span>
+            )}
           </div>
           <Button
             type="button"
@@ -175,6 +223,24 @@ export function InitiativeDetailsDialog({
                 {initiative.description}
               </p>
             )}
+            {openWorkSummary && openWorkSummary.totalOpen > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {openWorkSummary.totalOpen} open goal{openWorkSummary.totalOpen === 1 ? '' : 's'}
+                {(openWorkSummary.openQuarterly > 0 || openWorkSummary.openAdhoc > 0) && (
+                  <span>
+                    {' '}
+                    —{' '}
+                    {[
+                      openWorkSummary.openQuarterly > 0 &&
+                        `${openWorkSummary.openQuarterly} quarterly`,
+                      openWorkSummary.openAdhoc > 0 && `${openWorkSummary.openAdhoc} adhoc`,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </span>
+                )}
+              </p>
+            )}
           </div>
 
           {goalsByType === undefined ? (
@@ -182,40 +248,50 @@ export function InitiativeDetailsDialog({
               <Spinner />
             </div>
           ) : (
-            <Tabs defaultValue="quarterly" className="flex-1 flex flex-col min-h-0">
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as InitiativeGoalsTab)}
+              className="flex-1 flex flex-col min-h-0"
+            >
               <TabsList className="grid w-full grid-cols-4 rounded-none border-b">
                 <TabsTrigger value="quarterly">
-                  Quarterly ({goalsByType.quarterly.length})
+                  {formatInitiativeGoalsTabLabel('quarterly', goalsByType.quarterly)}
                 </TabsTrigger>
-                <TabsTrigger value="weekly">Weekly ({goalsByType.weekly.length})</TabsTrigger>
-                <TabsTrigger value="daily">Daily ({goalsByType.daily.length})</TabsTrigger>
-                <TabsTrigger value="adhoc">Adhoc ({goalsByType.adhoc.length})</TabsTrigger>
+                <TabsTrigger value="weekly">
+                  {formatInitiativeGoalsTabLabel('weekly', goalsByType.weekly)}
+                </TabsTrigger>
+                <TabsTrigger value="daily">
+                  {formatInitiativeGoalsTabLabel('daily', goalsByType.daily)}
+                </TabsTrigger>
+                <TabsTrigger value="adhoc">
+                  {formatInitiativeGoalsTabLabel('adhoc', goalsByType.adhoc)}
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="quarterly" className="flex-1 mt-0 py-2 overflow-y-auto">
                 <GoalTabPanel
                   goals={goalsByType.quarterly}
-                  emptyMessage="No quarterly goals tagged to this initiative."
+                  emptyMessage={getEmptyTabMessage('quarterly', goalsByType.quarterly)}
                   getContextLabel={formatQuarterlyGoalLabel}
                 />
               </TabsContent>
               <TabsContent value="weekly" className="flex-1 mt-0 py-2 overflow-y-auto">
                 <GoalTabPanel
                   goals={goalsByType.weekly}
-                  emptyMessage="No weekly goals tagged to this initiative."
+                  emptyMessage={getEmptyTabMessage('weekly', goalsByType.weekly)}
                   getContextLabel={formatStructuredWeeklyLabel}
                 />
               </TabsContent>
               <TabsContent value="daily" className="flex-1 mt-0 py-2 overflow-y-auto">
                 <GoalTabPanel
                   goals={goalsByType.daily}
-                  emptyMessage="No daily goals tagged to this initiative."
+                  emptyMessage={getEmptyTabMessage('daily', goalsByType.daily)}
                   getContextLabel={formatDailyGoalLabel}
                 />
               </TabsContent>
               <TabsContent value="adhoc" className="flex-1 mt-0 py-2 overflow-y-auto">
                 <GoalTabPanel
                   goals={goalsByType.adhoc}
-                  emptyMessage="No adhoc goals tagged to this initiative."
+                  emptyMessage={getEmptyTabMessage('adhoc', goalsByType.adhoc)}
                   getContextLabel={formatAdhocGoalLabel}
                 />
               </TabsContent>

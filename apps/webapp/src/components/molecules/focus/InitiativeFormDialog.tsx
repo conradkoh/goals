@@ -1,6 +1,8 @@
 'use client';
 
+import { api } from '@workspace/backend/convex/_generated/api';
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import { useQuery } from 'convex/react';
 import { ConvexError } from 'convex/values';
 import { Flag, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
@@ -32,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { normalizeInitiativeDates } from '@/lib/date/initiative-dates';
+import { useSession } from '@/modules/auth/useSession';
 
 // fallow-ignore-next-line complexity
 function getInitiativeErrorDetails(error: unknown): { code?: string; message?: string } {
@@ -93,7 +96,13 @@ export function InitiativeFormDialog({
   onDelete,
   isSubmitting = false,
 }: InitiativeFormDialogProps) {
+  const { sessionId } = useSession();
   const isEditMode = Boolean(initiative);
+  const goalCounts = useQuery(
+    api.initiative.getInitiativeGoalCounts,
+    isEditMode && initiative ? { sessionId } : 'skip'
+  );
+  const taggedGoalCount = initiative ? goalCounts?.[initiative._id]?.total : undefined;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState<Date>(getDefaultDates().startDate);
@@ -231,7 +240,9 @@ export function InitiativeFormDialog({
             </DialogTitle>
             <DialogDescription>
               {isEditMode
-                ? 'Update this initiative’s title, description, or dates.'
+                ? taggedGoalCount !== undefined
+                  ? `Update this initiative. ${taggedGoalCount} goal${taggedGoalCount === 1 ? '' : 's'} tagged.`
+                  : 'Update this initiative’s title, description, or dates.'
                 : 'Group goals across quarters with a date-bounded initiative.'}
             </DialogDescription>
           </DialogHeader>
