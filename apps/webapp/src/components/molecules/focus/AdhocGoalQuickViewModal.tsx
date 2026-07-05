@@ -15,6 +15,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../goal-details-popover/view/components';
 
@@ -249,6 +250,22 @@ function AdhocGoalQuickViewContent({
 
   const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
 
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.adhoc?.dueDate,
+          domainId: goal.domainId ?? null,
+          initiativeId,
+        })
+      );
+    },
+    [goal._id, goal.title, goal.details, goal.adhoc?.dueDate, goal.domainId, updateAdhocGoal]
+  );
+
   /**
    * Toggles completion status for a child adhoc goal.
    * @internal
@@ -346,6 +363,12 @@ function AdhocGoalQuickViewContent({
           {adhocGoalProp.domain && (
             <GoalDomainDisplay domain={adhocGoalProp.domain} weekNumber={weekNumber} />
           )}
+
+          <GoalInitiativeField
+            selectedInitiativeId={goal.initiativeId ?? null}
+            onInitiativeChange={handleInitiativeChange}
+            className="mt-3 space-y-2"
+          />
 
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 

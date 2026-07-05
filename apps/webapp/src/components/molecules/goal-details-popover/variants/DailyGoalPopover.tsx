@@ -1,5 +1,6 @@
-import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { ReactNode } from 'react';
+import { useCallback } from 'react';
 
 import {
   GoalActionMenuNew,
@@ -13,6 +14,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalDisplayContext,
   useGoalEditContext,
 } from '../view/components';
@@ -115,6 +117,13 @@ function DailyGoalPopoverContentInner({
 
   const handleDetailsChange = useStructuredGoalDetailsSave(onSave, goal);
 
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await onSave(goal.title, goal.details, goal.dueDate, goal.domainId ?? null, initiativeId);
+    },
+    [goal.title, goal.details, goal.dueDate, goal.domainId, onSave]
+  );
+
   // Shared content for both popover and fullscreen modes
   const goalContent = (
     <FireGoalsProvider>
@@ -133,6 +142,12 @@ function DailyGoalPopoverContentInner({
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+      <GoalInitiativeField
+        selectedInitiativeId={goal.initiativeId ?? null}
+        onInitiativeChange={handleInitiativeChange}
+        className="mt-3 space-y-2"
+      />
 
       {/* Tabs for Details and Log */}
       {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}

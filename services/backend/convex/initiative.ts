@@ -177,3 +177,70 @@ export const getInitiative = query({
     return initiative;
   },
 });
+
+export type InitiativeGoalGroup = 'quarterly' | 'weekly' | 'daily' | 'adhoc';
+
+export type GoalsByInitiative = {
+  quarterly: Doc<'goals'>[];
+  weekly: Doc<'goals'>[];
+  daily: Doc<'goals'>[];
+  adhoc: Doc<'goals'>[];
+};
+
+// fallow-ignore-next-line complexity
+export function classifyInitiativeGoal(goal: Doc<'goals'>): InitiativeGoalGroup {
+  if (goal.adhoc !== undefined || goal.depth === -1) return 'adhoc';
+  if (goal.depth === 0) return 'quarterly';
+  if (goal.depth === 1) return 'weekly';
+  return 'daily';
+}
+
+function sortGoalsByGroup(group: InitiativeGoalGroup, goals: Doc<'goals'>[]): Doc<'goals'>[] {
+  const sorted = [...goals];
+  if (group === 'adhoc') {
+    return sorted.sort((a, b) => a.title.localeCompare(b.title));
+  }
+  if (group === 'daily') {
+    return sorted.sort(
+      (a, b) => a.inPath.localeCompare(b.inPath) || a.title.localeCompare(b.title)
+    );
+  }
+  return sorted.sort(
+    (a, b) => a.year - b.year || a.quarter - b.quarter || a.title.localeCompare(b.title)
+  );
+}
+
+export const getGoalsByInitiative = query({
+  args: {
+    ...SessionIdArg,
+    initiativeId: v.id('initiatives'),
+  },
+  handler: async (ctx, args): Promise<GoalsByInitiative> => {
+    const { sessionId, initiativeId } = args;
+    const user = await requireLogin(ctx, sessionId);
+
+    const initiative = await ctx.db.get('initiatives', initiativeId);
+    if (!initiative || initiative.userId !== user._id) {
+      throw new ConvexError({ code: 'NOT_FOUND', message: 'Initiative not found' });
+    }
+
+    const goals = await ctx.db
+      .query('goals')
+      .withIndex('by_user_and_initiative', (q) =>
+        q.eq('userId', user._id).eq('initiativeId', initiativeId)
+      )
+      .collect();
+
+    const grouped: GoalsByInitiative = { quarterly: [], weekly: [], daily: [], adhoc: [] };
+    for (const goal of goals) {
+      grouped[classifyInitiativeGoal(goal)].push(goal);
+    }
+
+    return {
+      quarterly: sortGoalsByGroup('quarterly', grouped.quarterly),
+      weekly: sortGoalsByGroup('weekly', grouped.weekly),
+      daily: sortGoalsByGroup('daily', grouped.daily),
+      adhoc: sortGoalsByGroup('adhoc', grouped.adhoc),
+    };
+  },
+});

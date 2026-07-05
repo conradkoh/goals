@@ -23,6 +23,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   GoalStatusIndicators,
   useGoalEditContext,
 } from '../view/components';
@@ -81,6 +82,8 @@ interface StandardGoalPopoverContentInnerProps {
   setNewWeeklyGoalTitle: (title: string) => void;
   /** Handler for creating a new weekly goal */
   handleCreateWeeklyGoal: () => Promise<void>;
+  /** Handler for updating initiative tag */
+  onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
 }
 
 /**
@@ -174,6 +177,21 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
 
   const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
 
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await goalActions.updateQuarterlyGoalTitle({
+        goalId: goal._id,
+        ...buildStructuredGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.dueDate,
+          initiativeId,
+        }),
+      });
+    },
+    [goal._id, goal.title, goal.details, goal.dueDate, goalActions]
+  );
+
   const hasChildren = goal.children && goal.children.length > 0;
 
   return (
@@ -192,6 +210,7 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
           newWeeklyGoalTitle={newWeeklyGoalTitle}
           setNewWeeklyGoalTitle={setNewWeeklyGoalTitle}
           handleCreateWeeklyGoal={handleCreateWeeklyGoal}
+          onInitiativeChange={handleInitiativeChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -219,6 +238,7 @@ function StandardGoalPopoverContentInner({
   newWeeklyGoalTitle,
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
+  onInitiativeChange,
 }: StandardGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { year, quarter, weekNumber } = useWeek();
@@ -254,6 +274,12 @@ function StandardGoalPopoverContentInner({
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
         {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={onInitiativeChange}
+          className="mt-3 space-y-2"
+        />
 
         {/* Tabs for Details and Log */}
         {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}

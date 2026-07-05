@@ -289,4 +289,115 @@ describe('initiative', () => {
     expect(parent?.initiativeId).toBe(initiativeId);
     expect(child?.initiativeId).toBe(initiativeId);
   });
+
+  test('getGoalsByInitiative returns goals grouped by type', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Details Test',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Weekly',
+      parentId: quarterlyGoalId,
+      weekNumber: 1,
+    });
+    await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Daily',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    const adhocGoalId = await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Adhoc Goal',
+      year: 2024,
+      weekNumber: 10,
+    });
+
+    await ctx.mutation(api.dashboard.updateQuarterlyGoalTitle, {
+      sessionId,
+      goalId: quarterlyGoalId,
+      title: 'Quarterly',
+      initiativeId,
+    });
+
+    await ctx.mutation(api.adhocGoal.updateAdhocGoal, {
+      sessionId,
+      goalId: adhocGoalId,
+      initiativeId,
+    });
+
+    const result = await ctx.query(api.initiative.getGoalsByInitiative, {
+      sessionId,
+      initiativeId,
+    });
+
+    expect(result.quarterly.length).toBeGreaterThanOrEqual(1);
+    expect(result.weekly.length).toBeGreaterThanOrEqual(1);
+    expect(result.daily.length).toBeGreaterThanOrEqual(1);
+    expect(result.adhoc.length).toBeGreaterThanOrEqual(1);
+    expect(result.quarterly[0]?.title).toBe('Quarterly');
+    expect(result.weekly[0]?.title).toBe('Weekly');
+    expect(result.daily[0]?.title).toBe('Daily');
+    expect(result.adhoc[0]?.title).toBe('Adhoc Goal');
+  });
+
+  test('getGoalsByInitiative returns empty groups when no goals tagged', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Empty Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_086_400_000,
+    });
+
+    const result = await ctx.query(api.initiative.getGoalsByInitiative, {
+      sessionId,
+      initiativeId,
+    });
+
+    expect(result).toEqual({
+      quarterly: [],
+      weekly: [],
+      daily: [],
+      adhoc: [],
+    });
+  });
+
+  test('getGoalsByInitiative rejects unknown initiative', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+    const otherSessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Private Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_086_400_000,
+    });
+
+    await expect(
+      ctx.query(api.initiative.getGoalsByInitiative, {
+        sessionId: otherSessionId,
+        initiativeId,
+      })
+    ).rejects.toThrow(ConvexError);
+  });
 });

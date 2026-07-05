@@ -1,11 +1,12 @@
 'use client';
 
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
-import { Flag, Plus } from 'lucide-react';
+import { Flag, Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { FocusedGoalSection } from './FocusedGoalSection';
 
+import { InitiativeDetailsDialog } from '@/components/molecules/focus/InitiativeDetailsDialog';
 import {
   InitiativeFormDialog,
   type InitiativeFormDialogProps,
@@ -51,6 +52,7 @@ export function FocusedInitiativesSection({
   isSubmitting,
 }: FocusedInitiativesSectionProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [viewingInitiative, setViewingInitiative] = useState<Doc<'initiatives'> | null>(null);
   const [editingInitiative, setEditingInitiative] = useState<Doc<'initiatives'> | null>(null);
 
   const sortedInitiatives = useMemo(() => {
@@ -103,12 +105,12 @@ export function FocusedInitiativesSection({
 
                 return (
                   <li key={initiative._id}>
-                    <button
-                      type="button"
-                      onClick={() => setEditingInitiative(initiative)}
-                      className="w-full text-left rounded-md px-2 py-2 hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-1 rounded-md hover:bg-accent/50 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setViewingInitiative(initiative)}
+                        className="flex-1 min-w-0 text-left px-2 py-2"
+                      >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">
                             {initiative.title}
@@ -117,16 +119,24 @@ export function FocusedInitiativesSection({
                             {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
                           </p>
                         </div>
-                        <span
-                          className={cn(
-                            'flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
-                            badge.className
-                          )}
-                        >
-                          {badge.label}
-                        </span>
-                      </div>
-                    </button>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingInitiative(initiative)}
+                        className="h-7 w-7 mt-1.5 mr-1 flex-shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center"
+                        aria-label="Edit initiative"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <span
+                        className={cn(
+                          'mt-2 mr-2 flex-shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
+                          badge.className
+                        )}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
                   </li>
                 );
               })}
@@ -134,6 +144,18 @@ export function FocusedInitiativesSection({
           </div>
         )}
       </FocusedGoalSection>
+
+      <InitiativeDetailsDialog
+        initiative={viewingInitiative}
+        open={viewingInitiative !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingInitiative(null);
+        }}
+        onEdit={(initiative) => {
+          setViewingInitiative(null);
+          setEditingInitiative(initiative);
+        }}
+      />
 
       <InitiativeFormDialog
         open={isFormOpen}

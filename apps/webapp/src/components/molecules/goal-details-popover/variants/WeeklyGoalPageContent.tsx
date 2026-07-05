@@ -25,6 +25,7 @@ import {
   GoalEditProvider,
   GoalDueDateDisplay,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../view/components';
 
@@ -122,6 +123,23 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
 
   const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
 
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      if (!sessionId) return;
+      await updateGoalTitleMutation({
+        sessionId,
+        goalId: goal._id,
+        ...buildStructuredGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.dueDate,
+          initiativeId,
+        }),
+      });
+    },
+    [goal._id, goal.title, goal.details, goal.dueDate, sessionId, updateGoalTitleMutation]
+  );
+
   const handleCreateDailyGoal = useCallback(async () => {
     const trimmedTitle = newDailyGoalTitle.trim();
     if (trimmedTitle) {
@@ -158,6 +176,7 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
           selectedDayOfWeek={selectedDayOfWeek}
           setSelectedDayOfWeek={setSelectedDayOfWeek}
           handleCreateDailyGoal={handleCreateDailyGoal}
+          onInitiativeChange={handleInitiativeChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -190,6 +209,8 @@ interface WeeklyGoalPageContentInnerProps {
   setSelectedDayOfWeek: (day: DayOfWeek) => void;
   /** Handler for creating a new daily goal */
   handleCreateDailyGoal: () => Promise<void>;
+  /** Handler for updating initiative tag */
+  onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
 }
 
 /**
@@ -209,6 +230,7 @@ function WeeklyGoalPageContentInner({
   selectedDayOfWeek,
   setSelectedDayOfWeek,
   handleCreateDailyGoal,
+  onInitiativeChange,
 }: WeeklyGoalPageContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -228,6 +250,12 @@ function WeeklyGoalPageContentInner({
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
         {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={onInitiativeChange}
+          className="mt-3 space-y-2"
+        />
 
         {goal.details && (
           <GoalDetailsSection

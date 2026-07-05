@@ -24,6 +24,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../view/components';
 
@@ -95,6 +96,8 @@ interface AdhocGoalPopoverContentInnerProps {
   onChildDelete: (goalId: Id<'goals'>) => Promise<void>;
   /** Handler for creating a new child goal */
   onCreateChild: (parentId: Id<'goals'>, title: string) => Promise<void>;
+  /** Handler for updating initiative tag */
+  onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
 }
 
 /**
@@ -153,6 +156,22 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
   const isBacklog = (goal as unknown as { isBacklog?: boolean }).isBacklog || false;
 
   const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.adhoc?.dueDate,
+          domainId: goal.domainId ?? null,
+          initiativeId,
+        })
+      );
+    },
+    [goal._id, goal.title, goal.details, goal.adhoc?.dueDate, goal.domainId, updateAdhocGoal]
+  );
 
   const handleChildCompleteChange = useCallback(
     async (goalId: Id<'goals'>, isComplete: boolean) => {
@@ -223,6 +242,7 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
           onChildUpdate={handleChildUpdate}
           onChildDelete={handleChildDelete}
           onCreateChild={handleCreateChild}
+          onInitiativeChange={handleInitiativeChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -251,6 +271,7 @@ function AdhocGoalPopoverContentInner({
   onChildUpdate,
   onChildDelete,
   onCreateChild,
+  onInitiativeChange,
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -276,6 +297,12 @@ function AdhocGoalPopoverContentInner({
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
+
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={onInitiativeChange}
+          className="mt-3 space-y-2"
+        />
 
         <GoalCreatedDate createdAt={goal._creationTime} />
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
