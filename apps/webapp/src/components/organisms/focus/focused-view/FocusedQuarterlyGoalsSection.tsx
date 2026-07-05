@@ -1,5 +1,6 @@
 'use client';
 
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { Pin, Plus, Star, Target } from 'lucide-react';
 
@@ -10,12 +11,14 @@ interface FocusedQuarterlyGoalsSectionProps {
   goals: FocusedGoalItem[];
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   onAddGoal?: () => void;
+  initiativeTitleMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedQuarterlyGoalsSection({
   goals,
   onToggleComplete,
   onAddGoal,
+  initiativeTitleMap,
 }: FocusedQuarterlyGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -61,6 +64,9 @@ export function FocusedQuarterlyGoalsSection({
                   weekNumber={goal.weekNumber}
                   onToggleComplete={onToggleComplete}
                   leadingIndicator={indicator}
+                  initiativeTitle={
+                    goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                  }
                 />
               );
             })}

@@ -1,5 +1,6 @@
 'use client';
 
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { Flame } from 'lucide-react';
 
@@ -9,9 +10,14 @@ import { FocusedGoalSection } from './FocusedGoalSection';
 interface FocusedUrgentSectionProps {
   goals: FocusedGoalItem[];
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
+  initiativeTitleMap: Map<Id<'initiatives'>, string>;
 }
 
-export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentSectionProps) {
+export function FocusedUrgentSection({
+  goals,
+  onToggleComplete,
+  initiativeTitleMap,
+}: FocusedUrgentSectionProps) {
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
   return (
@@ -41,6 +47,9 @@ export function FocusedUrgentSection({ goals, onToggleComplete }: FocusedUrgentS
                 weekNumber={goal.weekNumber ?? undefined}
                 onToggleComplete={onToggleComplete}
                 incompleteClassName="text-red-500 dark:text-red-400"
+                initiativeTitle={
+                  goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                }
               />
             ))}
           </ul>

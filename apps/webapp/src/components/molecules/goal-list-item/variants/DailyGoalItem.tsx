@@ -10,6 +10,7 @@ import {
   useGoalListItemContext,
 } from '../view/components';
 
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { DailyGoalPopover } from '@/components/molecules/goal-details-popover';
 import {
   Select,
@@ -178,6 +179,8 @@ function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInterna
             </div>
           }
         />
+
+        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
         <GoalPendingIndicator isOptimistic={isOptimistic}>
           <GoalStatusIcons goalId={goal._id} />

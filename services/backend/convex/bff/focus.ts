@@ -24,6 +24,7 @@ export type FocusedGoalItem = {
   breadcrumb: BreadcrumbSegment[];
   isStarred?: boolean;
   isPinned?: boolean;
+  initiativeId?: Id<'initiatives'>;
 };
 
 export type FocusedViewData = {
@@ -112,6 +113,7 @@ async function getQuarterlyGoals(
         breadcrumb: [],
         isStarred: state?.isStarred ?? false,
         isPinned: state?.isPinned ?? false,
+        initiativeId: g.initiativeId,
       };
     });
 }
@@ -193,6 +195,7 @@ async function getUrgentGoals(
         depth: g.depth,
         indentLevel: 0,
         breadcrumb,
+        initiativeId: g.initiativeId,
       };
     })
   );
@@ -213,6 +216,7 @@ type AdhocNode = {
   parentId?: Id<'goals'>;
   adhoc?: { weekNumber?: number };
   domainName?: string;
+  initiativeId?: Id<'initiatives'>;
   children: AdhocNode[];
 };
 
@@ -267,6 +271,7 @@ async function getAdhocTasksFlattened(
       parentId: goal.parentId,
       adhoc: goal.adhoc,
       domainName: goal.domainId ? domainMap.get(goal.domainId) : undefined,
+      initiativeId: goal.initiativeId,
       children: [],
     });
   }
@@ -305,6 +310,7 @@ async function getAdhocTasksFlattened(
       depth: node.depth,
       indentLevel,
       breadcrumb,
+      initiativeId: node.initiativeId,
     });
 
     for (const child of node.children) {

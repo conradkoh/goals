@@ -9,6 +9,7 @@ import {
 } from '../view/components';
 
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
@@ -157,6 +158,8 @@ function QuarterlyGoalItemContentInternal({
           )}
           onToggleComplete={handleToggleCompletion}
         />
+
+        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
         <GoalPendingIndicator>
           <GoalActionButtons

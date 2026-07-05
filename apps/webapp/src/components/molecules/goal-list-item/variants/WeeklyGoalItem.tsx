@@ -10,6 +10,7 @@ import {
   useGoalListItemContext,
 } from '../view/components';
 
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalContext } from '@/contexts/GoalContext';
@@ -118,6 +119,8 @@ function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
           )}
           onToggleComplete={handleToggleCompletion}
         />
+
+        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
         <GoalPendingIndicator isOptimistic={isOptimistic}>
           <GoalStatusIcons goalId={goal._id} />

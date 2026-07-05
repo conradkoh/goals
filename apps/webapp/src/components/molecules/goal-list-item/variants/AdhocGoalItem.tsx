@@ -5,6 +5,7 @@ import { Calendar } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { DomainBadge } from '@/components/atoms/DomainBadge';
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -208,6 +209,10 @@ export function AdhocGoalItem({
                     {goal.title}
                   </span>
                   {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+                  <InitiativeBadgeForGoal
+                    initiativeId={goal.initiativeId}
+                    isComplete={goal.isComplete}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 mt-1">
@@ -220,6 +225,8 @@ export function AdhocGoalItem({
                 </div>
               </div>
             )}
+
+            <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
             <div className="flex items-center gap-1 flex-shrink-0">
               <AdhocGoalActionIcons
