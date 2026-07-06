@@ -3,6 +3,8 @@ import { SessionIdArg } from 'convex-helpers/server/sessions';
 
 import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query, type MutationCtx } from './_generated/server';
+import type { InitiativeQuarterOption } from '../src/usecase/getWeekDetails';
+import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
 
 async function getOwnedInitiative(
@@ -274,5 +276,81 @@ export const getGoalsByInitiative = query({
       daily: sortGoalsByGroup('daily', grouped.daily),
       adhoc: sortGoalsByGroup('adhoc', grouped.adhoc),
     };
+  },
+});
+
+// fallow-ignore-next-line complexity
+function isGoalInQuarter(
+  goal: Doc<'goals'>,
+  year: number,
+  quarter: number,
+  weeks: number[]
+): boolean {
+  if (goal.adhoc !== undefined || goal.depth === -1) {
+    return goal.year === year && goal.adhoc !== undefined && weeks.includes(goal.adhoc.weekNumber);
+  }
+  return goal.year === year && goal.quarter === quarter;
+}
+
+function initiativeOverlapsQuarter(
+  initiative: Doc<'initiatives'>,
+  quarterStartMs: number,
+  quarterEndMs: number
+): boolean {
+  if (initiative.startDate > quarterEndMs) return false;
+  if (initiative.endDate !== undefined && initiative.endDate < quarterStartMs) return false;
+  return true;
+}
+
+export const getInitiativesForQuarter = query({
+  args: {
+    ...SessionIdArg,
+    year: v.number(),
+    quarter: v.number(),
+  },
+  handler: async (ctx, args): Promise<InitiativeQuarterOption[]> => {
+    const { sessionId, year, quarter } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+
+    const { weeks, startDate, endDate } = getQuarterWeeks(year, quarter);
+    const quarterStartMs = startDate.startOf('day').toMillis();
+    const quarterEndMs = endDate.endOf('day').toMillis();
+
+    const initiatives = await ctx.db
+      .query('initiatives')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    const options: InitiativeQuarterOption[] = [];
+
+    for (const initiative of initiatives) {
+      if (!initiativeOverlapsQuarter(initiative, quarterStartMs, quarterEndMs)) continue;
+
+      const taggedGoals = await ctx.db
+        .query('goals')
+        .withIndex('by_user_and_initiative', (q) =>
+          q.eq('userId', userId).eq('initiativeId', initiative._id)
+        )
+        .collect();
+
+      const goalsInQuarter = taggedGoals.filter((goal) =>
+        isGoalInQuarter(goal, year, quarter, weeks)
+      );
+
+      options.push({
+        _id: initiative._id,
+        title: initiative.title,
+        description: initiative.description,
+        startDate: initiative.startDate,
+        endDate: initiative.endDate,
+        goalCountInQuarter: goalsInQuarter.length,
+        quarterlyGoalCount: goalsInQuarter.filter((g) => g.depth === 0).length,
+        adhocGoalCount: goalsInQuarter.filter((g) => g.adhoc !== undefined || g.depth === -1)
+          .length,
+      });
+    }
+
+    return options.sort((a, b) => a.startDate - b.startDate || a.title.localeCompare(b.title));
   },
 });

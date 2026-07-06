@@ -1,7 +1,15 @@
 'use client';
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
-import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } from 'lucide-react';
+import {
+  AlertCircle,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+  Flag,
+  Square,
+} from 'lucide-react';
 import React from 'react';
 
 import { useQuarterlySummaryContext } from './QuarterlySummaryContext';
@@ -11,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatInitiativeDateRange } from '@/lib/date/initiative-dates';
 import { cn } from '@/lib/utils';
 
 /**
@@ -283,6 +292,180 @@ export function QuarterlyGoalSelectorPanel() {
                   );
                 })}
               </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Panel for selecting initiatives to include in initiative-centric quarterly summary.
+ */
+export function InitiativeSelectorPanel() {
+  const {
+    year,
+    quarter,
+    initiativesForQuarter,
+    selectedInitiativeIds,
+    setSelectedInitiativeIds,
+    isLoadingInitiatives,
+  } = useQuarterlySummaryContext();
+
+  const { withGoals, withoutGoals } = React.useMemo(() => {
+    if (!initiativesForQuarter) return { withGoals: [], withoutGoals: [] };
+    return {
+      withGoals: initiativesForQuarter.filter((i) => i.goalCountInQuarter > 0),
+      withoutGoals: initiativesForQuarter.filter((i) => i.goalCountInQuarter === 0),
+    };
+  }, [initiativesForQuarter]);
+
+  const handleToggle = React.useCallback(
+    (initiativeId: Id<'initiatives'>, checked: boolean) => {
+      if (checked) {
+        setSelectedInitiativeIds([...selectedInitiativeIds, initiativeId]);
+      } else {
+        setSelectedInitiativeIds(selectedInitiativeIds.filter((id) => id !== initiativeId));
+      }
+    },
+    [selectedInitiativeIds, setSelectedInitiativeIds]
+  );
+
+  const handleSelectAll = React.useCallback(() => {
+    setSelectedInitiativeIds(withGoals.map((i) => i._id));
+  }, [withGoals, setSelectedInitiativeIds]);
+
+  const handleDeselectAll = React.useCallback(() => {
+    setSelectedInitiativeIds([]);
+  }, [setSelectedInitiativeIds]);
+
+  if (isLoadingInitiatives) {
+    return (
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+        <div className="p-6 border-b bg-muted/30">
+          <h2 className="text-lg font-semibold text-foreground">Initiatives</h2>
+        </div>
+        <div className="p-6">
+          <_QuarterlyGoalSelectorSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!initiativesForQuarter) {
+    return (
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>Failed to load initiatives</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (initiativesForQuarter.length === 0) {
+    return (
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden p-6">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No initiatives overlap Q{quarter} {year}. Create an initiative or adjust dates.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+      <div className="p-6 border-b bg-muted/30">
+        <h2 className="text-lg font-semibold text-foreground">Initiatives</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Select initiatives active this quarter to build agent-ready summary context
+        </p>
+      </div>
+      <div className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-foreground">
+            {selectedInitiativeIds.length} of {initiativesForQuarter.length} selected
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAll}
+              disabled={withGoals.length === 0}
+              className="flex items-center gap-1"
+            >
+              <CheckSquare className="h-4 w-4" />
+              Select All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeselectAll}
+              disabled={selectedInitiativeIds.length === 0}
+              className="flex items-center gap-1"
+            >
+              <Square className="h-4 w-4" />
+              Clear
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {withGoals.map((initiative) => {
+            const isSelected = selectedInitiativeIds.includes(initiative._id);
+            return (
+              <label
+                key={initiative._id}
+                htmlFor={`initiative-${initiative._id}`}
+                className={cn(
+                  'flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent/50',
+                  isSelected && 'bg-accent/30 border-primary/30'
+                )}
+              >
+                <Checkbox
+                  id={`initiative-${initiative._id}`}
+                  checked={isSelected}
+                  onCheckedChange={(checked) => handleToggle(initiative._id, checked === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <Flag className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                    <span className="text-sm font-medium truncate">{initiative.title}</span>
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                      {initiative.goalCountInQuarter} goal
+                      {initiative.goalCountInQuarter === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
+                  </p>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+
+        {withoutGoals.length > 0 && (
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              {withoutGoals.length} initiative{withoutGoals.length === 1 ? '' : 's'} with no tagged
+              goals this quarter
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 space-y-2">
+              {withoutGoals.map((initiative) => (
+                <div
+                  key={initiative._id}
+                  className="flex items-center gap-2 p-3 rounded-lg border opacity-60 text-sm text-muted-foreground"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  <span>{initiative.title}</span>
+                </div>
+              ))}
             </CollapsibleContent>
           </Collapsible>
         )}

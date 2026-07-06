@@ -5,9 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React from 'react';
 
 import { QuarterlySummaryProvider, useQuarterlySummaryContext } from './QuarterlySummaryContext';
-import { AdhocDomainSelectorPanel, QuarterlyGoalSelectorPanel } from './SelectorPanels';
+import {
+  AdhocDomainSelectorPanel,
+  InitiativeSelectorPanel,
+  QuarterlyGoalSelectorPanel,
+} from './SelectorPanels';
 
-import { MultiQuarterlySummaryMarkdownView } from '@/components/molecules/quarterly-summary';
+import {
+  InitiativeQuarterlySummaryMarkdownView,
+  MultiQuarterlySummaryMarkdownView,
+} from '@/components/molecules/quarterly-summary';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -21,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 /**
  * Inner component that uses the context.
  */
+// fallow-ignore-next-line complexity
 function QuarterlySummaryContent() {
   const router = useRouter();
   const {
@@ -32,8 +40,12 @@ function QuarterlySummaryContent() {
     handleNextQuarter,
     yearOptions,
     hasSelection,
+    summaryPathway,
+    setSummaryPathway,
     summaryData,
     isLoadingSummary,
+    initiativeSummaryData,
+    isLoadingInitiativeSummary,
   } = useQuarterlySummaryContext();
 
   const [activeTab, setActiveTab] = React.useState<'select' | 'preview'>('select');
@@ -127,7 +139,26 @@ function QuarterlySummaryContent() {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground">Quarterly Summary</h1>
             <p className="text-lg text-muted-foreground mt-2">
-              Select goals and preview your quarterly report.
+              Select initiatives or goals and preview your quarterly report for AI agents.
+            </p>
+          </div>
+
+          {/* Pathway toggle */}
+          <div className="bg-card rounded-xl shadow-sm border p-4">
+            <p className="text-sm font-medium text-foreground mb-3">Summary pathway</p>
+            <Tabs
+              value={summaryPathway}
+              onValueChange={(value) => setSummaryPathway(value as 'initiative' | 'goal')}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="initiative">By Initiative</TabsTrigger>
+                <TabsTrigger value="goal">By Goal</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <p className="text-xs text-muted-foreground mt-2">
+              {summaryPathway === 'initiative'
+                ? 'Group work by initiative — best for narrative quarterly reviews and agent context.'
+                : 'Select quarterly goals and adhoc domains — classic goal-centric summary.'}
             </p>
           </div>
 
@@ -207,19 +238,45 @@ function QuarterlySummaryContent() {
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="select">Select Goals</TabsTrigger>
+              <TabsTrigger value="select">
+                {summaryPathway === 'initiative' ? 'Select Initiatives' : 'Select Goals'}
+              </TabsTrigger>
               <TabsTrigger value="preview" disabled={!hasSelection}>
                 Preview
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="select" className="space-y-6 mt-6">
-              <QuarterlyGoalSelectorPanel />
-              <AdhocDomainSelectorPanel />
+              {summaryPathway === 'initiative' ? (
+                <InitiativeSelectorPanel />
+              ) : (
+                <>
+                  <QuarterlyGoalSelectorPanel />
+                  <AdhocDomainSelectorPanel />
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="preview" className="mt-6">
-              {isLoadingSummary ? (
+              {summaryPathway === 'initiative' ? (
+                isLoadingInitiativeSummary ? (
+                  <div className="bg-card rounded-lg shadow-sm border p-12 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground mt-4">Loading initiative summary...</p>
+                  </div>
+                ) : hasSelection && initiativeSummaryData ? (
+                  <InitiativeQuarterlySummaryMarkdownView
+                    summaryData={initiativeSummaryData}
+                    className="shadow-sm border"
+                  />
+                ) : (
+                  <div className="bg-card rounded-lg shadow-sm border p-6 text-center">
+                    <p className="text-muted-foreground">
+                      No initiatives selected. Please select initiatives to preview the summary.
+                    </p>
+                  </div>
+                )
+              ) : isLoadingSummary ? (
                 <div className="bg-card rounded-lg shadow-sm border p-12 text-center">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                   <p className="text-muted-foreground mt-4">Loading summary...</p>

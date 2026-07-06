@@ -7,6 +7,8 @@ import type { Doc, Id } from './_generated/dataModel';
 import { mutation, query, type QueryCtx } from './_generated/server';
 import {
   getWeekGoalsTree,
+  type QuarterlyGoalSummary,
+  type InitiativeQuarterSummary,
   type WeekGoalsTree,
   type WeeklyGoalWithLogs,
   type AdhocGoalWithLogs,
@@ -70,6 +72,152 @@ async function fetchLogsForGoals(
   }
 
   return goalLogsMap;
+}
+
+type WeeklyGoalTreeNode = Awaited<
+  ReturnType<typeof getWeekGoalsTree>
+>['quarterlyGoals'][number]['children'][number];
+
+const mapWeeklyGoal = (weeklyGoal: WeeklyGoalTreeNode, weekNumber: number, year: number) => ({
+  ...weeklyGoal,
+  weekNumber,
+  weekStartTimestamp: DateTime.fromObject({ weekNumber, weekYear: year })
+    .startOf('week')
+    .toMillis(),
+  weekEndTimestamp: DateTime.fromObject({ weekNumber, weekYear: year }).endOf('week').toMillis(),
+});
+
+async function buildQuarterlyGoalSummary(
+  ctx: QueryCtx,
+  userId: Id<'users'>,
+  goalId: Id<'goals'>,
+  year: number,
+  quarter: number
+): Promise<QuarterlyGoalSummary> {
+  const quarterlyGoal = await ctx.db.get('goals', goalId);
+  if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
+    throw new ConvexError({
+      code: 'NOT_FOUND',
+      message: `Quarterly goal ${goalId} not found`,
+    });
+  }
+  if (quarterlyGoal.depth !== 0) {
+    throw new ConvexError({
+      code: 'INVALID_STATE',
+      message: `Goal ${goalId} is not a quarterly goal`,
+    });
+  }
+
+  const { weeks, startWeek, endWeek } = getQuarterWeeks(year, quarter);
+
+  const weekResults = await Promise.all(
+    weeks.map((weekNum) =>
+      getWeekGoalsTree(ctx, {
+        userId,
+        year,
+        quarter,
+        weekNumber: weekNum,
+      })
+    )
+  );
+
+  const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
+  let quarterlyGoalDetails: QuarterlyGoalSummary['quarterlyGoal'] | null = null;
+  const allGoals: Doc<'goals'>[] = [quarterlyGoal];
+
+  for (const weekTree of weekResults) {
+    const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === goalId);
+
+    if (targetQuarterlyGoal) {
+      if (!quarterlyGoalDetails) {
+        quarterlyGoalDetails = {
+          _id: targetQuarterlyGoal._id,
+          title: targetQuarterlyGoal.title,
+          details: targetQuarterlyGoal.details,
+          isComplete: targetQuarterlyGoal.isComplete,
+          completedAt: targetQuarterlyGoal.completedAt,
+          state: targetQuarterlyGoal.state,
+        };
+      }
+
+      weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => {
+        allGoals.push(weeklyGoal);
+        for (const dailyGoal of weeklyGoal.children) {
+          allGoals.push(dailyGoal);
+        }
+        return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
+      });
+    }
+  }
+
+  if (!quarterlyGoalDetails) {
+    quarterlyGoalDetails = {
+      _id: quarterlyGoal._id,
+      title: quarterlyGoal.title,
+      details: quarterlyGoal.details,
+      isComplete: quarterlyGoal.isComplete,
+      completedAt: quarterlyGoal.completedAt,
+      state: undefined,
+    };
+  }
+
+  const goalLogsMap = await fetchLogsForGoals(ctx, allGoals);
+  const quarterlyGoalLogs = goalLogsMap.get(goalId.toString()) || [];
+
+  const weeklyGoalsByWeekWithLogs: Record<number, WeeklyGoalWithLogs[]> = {};
+  for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
+    weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
+      ...weeklyGoal,
+      logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
+      children: weeklyGoal.children.map((dailyGoal) => ({
+        ...dailyGoal,
+        logs: goalLogsMap.get(dailyGoal._id.toString()) || [],
+      })),
+    }));
+  }
+
+  return {
+    quarterlyGoal: {
+      ...quarterlyGoalDetails,
+      logs: quarterlyGoalLogs,
+    },
+    weeklyGoalsByWeek: weeklyGoalsByWeekWithLogs,
+    quarter,
+    year,
+    weekRange: { startWeek, endWeek },
+  };
+}
+
+async function fetchAdhocGoalsForQuarter(
+  ctx: QueryCtx,
+  userId: Id<'users'>,
+  year: number,
+  quarter: number,
+  filter?: (goal: Doc<'goals'>) => boolean
+): Promise<AdhocGoalWithLogs[]> {
+  const { weeks } = getQuarterWeeks(year, quarter);
+  const results = await Promise.all(
+    weeks.map((weekNum) =>
+      ctx.db
+        .query('goals')
+        .withIndex('by_user_and_adhoc_year_week', (q) =>
+          q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNum)
+        )
+        .collect()
+    )
+  );
+  const filteredAdhocGoals = results.flat().filter((goal) => {
+    if (!goal.adhoc) return false;
+    return filter ? filter(goal) : true;
+  });
+
+  if (filteredAdhocGoals.length === 0) return [];
+
+  const adhocGoalLogsMap = await fetchLogsForGoals(ctx, filteredAdhocGoals);
+  return filteredAdhocGoals.map((goal) => ({
+    ...goal,
+    logs: adhocGoalLogsMap.get(goal._id.toString()) || [],
+  }));
 }
 
 // Get the overview of all weeks in a quarter
@@ -798,119 +946,8 @@ export const getQuarterlyGoalSummary = query({
   handler: async (ctx, args) => {
     const { sessionId, quarterlyGoalId, year, quarter } = args;
     const user = await requireLogin(ctx, sessionId);
-    const userId = user._id;
 
-    // Verify the quarterly goal exists and belongs to the user
-    const quarterlyGoal = await ctx.db.get('goals', quarterlyGoalId);
-    if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
-      throw new ConvexError({
-        code: 'NOT_FOUND',
-        message: 'Quarterly goal not found',
-      });
-    }
-
-    // Verify it's actually a quarterly goal (depth 0)
-    if (quarterlyGoal.depth !== 0) {
-      throw new ConvexError({
-        code: 'INVALID_STATE',
-        message: 'Goal is not a quarterly goal',
-      });
-    }
-
-    // Calculate all week numbers in this quarter using the proper utility
-    const { weeks, startWeek, endWeek } = getQuarterWeeks(year, quarter);
-
-    // Get details for all weeks in the quarter
-    const weekPromises = [];
-    for (const weekNum of weeks) {
-      weekPromises.push(
-        getWeekGoalsTree(ctx, {
-          userId,
-          year,
-          quarter,
-          weekNumber: weekNum,
-        })
-      );
-    }
-
-    const weekResults = await Promise.all(weekPromises);
-
-    // Find the quarterly goal in each week's data and extract its weekly/daily goals
-    const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
-    let quarterlyGoalDetails = null;
-
-    // Collect all goals for fetching logs (quarterly, weekly, AND daily goals)
-    const allGoals: Doc<'goals'>[] = [quarterlyGoal];
-
-    for (const weekTree of weekResults) {
-      const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === quarterlyGoalId);
-
-      if (targetQuarterlyGoal) {
-        // Store quarterly goal details (from first occurrence)
-        if (!quarterlyGoalDetails) {
-          quarterlyGoalDetails = {
-            _id: targetQuarterlyGoal._id,
-            title: targetQuarterlyGoal.title,
-            details: targetQuarterlyGoal.details,
-            isComplete: targetQuarterlyGoal.isComplete,
-            completedAt: targetQuarterlyGoal.completedAt,
-            state: targetQuarterlyGoal.state,
-          };
-        }
-
-        // Store weekly goals for this week and collect them for log fetching
-        weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map((weeklyGoal) => {
-          allGoals.push(weeklyGoal);
-          // Also collect daily goals (children of weekly goals) for log fetching
-          for (const dailyGoal of weeklyGoal.children) {
-            allGoals.push(dailyGoal);
-          }
-          return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
-        });
-      }
-    }
-
-    if (!quarterlyGoalDetails) {
-      throw new ConvexError({
-        code: 'NOT_FOUND',
-        message: 'Quarterly goal not found in any week data',
-      });
-    }
-
-    // Fetch logs for all goals efficiently
-    const goalLogsMap = await fetchLogsForGoals(ctx, allGoals);
-
-    // Add logs to quarterly goal details
-    const quarterlyGoalLogs = goalLogsMap.get(quarterlyGoalId.toString()) || [];
-
-    // Add logs to weekly goals and their children (daily goals)
-    const weeklyGoalsByWeekWithLogs: Record<number, WeeklyGoalWithLogs[]> = {};
-
-    for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
-      weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
-        ...weeklyGoal,
-        logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
-        // Attach logs to daily goals (children)
-        children: weeklyGoal.children.map((dailyGoal) => ({
-          ...dailyGoal,
-          logs: goalLogsMap.get(dailyGoal._id.toString()) || [],
-        })),
-      }));
-    }
-
-    return {
-      quarterlyGoal: {
-        ...quarterlyGoalDetails,
-        logs: quarterlyGoalLogs,
-      },
-      weeklyGoalsByWeek: weeklyGoalsByWeekWithLogs,
-      quarter,
-      year,
-      weekRange: {
-        startWeek,
-        endWeek,
-      },
-    };
+    return buildQuarterlyGoalSummary(ctx, user._id, quarterlyGoalId, year, quarter);
   },
 });
 
@@ -989,177 +1026,25 @@ export const getQuarterSummary = query({
 
     const quarterlyGoalIds = selectedQuarterlyGoalIds || [];
 
-    // Get summaries for each quarterly goal
-    const summaryPromises = quarterlyGoalIds.map(async (goalId) => {
-      // Verify the quarterly goal exists and belongs to the user
-      const quarterlyGoal = await ctx.db.get('goals', goalId);
-      if (!quarterlyGoal || quarterlyGoal.userId !== userId) {
-        throw new ConvexError({
-          code: 'NOT_FOUND',
-          message: `Quarterly goal ${goalId} not found`,
-        });
-      }
-      // Verify it's actually a quarterly goal (depth 0)
-      if (quarterlyGoal.depth !== 0) {
-        throw new ConvexError({
-          code: 'INVALID_STATE',
-          message: `Goal ${goalId} is not a quarterly goal`,
-        });
-      }
+    const quarterlyGoals = await Promise.all(
+      quarterlyGoalIds.map((goalId) =>
+        buildQuarterlyGoalSummary(ctx, userId, goalId, year, quarter)
+      )
+    );
 
-      // Calculate all week numbers in this quarter using the proper utility
-      const { weeks, startWeek, endWeek } = getQuarterWeeks(year, quarter);
-
-      // Get details for all weeks in the quarter
-      const weekPromises = [];
-      for (const weekNum of weeks) {
-        weekPromises.push(
-          getWeekGoalsTree(ctx, {
-            userId,
-            year,
-            quarter,
-            weekNumber: weekNum,
-          })
-        );
-      }
-
-      const weekResults = await Promise.all(weekPromises);
-
-      // Find the quarterly goal in each week's data and extract its weekly/daily goals
-      const weeklyGoalsByWeek: Record<number, ReturnType<typeof mapWeeklyGoal>[]> = {};
-      let quarterlyGoalDetails = null;
-
-      // Collect all goals for fetching logs (quarterly, weekly, AND daily goals)
-      const allGoals: Doc<'goals'>[] = [quarterlyGoal];
-
-      for (const weekTree of weekResults) {
-        const targetQuarterlyGoal = weekTree.quarterlyGoals.find((qg) => qg._id === goalId);
-
-        if (targetQuarterlyGoal) {
-          // Store quarterly goal details (from first occurrence)
-          if (!quarterlyGoalDetails) {
-            quarterlyGoalDetails = {
-              _id: targetQuarterlyGoal._id,
-              title: targetQuarterlyGoal.title,
-              details: targetQuarterlyGoal.details,
-              isComplete: targetQuarterlyGoal.isComplete,
-              completedAt: targetQuarterlyGoal.completedAt,
-              state: targetQuarterlyGoal.state,
-            };
-          }
-
-          // Store weekly goals for this week and collect them for log fetching
-          weeklyGoalsByWeek[weekTree.weekNumber] = targetQuarterlyGoal.children.map(
-            (weeklyGoal) => {
-              allGoals.push(weeklyGoal);
-              // Also collect daily goals (children of weekly goals) for log fetching
-              for (const dailyGoal of weeklyGoal.children) {
-                allGoals.push(dailyGoal);
-              }
-              return mapWeeklyGoal(weeklyGoal, weekTree.weekNumber, year);
-            }
-          );
-        }
-      }
-
-      // If the goal wasn't found in any week data, it means it has no weekly goals assigned yet
-      // In this case, use the quarterly goal data we already fetched
-      if (!quarterlyGoalDetails) {
-        quarterlyGoalDetails = {
-          _id: quarterlyGoal._id,
-          title: quarterlyGoal.title,
-          details: quarterlyGoal.details,
-          isComplete: quarterlyGoal.isComplete,
-          completedAt: quarterlyGoal.completedAt,
-          state: undefined, // No state since it's not in any week
-        };
-      }
-
-      // Fetch logs for all goals efficiently
-      const goalLogsMap = await fetchLogsForGoals(ctx, allGoals);
-
-      // Add logs to quarterly goal details
-      const quarterlyGoalLogs = goalLogsMap.get(goalId.toString()) || [];
-
-      // Add logs to weekly goals and their children (daily goals)
-      const weeklyGoalsByWeekWithLogs: Record<number, WeeklyGoalWithLogs[]> = {};
-
-      for (const [weekNum, weeklyGoals] of Object.entries(weeklyGoalsByWeek)) {
-        weeklyGoalsByWeekWithLogs[Number(weekNum)] = weeklyGoals.map((weeklyGoal) => ({
-          ...weeklyGoal,
-          logs: goalLogsMap.get(weeklyGoal._id.toString()) || [],
-          // Attach logs to daily goals (children)
-          children: weeklyGoal.children.map((dailyGoal) => ({
-            ...dailyGoal,
-            logs: goalLogsMap.get(dailyGoal._id.toString()) || [],
-          })),
-        }));
-      }
-
-      return {
-        quarterlyGoal: {
-          ...quarterlyGoalDetails,
-          logs: quarterlyGoalLogs,
-        },
-        weeklyGoalsByWeek: weeklyGoalsByWeekWithLogs,
-        quarter,
-        year,
-        weekRange: {
-          startWeek,
-          endWeek,
-        },
-      };
-    });
-
-    const quarterlyGoals = await Promise.all(summaryPromises);
-
-    // Fetch adhoc goals if requested
     let adhocGoals: AdhocGoalWithLogs[] = [];
     if (includeAdhocGoals) {
-      const { weeks } = getQuarterWeeks(year, quarter);
-      const adhocPromises = weeks.map((weekNum) =>
-        ctx.db
-          .query('goals')
-          .withIndex('by_user_and_adhoc_year_week', (q) =>
-            q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', weekNum)
-          )
-          .collect()
-      );
-      const results = await Promise.all(adhocPromises);
-      const filteredAdhocGoals = results.flat().filter((goal) => {
-        if (!goal.adhoc) return false;
-        // Filter by domain if specific domains are selected
+      adhocGoals = await fetchAdhocGoalsForQuarter(ctx, userId, year, quarter, (goal) => {
         if (adhocDomainIds && adhocDomainIds.length > 0) {
-          // Check if UNCATEGORIZED is in the selection
           const includeUncategorized = adhocDomainIds.some((id) => id === 'UNCATEGORIZED');
-
-          // Get effective domain ID from root goal.domainId
           const effectiveDomainId = goal.domainId;
-
-          // If goal has no domain
-          if (!effectiveDomainId) {
-            // Include it only if UNCATEGORIZED is selected
-            return includeUncategorized;
-          }
-
-          // If goal has a domain, check if it's in the selected domains
+          if (!effectiveDomainId) return includeUncategorized;
           return adhocDomainIds.includes(effectiveDomainId);
         }
         return true;
       });
-
-      // Fetch logs for adhoc goals
-      if (filteredAdhocGoals.length > 0) {
-        const adhocGoalLogsMap = await fetchLogsForGoals(ctx, filteredAdhocGoals);
-        adhocGoals = filteredAdhocGoals.map((goal) => ({
-          ...goal,
-          logs: adhocGoalLogsMap.get(goal._id.toString()) || [],
-        }));
-      }
     }
 
-    // Calculate overall week range from the first goal (should be the same for all)
-    // If no quarterly goals, calculate from quarter dates
     const { startWeek, endWeek } = getQuarterWeeks(year, quarter);
     const weekRange = quarterlyGoals[0]?.weekRange || {
       startWeek,
@@ -1176,17 +1061,76 @@ export const getQuarterSummary = query({
   },
 });
 
-type WeeklyGoalTreeNode = Awaited<
-  ReturnType<typeof getWeekGoalsTree>
->['quarterlyGoals'][number]['children'][number];
+// Initiative-centric quarterly summary for selected initiatives
+export const getInitiativeQuarterSummary = query({
+  args: {
+    ...SessionIdArg,
+    year: v.number(),
+    quarter: v.number(),
+    selectedInitiativeIds: v.array(v.id('initiatives')),
+  },
+  handler: async (ctx, args): Promise<InitiativeQuarterSummary> => {
+    const { sessionId, year, quarter, selectedInitiativeIds } = args;
+    const user = await requireLogin(ctx, sessionId);
+    const userId = user._id;
+    const { startWeek, endWeek } = getQuarterWeeks(year, quarter);
 
-const mapWeeklyGoal = (weeklyGoal: WeeklyGoalTreeNode, weekNumber: number, year: number) => ({
-  ...weeklyGoal,
-  weekNumber,
-  weekStartTimestamp: DateTime.fromObject({ weekNumber, weekYear: year })
-    .startOf('week')
-    .toMillis(),
-  weekEndTimestamp: DateTime.fromObject({ weekNumber, weekYear: year }).endOf('week').toMillis(),
+    const initiatives = await Promise.all(
+      selectedInitiativeIds.map(async (initiativeId) => {
+        const initiative = await ctx.db.get('initiatives', initiativeId);
+        if (!initiative || initiative.userId !== userId) {
+          throw new ConvexError({
+            code: 'NOT_FOUND',
+            message: `Initiative ${initiativeId} not found`,
+          });
+        }
+
+        const taggedGoals = await ctx.db
+          .query('goals')
+          .withIndex('by_user_and_initiative', (q) =>
+            q.eq('userId', userId).eq('initiativeId', initiativeId)
+          )
+          .collect();
+
+        const quarterlyGoalIds = taggedGoals
+          .filter((goal) => goal.depth === 0 && goal.year === year && goal.quarter === quarter)
+          .map((goal) => goal._id);
+
+        const quarterlyGoals = await Promise.all(
+          quarterlyGoalIds.map((goalId) =>
+            buildQuarterlyGoalSummary(ctx, userId, goalId, year, quarter)
+          )
+        );
+
+        const adhocGoals = await fetchAdhocGoalsForQuarter(
+          ctx,
+          userId,
+          year,
+          quarter,
+          (goal) => goal.initiativeId === initiativeId
+        );
+
+        return {
+          initiative: {
+            _id: initiative._id,
+            title: initiative.title,
+            description: initiative.description,
+            startDate: initiative.startDate,
+            endDate: initiative.endDate,
+          },
+          quarterlyGoals,
+          adhocGoals: adhocGoals.length > 0 ? adhocGoals : undefined,
+        };
+      })
+    );
+
+    return {
+      initiatives,
+      year,
+      quarter,
+      weekRange: { startWeek, endWeek },
+    };
+  },
 });
 
 // Get adhoc goal counts per domain for a specific quarter (for selection UI)

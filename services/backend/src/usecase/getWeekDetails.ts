@@ -85,6 +85,42 @@ export type MultipleQuarterlyGoalsSummary = {
   };
 };
 
+/** Initiative option for quarterly summary selection UI */
+export type InitiativeQuarterOption = {
+  _id: Id<'initiatives'>;
+  title: string;
+  description?: string;
+  startDate: number;
+  endDate?: number;
+  goalCountInQuarter: number;
+  quarterlyGoalCount: number;
+  adhocGoalCount: number;
+};
+
+/** Per-initiative summary for a quarter */
+export type InitiativeQuarterSummaryItem = {
+  initiative: {
+    _id: Id<'initiatives'>;
+    title: string;
+    description?: string;
+    startDate: number;
+    endDate?: number;
+  };
+  quarterlyGoals: QuarterlyGoalSummary[];
+  adhocGoals?: AdhocGoalWithLogs[];
+};
+
+/** Initiative-centric quarterly summary for agent context */
+export type InitiativeQuarterSummary = {
+  initiatives: InitiativeQuarterSummaryItem[];
+  year: number;
+  quarter: number;
+  weekRange: {
+    startWeek: number;
+    endWeek: number;
+  };
+};
+
 // Quarterly goal option for selection UI
 export type QuarterlyGoalOption = {
   _id: Id<'goals'>;
