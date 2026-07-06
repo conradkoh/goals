@@ -3,7 +3,7 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
-import { Flag, Pencil, Plus } from 'lucide-react';
+import { Flag, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { FocusedGoalSection } from './FocusedGoalSection';
@@ -42,12 +42,10 @@ function InitiativeListRow({
   initiative,
   counts,
   onView,
-  onEdit,
 }: {
   initiative: Doc<'initiatives'>;
   counts?: { total: number; open: number };
   onView: () => void;
-  onEdit: () => void;
 }) {
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
   const badge = initiativeStatusBadge[status];
@@ -64,14 +62,6 @@ function InitiativeListRow({
               {goalCountLabel && <span>{` · ${goalCountLabel}`}</span>}
             </p>
           </div>
-        </button>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="h-7 w-7 mt-1.5 mr-1 flex-shrink-0 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground flex items-center justify-center"
-          aria-label="Edit initiative"
-        >
-          <Pencil className="h-3.5 w-3.5" />
         </button>
         <span
           className={cn(
@@ -150,7 +140,6 @@ export function FocusedInitiativesSection({
                   initiative={initiative}
                   counts={goalCounts?.[initiative._id]}
                   onView={() => setViewingInitiative(initiative)}
-                  onEdit={() => setEditingInitiative(initiative)}
                 />
               ))}
             </ul>

@@ -3,9 +3,10 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
-import { CheckCircle2, Circle, Flag, Pencil } from 'lucide-react';
+import { CheckCircle2, Circle, Flag } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { InitiativeActionMenu } from '@/components/molecules/focus/InitiativeActionMenu';
 import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -237,16 +238,7 @@ export function InitiativeDetailsDialog({
                 </span>
               )}
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="flex-shrink-0"
-              onClick={() => onEdit(initiative)}
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1" />
-              Edit
-            </Button>
+            <InitiativeActionMenu className="flex-shrink-0" onEdit={() => onEdit(initiative)} />
           </FixedSizeDialogTitle>
           <FixedSizeDialogContent className="p-0 flex flex-col">
             <div className="px-4 py-3 border-b space-y-1">
