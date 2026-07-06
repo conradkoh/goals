@@ -1,7 +1,7 @@
 'use client';
 
 import { api } from '@workspace/backend/convex/_generated/api';
-import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { CheckCircle2, Circle, Flag } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -41,6 +41,7 @@ export interface InitiativeDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: (initiative: Doc<'initiatives'>) => void;
+  onUpdateEndDate: (initiativeId: Id<'initiatives'>, endDate: number | null) => Promise<void>;
 }
 
 function formatQuarterlyGoalLabel(goal: Doc<'goals'>): string {
@@ -176,6 +177,7 @@ export function InitiativeDetailsDialog({
   open,
   onOpenChange,
   onEdit,
+  onUpdateEndDate,
 }: InitiativeDetailsDialogProps) {
   const { sessionId } = useSession();
   const goalsByType = useQuery(
@@ -238,7 +240,12 @@ export function InitiativeDetailsDialog({
                 </span>
               )}
             </div>
-            <InitiativeActionMenu className="flex-shrink-0" onEdit={() => onEdit(initiative)} />
+            <InitiativeActionMenu
+              className="flex-shrink-0"
+              initiative={initiative}
+              onEdit={() => onEdit(initiative)}
+              onEndDateChange={(endDate) => onUpdateEndDate(initiative._id, endDate)}
+            />
           </FixedSizeDialogTitle>
           <FixedSizeDialogContent className="p-0 flex flex-col">
             <div className="px-4 py-3 border-b space-y-1">

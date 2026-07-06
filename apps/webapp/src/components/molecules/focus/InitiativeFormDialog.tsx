@@ -63,7 +63,12 @@ export interface InitiativeFormDialogProps {
   }) => Promise<void>;
   onUpdate: (
     initiativeId: Id<'initiatives'>,
-    args: { title: string; description?: string; startDate: number; endDate: number | null }
+    args: {
+      title?: string;
+      description?: string;
+      startDate?: number;
+      endDate?: number | null;
+    }
   ) => Promise<void>;
   onDelete?: (initiativeId: Id<'initiatives'>) => Promise<void>;
   isSubmitting?: boolean;
@@ -71,18 +76,16 @@ export interface InitiativeFormDialogProps {
 
 type InitiativeFormDates = {
   startDate: Date;
-  endDate: Date | undefined;
 };
 
 function getDefaultDates(): InitiativeFormDates {
   const today = DateTime.now().startOf('day').toJSDate();
-  return { startDate: today, endDate: undefined };
+  return { startDate: today };
 }
 
 function initiativeToDates(initiative: Doc<'initiatives'>): InitiativeFormDates {
   return {
     startDate: DateTime.fromMillis(initiative.startDate).toJSDate(),
-    endDate: initiative.endDate ? DateTime.fromMillis(initiative.endDate).toJSDate() : undefined,
   };
 }
 
@@ -106,7 +109,6 @@ export function InitiativeFormDialog({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState<Date>(getDefaultDates().startDate);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -116,7 +118,6 @@ export function InitiativeFormDialog({
       setDescription('');
       const defaults = getDefaultDates();
       setStartDate(defaults.startDate);
-      setEndDate(defaults.endDate);
       setShowDeleteConfirm(false);
       return;
     }
@@ -126,13 +127,11 @@ export function InitiativeFormDialog({
       setDescription(initiative.description ?? '');
       const dates = initiativeToDates(initiative);
       setStartDate(dates.startDate);
-      setEndDate(dates.endDate);
     } else {
       setTitle('');
       setDescription('');
       const defaults = getDefaultDates();
       setStartDate(defaults.startDate);
-      setEndDate(defaults.endDate);
     }
   }, [open, initiative]);
 
@@ -148,10 +147,7 @@ export function InitiativeFormDialog({
     const trimmedTitle = title.trim();
     if (!trimmedTitle || isSubmitting || isDeleting) return;
 
-    const { startDate: normalizedStart, endDate: normalizedEnd } = normalizeInitiativeDates(
-      startDate,
-      endDate
-    );
+    const { startDate: normalizedStart } = normalizeInitiativeDates(startDate);
 
     try {
       if (isEditMode && initiative) {
@@ -159,16 +155,13 @@ export function InitiativeFormDialog({
           title: trimmedTitle,
           description: description.trim() || undefined,
           startDate: normalizedStart,
-          endDate: endDate === undefined ? null : (normalizedEnd ?? null),
         });
       } else {
-        const payload = {
+        await onCreate({
           title: trimmedTitle,
           description: description.trim() || undefined,
           startDate: normalizedStart,
-          ...(normalizedEnd !== undefined ? { endDate: normalizedEnd } : {}),
-        };
-        await onCreate(payload);
+        });
       }
       setShowDeleteConfirm(false);
       onOpenChange(false);
@@ -185,7 +178,6 @@ export function InitiativeFormDialog({
     isSubmitting,
     isDeleting,
     startDate,
-    endDate,
     isEditMode,
     initiative,
     onUpdate,
@@ -242,7 +234,7 @@ export function InitiativeFormDialog({
               {isEditMode
                 ? taggedGoalCount !== undefined
                   ? `Update this initiative. ${taggedGoalCount} goal${taggedGoalCount === 1 ? '' : 's'} tagged.`
-                  : 'Update this initiative’s title, description, or dates.'
+                  : "Update this initiative's title, description, or start date."
                 : 'Group goals across quarters with a date-bounded initiative.'}
             </DialogDescription>
           </DialogHeader>
@@ -276,21 +268,9 @@ export function InitiativeFormDialog({
                   onChange={(date) => {
                     if (!date) return;
                     setStartDate(date);
-                    if (endDate && endDate < date) setEndDate(undefined);
                   }}
                   allowFutureDates
                   placeholder="Select start date"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>End date (optional)</Label>
-                <DatePicker
-                  value={endDate}
-                  onChange={setEndDate}
-                  allowFutureDates
-                  clearable
-                  minDate={startDate}
-                  placeholder="No end date"
                 />
               </div>
             </div>

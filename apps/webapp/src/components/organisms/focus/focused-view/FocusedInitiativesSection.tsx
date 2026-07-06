@@ -157,6 +157,9 @@ export function FocusedInitiativesSection({
           setViewingInitiative(null);
           setEditingInitiative(initiative);
         }}
+        onUpdateEndDate={async (initiativeId, endDate) => {
+          await onUpdate(initiativeId, { endDate });
+        }}
       />
 
       <InitiativeFormDialog
