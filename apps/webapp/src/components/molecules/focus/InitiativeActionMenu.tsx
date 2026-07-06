@@ -2,7 +2,7 @@
 
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 import { ConvexError } from 'convex/values';
-import { CalendarDays, Edit2, MoreVertical, X } from 'lucide-react';
+import { CalendarDays, Check, Edit2, MoreVertical, X } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
 
@@ -112,6 +112,19 @@ export function InitiativeActionMenu({
     }
   };
 
+  const handleMarkComplete = async () => {
+    setIsOpen(false);
+    const today = DateTime.now().startOf('day').toJSDate();
+    const { endDate: normalizedEnd } = normalizeInitiativeDates(startDateJs, today);
+    if (normalizedEnd === undefined) return;
+
+    try {
+      await onEndDateChange(normalizedEnd);
+    } catch (error) {
+      handleEndDateError(error);
+    }
+  };
+
   return (
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -139,17 +152,30 @@ export function InitiativeActionMenu({
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault();
-              setIsOpen(false);
-              openEndDateDialog();
-            }}
-            className="flex items-center"
-          >
-            <CalendarDays className="mr-2 h-4 w-4" />
-            <span>{initiative.endDate ? 'Change end date' : 'Set end date'}</span>
-          </DropdownMenuItem>
+          {initiative.endDate === undefined ? (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                void handleMarkComplete();
+              }}
+              className="flex items-center"
+            >
+              <Check className="mr-2 h-4 w-4 text-green-600 dark:text-green-400" />
+              <span>Mark as complete</span>
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                setIsOpen(false);
+                openEndDateDialog();
+              }}
+              className="flex items-center"
+            >
+              <CalendarDays className="mr-2 h-4 w-4" />
+              <span>Change end date</span>
+            </DropdownMenuItem>
+          )}
           {initiative.endDate !== undefined && (
             <DropdownMenuItem
               onSelect={(e) => {
