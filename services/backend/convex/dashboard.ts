@@ -1283,6 +1283,7 @@ export const getGoalDetails = query({
       grandParentTitle,
       grandParentId,
       domainId: goal.domainId,
+      initiativeId: goal.initiativeId,
       year: goal.year,
       quarter: goal.quarter,
       adhoc: goal.adhoc,

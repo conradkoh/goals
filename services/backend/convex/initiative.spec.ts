@@ -206,6 +206,40 @@ describe('initiative', () => {
     expect(daily?.initiativeId).toBe(initiativeId);
   });
 
+  test('getGoalDetails returns initiativeId after tagging', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Details Query Test',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    await ctx.mutation(api.dashboard.updateQuarterlyGoalTitle, {
+      sessionId,
+      goalId: quarterlyGoalId,
+      title: 'Quarterly',
+      initiativeId,
+    });
+
+    const details = await ctx.query(api.dashboard.getGoalDetails, {
+      sessionId,
+      goalId: quarterlyGoalId,
+    });
+
+    expect(details?.initiativeId).toBe(initiativeId);
+  });
+
   test('untagging with null clears initiativeId on descendants', async () => {
     const ctx = convexTest(schema);
     const sessionId = await createTestSession(ctx);

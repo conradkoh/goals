@@ -1,7 +1,7 @@
 'use client';
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
 import { toast } from '@/components/ui/use-toast';
@@ -27,15 +27,21 @@ export function GoalInitiativeField({
   const { sessionId } = useSession();
   const { initiatives } = useInitiatives(sessionId);
   const [isSaving, setIsSaving] = useState(false);
+  const [displayedInitiativeId, setDisplayedInitiativeId] = useState(selectedInitiativeId);
+
+  useEffect(() => {
+    setDisplayedInitiativeId(selectedInitiativeId);
+  }, [selectedInitiativeId]);
 
   // fallow-ignore-next-line complexity
   const handleChange = async (initiativeId: string | null) => {
     if (disabled || isSaving) return;
-    if (initiativeId === selectedInitiativeId) return;
+    if (initiativeId === displayedInitiativeId) return;
 
     setIsSaving(true);
     try {
       await onInitiativeChange(initiativeId as Id<'initiatives'> | null);
+      setDisplayedInitiativeId(initiativeId as Id<'initiatives'> | null);
       const initiative = initiatives.find((item) => item._id === initiativeId);
       toast({
         title: initiativeId ? 'Initiative updated' : 'Initiative removed',
@@ -61,7 +67,7 @@ export function GoalInitiativeField({
       <label className="text-sm font-medium">Initiative</label>
       <InitiativeSelector
         initiatives={initiatives}
-        selectedInitiativeId={selectedInitiativeId}
+        selectedInitiativeId={displayedInitiativeId}
         onInitiativeChange={handleChange}
         placeholder="Tag to an initiative..."
         className="w-full"
