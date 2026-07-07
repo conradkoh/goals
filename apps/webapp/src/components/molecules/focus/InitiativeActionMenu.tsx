@@ -50,6 +50,8 @@ export interface InitiativeActionMenuProps {
   className?: string;
 }
 
+type EndDateDialogMode = 'complete' | 'change-end-date';
+
 // fallow-ignore-next-line complexity
 export function InitiativeActionMenu({
   initiative,
@@ -59,6 +61,7 @@ export function InitiativeActionMenu({
 }: InitiativeActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showEndDateDialog, setShowEndDateDialog] = useState(false);
+  const [dialogMode, setDialogMode] = useState<EndDateDialogMode>('change-end-date');
   const [pendingEndDate, setPendingEndDate] = useState<Date | undefined>(undefined);
   const [isSavingEndDate, setIsSavingEndDate] = useState(false);
 
@@ -70,9 +73,17 @@ export function InitiativeActionMenu({
   };
 
   const openEndDateDialog = () => {
+    setDialogMode('change-end-date');
     setPendingEndDate(
       initiative.endDate ? DateTime.fromMillis(initiative.endDate).toJSDate() : undefined
     );
+    setShowEndDateDialog(true);
+  };
+
+  const openCompleteDialog = () => {
+    setIsOpen(false);
+    setDialogMode('complete');
+    setPendingEndDate(DateTime.now().startOf('day').toJSDate());
     setShowEndDateDialog(true);
   };
 
@@ -112,18 +123,18 @@ export function InitiativeActionMenu({
     }
   };
 
-  const handleMarkComplete = async () => {
-    setIsOpen(false);
-    const today = DateTime.now().startOf('day').toJSDate();
-    const { endDate: normalizedEnd } = normalizeInitiativeDates(startDateJs, today);
-    if (normalizedEnd === undefined) return;
+  const dialogTitle =
+    dialogMode === 'complete'
+      ? 'Complete initiative'
+      : initiative.endDate
+        ? 'Change end date'
+        : 'Set end date';
 
-    try {
-      await onEndDateChange(normalizedEnd);
-    } catch (error) {
-      handleEndDateError(error);
-    }
-  };
+  const confirmLabel = isSavingEndDate
+    ? 'Saving...'
+    : dialogMode === 'complete'
+      ? 'Confirm'
+      : 'Save';
 
   return (
     <>
@@ -156,7 +167,7 @@ export function InitiativeActionMenu({
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
-                void handleMarkComplete();
+                openCompleteDialog();
               }}
               className="flex items-center"
             >
@@ -194,7 +205,7 @@ export function InitiativeActionMenu({
       <Dialog open={showEndDateDialog} onOpenChange={setShowEndDateDialog}>
         <DialogContent className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>{initiative.endDate ? 'Change end date' : 'Set end date'}</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
           </DialogHeader>
           <DatePicker
             value={pendingEndDate}
@@ -217,7 +228,7 @@ export function InitiativeActionMenu({
               onClick={() => void handleSaveEndDate()}
               disabled={!pendingEndDate || isSavingEndDate}
             >
-              {isSavingEndDate ? 'Saving...' : 'Save'}
+              {confirmLabel}
             </Button>
           </DialogFooter>
         </DialogContent>

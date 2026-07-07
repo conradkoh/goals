@@ -11,8 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getInitiativeDateStatus } from '@/lib/date/initiative-dates';
-import { initiativeStatusOrder } from '@/lib/initiative/initiative-status-badge';
+import { sortInitiativesByStatusAndDate } from '@/lib/initiative/initiative-status-badge';
 
 interface FocusedInitiativeFilterProps {
   initiatives: Doc<'initiatives'>[];
@@ -25,15 +24,7 @@ export function FocusedInitiativeFilter({
   selectedInitiativeId,
   onInitiativeChange,
 }: FocusedInitiativeFilterProps) {
-  const sorted = useMemo(() => {
-    return [...initiatives].sort((a, b) => {
-      const statusA = getInitiativeDateStatus(a.startDate, a.endDate);
-      const statusB = getInitiativeDateStatus(b.startDate, b.endDate);
-      const diff = initiativeStatusOrder[statusA] - initiativeStatusOrder[statusB];
-      if (diff !== 0) return diff;
-      return a.startDate - b.startDate || a.title.localeCompare(b.title);
-    });
-  }, [initiatives]);
+  const sorted = useMemo(() => sortInitiativesByStatusAndDate(initiatives), [initiatives]);
 
   const value = selectedInitiativeId ?? '__all__';
 

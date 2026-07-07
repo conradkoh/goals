@@ -13,10 +13,12 @@ import {
   InitiativeFormDialog,
   type InitiativeFormDialogProps,
 } from '@/components/molecules/focus/InitiativeFormDialog';
+import { InitiativesBrowseDialog } from '@/components/molecules/focus/InitiativesBrowseDialog';
 import { formatInitiativeDateRange, getInitiativeDateStatus } from '@/lib/date/initiative-dates';
+import { filterInitiativesForFocusView } from '@/lib/initiative/initiative-focus-filters';
 import {
   initiativeStatusBadge,
-  initiativeStatusOrder,
+  sortInitiativesByStatusAndDate,
 } from '@/lib/initiative/initiative-status-badge';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
@@ -87,18 +89,16 @@ export function FocusedInitiativesSection({
   const goalCounts = useQuery(api.initiative.getInitiativeGoalCounts, { sessionId });
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isBrowseOpen, setIsBrowseOpen] = useState(false);
   const [viewingInitiative, setViewingInitiative] = useState<Doc<'initiatives'> | null>(null);
   const [editingInitiative, setEditingInitiative] = useState<Doc<'initiatives'> | null>(null);
 
-  const sortedInitiatives = useMemo(() => {
-    return [...initiatives].sort((a, b) => {
-      const statusA = getInitiativeDateStatus(a.startDate, a.endDate);
-      const statusB = getInitiativeDateStatus(b.startDate, b.endDate);
-      const statusDiff = initiativeStatusOrder[statusA] - initiativeStatusOrder[statusB];
-      if (statusDiff !== 0) return statusDiff;
-      return a.startDate - b.startDate || a.title.localeCompare(b.title);
-    });
-  }, [initiatives]);
+  const focusInitiatives = useMemo(() => filterInitiativesForFocusView(initiatives), [initiatives]);
+
+  const sortedInitiatives = useMemo(
+    () => sortInitiativesByStatusAndDate(focusInitiatives),
+    [focusInitiatives]
+  );
 
   const isFormOpen = isCreateOpen || editingInitiative !== null;
 
@@ -114,8 +114,9 @@ export function FocusedInitiativesSection({
       <FocusedGoalSection
         title="Initiatives"
         description="Date-bounded efforts that can span multiple quarters."
-        count={initiatives.length}
+        count={focusInitiatives.length}
         icon={<Flag className="h-3.5 w-3.5 text-muted-foreground" />}
+        onTitleClick={() => setIsBrowseOpen(true)}
         action={
           <button
             type="button"
@@ -129,7 +130,9 @@ export function FocusedInitiativesSection({
       >
         {sortedInitiatives.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">
-            No initiatives yet. Create one to group goals across quarters.
+            {initiatives.length === 0
+              ? 'No initiatives yet. Create one to group goals across quarters.'
+              : 'No active initiatives. Click the header to browse past initiatives.'}
           </p>
         ) : (
           <div className="px-4 py-2">
@@ -170,6 +173,13 @@ export function FocusedInitiativesSection({
         onUpdate={onUpdate}
         onDelete={onDelete}
         isSubmitting={isSubmitting}
+      />
+
+      <InitiativesBrowseDialog
+        open={isBrowseOpen}
+        onOpenChange={setIsBrowseOpen}
+        initiatives={initiatives}
+        onSelectInitiative={setViewingInitiative}
       />
     </>
   );
