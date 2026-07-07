@@ -279,6 +279,17 @@ export default defineSchema({
   }).index('by_user', ['userId']),
 
   /**
+   * Initiatives - date-bounded efforts that can span multiple quarters.
+   */
+  initiatives: defineTable({
+    userId: v.id('users'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    startDate: v.number(), // Unix ms (start of day)
+    endDate: v.optional(v.number()), // Unix ms (end of day); omitted = ongoing
+  }).index('by_user', ['userId']),
+
+  /**
    * Goals table - the core of the application.
    * Supports quarterly, weekly, daily, and adhoc goals with hierarchical structure.
    */
@@ -293,6 +304,7 @@ export default defineSchema({
     details: v.optional(v.string()),
     dueDate: v.optional(v.number()),
     domainId: v.optional(v.id('domains')),
+    initiativeId: v.optional(v.id('initiatives')),
     parentId: v.optional(v.id('goals')),
     inPath: v.string(),
     depth: v.number(),
@@ -314,7 +326,8 @@ export default defineSchema({
     .index('by_user_and_year_and_quarter', ['userId', 'year', 'quarter'])
     .index('by_user_and_year_and_quarter_and_parent', ['userId', 'year', 'quarter', 'parentId'])
     .index('by_user_and_adhoc_year_week', ['userId', 'year', 'adhoc.weekNumber'])
-    .index('by_user_and_domain', ['userId', 'domainId']),
+    .index('by_user_and_domain', ['userId', 'domainId'])
+    .index('by_user_and_initiative', ['userId', 'initiativeId']),
 
   /**
    * Time series data for goal state snapshots by week.

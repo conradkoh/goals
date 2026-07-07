@@ -1,3 +1,4 @@
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback } from 'react';
 
 import {
@@ -9,6 +10,7 @@ import {
   useGoalListItemContext,
 } from '../view/components';
 
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { WeeklyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { useGoalContext } from '@/contexts/GoalContext';
@@ -82,8 +84,21 @@ function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
    * Handles updating the goal title and details.
    */
   const handleUpdateGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      const updatePromise = onUpdateGoal(goal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      const updatePromise = onUpdateGoal(
+        goal._id,
+        title,
+        details,
+        dueDate,
+        undefined,
+        initiativeId
+      );
       setPendingUpdate(updatePromise);
       return updatePromise;
     },
@@ -104,6 +119,8 @@ function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
           )}
           onToggleComplete={handleToggleCompletion}
         />
+
+        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
         <GoalPendingIndicator isOptimistic={isOptimistic}>
           <GoalStatusIcons goalId={goal._id} />

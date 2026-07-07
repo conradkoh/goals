@@ -1,5 +1,7 @@
+import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
+import { useMutation } from 'convex/react';
 import { DateTime } from 'luxon';
 import { useCallback, useMemo, useState } from 'react';
 
@@ -15,6 +17,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../goal-details-popover/view/components';
 
@@ -34,10 +37,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { resolveGoalType } from '@/domain/goal-actions';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
+import { useSession } from '@/modules/auth/useSession';
 
 /**
  * Props for the GoalQuickViewModal component.
@@ -114,6 +120,8 @@ function GoalQuickViewContentInternal({
 }) {
   const { goal } = useGoalContext();
   const goalActions = useGoalActions();
+  const { sessionId } = useSession();
+  const updateGoalTitleMutation = useMutation(api.dashboard.updateGoalTitle);
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, createDailyGoalOptimistic } =
     useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -136,12 +144,21 @@ function GoalQuickViewContentInternal({
   const hasChildren = goal.children && goal.children.length > 0;
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       await goalActions.updateQuarterlyGoalTitle({
         goalId: goal._id,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [goal._id, goalActions]
@@ -155,12 +172,35 @@ function GoalQuickViewContentInternal({
     });
   }, [goal._id, weekNumber, isComplete, goalActions]);
 
-  // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.dueDate);
+  const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      const args = buildStructuredGoalMutationArgs({
+        title: goal.title,
+        details: goal.details,
+        dueDate: goal.dueDate,
+        initiativeId,
+      });
+
+      if (goal.depth === 0) {
+        await goalActions.updateQuarterlyGoalTitle({ goalId: goal._id, ...args });
+        return;
+      }
+
+      if (!sessionId) return;
+      await updateGoalTitleMutation({ sessionId, goalId: goal._id, ...args });
     },
-    [goal.title, goal.dueDate, handleSave]
+    [
+      goal._id,
+      goal.title,
+      goal.details,
+      goal.dueDate,
+      goal.depth,
+      goalActions,
+      sessionId,
+      updateGoalTitleMutation,
+    ]
   );
 
   // Handler for creating weekly goals (from quarterly goal)
@@ -225,6 +265,12 @@ function GoalQuickViewContentInternal({
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
           {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+          <GoalInitiativeField
+            selectedInitiativeId={goal.initiativeId ?? null}
+            onInitiativeChange={handleInitiativeChange}
+            className="mt-3 space-y-2"
+          />
 
           {/* Tabs for Details and Log */}
           <Tabs defaultValue="details" className="mt-4">

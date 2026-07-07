@@ -8,6 +8,7 @@
  */
 
 import { api } from '@workspace/backend/convex/_generated/api';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useMutation } from 'convex/react';
 import { DateTime } from 'luxon';
 import { useMemo, useState, useCallback } from 'react';
@@ -24,6 +25,7 @@ import {
   GoalEditProvider,
   GoalDueDateDisplay,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../view/components';
 
@@ -39,7 +41,9 @@ import {
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useGoalActions } from '@/hooks/useGoalActions';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -84,14 +88,23 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
   const hasChildren = goal.children && goal.children.length > 0;
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       if (!sessionId) return;
       await updateGoalTitleMutation({
         sessionId,
         goalId: goal._id,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [goal._id, sessionId, updateGoalTitleMutation]
@@ -108,11 +121,23 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
     }
   }, [goal._id, weekNumber, isComplete, toggleGoalCompletion, onComplete]);
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.dueDate);
+  const handleDetailsChange = useStructuredGoalDetailsSave(handleSave, goal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      if (!sessionId) return;
+      await updateGoalTitleMutation({
+        sessionId,
+        goalId: goal._id,
+        ...buildStructuredGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.dueDate,
+          initiativeId,
+        }),
+      });
     },
-    [goal.title, goal.dueDate, handleSave]
+    [goal._id, goal.title, goal.details, goal.dueDate, sessionId, updateGoalTitleMutation]
   );
 
   const handleCreateDailyGoal = useCallback(async () => {
@@ -151,6 +176,7 @@ export function WeeklyGoalPageContent({ onComplete }: WeeklyGoalPageContentProps
           selectedDayOfWeek={selectedDayOfWeek}
           setSelectedDayOfWeek={setSelectedDayOfWeek}
           handleCreateDailyGoal={handleCreateDailyGoal}
+          onInitiativeChange={handleInitiativeChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -183,6 +209,8 @@ interface WeeklyGoalPageContentInnerProps {
   setSelectedDayOfWeek: (day: DayOfWeek) => void;
   /** Handler for creating a new daily goal */
   handleCreateDailyGoal: () => Promise<void>;
+  /** Handler for updating initiative tag */
+  onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
 }
 
 /**
@@ -202,6 +230,7 @@ function WeeklyGoalPageContentInner({
   selectedDayOfWeek,
   setSelectedDayOfWeek,
   handleCreateDailyGoal,
+  onInitiativeChange,
 }: WeeklyGoalPageContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -221,6 +250,12 @@ function WeeklyGoalPageContentInner({
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
         {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={onInitiativeChange}
+          className="mt-3 space-y-2"
+        />
 
         {goal.details && (
           <GoalDetailsSection

@@ -86,8 +86,16 @@ export const DailyGoalGroup = ({
               title={quarterlyGoal.title}
               details={quarterlyGoal.details}
               initialDueDate={quarterlyGoal.dueDate}
-              onSave={async (title, details, dueDate) => {
-                await onUpdateGoal(quarterlyGoal._id, title, details, dueDate);
+              initialInitiativeId={quarterlyGoal.initiativeId ?? null}
+              onSave={async (title, details, dueDate, _domainId, initiativeId) => {
+                await onUpdateGoal(
+                  quarterlyGoal._id,
+                  title,
+                  details,
+                  dueDate,
+                  undefined,
+                  initiativeId
+                );
               }}
               trigger={
                 <Button
@@ -105,8 +113,9 @@ export const DailyGoalGroup = ({
             title={weeklyGoal.title}
             details={weeklyGoal.details}
             initialDueDate={weeklyGoal.dueDate}
-            onSave={async (title, details, dueDate) => {
-              await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
+            initialInitiativeId={weeklyGoal.initiativeId ?? null}
+            onSave={async (title, details, dueDate, _domainId, initiativeId) => {
+              await onUpdateGoal(weeklyGoal._id, title, details, dueDate, undefined, initiativeId);
             }}
             trigger={
               <Button

@@ -19,11 +19,13 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useSessionMutation, useSessionQuery } from 'convex-helpers/react/sessions';
 import { History, Loader2, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { CreateQuarterlyGoalDialog } from '@/components/molecules/focus/CreateQuarterlyGoalDialog';
 import {
   FocusedAdhocGoalsSection,
+  FocusedInitiativeFilter,
+  FocusedInitiativesSection,
   FocusedQuarterlyGoalsSection,
   FocusedUrgentSection,
 } from '@/components/organisms/focus/focused-view';
@@ -33,10 +35,14 @@ import { ScratchpadNewDialog } from '@/components/organisms/focus/ScratchpadNewD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { useInitiatives } from '@/hooks/useInitiatives';
+import { useInitiativeTitleMap } from '@/hooks/useInitiativeTitleMap';
 import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
 import type { DayOfWeek } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
+import { filterFocusedGoalsByInitiative } from '@/lib/initiative/filter-focused-goals-by-initiative';
+import { useSession } from '@/modules/auth/useSession';
 
 // ============================================================================
 // FocusModeFocusedView
@@ -51,9 +57,22 @@ import { getQuarterFromWeek } from '@/lib/date/iso-week';
  * ```
  */
 export function FocusModeFocusedView() {
+  const { sessionId } = useSession();
+  const {
+    initiatives,
+    createInitiative,
+    updateInitiative,
+    deleteInitiative,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useInitiatives(sessionId);
+  const initiativeTitleMap = useInitiativeTitleMap(initiatives);
+
   // ── History dialog ─────────────────────────────────────────────────────
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCreateQuarterlyGoalOpen, setIsCreateQuarterlyGoalOpen] = useState(false);
+  const [initiativeFilterId, setInitiativeFilterId] = useState<Id<'initiatives'> | null>(null);
 
   // ── Scratchpad ─────────────────────────────────────────────────────────
   const {
@@ -101,6 +120,19 @@ export function FocusModeFocusedView() {
     weekNumber,
     dayOfWeek,
   });
+
+  const filteredUrgent = useMemo(
+    () => filterFocusedGoalsByInitiative(focusedViewData?.urgent ?? [], initiativeFilterId),
+    [focusedViewData?.urgent, initiativeFilterId]
+  );
+  const filteredQuarterly = useMemo(
+    () => filterFocusedGoalsByInitiative(focusedViewData?.quarterlyGoals ?? [], initiativeFilterId),
+    [focusedViewData?.quarterlyGoals, initiativeFilterId]
+  );
+  const filteredAdhoc = useMemo(
+    () => filterFocusedGoalsByInitiative(focusedViewData?.adhocTasks ?? [], initiativeFilterId),
+    [focusedViewData?.adhocTasks, initiativeFilterId]
+  );
 
   // ── Goal mutations ──────────────────────────────────────────────────────
   const createAdhocGoal = useSessionMutation(api.adhocGoal.createAdhocGoal);
@@ -257,15 +289,37 @@ export function FocusModeFocusedView() {
           </div>
         ) : (
           <WeekProvider weekData={weekData}>
+            <FocusedInitiativeFilter
+              initiatives={initiatives}
+              selectedInitiativeId={initiativeFilterId}
+              onInitiativeChange={setInitiativeFilterId}
+            />
+
             <FocusedUrgentSection
-              goals={focusedViewData.urgent}
+              goals={filteredUrgent}
               onToggleComplete={handleUrgentCompleteChange}
+              initiativeTitleMap={initiativeTitleMap}
+            />
+
+            <FocusedInitiativesSection
+              initiatives={initiatives}
+              onCreate={async (args) => {
+                await createInitiative(args);
+              }}
+              onUpdate={async (id, args) => {
+                await updateInitiative(id, args);
+              }}
+              onDelete={async (id) => {
+                await deleteInitiative(id);
+              }}
+              isSubmitting={isCreating || isUpdating || isDeleting}
             />
 
             <FocusedQuarterlyGoalsSection
-              goals={focusedViewData.quarterlyGoals}
+              goals={filteredQuarterly}
               onToggleComplete={handleNormalGoalCompleteChange}
               onAddGoal={() => setIsCreateQuarterlyGoalOpen(true)}
+              initiativeTitleMap={initiativeTitleMap}
             />
 
             <CreateQuarterlyGoalDialog
@@ -277,8 +331,9 @@ export function FocusModeFocusedView() {
             />
 
             <FocusedAdhocGoalsSection
-              goals={focusedViewData.adhocTasks}
+              goals={filteredAdhoc}
               onToggleComplete={handleAdhocCompleteChange}
+              initiativeTitleMap={initiativeTitleMap}
             />
 
             {/* Inline add task */}

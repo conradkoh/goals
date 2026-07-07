@@ -24,6 +24,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../view/components';
 
@@ -33,8 +34,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -86,12 +89,15 @@ interface AdhocGoalPopoverContentInnerProps {
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
   /** Handler for deleting a child goal */
   onChildDelete: (goalId: Id<'goals'>) => Promise<void>;
   /** Handler for creating a new child goal */
   onCreateChild: (parentId: Id<'goals'>, title: string) => Promise<void>;
+  /** Handler for updating initiative tag */
+  onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
 }
 
 /**
@@ -105,6 +111,7 @@ interface AdhocGoalPopoverContentInnerProps {
  * @param props - Component props
  * @returns Rendered adhoc goal content
  */
+// fallow-ignore-next-line complexity
 export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { sessionId } = useSession();
@@ -113,13 +120,17 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
   const isComplete = goal.isComplete;
 
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number, domainId?: Id<'domains'> | null) => {
-      await updateAdhocGoal(goal._id, {
-        title,
-        details,
-        dueDate,
-        domainId: domainId === null ? null : domainId,
-      });
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [goal._id, updateAdhocGoal]
   );
@@ -144,11 +155,22 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
 
   const isBacklog = (goal as unknown as { isBacklog?: boolean }).isBacklog || false;
 
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+  const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.adhoc?.dueDate,
+          domainId: goal.domainId ?? null,
+          initiativeId,
+        })
+      );
     },
-    [goal.title, goal.adhoc?.dueDate, goal.domainId, handleSave]
+    [goal._id, goal.title, goal.details, goal.adhoc?.dueDate, goal.domainId, updateAdhocGoal]
   );
 
   const handleChildCompleteChange = useCallback(
@@ -164,9 +186,13 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
       title: string,
       details?: string,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [updateAdhocGoal]
   );
@@ -216,6 +242,7 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
           onChildUpdate={handleChildUpdate}
           onChildDelete={handleChildDelete}
           onCreateChild={handleCreateChild}
+          onInitiativeChange={handleInitiativeChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -244,6 +271,7 @@ function AdhocGoalPopoverContentInner({
   onChildUpdate,
   onChildDelete,
   onCreateChild,
+  onInitiativeChange,
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
@@ -269,6 +297,12 @@ function AdhocGoalPopoverContentInner({
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
+
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={onInitiativeChange}
+          className="mt-3 space-y-2"
+        />
 
         <GoalCreatedDate createdAt={goal._creationTime} />
         {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}

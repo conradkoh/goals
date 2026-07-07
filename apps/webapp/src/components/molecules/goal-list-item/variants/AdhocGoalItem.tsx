@@ -5,6 +5,7 @@ import { Calendar } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { DomainBadge } from '@/components/atoms/DomainBadge';
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,7 +28,8 @@ export interface AdhocGoalItemProps {
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => void;
   /** Callback fired when the goal's backlog status changes */
   onBacklogChange?: (goalId: Id<'goals'>, isBacklog: boolean) => void;
@@ -98,11 +100,12 @@ export function AdhocGoalItem({
       title: string,
       details: string | undefined,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
       // Create promise and track pending state
       const updatePromise = Promise.resolve(
-        onUpdate?.(goal._id, title, details, dueDate, domainId)
+        onUpdate?.(goal._id, title, details, dueDate, domainId, initiativeId)
       );
 
       setIsPending(true);
@@ -206,6 +209,10 @@ export function AdhocGoalItem({
                     {goal.title}
                   </span>
                   {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+                  <InitiativeBadgeForGoal
+                    initiativeId={goal.initiativeId}
+                    isComplete={goal.isComplete}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 mt-1">
@@ -218,6 +225,8 @@ export function AdhocGoalItem({
                 </div>
               </div>
             )}
+
+            <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
             <div className="flex items-center gap-1 flex-shrink-0">
               <AdhocGoalActionIcons

@@ -9,6 +9,7 @@ import {
 } from '../view/components';
 
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
+import { InitiativeBadgeForGoal } from '@/components/atoms/InitiativeBadgeForGoal';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { useWeek } from '@/hooks/useWeek';
@@ -102,8 +103,21 @@ function QuarterlyGoalItemContentInternal({
   );
 
   const handleSaveGoal = useCallback(
-    async (title: string, details?: string, dueDate?: number, _domainId?: Id<'domains'> | null) => {
-      const updatePromise = onUpdateGoal(goal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      const updatePromise = onUpdateGoal(
+        goal._id,
+        title,
+        details,
+        dueDate,
+        undefined,
+        initiativeId
+      );
       setPendingUpdate(updatePromise);
       return updatePromise;
     },
@@ -144,6 +158,8 @@ function QuarterlyGoalItemContentInternal({
           )}
           onToggleComplete={handleToggleCompletion}
         />
+
+        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
 
         <GoalPendingIndicator>
           <GoalActionButtons

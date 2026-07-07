@@ -1,5 +1,6 @@
 'use client';
 
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { ListTodo, Loader2 } from 'lucide-react';
 
@@ -9,11 +10,13 @@ import { FocusedGoalSection } from './FocusedGoalSection';
 interface FocusedAdhocGoalsSectionProps {
   goals: FocusedGoalItem[] | undefined;
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
+  initiativeTitleMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedAdhocGoalsSection({
   goals,
   onToggleComplete,
+  initiativeTitleMap,
 }: FocusedAdhocGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -43,6 +46,9 @@ export function FocusedAdhocGoalsSection({
                 weekNumber={goal.weekNumber}
                 onToggleComplete={onToggleComplete}
                 indentLevel={goal.indentLevel}
+                initiativeTitle={
+                  goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                }
               />
             ))}
           </ul>

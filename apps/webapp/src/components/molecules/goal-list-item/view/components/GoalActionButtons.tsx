@@ -65,6 +65,7 @@ export function GoalActionButtons({
           details={goal.details}
           initialDueDate={goal.dueDate}
           initialDomainId={goal.domainId ?? null}
+          initialInitiativeId={goal.initiativeId ?? null}
           showDomainSelector={showDomainSelector}
           onSave={onSave}
           onUpdatePending={onUpdatePending}

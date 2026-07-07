@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
+import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -20,6 +21,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
+import { useInitiatives } from '@/hooks/useInitiatives';
 import { cn } from '@/lib/utils';
 import type { GoalUpdatePendingHandler } from '@/models/goal-handlers';
 import { useSession } from '@/modules/auth/useSession';
@@ -37,7 +39,8 @@ export interface GoalEditPopoverProps {
     title: string,
     details: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
   /** Custom trigger element (defaults to edit icon button) */
   trigger?: React.ReactNode;
@@ -45,8 +48,12 @@ export interface GoalEditPopoverProps {
   initialDueDate?: number;
   /** Initial domain ID for adhoc goals */
   initialDomainId?: Id<'domains'> | null;
+  /** Initial initiative ID for goal tagging */
+  initialInitiativeId?: Id<'initiatives'> | null;
   /** Whether to show the domain selector (for adhoc goals) */
   showDomainSelector?: boolean;
+  /** Whether to show the initiative selector */
+  showInitiativeSelector?: boolean;
   /** Called with the update promise for tracking pending state in the parent */
   onUpdatePending?: GoalUpdatePendingHandler;
 }
@@ -76,7 +83,9 @@ export function GoalEditPopover({
   trigger,
   initialDueDate,
   initialDomainId,
+  initialInitiativeId,
   showDomainSelector = false,
+  showInitiativeSelector = true,
   onUpdatePending,
 }: GoalEditPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,9 +95,13 @@ export function GoalEditPopover({
     initialDueDate ? new Date(initialDueDate) : undefined
   );
   const [domainId, setDomainId] = useState<Id<'domains'> | null | undefined>(initialDomainId);
+  const [initiativeId, setInitiativeId] = useState<Id<'initiatives'> | null | undefined>(
+    initialInitiativeId
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { sessionId } = useSession();
   const { domains, createDomain, updateDomain, deleteDomain } = useDomains(sessionId);
+  const { initiatives } = useInitiatives(sessionId);
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
 
   // Sync title with external data when it changes or popover opens
@@ -119,6 +132,12 @@ export function GoalEditPopover({
     }
   }, [isOpen, initialDomainId]);
 
+  useEffect(() => {
+    if (isOpen) {
+      setInitiativeId(initialInitiativeId);
+    }
+  }, [isOpen, initialInitiativeId]);
+
   /**
    * Resets form state and closes the popover.
    */
@@ -127,12 +146,14 @@ export function GoalEditPopover({
     setDetails(initialDetails ?? '');
     setDueDate(initialDueDate ? new Date(initialDueDate) : undefined);
     setDomainId(initialDomainId);
+    setInitiativeId(initialInitiativeId);
     setIsOpen(false);
-  }, [initialTitle, initialDetails, initialDueDate, initialDomainId]);
+  }, [initialTitle, initialDetails, initialDueDate, initialDomainId, initialInitiativeId]);
 
   /**
    * Saves the goal with optimistic UI - closes immediately while save is in flight.
    */
+  // fallow-ignore-next-line complexity
   const handleSave = useCallback(async () => {
     if (!title.trim()) return;
 
@@ -141,7 +162,7 @@ export function GoalEditPopover({
     setIsOpen(false);
 
     // Create the save promise
-    const savePromise = onSave(title.trim(), details, dueDate?.getTime(), domainId);
+    const savePromise = onSave(title.trim(), details, dueDate?.getTime(), domainId, initiativeId);
 
     // Notify parent of pending update (allows showing loading indicator in list item)
     onUpdatePending?.(savePromise);
@@ -158,7 +179,7 @@ export function GoalEditPopover({
     } finally {
       setIsSubmitting(false);
     }
-  }, [title, details, dueDate, domainId, onSave, onUpdatePending]);
+  }, [title, details, dueDate, domainId, initiativeId, onSave, onUpdatePending]);
 
   /**
    * Handles Enter key press to submit the form.
@@ -261,6 +282,19 @@ export function GoalEditPopover({
           </PopoverContent>
         </Popover>
       </div>
+      {showInitiativeSelector && (
+        <div className="space-y-2">
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with InitiativeSelector below */}
+          <label className="text-sm font-medium text-muted-foreground">Initiative</label>
+          <InitiativeSelector
+            initiatives={initiatives}
+            selectedInitiativeId={initiativeId === null ? null : initiativeId}
+            onInitiativeChange={(id) => setInitiativeId(id as Id<'initiatives'> | null)}
+            placeholder="Tag to an initiative..."
+            className="w-full"
+          />
+        </div>
+      )}
       {showDomainSelector && (
         <div className="space-y-2">
           {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with DomainSelector below */}

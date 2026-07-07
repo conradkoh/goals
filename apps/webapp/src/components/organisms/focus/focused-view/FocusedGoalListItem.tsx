@@ -3,6 +3,7 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useState } from 'react';
 
+import { InitiativeBadge } from '@/components/atoms/InitiativeBadge';
 import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ interface FocusedGoalListItemProps {
   /** Nesting depth for visual indentation (0 = root) */
   indentLevel?: number;
   leadingIndicator?: React.ReactNode;
+  initiativeTitle?: string;
 }
 
 export function FocusedGoalListItem({
@@ -34,6 +36,7 @@ export function FocusedGoalListItem({
   incompleteClassName,
   indentLevel = 0,
   leadingIndicator,
+  initiativeTitle,
 }: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -53,7 +56,7 @@ export function FocusedGoalListItem({
           type="button"
           onClick={() => setPopoverOpen(true)}
           className={cn(
-            'text-sm text-left flex-1 truncate transition-all duration-200',
+            'text-sm text-left flex-1 min-w-0 truncate transition-all duration-200',
             isComplete
               ? 'line-through text-muted-foreground/60 opacity-60'
               : (incompleteClassName ?? 'text-foreground')
@@ -61,6 +64,12 @@ export function FocusedGoalListItem({
         >
           {title}
         </button>
+        {initiativeTitle && (
+          <InitiativeBadge
+            title={initiativeTitle}
+            className={cn('flex-shrink-0', isComplete && 'bg-muted text-muted-foreground')}
+          />
+        )}
       </li>
 
       <StandaloneGoalModal

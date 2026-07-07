@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/collapsible-minimal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek } from '@/hooks/useWeek';
 
 interface WeekCardQuarterlyGoalsProps {
@@ -112,15 +113,19 @@ export const WeekCardQuarterlyGoals = ({
       title: string,
       details?: string,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
-          title,
-          details,
-          dueDate,
-          domainId,
+          ...buildStructuredGoalMutationArgs({
+            title,
+            details,
+            dueDate,
+            domainId,
+            initiativeId,
+          }),
         });
       } catch (error) {
         console.error('Failed to update goal:', error);

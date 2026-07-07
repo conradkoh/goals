@@ -36,7 +36,8 @@ export interface AdhocSubGoalsListProps {
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => void;
   /** Callback when a goal is deleted */
   onDelete?: (goalId: Id<'goals'>) => void;
@@ -191,7 +192,8 @@ interface SubGoalItemProps {
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => void;
   onDelete?: (goalId: Id<'goals'>) => void;
   onCreateChild?: (parentId: Id<'goals'>, title: string) => Promise<void>;
@@ -217,9 +219,10 @@ function SubGoalItem({
       title: string,
       details: string | undefined,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
-      onUpdate?.(goal._id, title, details, dueDate, domainId);
+      onUpdate?.(goal._id, title, details, dueDate, domainId, initiativeId);
     },
     [goal._id, onUpdate]
   );

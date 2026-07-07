@@ -6,6 +6,7 @@ import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
 
 import { toast } from '@/components/ui/use-toast';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -109,6 +110,8 @@ export interface UpdateQuarterlyGoalTitleParams {
   dueDate?: number;
   /** Optional domain/category ID for the goal. Null removes the domain assignment. */
   domainId?: Id<'domains'> | null;
+  /** Optional initiative ID for the goal. Null untags the initiative. */
+  initiativeId?: Id<'initiatives'> | null;
 }
 
 /**
@@ -504,14 +507,17 @@ export const useGoalActions = (): GoalActions => {
       },
 
       updateQuarterlyGoalTitle: async (params: UpdateQuarterlyGoalTitleParams) => {
-        const { goalId, title, details, dueDate, domainId } = params;
+        const { goalId, title, details, dueDate, domainId, initiativeId } = params;
         await updateQuarterlyGoalTitleMutation({
           sessionId,
           goalId,
-          title,
-          details,
-          dueDate,
-          domainId: domainId ?? undefined,
+          ...buildStructuredGoalMutationArgs({
+            title,
+            details,
+            dueDate,
+            domainId,
+            initiativeId,
+          }),
         });
       },
 

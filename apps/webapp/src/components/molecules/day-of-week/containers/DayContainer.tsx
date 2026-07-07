@@ -14,6 +14,7 @@ import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalProvider } from '@/contexts/GoalContext';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type { GoalUpdateHandler } from '@/models/goal-handlers';
 
 // Helper function to check if a goal was completed today
 export const wasCompletedToday = (
@@ -38,12 +39,7 @@ interface WeeklyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -75,8 +71,14 @@ const WeeklyGoalSection = ({
 
   // Handle saving edits
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number) => {
-      await onUpdateGoal(weeklyGoal._id, title, details, dueDate);
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await onUpdateGoal(weeklyGoal._id, title, details, dueDate, undefined, initiativeId);
     },
     [weeklyGoal._id, onUpdateGoal]
   );
@@ -154,12 +156,7 @@ interface QuarterlyGoalSectionProps {
   dayOfWeek: DayOfWeek;
   mode: DayContainerMode;
   sortDailyGoals?: (goals: GoalWithDetailsAndChildren[]) => GoalWithDetailsAndChildren[];
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDelete: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -325,12 +322,7 @@ export interface DayContainerProps {
    * Typically used for starred and pinned quarterly goals to ensure they're always visible.
    */
   alwaysShowQuarterlyGoals?: GoalWithDetailsAndChildren[];
-  onUpdateGoal: (
-    goalId: Id<'goals'>,
-    title: string,
-    details?: string,
-    dueDate?: number
-  ) => Promise<void>;
+  onUpdateGoal: GoalUpdateHandler;
   onDeleteGoal: (goalId: Id<'goals'>) => Promise<void>;
   onCreateDailyGoal: (
     weeklyGoalId: Id<'goals'>,
@@ -359,8 +351,15 @@ export const DayContainer = ({
 }: DayContainerProps) => {
   // Memoize the callback functions to prevent unnecessary re-renders
   const handleUpdateGoal = useCallback(
-    (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-      return onUpdateGoal(goalId, title, details, dueDate);
+    (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      return onUpdateGoal(goalId, title, details, dueDate, undefined, initiativeId);
     },
     [onUpdateGoal]
   );

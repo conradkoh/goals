@@ -24,6 +24,7 @@ interface FocusedGoalSectionProps {
   tone?: FocusedGoalSectionTone;
   icon?: ReactNode;
   action?: ReactNode;
+  onTitleClick?: () => void;
   children: ReactNode;
 }
 
@@ -34,6 +35,7 @@ export function FocusedGoalSection({
   tone = 'muted',
   icon,
   action,
+  onTitleClick,
   children,
 }: FocusedGoalSectionProps) {
   const styles = toneStyles[tone];
@@ -43,7 +45,17 @@ export function FocusedGoalSection({
       <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-border">
         {icon && <span className="flex-shrink-0 text-muted-foreground">{icon}</span>}
         <div className="min-w-0">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{title}</h3>
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              className="text-xs font-bold uppercase tracking-wider text-foreground hover:text-primary transition-colors text-left"
+            >
+              {title}
+            </button>
+          ) : (
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{title}</h3>
+          )}
           {description && (
             <p className="text-[10px] leading-4 text-muted-foreground">{description}</p>
           )}

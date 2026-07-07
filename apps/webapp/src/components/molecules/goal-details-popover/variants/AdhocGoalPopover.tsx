@@ -1,6 +1,5 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
-import { useCallback } from 'react';
 
 import {
   AdhocSubGoalsList,
@@ -27,6 +26,7 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useAdhocGoalDetailsSaveViaHandler } from '@/hooks/useGoalDetailsSave';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface AdhocGoalPopoverProps {
@@ -152,13 +152,7 @@ function AdhocGoalPopoverContentInner({
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
-  // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      onSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
-    },
-    [onSave, goal.title, goal.adhoc?.dueDate, goal.domainId]
-  );
+  const handleDetailsChange = useAdhocGoalDetailsSaveViaHandler(onSave, goal);
 
   // Shared content for both popover and fullscreen modes
   const goalContent = (

@@ -22,6 +22,7 @@ export {
 } from './GoalDisplayContext';
 export { GoalDomainDisplay, type GoalDomainDisplayProps } from './GoalDomainDisplay';
 export { GoalDueDateDisplay, type GoalDueDateDisplayProps } from './GoalDueDateDisplay';
+export { GoalInitiativeField } from './GoalInitiativeField';
 export { GoalEditProvider, useGoalEditContext } from './GoalEditContext';
 export { GoalEditModal, type GoalEditModalProps } from './GoalEditModal';
 export { GoalHeader, type GoalHeaderProps } from './GoalHeader';

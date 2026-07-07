@@ -6,6 +6,7 @@ import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/component
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
@@ -46,12 +47,22 @@ export function GoalDetailsChildrenList({
 
   // Handle updating child goals
   const handleUpdateGoal = useCallback(
-    async (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
+    async (
+      goalId: Id<'goals'>,
+      title: string,
+      details?: string,
+      dueDate?: number,
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
       await updateQuarterlyGoalTitle({
         goalId,
-        title,
-        details,
-        dueDate,
+        ...buildStructuredGoalMutationArgs({
+          title,
+          details,
+          dueDate,
+          initiativeId,
+        }),
       });
     },
     [updateQuarterlyGoalTitle]

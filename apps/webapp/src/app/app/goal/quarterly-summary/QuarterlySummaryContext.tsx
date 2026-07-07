@@ -2,22 +2,34 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
-import type { QuarterlyGoalOption } from '@workspace/backend/src/usecase/getWeekDetails';
+import type {
+  InitiativeQuarterOption,
+  QuarterlyGoalOption,
+} from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
 import { DateTime } from 'luxon';
 import React from 'react';
 
 import { useDomains } from '@/hooks/useDomains';
+import { useInitiativeQuarterSummary } from '@/hooks/useInitiativeQuarterSummary';
 import { useQuarterlyGoalsList } from '@/hooks/useQuarterlyGoalsList';
 import { useQuarterSummary } from '@/hooks/useQuarterSummary';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
+ * Summary pathway: initiative-centric (default) or goal-centric.
+ */
+export type QuarterlySummaryPathway = 'initiative' | 'goal';
+
+/**
  * Context value for quarterly summary state and actions.
  * Provides access to period selection, goal selection, and summary data.
  */
 export interface QuarterlySummaryContextValue {
+  /** Active summary pathway */
+  summaryPathway: QuarterlySummaryPathway;
+  setSummaryPathway: (pathway: QuarterlySummaryPathway) => void;
   /** Current year for the quarterly summary */
   year: number;
   /** Current quarter (1-4) for the quarterly summary */
@@ -50,10 +62,21 @@ export interface QuarterlySummaryContextValue {
   summaryData: ReturnType<typeof useQuarterSummary>['summaryData'];
   /** Whether summary data is currently loading */
   isLoadingSummary: boolean;
-  /** Whether any goals or domains are selected */
-  hasSelection: boolean;
+  /** Whether any goals or domains are selected (goal-centric pathway) */
+  hasGoalSelection: boolean;
   /** Available years for selection in the year dropdown */
   yearOptions: number[];
+  /** Initiatives overlapping the selected quarter */
+  initiativesForQuarter: InitiativeQuarterOption[] | undefined;
+  /** Selected initiative IDs (initiative-centric pathway) */
+  selectedInitiativeIds: Id<'initiatives'>[];
+  setSelectedInitiativeIds: (ids: Id<'initiatives'>[]) => void;
+  isLoadingInitiatives: boolean;
+  /** Initiative-centric summary data */
+  initiativeSummaryData: ReturnType<typeof useInitiativeQuarterSummary>['summaryData'];
+  isLoadingInitiativeSummary: boolean;
+  /** Whether current pathway has a valid selection for preview */
+  hasSelection: boolean;
 }
 
 /**
@@ -117,7 +140,10 @@ export function QuarterlySummaryProvider({
   const [year, setYear] = React.useState(defaultYear);
   const [quarter, setQuarter] = React.useState<1 | 2 | 3 | 4>(defaultQuarter);
 
+  const [summaryPathway, setSummaryPathway] = React.useState<QuarterlySummaryPathway>('initiative');
+
   const [selectedGoalIds, setSelectedGoalIds] = React.useState<Id<'goals'>[]>([]);
+  const [selectedInitiativeIds, setSelectedInitiativeIds] = React.useState<Id<'initiatives'>[]>([]);
   const [selectedAdhocDomainIds, setSelectedAdhocDomainIds] = React.useState<
     (Id<'domains'> | 'UNCATEGORIZED')[]
   >([]);
@@ -134,9 +160,15 @@ export function QuarterlySummaryProvider({
     sessionId ? { sessionId, year, quarter } : 'skip'
   );
 
+  const initiativesForQuarter = useQuery(
+    api.initiative.getInitiativesForQuarter,
+    sessionId ? { sessionId, year, quarter } : 'skip'
+  );
+
   const previousQuarterRef = React.useRef<_QuarterPeriod>({ year, quarter });
   const hasAutoSelectedGoalsRef = React.useRef(false);
   const hasAutoSelectedDomainsRef = React.useRef(false);
+  const hasAutoSelectedInitiativesRef = React.useRef(false);
 
   // Reset auto-selection flags when quarter changes
   React.useEffect(() => {
@@ -147,8 +179,10 @@ export function QuarterlySummaryProvider({
       previousQuarterRef.current = { year, quarter };
       hasAutoSelectedGoalsRef.current = false;
       hasAutoSelectedDomainsRef.current = false;
+      hasAutoSelectedInitiativesRef.current = false;
       setSelectedGoalIds([]);
       setSelectedAdhocDomainIds([]);
+      setSelectedInitiativeIds([]);
     }
   }, [year, quarter]);
 
@@ -188,6 +222,21 @@ export function QuarterlySummaryProvider({
     }
   }, [domains, adhocGoalCounts]);
 
+  // Auto-select initiatives with tagged goals in quarter
+  React.useEffect(() => {
+    if (hasAutoSelectedInitiativesRef.current) return;
+
+    if (initiativesForQuarter && initiativesForQuarter.length > 0) {
+      const withGoals = initiativesForQuarter
+        .filter((i) => i.goalCountInQuarter > 0)
+        .map((i) => i._id);
+      if (withGoals.length > 0) {
+        hasAutoSelectedInitiativesRef.current = true;
+        setSelectedInitiativeIds(withGoals);
+      }
+    }
+  }, [initiativesForQuarter]);
+
   const includeAdhocGoals = selectedAdhocDomainIds.length > 0;
   const { summaryData, isLoading: isLoadingSummary } = useQuarterSummary({
     quarterlyGoalIds: selectedGoalIds,
@@ -196,6 +245,13 @@ export function QuarterlySummaryProvider({
     includeAdhocGoals,
     adhocDomainIds: selectedAdhocDomainIds,
   });
+
+  const { summaryData: initiativeSummaryData, isLoading: isLoadingInitiativeSummary } =
+    useInitiativeQuarterSummary({
+      initiativeIds: selectedInitiativeIds,
+      year,
+      quarter,
+    });
 
   const handlePreviousQuarter = React.useCallback(() => {
     if (quarter === 1) {
@@ -225,9 +281,13 @@ export function QuarterlySummaryProvider({
     return years;
   }, [currentWeekYear]);
 
-  const hasSelection = selectedGoalIds.length > 0 || includeAdhocGoals;
+  const hasGoalSelection = selectedGoalIds.length > 0 || includeAdhocGoals;
+  const hasInitiativeSelection = selectedInitiativeIds.length > 0;
+  const hasSelection = summaryPathway === 'initiative' ? hasInitiativeSelection : hasGoalSelection;
 
   const value: QuarterlySummaryContextValue = {
+    summaryPathway,
+    setSummaryPathway,
     year,
     quarter,
     setYear,
@@ -244,8 +304,15 @@ export function QuarterlySummaryProvider({
     adhocGoalCounts: adhocGoalCounts ?? undefined,
     summaryData,
     isLoadingSummary,
+    hasGoalSelection,
     hasSelection,
     yearOptions,
+    initiativesForQuarter: initiativesForQuarter ?? undefined,
+    selectedInitiativeIds,
+    setSelectedInitiativeIds,
+    isLoadingInitiatives: initiativesForQuarter === undefined,
+    initiativeSummaryData,
+    isLoadingInitiativeSummary,
   };
 
   return (

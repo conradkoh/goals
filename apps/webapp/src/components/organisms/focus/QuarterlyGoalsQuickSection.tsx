@@ -9,6 +9,7 @@ import {
   CollapsibleMinimalTrigger,
 } from '@/components/ui/collapsible-minimal';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
@@ -97,14 +98,18 @@ export function QuarterlyGoalsQuickSection({ showHeader = true }: QuarterlyGoals
       title: string,
       details?: string,
       dueDate?: number,
-      _domainId?: Id<'domains'> | null
+      _domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
       try {
         await updateQuarterlyGoalTitle({
           goalId,
-          title,
-          details,
-          dueDate,
+          ...buildStructuredGoalMutationArgs({
+            title,
+            details,
+            dueDate,
+            initiativeId,
+          }),
         });
       } catch (error) {
         console.error('Failed to update goal:', error);

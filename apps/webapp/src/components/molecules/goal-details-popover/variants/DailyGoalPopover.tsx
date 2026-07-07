@@ -1,5 +1,6 @@
-import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
-import { useCallback, type ReactNode } from 'react';
+import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { ReactNode } from 'react';
+import { useCallback } from 'react';
 
 import {
   GoalActionMenuNew,
@@ -13,6 +14,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalDisplayContext,
   useGoalEditContext,
 } from '../view/components';
@@ -26,6 +28,7 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
@@ -112,12 +115,13 @@ function DailyGoalPopoverContentInner({
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter } = useWeek();
 
-  // Handler for updating goal details when task list items are toggled
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      onSave(goal.title, newDetails, goal.dueDate);
+  const handleDetailsChange = useStructuredGoalDetailsSave(onSave, goal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await onSave(goal.title, goal.details, goal.dueDate, goal.domainId ?? null, initiativeId);
     },
-    [onSave, goal.title, goal.dueDate]
+    [goal.title, goal.details, goal.dueDate, goal.domainId, onSave]
   );
 
   // Shared content for both popover and fullscreen modes
@@ -138,6 +142,12 @@ function DailyGoalPopoverContentInner({
       {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 
       {goal.dueDate && <GoalDueDateDisplay dueDate={goal.dueDate} isComplete={isComplete} />}
+
+      <GoalInitiativeField
+        selectedInitiativeId={goal.initiativeId ?? null}
+        onInitiativeChange={handleInitiativeChange}
+        className="mt-3 space-y-2"
+      />
 
       {/* Tabs for Details and Log */}
       {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}

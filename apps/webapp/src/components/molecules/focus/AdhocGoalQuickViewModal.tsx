@@ -15,6 +15,7 @@ import {
   GoalEditModal,
   GoalEditProvider,
   GoalHeader,
+  GoalInitiativeField,
   useGoalEditContext,
 } from '../goal-details-popover/view/components';
 
@@ -27,8 +28,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
+import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
+import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -207,13 +210,17 @@ function AdhocGoalQuickViewContent({
    * @internal
    */
   const handleSave = useCallback(
-    async (title: string, details?: string, dueDate?: number, domainId?: Id<'domains'> | null) => {
-      await updateAdhocGoal(goal._id, {
-        title,
-        details,
-        dueDate,
-        domainId: domainId === null ? null : domainId,
-      });
+    async (
+      title: string,
+      details?: string,
+      dueDate?: number,
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
+    ) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [goal._id, updateAdhocGoal]
   );
@@ -241,15 +248,22 @@ function AdhocGoalQuickViewContent({
     [goal._id, updateAdhocGoal]
   );
 
-  /**
-   * Updates goal details when task list checkboxes are toggled.
-   * @internal
-   */
-  const handleDetailsChange = useCallback(
-    (newDetails: string) => {
-      handleSave(goal.title, newDetails, goal.adhoc?.dueDate, goal.domainId);
+  const handleDetailsChange = useAdhocGoalDetailsSave(goal._id, updateAdhocGoal);
+
+  const handleInitiativeChange = useCallback(
+    async (initiativeId: Id<'initiatives'> | null) => {
+      await updateAdhocGoal(
+        goal._id,
+        buildAdhocGoalMutationArgs({
+          title: goal.title,
+          details: goal.details,
+          dueDate: goal.adhoc?.dueDate,
+          domainId: goal.domainId ?? null,
+          initiativeId,
+        })
+      );
     },
-    [goal.title, goal.adhoc?.dueDate, goal.domainId, handleSave]
+    [goal._id, goal.title, goal.details, goal.adhoc?.dueDate, goal.domainId, updateAdhocGoal]
   );
 
   /**
@@ -273,9 +287,13 @@ function AdhocGoalQuickViewContent({
       title: string,
       details?: string,
       dueDate?: number,
-      domainId?: Id<'domains'> | null
+      domainId?: Id<'domains'> | null,
+      initiativeId?: Id<'initiatives'> | null
     ) => {
-      await updateAdhocGoal(goalId, { title, details, dueDate, domainId });
+      await updateAdhocGoal(
+        goalId,
+        buildAdhocGoalMutationArgs({ title, details, dueDate, domainId, initiativeId })
+      );
     },
     [updateAdhocGoal]
   );
@@ -345,6 +363,12 @@ function AdhocGoalQuickViewContent({
           {adhocGoalProp.domain && (
             <GoalDomainDisplay domain={adhocGoalProp.domain} weekNumber={weekNumber} />
           )}
+
+          <GoalInitiativeField
+            selectedInitiativeId={goal.initiativeId ?? null}
+            onInitiativeChange={handleInitiativeChange}
+            className="mt-3 space-y-2"
+          />
 
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
 

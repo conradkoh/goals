@@ -23,6 +23,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/ui/use-toast';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
+import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, type DayOfWeekType, getDayName } from '@/lib/constants';
 
@@ -383,8 +384,23 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
     }, [weeklyGoals, quarterlyGoals, selectedDayOfWeek, days]);
 
     const handleUpdateGoalTitle = useCallback(
-      (goalId: Id<'goals'>, title: string, details?: string, dueDate?: number) => {
-        return updateQuarterlyGoalTitle({ goalId, title, details, dueDate });
+      (
+        goalId: Id<'goals'>,
+        title: string,
+        details?: string,
+        dueDate?: number,
+        _domainId?: Id<'domains'> | null,
+        initiativeId?: Id<'initiatives'> | null
+      ) => {
+        return updateQuarterlyGoalTitle({
+          goalId,
+          ...buildStructuredGoalMutationArgs({
+            title,
+            details,
+            dueDate,
+            initiativeId,
+          }),
+        });
       },
       [updateQuarterlyGoalTitle]
     );

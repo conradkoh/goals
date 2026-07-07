@@ -1,4 +1,5 @@
 export * from './AdhocDomainSelector';
+export * from './InitiativeQuarterlySummaryMarkdownView';
 export * from './MultiQuarterlySummaryMarkdownView';
 export * from './QuarterlyGoalSelector';
 export * from './QuarterlyGoalSummaryView';
