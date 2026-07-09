@@ -13,6 +13,8 @@ export interface GoalDetailsSectionProps {
   onDetailsChange?: (newDetails: string) => void;
   /** If true, task list checkboxes are disabled */
   readOnly?: boolean;
+  /** When set, clicking details (or empty state) starts editing */
+  onEditClick?: () => void;
 }
 
 /**
@@ -29,27 +31,38 @@ export interface GoalDetailsSectionProps {
  * />
  * ```
  */
+// fallow-ignore-next-line complexity
 export function GoalDetailsSection({
   title,
   details,
   showSeparator = true,
   onDetailsChange,
   readOnly = false,
+  onEditClick,
 }: GoalDetailsSectionProps) {
-  if (!details) {
-    return null;
-  }
+  if (!details && !onEditClick) return null;
 
   return (
     <>
       {showSeparator && <Separator className="my-2" />}
       <div className="pt-1">
-        <GoalDetailsContent
-          title={title}
-          details={details}
-          onDetailsChange={onDetailsChange}
-          readOnly={readOnly}
-        />
+        {details ? (
+          <GoalDetailsContent
+            title={title}
+            details={details}
+            onDetailsChange={onDetailsChange}
+            readOnly={readOnly}
+            onEditClick={onEditClick}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={onEditClick}
+            className="w-full text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md px-3 py-4 transition-colors cursor-pointer"
+          >
+            No details — click to add
+          </button>
+        )}
       </div>
     </>
   );

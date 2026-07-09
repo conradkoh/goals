@@ -26,6 +26,7 @@ import {
   GoalInitiativeField,
   GoalStatusIndicators,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -243,6 +244,7 @@ function StandardGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { year, quarter, weekNumber } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
@@ -266,6 +268,7 @@ function StandardGoalPopoverContentInner({
             </div>
           }
           actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Quarterly} />}
+          onTitleClick={onTitleClick}
         />
 
         <GoalStatusIndicators isStarred={isStarred} isPinned={isPinned} />
@@ -291,14 +294,13 @@ function StandardGoalPopoverContentInner({
 
           {/* overflow-y-auto allows Details content to scroll if it overflows */}
           <TabsContent value="details" className="mt-4 overflow-y-auto">
-            {goal.details && (
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={onDetailsChange}
-                showSeparator={false}
-              />
-            )}
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details ?? ''}
+              onDetailsChange={onDetailsChange}
+              showSeparator={false}
+              onEditClick={onEditClick}
+            />
 
             <GoalChildrenSection
               title="Weekly Goals"

@@ -26,6 +26,7 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
@@ -275,6 +276,7 @@ function AdhocGoalPopoverContentInner({
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
@@ -294,6 +296,7 @@ function AdhocGoalPopoverContentInner({
             />
           }
           statusControls={<GoalStatusIcons goalId={goal._id} />}
+          onTitleClick={onTitleClick}
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -321,14 +324,13 @@ function AdhocGoalPopoverContentInner({
 
           {/* overflow-y-auto allows Details content to scroll if it overflows */}
           <TabsContent value="details" className="mt-4 overflow-y-auto">
-            {goal.details && (
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details}
-                onDetailsChange={onDetailsChange}
-                showSeparator={false}
-              />
-            )}
+            <GoalDetailsSection
+              title={goal.title}
+              details={goal.details ?? ''}
+              onDetailsChange={onDetailsChange}
+              showSeparator={false}
+              onEditClick={onEditClick}
+            />
 
             <AdhocSubGoalsList
               subGoals={subGoals}

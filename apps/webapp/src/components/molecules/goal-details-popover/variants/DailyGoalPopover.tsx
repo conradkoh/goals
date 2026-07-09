@@ -17,6 +17,7 @@ import {
   GoalInitiativeField,
   useGoalDisplayContext,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
@@ -111,6 +112,7 @@ function DailyGoalPopoverContentInner({
 }: DailyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter } = useWeek();
@@ -134,6 +136,7 @@ function DailyGoalPopoverContentInner({
         onToggleComplete={onToggleComplete}
         statusControls={<GoalStatusIcons goalId={goal._id} />}
         actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Daily} />}
+        onTitleClick={onTitleClick}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -159,14 +162,13 @@ function DailyGoalPopoverContentInner({
 
         {/* overflow-y-auto allows Details content to scroll if it overflows */}
         <TabsContent value="details" className="mt-4 overflow-y-auto">
-          {goal.details && (
-            <GoalDetailsSection
-              title={goal.title}
-              details={goal.details}
-              onDetailsChange={handleDetailsChange}
-              showSeparator={false}
-            />
-          )}
+          <GoalDetailsSection
+            title={goal.title}
+            details={goal.details ?? ''}
+            onDetailsChange={handleDetailsChange}
+            showSeparator={false}
+            onEditClick={onEditClick}
+          />
 
           {additionalContent && (
             <>

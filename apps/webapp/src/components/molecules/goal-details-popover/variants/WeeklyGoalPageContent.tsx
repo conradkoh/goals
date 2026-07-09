@@ -27,6 +27,7 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -234,6 +235,7 @@ function WeeklyGoalPageContentInner({
 }: WeeklyGoalPageContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
 
   return (
     <>
@@ -244,6 +246,7 @@ function WeeklyGoalPageContentInner({
           onToggleComplete={onToggleComplete}
           statusControls={<GoalStatusIcons goalId={goal._id} />}
           actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
+          onTitleClick={onTitleClick}
         />
 
         <GoalCreatedDate createdAt={goal._creationTime} />
@@ -257,13 +260,12 @@ function WeeklyGoalPageContentInner({
           className="mt-3 space-y-2"
         />
 
-        {goal.details && (
-          <GoalDetailsSection
-            title={goal.title}
-            details={goal.details}
-            onDetailsChange={onDetailsChange}
-          />
-        )}
+        <GoalDetailsSection
+          title={goal.title}
+          details={goal.details ?? ''}
+          onDetailsChange={onDetailsChange}
+          onEditClick={onEditClick}
+        />
 
         <GoalChildrenSection
           title="Daily Goals"

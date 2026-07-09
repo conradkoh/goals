@@ -16,6 +16,7 @@ import {
   GoalHeader,
   useGoalDisplayContext,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
@@ -149,6 +150,7 @@ function AdhocGoalPopoverContentInner({
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
@@ -171,6 +173,7 @@ function AdhocGoalPopoverContentInner({
           />
         }
         statusControls={<GoalStatusIcons goalId={goal._id} />}
+        onTitleClick={onTitleClick}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -192,14 +195,13 @@ function AdhocGoalPopoverContentInner({
 
         {/* overflow-y-auto allows Details content to scroll if it overflows */}
         <TabsContent value="details" className="mt-4 overflow-y-auto">
-          {goal.details && (
-            <GoalDetailsSection
-              title={goal.title}
-              details={goal.details}
-              onDetailsChange={handleDetailsChange}
-              showSeparator={false}
-            />
-          )}
+          <GoalDetailsSection
+            title={goal.title}
+            details={goal.details ?? ''}
+            onDetailsChange={handleDetailsChange}
+            showSeparator={false}
+            onEditClick={onEditClick}
+          />
 
           {/* Sub-tasks section */}
           {(subGoals !== undefined || onCreateChild) && (
