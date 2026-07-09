@@ -1,5 +1,6 @@
 import { GoalDetailsContent } from './GoalDetailsContent';
 
+import { isHTMLEmpty } from '@/components/ui/rich-text-editor';
 import { Separator } from '@/components/ui/separator';
 
 export interface GoalDetailsSectionProps {
@@ -40,13 +41,15 @@ export function GoalDetailsSection({
   readOnly = false,
   onEditClick,
 }: GoalDetailsSectionProps) {
-  if (!details && !onEditClick) return null;
+  const hasDetails = !isHTMLEmpty(details);
+
+  if (!hasDetails && !onEditClick) return null;
 
   return (
     <>
       {showSeparator && <Separator className="my-2" />}
       <div className="pt-1">
-        {details ? (
+        {hasDetails ? (
           <GoalDetailsContent
             title={title}
             details={details}

@@ -268,13 +268,21 @@ export function InitiativeDetailsDialog({
                   {badge.label}
                 </span>
               </div>
-              {initiative.description && (
+              {initiative.description ? (
                 <button
                   type="button"
                   onClick={() => onEdit(initiative)}
                   className="text-sm text-muted-foreground whitespace-pre-wrap text-left hover:text-foreground transition-colors cursor-pointer w-full"
                 >
                   {initiative.description}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onEdit(initiative)}
+                  className="text-sm text-muted-foreground text-left hover:text-foreground hover:bg-muted/50 rounded-md px-0 py-1 transition-colors cursor-pointer w-full"
+                >
+                  No description — click to add
                 </button>
               )}
               {openWorkSummary && openWorkSummary.totalOpen > 0 && (
