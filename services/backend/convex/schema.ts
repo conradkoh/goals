@@ -439,6 +439,39 @@ export default defineSchema({
     .index('by_goal_and_date', ['goalId', 'logDate'])
     .index('by_root_goal_and_date', ['rootGoalId', 'logDate']),
 
+  /**
+   * Contacts - people associated with goals and goal logs.
+   */
+  contacts: defineTable({
+    userId: v.id('users'),
+    name: v.string(),
+    email: v.optional(v.string()),
+    organization: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_user', ['userId']),
+
+  goalContacts: defineTable({
+    userId: v.id('users'),
+    goalId: v.id('goals'),
+    contactId: v.id('contacts'),
+    createdAt: v.number(),
+  })
+    .index('by_user_and_goal', ['userId', 'goalId'])
+    .index('by_user_and_contact', ['userId', 'contactId'])
+    .index('by_user_goal_contact', ['userId', 'goalId', 'contactId']),
+
+  goalLogContacts: defineTable({
+    userId: v.id('users'),
+    goalLogId: v.id('goalLogs'),
+    contactId: v.id('contacts'),
+    createdAt: v.number(),
+  })
+    .index('by_user_and_goal_log', ['userId', 'goalLogId'])
+    .index('by_user_and_contact', ['userId', 'contactId'])
+    .index('by_user_goal_log_contact', ['userId', 'goalLogId', 'contactId']),
+
   // ============================================================================
   // DOCUMENTS TABLE
   // ============================================================================

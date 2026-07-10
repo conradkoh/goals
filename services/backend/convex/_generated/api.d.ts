@@ -16,6 +16,7 @@ import type * as auth_google from "../auth/google.js";
 import type * as bff_focus from "../bff/focus.js";
 import type * as checklists from "../checklists.js";
 import type * as cleanupTasks from "../cleanupTasks.js";
+import type * as contact from "../contact.js";
 import type * as crypto from "../crypto.js";
 import type * as dashboard from "../dashboard.js";
 import type * as discussions from "../discussions.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   "bff/focus": typeof bff_focus;
   checklists: typeof checklists;
   cleanupTasks: typeof cleanupTasks;
+  contact: typeof contact;
   crypto: typeof crypto;
   dashboard: typeof dashboard;
   discussions: typeof discussions;
