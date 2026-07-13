@@ -19,6 +19,7 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../goal-details-popover/view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -125,6 +126,7 @@ function GoalQuickViewContentInternal({
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, createDailyGoalOptimistic } =
     useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const isComplete = goal.isComplete;
 
   // State for creating child goals
@@ -260,6 +262,7 @@ function GoalQuickViewContentInternal({
             onToggleComplete={handleToggleComplete}
             statusControls={<GoalStatusIcons goalId={goal._id} />}
             actionMenu={<GoalActionMenuNew onSave={handleSave} goalType={resolveGoalType(goal)} />}
+            onTitleClick={onTitleClick}
           />
 
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
@@ -280,14 +283,13 @@ function GoalQuickViewContentInternal({
             </TabsList>
 
             <TabsContent value="details" className="mt-4">
-              {goal.details && (
-                <GoalDetailsSection
-                  title={goal.title}
-                  details={goal.details}
-                  onDetailsChange={handleDetailsChange}
-                  showSeparator={false}
-                />
-              )}
+              <GoalDetailsSection
+                title={goal.title}
+                details={goal.details ?? ''}
+                onDetailsChange={handleDetailsChange}
+                showSeparator={false}
+                onEditClick={onEditClick}
+              />
 
               {/* Weekly Goals section for quarterly goals */}
               {isQuarterlyGoal && (

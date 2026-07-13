@@ -17,6 +17,7 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
+  useStartEditingGoal,
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
@@ -203,6 +204,7 @@ function AdhocGoalQuickViewContent({
   const { sessionId } = useSession();
   const { updateAdhocGoal, deleteAdhocGoal, createAdhocGoal } = useAdhocGoals(sessionId);
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
+  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const isComplete = goal.isComplete;
 
   /**
@@ -358,6 +360,7 @@ function AdhocGoalQuickViewContent({
                 onToggleBacklog={handleToggleBacklog}
               />
             }
+            onTitleClick={onTitleClick}
           />
 
           {adhocGoalProp.domain && (
@@ -384,17 +387,14 @@ function AdhocGoalQuickViewContent({
             </TabsList>
 
             <TabsContent value="details" className="mt-4">
-              {goal.details && (
-                <>
-                  <GoalDetailsSection
-                    title={goal.title}
-                    details={goal.details}
-                    onDetailsChange={handleDetailsChange}
-                    showSeparator={false}
-                  />
-                  <Separator className="my-4" />
-                </>
-              )}
+              <GoalDetailsSection
+                title={goal.title}
+                details={goal.details ?? ''}
+                onDetailsChange={handleDetailsChange}
+                showSeparator={false}
+                onEditClick={onEditClick}
+              />
+              <Separator className="my-4" />
 
               {/* Sub-tasks section */}
               <AdhocSubGoalsList

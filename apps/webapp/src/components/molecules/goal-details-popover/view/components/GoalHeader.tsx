@@ -17,6 +17,8 @@ export interface GoalHeaderProps {
   actionMenu?: ReactNode;
   /** Title size variant */
   size?: 'default' | 'large';
+  /** When set, title is clickable to start editing */
+  onTitleClick?: () => void;
 }
 
 /**
@@ -42,6 +44,7 @@ export function GoalHeader({
   statusControls,
   actionMenu,
   size = 'default',
+  onTitleClick,
 }: GoalHeaderProps) {
   const titleClassName = size === 'large' ? 'font-semibold text-xl' : 'font-semibold text-lg';
 
@@ -54,7 +57,17 @@ export function GoalHeader({
           disabled={disableCompletion || !onToggleComplete}
           onCheckedChange={(checked) => onToggleComplete?.(checked === true)}
         />
-        <h3 className={`${titleClassName} break-words flex-1 leading-tight`}>{title}</h3>
+        {onTitleClick ? (
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className={`${titleClassName} break-words flex-1 leading-tight text-left hover:text-primary transition-colors cursor-pointer`}
+          >
+            {title}
+          </button>
+        ) : (
+          <h3 className={`${titleClassName} break-words flex-1 leading-tight`}>{title}</h3>
+        )}
       </div>
       <div className="flex items-center gap-1">
         {statusControls}

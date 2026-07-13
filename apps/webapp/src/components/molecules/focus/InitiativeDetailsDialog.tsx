@@ -233,7 +233,13 @@ export function InitiativeDetailsDialog({
           <FixedSizeDialogTitle className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <Flag className="h-4 w-4 text-primary flex-shrink-0" />
-              <span className="truncate">{initiative.title}</span>
+              <button
+                type="button"
+                onClick={() => onEdit(initiative)}
+                className="truncate hover:text-primary transition-colors cursor-pointer text-left"
+              >
+                {initiative.title}
+              </button>
               {titleCountLabel && (
                 <span className="text-xs font-normal text-muted-foreground">
                   ({titleCountLabel})
@@ -262,10 +268,22 @@ export function InitiativeDetailsDialog({
                   {badge.label}
                 </span>
               </div>
-              {initiative.description && (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {initiative.description ? (
+                <button
+                  type="button"
+                  onClick={() => onEdit(initiative)}
+                  className="text-sm text-muted-foreground whitespace-pre-wrap text-left hover:text-foreground transition-colors cursor-pointer w-full"
+                >
                   {initiative.description}
-                </p>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onEdit(initiative)}
+                  className="text-sm text-muted-foreground text-left hover:text-foreground hover:bg-muted/50 rounded-md px-0 py-1 transition-colors cursor-pointer w-full"
+                >
+                  No description — click to add
+                </button>
               )}
               {openWorkSummary && openWorkSummary.totalOpen > 0 && (
                 <p className="text-xs text-muted-foreground">
