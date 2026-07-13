@@ -1,16 +1,16 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import { DayOfWeek } from '@workspace/backend/src/constants';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { useConvex } from 'convex/react';
 import { type ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useGoalActions } from './useGoalActions';
 
 import {
+  PullGoalsPreviewDialog,
   type PreviewTask,
-  TaskMovePreview,
-  type TaskMovePreviewData,
-} from '@/components/molecules/day-of-week/components/TaskMovePreview';
+  type WeekRef,
+} from '@/components/molecules/PullGoalsPreviewDialog';
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
@@ -21,12 +21,6 @@ interface UsePullGoalsProps {
   year: number;
   quarter: number;
 }
-
-type WeekRef = {
-  year: number;
-  quarter: number;
-  weekNumber: number;
-};
 
 interface PullGoalsPreviewData {
   tasksFromPreviousWeek: PreviewTask[];
@@ -99,17 +93,19 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
   // --- State ---
   const [isPulling, setIsPulling] = useState(false);
   const [isRefreshingPreview, setIsRefreshingPreview] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
   const [previewData, setPreviewData] = useState<PullGoalsPreviewData | null>(null);
 
   // Editable From/To state (initialised lazily when dialog opens)
   const [fromWeek, setFromWeekState] = useState<WeekRef | null>(null);
   const [toWeek, setToWeekState] = useState<WeekRef | null>(null);
 
-  // Stable refs for the preview/execute helpers
+  // Stable refs for the preview/execute helpers (avoid stale closure reads)
   const fromWeekRef = useRef<WeekRef | null>(null);
   const toWeekRef = useRef<WeekRef | null>(null);
+
+  // Current effective To (derived from state or default)
+  const effectiveToWeek: WeekRef = toWeek ?? toDefault;
 
   const updateFromWeek = useCallback((week: WeekRef | null) => {
     setFromWeekState(week);
@@ -120,6 +116,16 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     setToWeekState(week);
     toWeekRef.current = week;
   }, []);
+
+  // --- Week options for dialog selects ---
+  const weekOptions = useQuery(api.goal.getAvailableWeeks, {
+    sessionId,
+    currentWeek: {
+      year: effectiveToWeek.year,
+      quarter: effectiveToWeek.quarter,
+      weekNumber: effectiveToWeek.weekNumber,
+    },
+  });
 
   // --- Helpers ---
 
@@ -249,6 +255,33 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
   );
 
   /**
+   * Refresh the preview from the current From/To refs.
+   * Used after setFromWeek / setToWeek / jump changes.
+   */
+  const refreshPreview = useCallback(async () => {
+    const from = fromWeekRef.current;
+    const to = toWeekRef.current ?? toDefault;
+
+    setIsRefreshingPreview(true);
+    try {
+      const [weekTasks, pastDayTasks] = await Promise.all([
+        previewWeekPull(from, to),
+        previewPastDays(to),
+      ]);
+
+      setPreviewData({
+        tasksFromPreviousWeek: weekTasks,
+        tasksFromPastDays: pastDayTasks,
+        totalTasks: weekTasks.length + pastDayTasks.length,
+      });
+    } catch (error) {
+      console.error('Failed to refresh preview:', error);
+    } finally {
+      setIsRefreshingPreview(false);
+    }
+  }, [toDefault, previewWeekPull, previewPastDays]);
+
+  /**
    * Reset From/To to defaults, run preview, and open dialog.
    * Always opens the dialog (even if totalTasks === 0).
    */
@@ -268,33 +301,14 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
         previewPastDays(to),
       ]);
 
-      const allTasks = [...weekTasks, ...pastDayTasks];
-      const total = allTasks.length;
-
       setPreviewData({
         tasksFromPreviousWeek: weekTasks,
         tasksFromPastDays: pastDayTasks,
-        totalTasks: total,
-      });
-
-      // Build description for the dialog
-      let previousDayDescription = '';
-      if (weekTasks.length > 0 && pastDayTasks.length > 0) {
-        previousDayDescription = 'previous week and past days';
-      } else if (weekTasks.length > 0) {
-        previousDayDescription = 'previous week';
-      } else {
-        previousDayDescription = 'past days';
-      }
-
-      setPreview({
-        previousDay: previousDayDescription,
-        targetDay: getDayName(currentDayOfWeek),
-        tasks: allTasks,
+        totalTasks: weekTasks.length + pastDayTasks.length,
       });
 
       // ALWAYS open dialog (even if 0 tasks)
-      setShowConfirmDialog(true);
+      setShowDialog(true);
     } catch (error) {
       console.error('Failed to preview goals:', error);
       toast({
@@ -305,7 +319,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     } finally {
       setIsPulling(false);
     }
-  }, [fromDefault, toDefault, updateFromWeek, updateToWeek, previewWeekPull, previewPastDays, currentDayOfWeek]);
+  }, [fromDefault, toDefault, updateFromWeek, updateToWeek, previewWeekPull, previewPastDays]);
 
   /**
    * Execute the pull goals operation for the current From/To range.
@@ -353,7 +367,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
         }
       }
 
-      setShowConfirmDialog(false);
+      setShowDialog(false);
     } catch (error) {
       console.error('Failed to pull goals:', error);
       toast({
@@ -376,26 +390,34 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
   // ---- Public setters for slice 2 ----
 
   const setFromWeek = useCallback(
-    (week: WeekRef) => {
+    async (week: WeekRef) => {
       updateFromWeek(week);
-      // Preview refresh happens in the next render — we could trigger it here
-      // but the caller in slice 2 will manage preview refresh via a useEffect.
+      await refreshPreview();
     },
-    [updateFromWeek]
+    [updateFromWeek, refreshPreview]
   );
 
   const setToWeek = useCallback(
-    (week: WeekRef) => {
-      // If new To is <= current From, clamp/clear From
+    async (week: WeekRef) => {
       const currentFrom = fromWeekRef.current;
-      if (currentFrom && currentFrom.weekNumber >= week.weekNumber) {
-        // Clear From when To is moved to same or earlier week
-        updateFromWeek(currentFrom.weekNumber > 1 ? { ...week, weekNumber: currentFrom.weekNumber - 1 } : null);
+      const sameQuarter =
+        currentFrom &&
+        currentFrom.year === week.year &&
+        currentFrom.quarter === week.quarter;
+
+      // Clamp/clear From if it would be >= To
+      if (!sameQuarter || !currentFrom || currentFrom.weekNumber >= week.weekNumber) {
+        updateFromWeek(
+          week.weekNumber > 1
+            ? { year: week.year, quarter: week.quarter, weekNumber: week.weekNumber - 1 }
+            : null
+        );
       }
 
       updateToWeek(week);
+      await refreshPreview();
     },
-    [updateFromWeek, updateToWeek]
+    [updateFromWeek, updateToWeek, refreshPreview]
   );
 
   const jumpToLastNonEmptyWeek = useCallback(async () => {
@@ -411,6 +433,17 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
 
       if (result) {
         updateFromWeek(result);
+        // Refresh preview with the new From
+        const fromVal = result;
+        const [weekTasks, pastDayTasks] = await Promise.all([
+          previewWeekPull(fromVal, to),
+          previewPastDays(to),
+        ]);
+        setPreviewData({
+          tasksFromPreviousWeek: weekTasks,
+          tasksFromPastDays: pastDayTasks,
+          totalTasks: weekTasks.length + pastDayTasks.length,
+        });
       } else {
         toast({
           title: 'No earlier week found',
@@ -427,7 +460,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     } finally {
       setIsRefreshingPreview(false);
     }
-  }, [sessionId, convex, updateFromWeek]);
+  }, [sessionId, convex, updateFromWeek, previewWeekPull, previewPastDays]);
 
   return {
     isPulling,
@@ -435,16 +468,27 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     pendingGoalsCount: previewData?.totalTasks ?? 0,
     handlePullGoals,
     fromWeek,
-    toWeek: toWeek ?? toDefault,
+    toWeek: effectiveToWeek,
     setFromWeek,
     setToWeek,
     jumpToLastNonEmptyWeek,
     isRefreshingPreview,
     dialog: (
-      <TaskMovePreview
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        preview={preview}
+      <PullGoalsPreviewDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        fromWeek={fromWeek}
+        toWeek={effectiveToWeek}
+        tasksFromPreviousWeek={previewData?.tasksFromPreviousWeek ?? []}
+        tasksFromPastDays={previewData?.tasksFromPastDays ?? []}
+        showPastDaysSection={shouldPullPastDays(effectiveToWeek)}
+        todayLabel={getDayName(currentDayOfWeek)}
+        isRefreshingPreview={isRefreshingPreview}
+        isPulling={isPulling}
+        weekOptions={weekOptions ?? []}
+        onFromWeekChange={setFromWeek}
+        onToWeekChange={setToWeek}
+        onJumpToLastNonEmpty={jumpToLastNonEmptyWeek}
         onConfirm={executePullGoals}
       />
     ),
