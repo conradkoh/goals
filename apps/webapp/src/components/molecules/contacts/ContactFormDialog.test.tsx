@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -45,7 +44,6 @@ describe('ContactFormDialog', () => {
   });
 
   it('trims fields, omits blank optionals, and closes on successful create', async () => {
-    const user = userEvent.setup();
     const onCreate = vi.fn().mockResolvedValue(undefined);
     const onOpenChange = vi.fn();
 
@@ -59,10 +57,12 @@ describe('ContactFormDialog', () => {
       />
     );
 
-    await user.type(screen.getByLabelText(/^name$/i), '  Alice  ');
-    await user.type(screen.getByLabelText(/email/i), '  alice@example.com  ');
-    await user.type(screen.getByLabelText(/organization/i), '   ');
-    await user.click(screen.getByRole('button', { name: /create contact/i }));
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: '  Alice  ' } });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: '  alice@example.com  ' },
+    });
+    fireEvent.change(screen.getByLabelText(/organization/i), { target: { value: '   ' } });
+    fireEvent.click(screen.getByRole('button', { name: /create contact/i }));
 
     await waitFor(() => {
       expect(onCreate).toHaveBeenCalledWith({
@@ -74,7 +74,6 @@ describe('ContactFormDialog', () => {
   });
 
   it('prepopulates edit mode and calls onUpdate with the selected contact ID', async () => {
-    const user = userEvent.setup();
     const onUpdate = vi.fn().mockResolvedValue(undefined);
     const contact = makeContact({ name: 'Alice' });
 
@@ -94,8 +93,8 @@ describe('ContactFormDialog', () => {
     expect(screen.getByLabelText(/organization/i)).toHaveValue('Acme Corp');
     expect(screen.getByLabelText(/notes/i)).toHaveValue('Met at a conference');
 
-    await user.clear(screen.getByLabelText(/email/i));
-    await user.click(screen.getByRole('button', { name: /save changes/i }));
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
 
     await waitFor(() => {
       expect(onUpdate).toHaveBeenCalledWith(CONTACT_ID, {
@@ -140,7 +139,6 @@ describe('ContactFormDialog', () => {
   });
 
   it('keeps the dialog open when save is rejected', async () => {
-    const user = userEvent.setup();
     const onCreate = vi.fn().mockRejectedValue(new Error('Save failed'));
     const onOpenChange = vi.fn();
 
@@ -154,8 +152,8 @@ describe('ContactFormDialog', () => {
       />
     );
 
-    await user.type(screen.getByLabelText(/^name$/i), 'Alice');
-    await user.click(screen.getByRole('button', { name: /create contact/i }));
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: 'Alice' } });
+    fireEvent.click(screen.getByRole('button', { name: /create contact/i }));
 
     await waitFor(() => {
       expect(toast).toHaveBeenCalled();
