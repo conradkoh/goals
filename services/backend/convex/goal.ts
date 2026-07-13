@@ -186,6 +186,60 @@ export const getAvailableWeeks = query({
   },
 });
 
+/**
+ * Find the most recent week before `before` (same year+quarter only) that has
+ * movable incomplete content (regular week states and/or incomplete adhoc goals).
+ * Returns null if none found within the quarter.
+ */
+export const findLastNonEmptyWeekBefore = query({
+  args: {
+    ...SessionIdArg,
+    before: v.object({
+      year: v.number(),
+      quarter: v.number(),
+      weekNumber: v.number(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireLogin(ctx, args.sessionId);
+    const userId = user._id;
+    const { year, quarter, weekNumber } = args.before;
+
+    // Search weekNumber-1 down to 1 in the SAME quarter only
+    for (let candidateWeek = weekNumber - 1; candidateWeek >= 1; candidateWeek--) {
+      // Cheap existence probe: check for both regular goals and adhoc goals
+      const [regularGoalProbe, adhocGoalProbe] = await Promise.all([
+        ctx.db
+          .query('goalStateByWeek')
+          .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+            q
+              .eq('userId', userId)
+              .eq('year', year)
+              .eq('quarter', quarter)
+              .eq('weekNumber', candidateWeek)
+          )
+          .first(),
+        ctx.db
+          .query('goals')
+          .withIndex('by_user_and_adhoc_year_week', (q) =>
+            q
+              .eq('userId', userId)
+              .eq('year', year)
+              .eq('adhoc.weekNumber', candidateWeek)
+          )
+          .filter((q) => q.eq(q.field('isComplete'), false))
+          .first(),
+      ]);
+
+      if (regularGoalProbe || adhocGoalProbe) {
+        return { year, quarter, weekNumber: candidateWeek };
+      }
+    }
+
+    return null;
+  },
+});
+
 export const moveGoalsFromDay = mutation({
   args: {
     ...SessionIdArg,
