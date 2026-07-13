@@ -96,7 +96,7 @@ Users can search, create, inspect, edit, and delete contacts from `/app/contacts
 - [x] `/app/contacts` page and components implemented
 - [x] UserMenu navigation wired
 - [ ] Full webapp test suite and typecheck verified at PR completion time
-- [ ] Committed on feature branch (pending this draft PR)
+- [x] Committed as `272445e6` — `feat(contacts): add contact management UI and implementation plan`
 
 ### Files
 
