@@ -1159,3 +1159,104 @@ describe('deleteGoal', () => {
     expect(weeklyGoals.length).toBe(0);
   });
 });
+
+describe('findLastNonEmptyWeekBefore', () => {
+  test('returns the most recent earlier week in the same quarter with goal state', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal → creates goalStateByWeek entries for ALL weeks in Q1 2024
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q1 Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    // Create a weekly goal at week 2 (adds a goalStateByWeek entry for week 2 specifically)
+    await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Week 2 Goal',
+      parentId: quarterlyGoalId,
+      weekNumber: 2,
+    });
+
+    // Also create a weekly goal at week 4
+    await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Week 4 Goal',
+      parentId: quarterlyGoalId,
+      weekNumber: 4,
+    });
+
+    // Query: find the most recent week before week 5
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 5 },
+    });
+
+    // The loop searches from weekNumber-1 = 4 down to 1.
+    // All weeks have quarterly goal states so week 4 is found first.
+    expect(result).toEqual({ year: 2024, quarter: 1, weekNumber: 4 });
+  });
+
+  test('returns null when no earlier week in the quarter has content', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // No goals created at all → no goalStateByWeek entries
+
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 3 },
+    });
+
+    expect(result).toBeNull();
+  });
+
+  test('does not cross into the previous quarter', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal only in 2023 Q4 → goalStateByWeek entries only for Q4 2023 weeks
+    await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q4 2023 Goal',
+      year: 2023,
+      quarter: 4,
+      weekNumber: 12,
+    });
+
+    // Query for 2024 Q1 week 2 with NO content in Q1 2024
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 2 },
+    });
+
+    // Must NOT cross into Q4 2023 → should return null
+    expect(result).toBeNull();
+  });
+
+  test('returns null when before.weekNumber is 1 (no prior week in quarter)', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal in Q1 2024
+    await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q1 Goal',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    // before week 1 → loop doesn't run (candidateWeek = 0, 0 >= 1 is false)
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 1 },
+    });
+
+    expect(result).toBeNull();
+  });
+});
