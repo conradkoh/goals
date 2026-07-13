@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { describe, expect, it, vi } from 'vitest';
@@ -108,7 +108,8 @@ describe('ContactFormDialog', () => {
   });
 
   it('requires delete confirmation before calling onDelete', async () => {
-    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    // Nested Dialog + AlertDialog focus traps overflow under userEvent in jsdom;
+    // use fireEvent for this interaction path.
     const onDelete = vi.fn().mockResolvedValue(undefined);
     const contact = makeContact({ name: 'Alice' });
 
@@ -123,7 +124,7 @@ describe('ContactFormDialog', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /^delete$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
     expect(onDelete).not.toHaveBeenCalled();
 
     const alertDialog = await screen.findByRole('alertdialog');
@@ -131,7 +132,7 @@ describe('ContactFormDialog', () => {
       within(alertDialog).getByRole('heading', { name: /delete contact/i })
     ).toBeInTheDocument();
 
-    await user.click(within(alertDialog).getByRole('button', { name: /^delete$/i }));
+    fireEvent.click(within(alertDialog).getByRole('button', { name: /^delete$/i }));
 
     await waitFor(() => {
       expect(onDelete).toHaveBeenCalledWith(CONTACT_ID);
