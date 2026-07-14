@@ -1,13 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  applyDashboardUrlUpdates,
   buildDashboardHref,
   buildDashboardViewHref,
   getLegacyViewModeRedirectHref,
   getViewModeFromPathname,
   isViewMode,
-  parseViewMode,
 } from './dashboardUrlParams';
 
 import { DayOfWeek } from '@/lib/constants';
@@ -23,18 +21,6 @@ describe('isViewMode', () => {
   it('returns false for invalid values', () => {
     expect(isViewMode('invalid')).toBe(false);
     expect(isViewMode('')).toBe(false);
-  });
-});
-
-describe('parseViewMode', () => {
-  it('returns valid view modes from the URL', () => {
-    expect(parseViewMode('focused', 'quarterly')).toBe('focused');
-  });
-
-  it('falls back for invalid values', () => {
-    expect(parseViewMode('invalid', 'quarterly')).toBe('quarterly');
-    expect(parseViewMode(null, 'daily')).toBe('daily');
-    expect(parseViewMode(undefined, 'weekly')).toBe('weekly');
   });
 });
 
@@ -108,6 +94,14 @@ describe('buildDashboardHref', () => {
     expect(href).toBe('/app/daily?year=2026&week=24&day=3');
     expect(href).not.toContain('view-mode');
   });
+
+  it('strips legacy view-mode when applying empty updates', () => {
+    const current = new URLSearchParams('view-mode=weekly&week=10&year=2026');
+    const href = buildDashboardHref('weekly', current, {});
+
+    expect(href).toBe('/app/weekly?week=10&year=2026');
+    expect(href).not.toContain('view-mode');
+  });
 });
 
 describe('getLegacyViewModeRedirectHref', () => {
@@ -139,23 +133,5 @@ describe('getLegacyViewModeRedirectHref', () => {
   it('returns null for invalid view-mode', () => {
     const params = new URLSearchParams('view-mode=invalid');
     expect(getLegacyViewModeRedirectHref(params)).toBeNull();
-  });
-});
-
-describe('applyDashboardUrlUpdates', () => {
-  it('merges partial updates onto existing params without view-mode', () => {
-    const current = new URLSearchParams('week=10&year=2026');
-    const next = applyDashboardUrlUpdates(current, { week: 11 });
-
-    expect(next.get('week')).toBe('11');
-    expect(next.has('view-mode')).toBe(false);
-  });
-
-  it('strips view-mode from existing params', () => {
-    const current = new URLSearchParams('view-mode=weekly&week=10&year=2026');
-    const next = applyDashboardUrlUpdates(current, { week: 11 });
-
-    expect(next.get('week')).toBe('11');
-    expect(next.has('view-mode')).toBe(false);
   });
 });

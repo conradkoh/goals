@@ -8,12 +8,6 @@ import { isViewMode } from '@/lib/dashboard/dashboardUrlParams';
 
 const DashboardViewPage = () => {
   const params = useParams();
-  const viewModeParam = params.viewMode as string;
-
-  if (!isViewMode(viewModeParam)) {
-    notFound();
-  }
-
   const {
     selectedWeek,
     selectedDayOfWeek,
@@ -23,6 +17,11 @@ const DashboardViewPage = () => {
     handlePrevious,
     handleNext,
   } = useDashboard();
+
+  const viewModeParam = params.viewMode;
+  if (typeof viewModeParam !== 'string' || !isViewMode(viewModeParam)) {
+    notFound();
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

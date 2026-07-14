@@ -1,7 +1,7 @@
 import type { ViewMode } from '@/components/molecules/focus/constants';
 import type { DayOfWeek } from '@/lib/constants';
 
-export const VIEW_MODES: readonly ViewMode[] = ['daily', 'weekly', 'quarterly', 'focused'];
+const VIEW_MODES: readonly ViewMode[] = ['daily', 'weekly', 'quarterly', 'focused'];
 
 export interface DashboardUrlUpdates {
   week?: number;
@@ -13,11 +13,6 @@ export interface DashboardUrlUpdates {
 
 export function isViewMode(value: string): value is ViewMode {
   return (VIEW_MODES as readonly string[]).includes(value);
-}
-
-export function parseViewMode(value: string | null | undefined, fallback: ViewMode): ViewMode {
-  if (value != null && isViewMode(value)) return value;
-  return fallback;
 }
 
 export function getViewModeFromPathname(pathname: string): ViewMode | null {
@@ -43,14 +38,15 @@ export function buildDashboardHref(
 }
 
 export function getLegacyViewModeRedirectHref(searchParams: URLSearchParams): string | null {
-  const viewMode = searchParams.get('view-mode');
-  if (viewMode && isViewMode(viewMode)) {
-    return buildDashboardViewHref(viewMode);
+  const raw = searchParams.get('view-mode');
+  if (raw != null && isViewMode(raw)) {
+    return buildDashboardViewHref(raw);
   }
   return null;
 }
 
-export function applyDashboardUrlUpdates(
+// fallow-ignore-next-line complexity
+function applyDashboardUrlUpdates(
   current: URLSearchParams,
   updates: DashboardUrlUpdates
 ): URLSearchParams {

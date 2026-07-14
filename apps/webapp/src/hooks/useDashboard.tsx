@@ -141,14 +141,10 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     [router, searchParams, viewMode]
   );
 
-  // Handle view mode changes
+  // Handle view mode changes — always land on a clean path (no query string)
   const handleViewModeChange = useCallback(
     (newViewMode: ViewMode) => {
-      if (newViewMode === viewMode) {
-        if (pathViewMode != null && searchParams.toString() === '') {
-          return;
-        }
-        router.replace(buildDashboardViewHref(newViewMode), { scroll: false });
+      if (newViewMode === viewMode && pathViewMode != null && searchParams.toString() === '') {
         return;
       }
 
