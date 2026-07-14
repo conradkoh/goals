@@ -151,4 +151,22 @@ describe('PullGoalsPreviewDialog', () => {
 
     expect(props.onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  it('renders weekly-only task as the weekly header without a duplicate bullet', () => {
+    renderDialog({
+      tasksFromPreviousWeek: [
+        {
+          id: 'weekly-1',
+          title: 'Weekly-only goal',
+          quarterlyGoal: { id: 'q1', title: 'Q Goal' },
+          weeklyGoal: { id: 'weekly-1', title: 'Weekly-only goal' },
+        },
+      ],
+    });
+
+    expect(screen.getByText('Weekly-only goal')).toBeInTheDocument();
+    // The weekly header appears (the weekly title)
+    const weeklyHeaders = screen.getAllByText('Weekly-only goal');
+    expect(weeklyHeaders.length).toBe(1);
+  });
 });

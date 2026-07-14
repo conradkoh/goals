@@ -1,8 +1,7 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import { DayOfWeek } from '@workspace/backend/src/constants';
 import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
-import { useMutation, useQuery } from 'convex/react';
-import { useConvex } from 'convex/react';
+import { useMutation, useQuery, useConvex } from 'convex/react';
 import { type ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useGoalActions } from './useGoalActions';
@@ -15,6 +14,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
+import { buildWeekPullPreviewTasks } from '@/lib/pull-goals/buildWeekPullPreviewTasks';
 import { useSession } from '@/modules/auth/useSession';
 
 interface UsePullGoalsProps {
@@ -169,50 +169,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
 
       if (!('canPull' in result) || !result.canPull) return [];
 
-      const weekTasks: PreviewTask[] = result.dailyGoalsToMove.map((dailyGoal) => {
-        const quarterlyStatus = result.quarterlyGoalsToUpdate.find(
-          (q) => q.id === dailyGoal.quarterlyGoalId
-        ) ?? { isStarred: false, isPinned: false };
-
-        return {
-          id: dailyGoal.id,
-          title: dailyGoal.title,
-          isComplete: false,
-          quarterlyGoal: {
-            id: dailyGoal.quarterlyGoalId ?? dailyGoal.weeklyGoalId,
-            title: dailyGoal.quarterlyGoalTitle ?? dailyGoal.weeklyGoalTitle,
-            isStarred: quarterlyStatus.isStarred,
-            isPinned: quarterlyStatus.isPinned,
-          },
-          weeklyGoal: {
-            id: dailyGoal.weeklyGoalId,
-            title: dailyGoal.weeklyGoalTitle,
-          },
-        };
-      });
-
-      // Also add adhoc goals from the preview
-      if (result.adhocGoalsToMove && result.adhocGoalsToMove.length > 0) {
-        const adhocTasks: PreviewTask[] = result.adhocGoalsToMove.map((adhoc) => ({
-          id: adhoc.id,
-          title: adhoc.title,
-          details: undefined,
-          isComplete: false,
-          quarterlyGoal: {
-            id: 'adhoc',
-            title: 'Adhoc Tasks',
-            isStarred: false,
-            isPinned: false,
-          },
-          weeklyGoal: {
-            id: `adhoc-domain-${adhoc.domainId || 'uncategorized'}`,
-            title: adhoc.domainName || 'Uncategorized',
-          },
-        }));
-        weekTasks.push(...adhocTasks);
-      }
-
-      return weekTasks;
+      return buildWeekPullPreviewTasks(result);
     },
     [sessionId, moveGoalsFromWeekMutation]
   );
@@ -246,7 +203,11 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
           moveOnlyIncomplete: true,
         });
 
-        if ('canMove' in dayPreviewData && dayPreviewData.canMove && dayPreviewData.tasks.length > 0) {
+        if (
+          'canMove' in dayPreviewData &&
+          dayPreviewData.canMove &&
+          dayPreviewData.tasks.length > 0
+        ) {
           tasks.push(...dayPreviewData.tasks);
         }
       }
@@ -403,9 +364,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     async (week: WeekRef) => {
       const currentFrom = fromWeekRef.current;
       const sameQuarter =
-        currentFrom &&
-        currentFrom.year === week.year &&
-        currentFrom.quarter === week.quarter;
+        currentFrom && currentFrom.year === week.year && currentFrom.quarter === week.quarter;
 
       // Clamp/clear From if it would be >= To
       if (!sameQuarter || !currentFrom || currentFrom.weekNumber >= week.weekNumber) {

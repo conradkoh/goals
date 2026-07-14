@@ -80,6 +80,7 @@ export type WeekStateToCopy = {
   weekState: Doc<'goalStateByWeek'>;
   carryOver: CarryOver;
   quarterlyGoalId?: Id<'goals'>;
+  quarterlyGoalTitle?: string;
   dailyGoalsToMove: DailyGoalToMove[];
 };
 
@@ -90,10 +91,12 @@ export type GoalSummary = {
 };
 
 export type WeekStateSummary = {
+  id: Id<'goals'>;
   title: string;
   carryOver: CarryOver;
   dailyGoalsCount: number;
   quarterlyGoalId?: Id<'goals'>;
+  quarterlyGoalTitle?: string;
 };
 
 export type DailyGoalSummary = {
@@ -128,6 +131,7 @@ export type SkippedGoalSummary = {
   carryOver: CarryOver;
   dailyGoalsCount: number;
   quarterlyGoalId?: Id<'goals'>;
+  quarterlyGoalTitle?: string;
 };
 
 export type BaseGoalMoveResult = {

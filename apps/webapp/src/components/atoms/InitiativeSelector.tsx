@@ -75,7 +75,16 @@ export function InitiativeSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+        {/*
+          portalled={false}: keep combobox in the dialog DOM tree so Safari can
+          focus/click the search input (Radix portal + dialog focus trap blocks it).
+          modal on Popover (above) still required so the list opens inside dialogs.
+        */}
+        <PopoverContent
+          portalled={false}
+          className="w-[--radix-popover-trigger-width] p-0"
+          align="start"
+        >
           <Command>
             <CommandInput placeholder="Search initiatives..." />
             <CommandList>
