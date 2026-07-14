@@ -49,8 +49,12 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  onOverlayClick,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  /** Optional: dismiss when the dimmed overlay is clicked (AlertDialog does not do this by default). */
+  onOverlayClick?: React.MouseEventHandler<HTMLDivElement>;
+}) {
   // Fix iOS text selection handles not being draggable
   // Must be called before react-remove-scroll attaches its listeners
   // https://github.com/theKashey/react-remove-scroll/pull/144
@@ -58,7 +62,7 @@ function AlertDialogContent({
 
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay onClick={onOverlayClick} />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(

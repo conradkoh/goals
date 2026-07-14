@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 // ── Shared types ────────────────────────────────────────────────────────────
@@ -265,7 +266,10 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="flex max-h-[90vh] flex-col">
+      <AlertDialogContent
+        className="flex max-h-[90vh] flex-col"
+        onOverlayClick={() => onOpenChange(false)}
+      >
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <AlertDialogHeader className="shrink-0">
           <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
@@ -297,20 +301,29 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onJumpToLastNonEmpty}
-              disabled={isRefreshingPreview || isPulling}
-              className="shrink-0"
-            >
-              {isRefreshingPreview ? (
-                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Search className="mr-1 h-3.5 w-3.5" />
-              )}
-              Jump
-            </Button>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onJumpToLastNonEmpty}
+                    disabled={isRefreshingPreview || isPulling}
+                    className="shrink-0"
+                  >
+                    {isRefreshingPreview ? (
+                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Search className="mr-1 h-3.5 w-3.5" />
+                    )}
+                    Jump
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-center">
+                  Jump to the last earlier week in this quarter that still has incomplete goals
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           {/* To row */}
@@ -347,10 +360,7 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
             </div>
           ) : (
             <div
-              className={cn(
-                'space-y-6',
-                isRefreshingPreview && 'opacity-50 transition-opacity'
-              )}
+              className={cn('space-y-6', isRefreshingPreview && 'opacity-50 transition-opacity')}
             >
               {/* Section A: Week pull */}
               {fromWeek && (
