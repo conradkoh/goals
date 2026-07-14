@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GoalDetailsContent } from './GoalDetailsContent';
 
@@ -29,6 +29,7 @@ function GoalDetailsSection({
   const hasDetails = !isHTMLEmpty(details);
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(details);
+  const isCancellingRef = useRef(false);
 
   useEffect(() => {
     if (!isEditing) setDraft(details);
@@ -40,11 +41,16 @@ function GoalDetailsSection({
   }, [details]);
 
   const saveAndClose = useCallback(() => {
+    if (isCancellingRef.current) {
+      isCancellingRef.current = false;
+      return;
+    }
     if (editable && onDetailsChange && draft !== details) onDetailsChange(draft);
     setIsEditing(false);
   }, [editable, onDetailsChange, draft, details]);
 
   const cancel = useCallback(() => {
+    isCancellingRef.current = true;
     setDraft(details);
     setIsEditing(false);
   }, [details]);

@@ -67,6 +67,27 @@ describe('GoalHeader', () => {
     expect(screen.getByRole('button', { name: 'My Goal' })).toBeInTheDocument();
   });
 
+  it('does not save when Escape is followed by blur', () => {
+    const onTitleSave = vi.fn();
+
+    render(
+      <GoalHeader
+        title="My Goal"
+        isComplete={false}
+        onToggleComplete={vi.fn()}
+        onTitleSave={onTitleSave}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'My Goal' }));
+    const input = screen.getByDisplayValue('My Goal');
+    fireEvent.change(input, { target: { value: 'Updated Goal' } });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    fireEvent.blur(input);
+
+    expect(onTitleSave).not.toHaveBeenCalled();
+  });
+
   it('renders title as heading when onTitleSave is not provided', () => {
     render(<GoalHeader title="Static Goal" isComplete={false} />);
 

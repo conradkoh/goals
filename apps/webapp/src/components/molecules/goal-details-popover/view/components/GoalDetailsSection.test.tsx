@@ -97,6 +97,26 @@ describe('GoalDetailsSection', () => {
     expect(onDetailsChange).not.toHaveBeenCalled();
   });
 
+  it('does not save when Escape is followed by container blur', () => {
+    const onDetailsChange = vi.fn();
+    render(
+      <GoalDetailsSection
+        title="Goal"
+        details=""
+        onDetailsChange={onDetailsChange}
+        showSeparator={false}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /no details/i }));
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    fireEvent.change(editor, { target: { value: '<p>New details</p>' } });
+    const container = editor.closest('[class*="rounded-md"]');
+    expect(container).not.toBeNull();
+    fireEvent.keyDown(container as Element, { key: 'Escape' });
+    fireEvent.blur(container as Element);
+    expect(onDetailsChange).not.toHaveBeenCalled();
+  });
+
   it('renders content when details have text', () => {
     render(<GoalDetailsSection title="Goal" details="<p>Hello</p>" showSeparator={false} />);
     expect(screen.queryByRole('button', { name: /no details/i })).not.toBeInTheDocument();

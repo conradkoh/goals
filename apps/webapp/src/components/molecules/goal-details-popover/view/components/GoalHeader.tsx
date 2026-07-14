@@ -52,6 +52,7 @@ export function GoalHeader({
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(title);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isCancellingRef = useRef(false);
 
   useEffect(() => {
     if (!isEditing) setDraft(title);
@@ -65,6 +66,10 @@ export function GoalHeader({
   }, [isEditing]);
 
   const commit = useCallback(() => {
+    if (isCancellingRef.current) {
+      isCancellingRef.current = false;
+      return;
+    }
     const trimmed = draft.trim();
     if (!trimmed) {
       toast({
@@ -79,6 +84,7 @@ export function GoalHeader({
   }, [draft, title, onTitleSave]);
 
   const cancel = useCallback(() => {
+    isCancellingRef.current = true;
     setDraft(title);
     setIsEditing(false);
   }, [title]);
