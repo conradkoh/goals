@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type React from 'react';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 
@@ -11,9 +11,9 @@ import type { ViewMode } from '@/components/molecules/focus/constants';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { DayOfWeek } from '@/lib/constants';
 import {
-  applyDashboardUrlUpdates,
-  buildUrlParamsForViewModeChange,
-  parseViewMode,
+  buildDashboardHref,
+  buildDashboardViewHref,
+  getViewModeFromPathname,
   type DashboardUrlUpdates,
 } from '@/lib/dashboard/dashboardUrlParams';
 import { getWeeksInYear } from '@/lib/date/iso-week';
@@ -72,6 +72,7 @@ const DashboardContext = createContext<DashboardContextValue | 'not-found'>('not
 export const DashboardProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { isMobile } = useDeviceScreenInfo();
 
   // Use reactive current date - already optimized to update daily
@@ -101,9 +102,10 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
     selectedQuarter
   );
 
-  // Get view mode from URL or use default based on screen size
+  // Get view mode from pathname or use default based on screen size
   const defaultViewMode: ViewMode = isMobile ? 'focused' : 'quarterly';
-  const viewMode = parseViewMode(searchParams.get('view-mode'), defaultViewMode);
+  const pathViewMode = getViewModeFromPathname(pathname);
+  const viewMode = pathViewMode ?? defaultViewMode;
 
   // Get selected week from URL or use current week
   const weekFromUrl = searchParams.get('week');
@@ -130,40 +132,25 @@ export const DashboardProvider = ({ children }: { children: React.ReactNode }) =
         ? false // No bounds in daily view - can navigate freely
         : false; // No bounds in weekly view - can navigate freely
 
-  const navigationDefaults = useMemo(
-    () => ({
-      year: currentYear,
-      quarter: currentQuarter,
-      week: currentWeekNumber,
-      day: currentDate.weekday as DayOfWeek,
-    }),
-    [currentYear, currentQuarter, currentWeekNumber, currentDate.weekday]
-  );
-
   // Update URL helper function
   const updateUrlParams = useCallback(
     (params: DashboardUrlUpdates) => {
-      const newParams = applyDashboardUrlUpdates(searchParams, params);
-      router.replace(`/app?${newParams.toString()}`, { scroll: false });
+      const href = buildDashboardHref(viewMode, searchParams, params);
+      router.replace(href, { scroll: false });
     },
-    [router, searchParams]
+    [router, searchParams, viewMode]
   );
 
-  // Handle view mode changes
+  // Handle view mode changes — always land on a clean path (no query string)
   const handleViewModeChange = useCallback(
     (newViewMode: ViewMode) => {
-      if (newViewMode === viewMode) {
+      if (newViewMode === viewMode && pathViewMode != null && searchParams.toString() === '') {
         return;
       }
 
-      const newParams = buildUrlParamsForViewModeChange(
-        searchParams,
-        newViewMode,
-        navigationDefaults
-      );
-      router.replace(`/app?${newParams.toString()}`, { scroll: false });
+      router.replace(buildDashboardViewHref(newViewMode), { scroll: false });
     },
-    [navigationDefaults, router, searchParams, viewMode]
+    [router, searchParams, viewMode, pathViewMode]
   );
 
   // Handle year and quarter changes

@@ -1,126 +1,58 @@
 import type { ViewMode } from '@/components/molecules/focus/constants';
-import { DayOfWeek } from '@/lib/constants';
-import { getQuarterFromWeek } from '@/lib/date/iso-week';
+import type { DayOfWeek } from '@/lib/constants';
 
 const VIEW_MODES: readonly ViewMode[] = ['daily', 'weekly', 'quarterly', 'focused'];
-
-export interface DashboardNavigationDefaults {
-  year: number;
-  quarter: 1 | 2 | 3 | 4;
-  week: number;
-  day: DayOfWeek;
-}
 
 export interface DashboardUrlUpdates {
   week?: number;
   day?: DayOfWeek;
-  viewMode?: ViewMode;
   year?: number;
   quarter?: number;
   focusMode?: boolean;
 }
 
-function parsePositiveInt(value: string | null): number | undefined {
-  if (value === null) {
-    return undefined;
-  }
-
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed < 1) {
-    return undefined;
-  }
-
-  return parsed;
+export function isViewMode(value: string): value is ViewMode {
+  return (VIEW_MODES as readonly string[]).includes(value);
 }
 
-function parseQuarter(value: string | null): 1 | 2 | 3 | 4 | undefined {
-  const parsed = parsePositiveInt(value);
-  if (parsed === undefined || parsed < 1 || parsed > 4) {
-    return undefined;
+export function getViewModeFromPathname(pathname: string): ViewMode | null {
+  const match = pathname.match(/^\/app\/(daily|weekly|quarterly|focused)(?:\/|$)/);
+  if (match) {
+    return match[1] as ViewMode;
   }
-
-  return parsed as 1 | 2 | 3 | 4;
+  return null;
 }
 
-function parseDay(value: string | null): DayOfWeek | undefined {
-  const parsed = parsePositiveInt(value);
-  if (parsed === undefined || parsed < DayOfWeek.MONDAY || parsed > DayOfWeek.SUNDAY) {
-    return undefined;
-  }
-
-  return parsed as DayOfWeek;
+export function buildDashboardViewHref(viewMode: ViewMode): string {
+  return `/app/${viewMode}`;
 }
 
-/** Parses a view-mode query value, falling back when missing or invalid. */
-export function parseViewMode(value: string | null, fallback: ViewMode): ViewMode {
-  if (value !== null && VIEW_MODES.includes(value as ViewMode)) {
-    return value as ViewMode;
-  }
-
-  return fallback;
-}
-
-/**
- * Builds canonical dashboard URL search params for a view-mode change.
- *
- * When every navigation param is present in the URL, stale week/day/quarter values
- * can disagree and make view switches appear to do nothing. Each view mode keeps
- * only the params it needs and drops the rest.
- */
-// fallow-ignore-next-line complexity
-export function buildUrlParamsForViewModeChange(
+export function buildDashboardHref(
+  viewMode: ViewMode,
   current: URLSearchParams,
-  newViewMode: ViewMode,
-  defaults: DashboardNavigationDefaults
-): URLSearchParams {
-  const next = new URLSearchParams(current.toString());
-  next.set('view-mode', newViewMode);
-
-  const year = parsePositiveInt(current.get('year')) ?? defaults.year;
-  const week = parsePositiveInt(current.get('week')) ?? defaults.week;
-  const day = parseDay(current.get('day')) ?? defaults.day;
-  const quarter =
-    parseQuarter(current.get('quarter')) ?? getQuarterFromWeek(week) ?? defaults.quarter;
-
-  next.set('year', year.toString());
-
-  switch (newViewMode) {
-    case 'quarterly': {
-      next.set('quarter', quarter.toString());
-      next.delete('week');
-      next.delete('day');
-      break;
-    }
-    case 'weekly': {
-      next.set('week', week.toString());
-      next.delete('quarter');
-      next.delete('day');
-      break;
-    }
-    case 'daily': {
-      next.set('week', week.toString());
-      next.set('day', day.toString());
-      next.delete('quarter');
-      break;
-    }
-    case 'focused': {
-      next.delete('week');
-      next.delete('day');
-      next.delete('quarter');
-      break;
-    }
-  }
-
-  return next;
+  updates: DashboardUrlUpdates
+): string {
+  const next = applyDashboardUrlUpdates(current, updates);
+  const qs = next.toString();
+  return qs ? `/app/${viewMode}?${qs}` : `/app/${viewMode}`;
 }
 
-/** Applies partial dashboard navigation updates onto existing search params. */
+export function getLegacyViewModeRedirectHref(searchParams: URLSearchParams): string | null {
+  const raw = searchParams.get('view-mode');
+  if (raw != null && isViewMode(raw)) {
+    return buildDashboardViewHref(raw);
+  }
+  return null;
+}
+
 // fallow-ignore-next-line complexity
-export function applyDashboardUrlUpdates(
+function applyDashboardUrlUpdates(
   current: URLSearchParams,
   updates: DashboardUrlUpdates
 ): URLSearchParams {
   const next = new URLSearchParams(current.toString());
+
+  next.delete('view-mode');
 
   if (updates.week !== undefined) {
     next.set('week', updates.week.toString());
@@ -128,10 +60,6 @@ export function applyDashboardUrlUpdates(
 
   if (updates.day !== undefined) {
     next.set('day', updates.day.toString());
-  }
-
-  if (updates.viewMode !== undefined) {
-    next.set('view-mode', updates.viewMode);
   }
 
   if (updates.year !== undefined) {

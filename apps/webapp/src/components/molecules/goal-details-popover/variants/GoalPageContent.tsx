@@ -13,17 +13,16 @@ import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useQuery } from 'convex/react';
-import { ArrowLeft, Calendar, Home, Loader2, Target } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
+import { GoalDetailsPageShell } from './GoalDetailsPageShell';
 import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 import { WeeklyGoalPageContent } from './WeeklyGoalPageContent';
 
-import { Button } from '@/components/ui/button';
 import { GoalProvider } from '@/contexts/GoalContext';
 import { WeekProvider } from '@/hooks/useWeek';
+import { buildDashboardHref } from '@/lib/dashboard/dashboardUrlParams';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -84,178 +83,80 @@ export function GoalPageContent({
   quarter: quarterProp,
 }: GoalPageContentProps) {
   const { sessionId } = useSession();
-  const router = useRouter();
 
   const quarter = useMemo(() => {
     if (quarterProp !== undefined) return quarterProp;
     return getQuarterFromWeek(weekNumber);
   }, [quarterProp, weekNumber]);
 
-  // Fetch week data for context
   const weekData = useQuery(
     api.dashboard.getWeek,
     sessionId ? { sessionId, year, quarter, weekNumber } : 'skip'
   );
 
-  // Fetch goal details
   const goalDetails = useQuery(
     api.dashboard.getGoalDetails,
     goalId && sessionId ? { sessionId, goalId } : 'skip'
   );
 
-  const handleGoBack = useCallback(() => {
-    if (window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/app');
-    }
-  }, [router]);
-
-  const handleGoHome = useCallback(() => {
-    router.push('/app');
-  }, [router]);
-
-  const handleGoToDashboard = useCallback(() => {
-    const params = new URLSearchParams();
-    params.set('year', year.toString());
-    params.set('quarter', quarter.toString());
-    params.set('week', weekNumber.toString());
-    params.set('viewMode', 'weekly');
-    router.push(`/app?${params.toString()}`);
-  }, [router, year, quarter, weekNumber]);
-
   const goalType = goalDetails
     ? getGoalType(goalDetails as unknown as GoalWithDetailsAndChildren)
     : null;
   const goalTitle = goalDetails?.title ?? 'Loading...';
+  const dashboardHref = buildDashboardHref('weekly', new URLSearchParams(), {
+    year,
+    week: weekNumber,
+  });
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            {/* Breadcrumb Navigation */}
-            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleGoBack}
-                className="flex items-center gap-1.5 flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground min-w-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleGoHome}
-                  className="flex items-center gap-1 h-8 px-2 flex-shrink-0"
-                >
-                  <Home className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </Button>
-                <span className="hidden sm:inline">/</span>
-                <span className="hidden sm:inline">Goal</span>
-                {goalDetails && (
-                  <>
-                    <span className="hidden sm:inline">/</span>
-                    <span className="font-medium text-foreground truncate max-w-[120px] sm:max-w-xs">
-                      {goalTitle}
-                    </span>
-                  </>
+    <GoalDetailsPageShell
+      goalTitle={goalTitle}
+      hasGoalDetails={Boolean(goalDetails)}
+      contextBadgeLabel={`W${weekNumber} · Q${quarter} ${year}`}
+      isLoading={weekData === undefined || goalDetails === undefined}
+      isNotFound={goalDetails === null}
+      notFoundDescription="This goal may have been deleted or you don't have access to it."
+      dashboardHref={dashboardHref}
+    >
+      {weekData && goalDetails && goalType && (
+        <div className="bg-card rounded-lg border shadow-sm">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="mb-4">
+              <span
+                className={cn(
+                  'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
+                  goalType === 'quarterly' &&
+                    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+                  goalType === 'weekly' &&
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+                  goalType === 'daily' &&
+                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                  goalType === 'adhoc' &&
+                    'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                 )}
-              </div>
+              >
+                {goalType === 'quarterly' && 'Quarterly Goal'}
+                {goalType === 'weekly' && 'Weekly Goal'}
+                {goalType === 'daily' && 'Daily Goal'}
+                {goalType === 'adhoc' && 'Adhoc Task'}
+              </span>
             </div>
 
-            {/* Context Badge */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGoToDashboard}
-                className="flex items-center gap-1.5 text-xs"
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                <span>
-                  W{weekNumber} · Q{quarter} {year}
-                </span>
-              </Button>
-            </div>
+            <WeekProvider weekData={{ ...weekData, year, quarter }}>
+              <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
+                {goalType === 'quarterly' && <StandardGoalPopoverContent />}
+                {goalType === 'weekly' && <WeeklyGoalPageContent />}
+                {goalType === 'adhoc' && <AdhocGoalPopoverContent weekNumber={weekNumber} />}
+                {goalType === 'daily' && (
+                  <div className="text-muted-foreground text-center py-8">
+                    Daily goal view coming soon
+                  </div>
+                )}
+              </GoalProvider>
+            </WeekProvider>
           </div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Loading State */}
-        {(weekData === undefined || goalDetails === undefined) && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Loading goal details...</p>
-          </div>
-        )}
-
-        {/* Not Found State */}
-        {goalDetails === null && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Target className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Goal not found</h2>
-            <p className="text-muted-foreground mb-6">
-              This goal may have been deleted or you don't have access to it.
-            </p>
-            <Button onClick={handleGoHome}>
-              <Home className="h-4 w-4 mr-2" />
-              Return to Dashboard
-            </Button>
-          </div>
-        )}
-
-        {/* Goal Content */}
-        {weekData && goalDetails && goalType && (
-          <div className="bg-card rounded-lg border shadow-sm">
-            <div className="p-4 sm:p-6 lg:p-8">
-              {/* Goal Type Badge */}
-              <div className="mb-4">
-                <span
-                  className={cn(
-                    'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium',
-                    goalType === 'quarterly' &&
-                      'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-                    goalType === 'weekly' &&
-                      'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-                    goalType === 'daily' &&
-                      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                    goalType === 'adhoc' &&
-                      'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                  )}
-                >
-                  {goalType === 'quarterly' && 'Quarterly Goal'}
-                  {goalType === 'weekly' && 'Weekly Goal'}
-                  {goalType === 'daily' && 'Daily Goal'}
-                  {goalType === 'adhoc' && 'Adhoc Task'}
-                </span>
-              </div>
-
-              {/* Goal Content based on type */}
-              <WeekProvider weekData={{ ...weekData, year, quarter }}>
-                <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
-                  {goalType === 'quarterly' && <StandardGoalPopoverContent />}
-                  {goalType === 'weekly' && <WeeklyGoalPageContent />}
-                  {goalType === 'adhoc' && <AdhocGoalPopoverContent weekNumber={weekNumber} />}
-                  {goalType === 'daily' && (
-                    <div className="text-muted-foreground text-center py-8">
-                      Daily goal view coming soon
-                    </div>
-                  )}
-                </GoalProvider>
-              </WeekProvider>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </GoalDetailsPageShell>
   );
 }
