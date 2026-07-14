@@ -103,6 +103,7 @@ describe('moveGoalsFromWeek', () => {
       isDryRun: true,
       weekStatesToCopy: [
         {
+          id: weeklyGoalId,
           title: 'Goal weekly',
           carryOver: {
             type: 'week',
@@ -114,6 +115,7 @@ describe('moveGoalsFromWeek', () => {
           },
           dailyGoalsCount: 1,
           quarterlyGoalId,
+          quarterlyGoalTitle: 'Goal quarterly',
         },
       ],
       dailyGoalsToMove: [
@@ -361,7 +363,6 @@ describe('moveGoalsFromWeek', () => {
       from: { year: 2024, quarter: 1, weekNumber: 1 },
       to: { year: 2024, quarter: 1, weekNumber: 4 },
       dryRun: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     })) as any;
 
     // The stale clone must not appear in weekStatesToCopy
@@ -376,7 +377,6 @@ describe('moveGoalsFromWeek', () => {
       from: { year: 2024, quarter: 1, weekNumber: 3 },
       to: { year: 2024, quarter: 1, weekNumber: 4 },
       dryRun: true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     })) as any;
 
     expect(latestPreview.canPull).toBe(true);
@@ -410,12 +410,85 @@ describe('moveGoalsFromWeek', () => {
       (g: GoalWithDetailsAndChildren) => g._id === quarterlyGoalId
     );
     const seriesClonesInWeek4 = (qg?.children ?? []).filter(
-      (wg: GoalWithDetailsAndChildren) =>
-        wg.carryOver?.fromGoal.rootGoalId === weeklyGoalId
+      (wg: GoalWithDetailsAndChildren) => wg.carryOver?.fromGoal.rootGoalId === weeklyGoalId
     );
 
     // Only ONE clone in week 4 (from the latest snapshot, not the two earlier ones)
     expect(seriesClonesInWeek4).toHaveLength(1);
+  });
+
+  test('dry run includes incomplete weekly goal with no daily children', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
+    // Do NOT create daily children. Weekly is incomplete by default.
+
+    const previewResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 1 },
+      to: { year: 2024, quarter: 1, weekNumber: 2 },
+      dryRun: true,
+    });
+
+    expect((previewResult as any).canPull).toBe(true);
+    expect((previewResult as any).weekStatesToCopy).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: weeklyGoalId,
+          title: 'Goal weekly',
+          dailyGoalsCount: 0,
+          quarterlyGoalId,
+        }),
+      ])
+    );
+    expect((previewResult as any).dailyGoalsToMove).toEqual([]);
+  });
+
+  test('dry run includes incomplete weekly goal when all daily children are complete', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
+
+    // Create daily goals and mark them as complete
+    const dailyGoal1Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
+    const dailyGoal2Id = await createMockGoal(ctx, sessionId, GoalDepth.Daily, weeklyGoalId);
+
+    await ctx.mutation(api.dashboard.toggleGoalCompletion, {
+      sessionId,
+      goalId: dailyGoal1Id,
+      weekNumber: 1,
+      isComplete: true,
+    });
+    await ctx.mutation(api.dashboard.toggleGoalCompletion, {
+      sessionId,
+      goalId: dailyGoal2Id,
+      weekNumber: 1,
+      isComplete: true,
+    });
+
+    const previewResult = await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 1 },
+      to: { year: 2024, quarter: 1, weekNumber: 2 },
+      dryRun: true,
+    });
+
+    expect((previewResult as any).canPull).toBe(true);
+    expect((previewResult as any).weekStatesToCopy).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: weeklyGoalId,
+          title: 'Goal weekly',
+          dailyGoalsCount: 0,
+          quarterlyGoalId,
+        }),
+      ])
+    );
+    expect((previewResult as any).dailyGoalsToMove).toEqual([]);
   });
 });
 
