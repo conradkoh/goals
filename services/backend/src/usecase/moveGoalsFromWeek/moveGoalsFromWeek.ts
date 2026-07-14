@@ -104,6 +104,52 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
   // Pre-fetch goals for the target week (needed for both dry run and actual move)
   const targetWeekGoals = await getGoalsForWeek(ctx, userId, to);
 
+  // --- Filter stale carry-over snapshots ---
+  // When a goal has been carried over across multiple weeks (a series), only the
+  // latest snapshot in the series should be pullable. Older clones must not be
+  // pulled again even if they still exist in the from-week.
+  if (result.weekStatesToCopy.length > 0) {
+    // Query all goal states in weeks after `from` within the same year+quarter
+    const newerStates = await ctx.db
+      .query('goalStateByWeek')
+      .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
+        q
+          .eq('userId', userId)
+          .eq('year', from.year)
+          .eq('quarter', from.quarter)
+      )
+      .filter((q) => q.gt(q.field('weekNumber'), from.weekNumber))
+      .collect();
+
+    // Collect rootGoalIds that have a newer snapshot
+    const rootGoalIdsWithNewerSnapshot = new Set<Id<'goals'>>();
+    for (const state of newerStates) {
+      const rootId = state.carryOver?.fromGoal?.rootGoalId;
+      if (rootId) {
+        rootGoalIdsWithNewerSnapshot.add(rootId);
+      }
+    }
+
+    if (rootGoalIdsWithNewerSnapshot.size > 0) {
+      const staleWeeklyGoalIds = new Set<Id<'goals'>>();
+      result.weekStatesToCopy = result.weekStatesToCopy.filter((item) => {
+        const rootGoalId = item.carryOver.fromGoal.rootGoalId;
+        if (rootGoalIdsWithNewerSnapshot.has(rootGoalId)) {
+          staleWeeklyGoalIds.add(item.originalGoal._id);
+          return false;
+        }
+        return true;
+      });
+
+      // Also exclude daily goals belonging to the filtered-out weekly snapshots
+      if (staleWeeklyGoalIds.size > 0) {
+        result.dailyGoalsToMove = result.dailyGoalsToMove.filter(
+          (item) => !staleWeeklyGoalIds.has(item.parentWeeklyGoal._id)
+        );
+      }
+    }
+  }
+
   // If this is a dry run, return the preview data
   if (dryRun) {
     return (await generateDryRunPreview(
