@@ -1,17 +1,19 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import { DayOfWeek } from '@workspace/backend/src/constants';
-import { useMutation } from 'convex/react';
-import { type ReactElement, useCallback, useState } from 'react';
+import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
+import { useMutation, useQuery } from 'convex/react';
+import { useConvex } from 'convex/react';
+import { type ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useGoalActions } from './useGoalActions';
 
 import {
+  PullGoalsPreviewDialog,
   type PreviewTask,
-  TaskMovePreview,
-  type TaskMovePreviewData,
-} from '@/components/molecules/day-of-week/components/TaskMovePreview';
+  type WeekRef,
+} from '@/components/molecules/PullGoalsPreviewDialog';
 import { toast } from '@/components/ui/use-toast';
-import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
+import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -33,39 +35,102 @@ interface UsePullGoalsReturn {
   pendingGoalsCount: number;
   handlePullGoals: () => Promise<void>;
   dialog: ReactElement;
+  /** The current From week (null when week 1 / no prior week in quarter). */
+  fromWeek: WeekRef | null;
+  /** The current To week (defaults to calendar current week). */
+  toWeek: WeekRef;
+  /** Update From week and refresh preview. */
+  setFromWeek: (week: WeekRef) => void;
+  /** Update To week, clamp/clear From if invalid, and refresh preview. */
+  setToWeek: (week: WeekRef) => void;
+  /** Jump From to the last non-empty week before the current To week (same quarter only). */
+  jumpToLastNonEmptyWeek: () => Promise<void>;
+  /** True while a Jump query or preview refresh is in flight. */
+  isRefreshingPreview: boolean;
 }
 
 /**
  * Unified hook for pulling goals from:
- * 1. Last non-empty week → Monday of current week
+ * 1. Previous week → Monday of target week (explicit From/To, never moveGoalsFromLastNonEmptyWeek)
  * 2. Past days of current week → Today
  *
- * This combines both operations into a single "Pull goals" action.
+ * Props are kept for caller compat but IGNORED for defaults/execution.
+ * Defaults come from `useCurrentWeekInfo()`.
  */
-export const usePullGoals = ({
-  weekNumber,
-  year,
-  quarter,
-}: UsePullGoalsProps): UsePullGoalsReturn => {
+export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
   const { sessionId } = useSession();
   const { moveGoalsFromDay } = useGoalActions();
-  const moveGoalsFromLastNonEmptyWeekMutation = useMutation(api.goal.moveGoalsFromLastNonEmptyWeek);
+  const moveGoalsFromWeekMutation = useMutation(api.goal.moveGoalsFromWeek);
+  const convex = useConvex();
 
-  const [isPulling, setIsPulling] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [preview, setPreview] = useState<TaskMovePreviewData | null>(null);
-  const [previewData, setPreviewData] = useState<PullGoalsPreviewData | null>(null);
+  // Calendar current week — source of truth for defaults
+  const {
+    weekNumber: currentWeekNumber,
+    weekYear,
+    weekQuarter,
+    weekday: currentDayOfWeek,
+  } = useCurrentWeekInfo();
 
-  // Get current day info
-  const { weekday: currentDayOfWeek } = useCurrentDateInfo();
-
-  // Check if it's Monday (first day of week)
   const isMonday = currentDayOfWeek === DayOfWeek.MONDAY;
 
-  // Check if it's the first week of the quarter (don't pull from previous quarter)
-  const isFirstWeekOfQuarter = weekNumber === 1;
+  // --- Derived defaults (stable across renders) ---
+  const toDefault = useMemo<WeekRef>(
+    () => ({
+      year: weekYear,
+      quarter: weekQuarter,
+      weekNumber: currentWeekNumber,
+    }),
+    [weekYear, weekQuarter, currentWeekNumber]
+  );
 
-  // Get all past days of the current week (before today)
+  const fromDefault = useMemo<WeekRef | null>(() => {
+    const { weeks } = getQuarterWeeks(weekYear, weekQuarter);
+    const prior = weeks.filter((w) => w < currentWeekNumber);
+    if (prior.length === 0) return null;
+    // Largest week still before current week number
+    const weekNumber = prior[prior.length - 1];
+    return { year: weekYear, quarter: weekQuarter, weekNumber };
+  }, [currentWeekNumber, weekYear, weekQuarter]);
+
+  // --- State ---
+  const [isPulling, setIsPulling] = useState(false);
+  const [isRefreshingPreview, setIsRefreshingPreview] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [previewData, setPreviewData] = useState<PullGoalsPreviewData | null>(null);
+
+  // Editable From/To state (initialised lazily when dialog opens)
+  const [fromWeek, setFromWeekState] = useState<WeekRef | null>(null);
+  const [toWeek, setToWeekState] = useState<WeekRef | null>(null);
+
+  // Stable refs for the preview/execute helpers (avoid stale closure reads)
+  const fromWeekRef = useRef<WeekRef | null>(null);
+  const toWeekRef = useRef<WeekRef | null>(null);
+
+  // Current effective To (derived from state or default)
+  const effectiveToWeek: WeekRef = toWeek ?? toDefault;
+
+  const updateFromWeek = useCallback((week: WeekRef | null) => {
+    setFromWeekState(week);
+    fromWeekRef.current = week;
+  }, []);
+
+  const updateToWeek = useCallback((week: WeekRef) => {
+    setToWeekState(week);
+    toWeekRef.current = week;
+  }, []);
+
+  // --- Week options for dialog selects ---
+  const weekOptions = useQuery(api.goal.getAvailableWeeks, {
+    sessionId,
+    currentWeek: {
+      year: effectiveToWeek.year,
+      quarter: effectiveToWeek.quarter,
+      weekNumber: effectiveToWeek.weekNumber,
+    },
+  });
+
+  // --- Helpers ---
+
   const getPastDaysOfWeek = useCallback((): DayOfWeek[] => {
     const pastDays: DayOfWeek[] = [];
     for (let day = DayOfWeek.MONDAY; day < currentDayOfWeek; day++) {
@@ -74,175 +139,228 @@ export const usePullGoals = ({
     return pastDays;
   }, [currentDayOfWeek]);
 
-  /**
-   * Preview what goals would be pulled (dry-run)
-   */
-  const handlePreviewGoals = useCallback(async (): Promise<PullGoalsPreviewData | null> => {
-    const allTasksFromPreviousWeek: PreviewTask[] = [];
-    const allTasksFromPastDays: PreviewTask[] = [];
+  /** Determine whether past-days preview/execute applies (To == calendar current week && not Monday). */
+  const shouldPullPastDays = useCallback(
+    (to: WeekRef): boolean => {
+      return (
+        !isMonday &&
+        to.year === weekYear &&
+        to.quarter === weekQuarter &&
+        to.weekNumber === currentWeekNumber
+      );
+    },
+    [isMonday, weekYear, weekQuarter, currentWeekNumber]
+  );
 
-    try {
-      // Step 1: Preview goals from last non-empty week → Monday
-      // IMPORTANT: Only pull from previous weeks within the same quarter (not from previous quarter)
-      if (!isFirstWeekOfQuarter) {
-        const weekPreviewData = await moveGoalsFromLastNonEmptyWeekMutation({
-          sessionId,
+  /**
+   * Preview the week pull for a given From → To range.
+   * Returns the list of tasks from the week pull (empty list if none or invalid range).
+   */
+  const previewWeekPull = useCallback(
+    async (from: WeekRef | null, to: WeekRef): Promise<PreviewTask[]> => {
+      if (!from || from.weekNumber >= to.weekNumber) return [];
+
+      const result = await moveGoalsFromWeekMutation({
+        sessionId,
+        from,
+        to: { ...to, dayOfWeek: DayOfWeek.MONDAY },
+        dryRun: true,
+      });
+
+      if (!('canPull' in result) || !result.canPull) return [];
+
+      const weekTasks: PreviewTask[] = result.dailyGoalsToMove.map((dailyGoal) => {
+        const quarterlyStatus = result.quarterlyGoalsToUpdate.find(
+          (q) => q.id === dailyGoal.quarterlyGoalId
+        ) ?? { isStarred: false, isPinned: false };
+
+        return {
+          id: dailyGoal.id,
+          title: dailyGoal.title,
+          isComplete: false,
+          quarterlyGoal: {
+            id: dailyGoal.quarterlyGoalId ?? dailyGoal.weeklyGoalId,
+            title: dailyGoal.quarterlyGoalTitle ?? dailyGoal.weeklyGoalTitle,
+            isStarred: quarterlyStatus.isStarred,
+            isPinned: quarterlyStatus.isPinned,
+          },
+          weeklyGoal: {
+            id: dailyGoal.weeklyGoalId,
+            title: dailyGoal.weeklyGoalTitle,
+          },
+        };
+      });
+
+      // Also add adhoc goals from the preview
+      if (result.adhocGoalsToMove && result.adhocGoalsToMove.length > 0) {
+        const adhocTasks: PreviewTask[] = result.adhocGoalsToMove.map((adhoc) => ({
+          id: adhoc.id,
+          title: adhoc.title,
+          details: undefined,
+          isComplete: false,
+          quarterlyGoal: {
+            id: 'adhoc',
+            title: 'Adhoc Tasks',
+            isStarred: false,
+            isPinned: false,
+          },
+          weeklyGoal: {
+            id: `adhoc-domain-${adhoc.domainId || 'uncategorized'}`,
+            title: adhoc.domainName || 'Uncategorized',
+          },
+        }));
+        weekTasks.push(...adhocTasks);
+      }
+
+      return weekTasks;
+    },
+    [sessionId, moveGoalsFromWeekMutation]
+  );
+
+  /**
+   * Preview past-days pull for a target week.
+   * Only applies when `to` matches the calendar current week and today is not Monday.
+   */
+  const previewPastDays = useCallback(
+    async (to: WeekRef): Promise<PreviewTask[]> => {
+      if (!shouldPullPastDays(to)) return [];
+
+      const tasks: PreviewTask[] = [];
+      const pastDays = getPastDaysOfWeek();
+
+      for (const pastDay of pastDays) {
+        const dayPreviewData = await moveGoalsFromDay({
+          from: {
+            year: to.year,
+            quarter: to.quarter,
+            weekNumber: to.weekNumber,
+            dayOfWeek: pastDay,
+          },
           to: {
-            quarter,
-            weekNumber,
-            year,
-            dayOfWeek: DayOfWeek.MONDAY, // Always pull to Monday first
+            year: to.year,
+            quarter: to.quarter,
+            weekNumber: to.weekNumber,
+            dayOfWeek: currentDayOfWeek,
           },
           dryRun: true,
+          moveOnlyIncomplete: true,
         });
 
-        if ('canPull' in weekPreviewData && weekPreviewData.canPull) {
-          // Convert daily goals from week preview to PreviewTask format
-          const weekTasks = weekPreviewData.dailyGoalsToMove.map((dailyGoal) => {
-            const quarterlyStatus = weekPreviewData.quarterlyGoalsToUpdate.find(
-              (q) => q.id === dailyGoal.quarterlyGoalId
-            ) ?? { isStarred: false, isPinned: false };
-
-            return {
-              id: dailyGoal.id,
-              title: dailyGoal.title,
-              isComplete: false,
-              quarterlyGoal: {
-                id: dailyGoal.quarterlyGoalId ?? dailyGoal.weeklyGoalId,
-                title: dailyGoal.quarterlyGoalTitle ?? dailyGoal.weeklyGoalTitle,
-                isStarred: quarterlyStatus.isStarred,
-                isPinned: quarterlyStatus.isPinned,
-              },
-              weeklyGoal: {
-                id: dailyGoal.weeklyGoalId,
-                title: dailyGoal.weeklyGoalTitle,
-              },
-            };
-          });
-          allTasksFromPreviousWeek.push(...weekTasks);
-
-          // Also add adhoc goals from the preview
-          if (weekPreviewData.adhocGoalsToMove && weekPreviewData.adhocGoalsToMove.length > 0) {
-            const adhocTasks = weekPreviewData.adhocGoalsToMove.map((adhoc) => ({
-              id: adhoc.id,
-              title: adhoc.title,
-              details: undefined,
-              isComplete: false,
-              quarterlyGoal: {
-                id: 'adhoc',
-                title: 'Adhoc Tasks',
-                isStarred: false,
-                isPinned: false,
-              },
-              weeklyGoal: {
-                id: `adhoc-domain-${adhoc.domainId || 'uncategorized'}`,
-                title: adhoc.domainName || 'Uncategorized',
-              },
-            }));
-            allTasksFromPreviousWeek.push(...adhocTasks);
-          }
+        if ('canMove' in dayPreviewData && dayPreviewData.canMove && dayPreviewData.tasks.length > 0) {
+          tasks.push(...dayPreviewData.tasks);
         }
       }
 
-      // Step 2: Preview goals from past days in current week → Today
-      // NOTE: Adhoc goals are week-level (not day-level), so they don't need to be
-      // "pulled" from past days - they're already in the current week.
-      // Only regular daily goals need to be moved between days.
-      if (!isMonday) {
-        const pastDays = getPastDaysOfWeek();
-
-        for (const pastDay of pastDays) {
-          // Preview regular goals from this past day
-          const dayPreviewData = await moveGoalsFromDay({
-            from: {
-              year,
-              quarter,
-              weekNumber,
-              dayOfWeek: pastDay,
-            },
-            to: {
-              year,
-              quarter,
-              weekNumber,
-              dayOfWeek: currentDayOfWeek,
-            },
-            dryRun: true,
-            moveOnlyIncomplete: true,
-          });
-
-          if (
-            'canMove' in dayPreviewData &&
-            dayPreviewData.canMove &&
-            dayPreviewData.tasks.length > 0
-          ) {
-            allTasksFromPastDays.push(...dayPreviewData.tasks);
-          }
-        }
-      }
-
-      return {
-        tasksFromPreviousWeek: allTasksFromPreviousWeek,
-        tasksFromPastDays: allTasksFromPastDays,
-        totalTasks: allTasksFromPreviousWeek.length + allTasksFromPastDays.length,
-      };
-    } catch (error) {
-      console.error('Failed to preview goals:', error);
-      return null;
-    }
-  }, [
-    sessionId,
-    quarter,
-    weekNumber,
-    year,
-    isMonday,
-    isFirstWeekOfQuarter,
-    currentDayOfWeek,
-    getPastDaysOfWeek,
-    moveGoalsFromLastNonEmptyWeekMutation,
-    moveGoalsFromDay,
-  ]);
+      return tasks;
+    },
+    [shouldPullPastDays, getPastDaysOfWeek, moveGoalsFromDay, currentDayOfWeek]
+  );
 
   /**
-   * Execute the pull goals operation
+   * Refresh the preview from the current From/To refs.
+   * Used after setFromWeek / setToWeek / jump changes.
    */
-  const executePullGoals = useCallback(async () => {
+  const refreshPreview = useCallback(async () => {
+    const from = fromWeekRef.current;
+    const to = toWeekRef.current ?? toDefault;
+
+    setIsRefreshingPreview(true);
+    try {
+      const [weekTasks, pastDayTasks] = await Promise.all([
+        previewWeekPull(from, to),
+        previewPastDays(to),
+      ]);
+
+      setPreviewData({
+        tasksFromPreviousWeek: weekTasks,
+        tasksFromPastDays: pastDayTasks,
+        totalTasks: weekTasks.length + pastDayTasks.length,
+      });
+    } catch (error) {
+      console.error('Failed to refresh preview:', error);
+    } finally {
+      setIsRefreshingPreview(false);
+    }
+  }, [toDefault, previewWeekPull, previewPastDays]);
+
+  /**
+   * Reset From/To to defaults, run preview, and open dialog.
+   * Always opens the dialog (even if totalTasks === 0).
+   */
+  const handlePullGoals = useCallback(async () => {
     try {
       setIsPulling(true);
 
-      // Step 1: Pull from last non-empty week → Monday
-      // IMPORTANT: Only pull from previous weeks within the same quarter (not from previous quarter)
-      if (!isFirstWeekOfQuarter) {
-        await moveGoalsFromLastNonEmptyWeekMutation({
+      // Reset to defaults from calendar
+      const from = fromDefault;
+      const to = toDefault;
+      updateFromWeek(from);
+      updateToWeek(to);
+
+      // Run preview
+      const [weekTasks, pastDayTasks] = await Promise.all([
+        previewWeekPull(from, to),
+        previewPastDays(to),
+      ]);
+
+      setPreviewData({
+        tasksFromPreviousWeek: weekTasks,
+        tasksFromPastDays: pastDayTasks,
+        totalTasks: weekTasks.length + pastDayTasks.length,
+      });
+
+      // ALWAYS open dialog (even if 0 tasks)
+      setShowDialog(true);
+    } catch (error) {
+      console.error('Failed to preview goals:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to preview goals to pull.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPulling(false);
+    }
+  }, [fromDefault, toDefault, updateFromWeek, updateToWeek, previewWeekPull, previewPastDays]);
+
+  /**
+   * Execute the pull goals operation for the current From/To range.
+   * Uses moveGoalsFromWeek with explicit from/to (never moveGoalsFromLastNonEmptyWeek).
+   */
+  const executePullGoals = useCallback(async () => {
+    const from = fromWeekRef.current;
+    const to = toWeekRef.current;
+    if (!to) return;
+
+    try {
+      setIsPulling(true);
+
+      // Step 1: Week pull (if valid range)
+      if (from && from.weekNumber < to.weekNumber) {
+        await moveGoalsFromWeekMutation({
           sessionId,
-          to: {
-            quarter,
-            weekNumber,
-            year,
-            dayOfWeek: DayOfWeek.MONDAY,
-          },
+          from,
+          to: { ...to, dayOfWeek: DayOfWeek.MONDAY },
           dryRun: false,
         });
       }
 
-      // Step 2: Pull from past days → Today
-      // NOTE: Adhoc goals are week-level, so they don't need day-to-day movement.
-      // Only regular daily goals are moved between days.
-      if (!isMonday) {
+      // Step 2: Past-days pull (if applicable)
+      if (shouldPullPastDays(to)) {
         const pastDays = getPastDaysOfWeek();
 
         for (const pastDay of pastDays) {
-          // Move regular goals only
           await moveGoalsFromDay({
             from: {
-              year,
-              quarter,
-              weekNumber,
+              year: to.year,
+              quarter: to.quarter,
+              weekNumber: to.weekNumber,
               dayOfWeek: pastDay,
             },
             to: {
-              year,
-              quarter,
-              weekNumber,
+              year: to.year,
+              quarter: to.quarter,
+              weekNumber: to.weekNumber,
               dayOfWeek: currentDayOfWeek,
             },
             dryRun: false,
@@ -251,7 +369,7 @@ export const usePullGoals = ({
         }
       }
 
-      setShowConfirmDialog(false);
+      setShowDialog(false);
     } catch (error) {
       console.error('Failed to pull goals:', error);
       toast({
@@ -264,75 +382,115 @@ export const usePullGoals = ({
     }
   }, [
     sessionId,
-    quarter,
-    weekNumber,
-    year,
-    isMonday,
-    isFirstWeekOfQuarter,
-    currentDayOfWeek,
-    getPastDaysOfWeek,
-    moveGoalsFromLastNonEmptyWeekMutation,
+    moveGoalsFromWeekMutation,
     moveGoalsFromDay,
+    shouldPullPastDays,
+    getPastDaysOfWeek,
+    currentDayOfWeek,
   ]);
 
-  /**
-   * Main handler: Preview first, then show dialog
-   */
-  const handlePullGoals = useCallback(async () => {
+  // ---- Public setters for slice 2 ----
+
+  const setFromWeek = useCallback(
+    async (week: WeekRef) => {
+      updateFromWeek(week);
+      await refreshPreview();
+    },
+    [updateFromWeek, refreshPreview]
+  );
+
+  const setToWeek = useCallback(
+    async (week: WeekRef) => {
+      const currentFrom = fromWeekRef.current;
+      const sameQuarter =
+        currentFrom &&
+        currentFrom.year === week.year &&
+        currentFrom.quarter === week.quarter;
+
+      // Clamp/clear From if it would be >= To
+      if (!sameQuarter || !currentFrom || currentFrom.weekNumber >= week.weekNumber) {
+        updateFromWeek(
+          week.weekNumber > 1
+            ? { year: week.year, quarter: week.quarter, weekNumber: week.weekNumber - 1 }
+            : null
+        );
+      }
+
+      updateToWeek(week);
+      await refreshPreview();
+    },
+    [updateFromWeek, updateToWeek, refreshPreview]
+  );
+
+  const jumpToLastNonEmptyWeek = useCallback(async () => {
+    const to = toWeekRef.current;
+    if (!to) return;
+
+    setIsRefreshingPreview(true);
     try {
-      setIsPulling(true);
-      const previewResult = await handlePreviewGoals();
-
-      if (!previewResult || previewResult.totalTasks === 0) {
-        return;
-      }
-
-      setPreviewData(previewResult);
-
-      // Combine all tasks for the preview dialog
-      const allTasks = [...previewResult.tasksFromPreviousWeek, ...previewResult.tasksFromPastDays];
-
-      // Build description based on what's being pulled
-      let previousDayDescription = '';
-      if (
-        previewResult.tasksFromPreviousWeek.length > 0 &&
-        previewResult.tasksFromPastDays.length > 0
-      ) {
-        previousDayDescription = 'previous week and past days';
-      } else if (previewResult.tasksFromPreviousWeek.length > 0) {
-        previousDayDescription = 'previous week';
-      } else {
-        previousDayDescription = 'past days';
-      }
-
-      setPreview({
-        previousDay: previousDayDescription,
-        targetDay: getDayName(currentDayOfWeek),
-        tasks: allTasks,
+      const result = await convex.query(api.goal.findLastNonEmptyWeekBefore, {
+        sessionId,
+        before: to,
       });
-      setShowConfirmDialog(true);
+
+      if (result) {
+        updateFromWeek(result);
+        // Refresh preview with the new From
+        const fromVal = result;
+        const [weekTasks, pastDayTasks] = await Promise.all([
+          previewWeekPull(fromVal, to),
+          previewPastDays(to),
+        ]);
+        setPreviewData({
+          tasksFromPreviousWeek: weekTasks,
+          tasksFromPastDays: pastDayTasks,
+          totalTasks: weekTasks.length + pastDayTasks.length,
+        });
+      } else {
+        toast({
+          title: 'No earlier week found',
+          description: 'No earlier week with incomplete goals in this quarter.',
+        });
+      }
     } catch (error) {
-      console.error('Failed to preview goals:', error);
+      console.error('Failed to find last non-empty week:', error);
       toast({
         title: 'Error',
-        description: 'Failed to preview goals to pull.',
+        description: 'Failed to find earlier week.',
         variant: 'destructive',
       });
     } finally {
-      setIsPulling(false);
+      setIsRefreshingPreview(false);
     }
-  }, [handlePreviewGoals, currentDayOfWeek]);
+  }, [sessionId, convex, updateFromWeek, previewWeekPull, previewPastDays]);
 
   return {
     isPulling,
     hasPendingGoals: (previewData?.totalTasks ?? 0) > 0,
     pendingGoalsCount: previewData?.totalTasks ?? 0,
     handlePullGoals,
+    fromWeek,
+    toWeek: effectiveToWeek,
+    setFromWeek,
+    setToWeek,
+    jumpToLastNonEmptyWeek,
+    isRefreshingPreview,
     dialog: (
-      <TaskMovePreview
-        open={showConfirmDialog}
-        onOpenChange={setShowConfirmDialog}
-        preview={preview}
+      <PullGoalsPreviewDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        fromWeek={fromWeek}
+        toWeek={effectiveToWeek}
+        tasksFromPreviousWeek={previewData?.tasksFromPreviousWeek ?? []}
+        tasksFromPastDays={previewData?.tasksFromPastDays ?? []}
+        showPastDaysSection={shouldPullPastDays(effectiveToWeek)}
+        todayLabel={getDayName(currentDayOfWeek)}
+        isRefreshingPreview={isRefreshingPreview}
+        isPulling={isPulling}
+        weekOptions={weekOptions ?? []}
+        onFromWeekChange={setFromWeek}
+        onToWeekChange={setToWeek}
+        onJumpToLastNonEmpty={jumpToLastNonEmptyWeek}
         onConfirm={executePullGoals}
       />
     ),

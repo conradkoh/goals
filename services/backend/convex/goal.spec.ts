@@ -332,6 +332,91 @@ describe('moveGoalsFromWeek', () => {
     expect(fireGoalsAfter).toContain(carriedOverWeeklyGoal?._id);
     expect(fireGoalsAfter).toHaveLength(1); // Should only have the new goal, not the old one
   });
+
+  test('only pulls the latest snapshot in a carry-over series', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create quarterly + weekly goals at week 1
+    const quarterlyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Quarterly);
+    const weeklyGoalId = await createMockGoal(ctx, sessionId, GoalDepth.Weekly, quarterlyGoalId);
+
+    // -- Build series: week1 → week2 → week3 (three snapshots, same rootGoalId) --
+    await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 1 },
+      to: { year: 2024, quarter: 1, weekNumber: 2 },
+      dryRun: false,
+    });
+    await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 2 },
+      to: { year: 2024, quarter: 1, weekNumber: 3 },
+      dryRun: false,
+    });
+
+    // -- Older snapshot (week 1) must NOT be pullable into week 4 --
+    const stalePreview = (await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 1 },
+      to: { year: 2024, quarter: 1, weekNumber: 4 },
+      dryRun: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    })) as any;
+
+    // The stale clone must not appear in weekStatesToCopy
+    expect(stalePreview.weekStatesToCopy).toEqual([]);
+    // canPull must be false since the only weekly goal in week 1 is the stale series clone
+    // (adhocGoalsToMove is empty, dailyGoalsToMove is empty)
+    expect(stalePreview.canPull).toBe(false);
+
+    // -- Latest snapshot (week 3) MUST still be pullable into week 4 --
+    const latestPreview = (await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 3 },
+      to: { year: 2024, quarter: 1, weekNumber: 4 },
+      dryRun: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    })) as any;
+
+    expect(latestPreview.canPull).toBe(true);
+    expect(latestPreview.weekStatesToCopy).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: 'Goal weekly',
+          carryOver: expect.objectContaining({
+            fromGoal: expect.objectContaining({ rootGoalId: weeklyGoalId }),
+          }),
+        }),
+      ])
+    );
+
+    // -- Execute latest pull and confirm a single new clone lands in week 4 --
+    await ctx.mutation(api.goal.moveGoalsFromWeek, {
+      sessionId,
+      from: { year: 2024, quarter: 1, weekNumber: 3 },
+      to: { year: 2024, quarter: 1, weekNumber: 4 },
+      dryRun: false,
+    });
+
+    const weekFour = await ctx.query(api.dashboard.getWeek, {
+      sessionId,
+      year: 2024,
+      quarter: 1,
+      weekNumber: 4,
+    });
+
+    const qg = weekFour.tree.quarterlyGoals.find(
+      (g: GoalWithDetailsAndChildren) => g._id === quarterlyGoalId
+    );
+    const seriesClonesInWeek4 = (qg?.children ?? []).filter(
+      (wg: GoalWithDetailsAndChildren) =>
+        wg.carryOver?.fromGoal.rootGoalId === weeklyGoalId
+    );
+
+    // Only ONE clone in week 4 (from the latest snapshot, not the two earlier ones)
+    expect(seriesClonesInWeek4).toHaveLength(1);
+  });
 });
 
 describe('moveGoalsFromDay', () => {
@@ -1157,5 +1242,129 @@ describe('deleteGoal', () => {
     // But the weekly goal and its children should be gone
     const weeklyGoals = quarterlyGoals[0].children;
     expect(weeklyGoals.length).toBe(0);
+  });
+});
+
+describe('findLastNonEmptyWeekBefore', () => {
+  test('returns the most recent earlier week in the same quarter with goal state', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal → creates goalStateByWeek entries for ALL weeks in Q1 2024
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q1 Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    // Create a weekly goal at week 2 (adds a goalStateByWeek entry for week 2 specifically)
+    await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Week 2 Goal',
+      parentId: quarterlyGoalId,
+      weekNumber: 2,
+    });
+
+    // Also create a weekly goal at week 4
+    await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Week 4 Goal',
+      parentId: quarterlyGoalId,
+      weekNumber: 4,
+    });
+
+    // Query: find the most recent week before week 5
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 5 },
+    });
+
+    // The loop searches from weekNumber-1 = 4 down to 1.
+    // All weeks have quarterly goal states so week 4 is found first.
+    expect(result).toEqual({ year: 2024, quarter: 1, weekNumber: 4 });
+  });
+
+  test('returns null when no earlier week in the quarter has content', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // No goals created at all → no goalStateByWeek entries
+
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 3 },
+    });
+
+    expect(result).toBeNull();
+  });
+
+  test('does not cross into the previous quarter', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal only in 2023 Q4 → goalStateByWeek entries only for Q4 2023 weeks
+    await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q4 2023 Goal',
+      year: 2023,
+      quarter: 4,
+      weekNumber: 12,
+    });
+
+    // Query for 2024 Q1 week 2 with NO content in Q1 2024
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 2 },
+    });
+
+    // Must NOT cross into Q4 2023 → should return null
+    expect(result).toBeNull();
+  });
+
+  test('returns null when before.weekNumber is 1 (no prior week in quarter)', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create a quarterly goal in Q1 2024
+    await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Q1 Goal',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+    });
+
+    // before week 1 → candidates list is empty (no Q1 weeks < 1)
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2024, quarter: 1, weekNumber: 1 },
+    });
+
+    expect(result).toBeNull();
+  });
+
+  test('does not jump to a week outside the current quarter (e.g. week 26 when To is early Q3)', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create an incomplete adhoc goal in week 26 of 2026 (prior quarter territory).
+    // This must NOT lure the finder when searching Q3 weeks.
+    await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Adhoc in Q2 week 26',
+      year: 2026,
+      weekNumber: 26,
+    });
+
+    // Query for Q3 week 27 with NO regular/adhoc content in any Q3 week
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2026, quarter: 3, weekNumber: 27 },
+    });
+
+    // Must NOT return week 26 (which belongs to Q2, not Q3)
+    expect(result).toBeNull();
   });
 });
