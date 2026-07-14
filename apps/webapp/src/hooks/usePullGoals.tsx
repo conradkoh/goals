@@ -1,5 +1,6 @@
 import { api } from '@workspace/backend/convex/_generated/api';
 import { DayOfWeek } from '@workspace/backend/src/constants';
+import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
 import { useMutation, useQuery } from 'convex/react';
 import { useConvex } from 'convex/react';
 import { type ReactElement, useCallback, useMemo, useRef, useState } from 'react';
@@ -82,13 +83,14 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
     [weekYear, weekQuarter, currentWeekNumber]
   );
 
-  const fromDefault = useMemo<WeekRef | null>(
-    () =>
-      currentWeekNumber > 1
-        ? { year: weekYear, quarter: weekQuarter, weekNumber: currentWeekNumber - 1 }
-        : null,
-    [currentWeekNumber, weekYear, weekQuarter]
-  );
+  const fromDefault = useMemo<WeekRef | null>(() => {
+    const { weeks } = getQuarterWeeks(weekYear, weekQuarter);
+    const prior = weeks.filter((w) => w < currentWeekNumber);
+    if (prior.length === 0) return null;
+    // Largest week still before current week number
+    const weekNumber = prior[prior.length - 1];
+    return { year: weekYear, quarter: weekQuarter, weekNumber };
+  }, [currentWeekNumber, weekYear, weekQuarter]);
 
   // --- State ---
   const [isPulling, setIsPulling] = useState(false);

@@ -205,8 +205,14 @@ export const findLastNonEmptyWeekBefore = query({
     const userId = user._id;
     const { year, quarter, weekNumber } = args.before;
 
-    // Search weekNumber-1 down to 1 in the SAME quarter only
-    for (let candidateWeek = weekNumber - 1; candidateWeek >= 1; candidateWeek--) {
+    // Only consider weeks that actually exist in this quarter (from getQuarterWeeks)
+    // and are strictly before the given weekNumber. Search descending (most recent first).
+    const { weeks } = getQuarterWeeks(year, quarter);
+    const candidates = weeks
+      .filter((w) => w < weekNumber)
+      .sort((a, b) => b - a);
+
+    for (const candidateWeek of candidates) {
       // Cheap existence probe: check for both regular goals and adhoc goals
       const [regularGoalProbe, adhocGoalProbe] = await Promise.all([
         ctx.db

@@ -1336,12 +1336,35 @@ describe('findLastNonEmptyWeekBefore', () => {
       weekNumber: 1,
     });
 
-    // before week 1 → loop doesn't run (candidateWeek = 0, 0 >= 1 is false)
+    // before week 1 → candidates list is empty (no Q1 weeks < 1)
     const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
       sessionId,
       before: { year: 2024, quarter: 1, weekNumber: 1 },
     });
 
+    expect(result).toBeNull();
+  });
+
+  test('does not jump to a week outside the current quarter (e.g. week 26 when To is early Q3)', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    // Create an incomplete adhoc goal in week 26 of 2026 (prior quarter territory).
+    // This must NOT lure the finder when searching Q3 weeks.
+    await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Adhoc in Q2 week 26',
+      year: 2026,
+      weekNumber: 26,
+    });
+
+    // Query for Q3 week 27 with NO regular/adhoc content in any Q3 week
+    const result = await ctx.query(api.goal.findLastNonEmptyWeekBefore, {
+      sessionId,
+      before: { year: 2026, quarter: 3, weekNumber: 27 },
+    });
+
+    // Must NOT return week 26 (which belongs to Q2, not Q3)
     expect(result).toBeNull();
   });
 });

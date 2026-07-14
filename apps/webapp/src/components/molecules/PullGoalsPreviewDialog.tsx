@@ -215,8 +215,23 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
   const totalTasks = tasksFromPreviousWeek.length + tasksFromPastDays.length;
 
   // ── Week option filtering ─────────────────────────────────────────────────
-  // From options: all weeks strictly before the selected To week
-  const fromOptions = weekOptions.filter((w) => w.weekNumber < toWeek.weekNumber);
+  // From options: all weeks strictly before the selected To week.
+  // If fromWeek is set but no option has that weekNumber, append a synthetic
+  // option so the Select control never goes blank (e.g. Jump returns a week
+  // outside the quarter's week list, or an old week the quarter didn't include).
+  const fromOptionsBase = weekOptions.filter((w) => w.weekNumber < toWeek.weekNumber);
+  const fromOptions =
+    fromWeek && !fromOptionsBase.some((w) => w.weekNumber === fromWeek.weekNumber)
+      ? [
+          ...fromOptionsBase,
+          {
+            year: fromWeek.year,
+            quarter: fromWeek.quarter,
+            weekNumber: fromWeek.weekNumber,
+            label: `Week ${fromWeek.weekNumber}`,
+          },
+        ].sort((a, b) => a.weekNumber - b.weekNumber)
+      : fromOptionsBase;
   // To options: all available weeks in the quarter
   const toOptions = weekOptions;
 

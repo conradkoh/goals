@@ -109,4 +109,20 @@ describe('PullGoalsPreviewDialog', () => {
     const confirmButton = screen.getByRole('button', { name: /Pulling/i });
     expect(confirmButton).toBeDisabled();
   });
+
+  it('still shows From week when Jump lands on a week missing from weekOptions', () => {
+    renderDialog({
+      fromWeek: { year: 2026, quarter: 3, weekNumber: 26 },
+      toWeek: { year: 2026, quarter: 3, weekNumber: 29 },
+      weekOptions: [
+        { year: 2026, quarter: 3, weekNumber: 27, label: 'Week 27 (past)' },
+        { year: 2026, quarter: 3, weekNumber: 28, label: 'Week 28 (past)' },
+        { year: 2026, quarter: 3, weekNumber: 29, label: 'Week 29 (current)' },
+      ],
+    });
+
+    // The Select must display "Week 26" even though 26 is not in weekOptions,
+    // because the dialog appends a synthetic option for the current fromWeek.
+    expect(screen.getByText('Week 26')).toBeInTheDocument();
+  });
 });
