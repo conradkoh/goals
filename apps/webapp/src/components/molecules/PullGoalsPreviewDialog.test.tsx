@@ -125,4 +125,30 @@ describe('PullGoalsPreviewDialog', () => {
     // because the dialog appends a synthetic option for the current fromWeek.
     expect(screen.getByText('Week 26')).toBeInTheDocument();
   });
+
+  it('shows a tooltip describing what Jump does', async () => {
+    renderDialog();
+
+    const jumpButton = screen.getByRole('button', { name: /Jump/i });
+    fireEvent.pointerMove(jumpButton);
+    fireEvent.focus(jumpButton);
+
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip.textContent).toMatch(
+      /Jump to the last earlier week in this quarter that still has incomplete goals/i
+    );
+  });
+
+  it('dismisses when the overlay outside the modal is clicked', () => {
+    const { props } = renderDialog();
+
+    const overlay = document.querySelector('[data-slot="alert-dialog-overlay"]');
+    expect(overlay).toBeTruthy();
+    if (!overlay) {
+      throw new Error('Expected alert-dialog overlay to be present');
+    }
+    fireEvent.click(overlay);
+
+    expect(props.onOpenChange).toHaveBeenCalledWith(false);
+  });
 });
