@@ -27,7 +27,6 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -44,7 +43,7 @@ import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useGoalActions } from '@/hooks/useGoalActions';
-import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useGoalTitleSave, useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -195,7 +194,13 @@ interface WeeklyGoalPageContentInnerProps {
   /** Whether the goal has child daily goals */
   hasChildren: boolean;
   /** Handler for saving goal updates */
-  onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
+  onSave: (
+    title: string,
+    details?: string,
+    dueDate?: number,
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
+  ) => Promise<void>;
   /** Handler for toggling goal completion */
   onToggleComplete: () => Promise<void>;
   /** Handler for updating goal details content */
@@ -235,7 +240,7 @@ function WeeklyGoalPageContentInner({
 }: WeeklyGoalPageContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
 
   return (
     <>
@@ -246,7 +251,7 @@ function WeeklyGoalPageContentInner({
           onToggleComplete={onToggleComplete}
           statusControls={<GoalStatusIcons goalId={goal._id} />}
           actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
-          onTitleClick={onTitleClick}
+          onTitleSave={handleTitleSave}
         />
 
         <GoalCreatedDate createdAt={goal._creationTime} />
@@ -264,7 +269,6 @@ function WeeklyGoalPageContentInner({
           title={goal.title}
           details={goal.details ?? ''}
           onDetailsChange={onDetailsChange}
-          onEditClick={onEditClick}
         />
 
         <GoalChildrenSection

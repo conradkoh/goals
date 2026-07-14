@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 
 export interface GoalHeaderProps {
   /** The goal title */
@@ -17,8 +19,8 @@ export interface GoalHeaderProps {
   actionMenu?: ReactNode;
   /** Title size variant */
   size?: 'default' | 'large';
-  /** When set, title is clickable to start editing */
-  onTitleClick?: () => void;
+  /** When set, title is clickable for inline edit; commits via this callback */
+  onTitleSave?: (title: string) => void;
 }
 
 /**
@@ -44,9 +46,55 @@ export function GoalHeader({
   statusControls,
   actionMenu,
   size = 'default',
-  onTitleClick,
+  onTitleSave,
 }: GoalHeaderProps) {
   const titleClassName = size === 'large' ? 'font-semibold text-xl' : 'font-semibold text-lg';
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isEditing) setDraft(title);
+  }, [title, isEditing]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const commit = useCallback(() => {
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      toast({
+        title: 'Error',
+        description: 'Goal title cannot be empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (trimmed !== title) onTitleSave?.(trimmed);
+    setIsEditing(false);
+  }, [draft, title, onTitleSave]);
+
+  const cancel = useCallback(() => {
+    setDraft(title);
+    setIsEditing(false);
+  }, [title]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancel();
+      }
+    },
+    [commit, cancel]
+  );
 
   return (
     <div className="flex items-start justify-between gap-3">
@@ -57,10 +105,19 @@ export function GoalHeader({
           disabled={disableCompletion || !onToggleComplete}
           onCheckedChange={(checked) => onToggleComplete?.(checked === true)}
         />
-        {onTitleClick ? (
+        {isEditing ? (
+          <Input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={commit}
+            className={`${titleClassName} h-auto border-0 px-0 py-0 shadow-none focus-visible:ring-0`}
+          />
+        ) : onTitleSave ? (
           <button
             type="button"
-            onClick={onTitleClick}
+            onClick={() => setIsEditing(true)}
             className={`${titleClassName} break-words flex-1 leading-tight text-left hover:text-primary transition-colors cursor-pointer`}
           >
             {title}

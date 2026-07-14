@@ -26,7 +26,6 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
@@ -38,7 +37,7 @@ import { GoalType } from '@/domain/goal-actions';
 import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
-import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useAdhocGoalDetailsSave, useGoalTitleSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -78,7 +77,8 @@ interface AdhocGoalPopoverContentInnerProps {
     title: string,
     details?: string,
     dueDate?: number,
-    domainId?: Id<'domains'> | null
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
   ) => Promise<void>;
   /** Handler for updating goal details content */
   onDetailsChange: (newDetails: string) => void;
@@ -276,8 +276,8 @@ function AdhocGoalPopoverContentInner({
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
 
   return (
     <>
@@ -296,7 +296,7 @@ function AdhocGoalPopoverContentInner({
             />
           }
           statusControls={<GoalStatusIcons goalId={goal._id} />}
-          onTitleClick={onTitleClick}
+          onTitleSave={handleTitleSave}
         />
 
         {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -329,7 +329,6 @@ function AdhocGoalPopoverContentInner({
               details={goal.details ?? ''}
               onDetailsChange={onDetailsChange}
               showSeparator={false}
-              onEditClick={onEditClick}
             />
 
             <AdhocSubGoalsList

@@ -1,8 +1,6 @@
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 
-import { useGoalContext } from '@/contexts/GoalContext';
-
 /**
  * Context value type for goal editing state management.
  */
@@ -84,22 +82,4 @@ export function GoalEditProvider({ children }: _GoalEditProviderProps) {
   );
 
   return <_GoalEditContext.Provider value={value}>{children}</_GoalEditContext.Provider>;
-}
-
-/**
- * Hook to start editing the current goal from title or details click handlers.
- * Must be used within GoalProvider and GoalEditProvider.
- */
-export function useStartEditingGoal() {
-  const { goal } = useGoalContext();
-  const { startEditing } = useGoalEditContext();
-
-  const handleStartEditing = useCallback(() => {
-    startEditing(goal);
-  }, [startEditing, goal]);
-
-  return {
-    onTitleClick: handleStartEditing,
-    onEditClick: handleStartEditing,
-  };
 }

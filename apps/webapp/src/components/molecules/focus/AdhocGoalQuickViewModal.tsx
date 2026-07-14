@@ -17,7 +17,6 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../goal-details-popover/view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
@@ -32,7 +31,7 @@ import { GoalType } from '@/domain/goal-actions';
 import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals } from '@/hooks/useAdhocGoals';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
-import { useAdhocGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useAdhocGoalDetailsSave, useGoalTitleSave } from '@/hooks/useGoalDetailsSave';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -204,7 +203,6 @@ function AdhocGoalQuickViewContent({
   const { sessionId } = useSession();
   const { updateAdhocGoal, deleteAdhocGoal, createAdhocGoal } = useAdhocGoals(sessionId);
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const isComplete = goal.isComplete;
 
   /**
@@ -226,6 +224,8 @@ function AdhocGoalQuickViewContent({
     },
     [goal._id, updateAdhocGoal]
   );
+
+  const handleTitleSave = useGoalTitleSave(handleSave, goal);
 
   /**
    * Toggles the completion status of the main adhoc goal.
@@ -360,7 +360,7 @@ function AdhocGoalQuickViewContent({
                 onToggleBacklog={handleToggleBacklog}
               />
             }
-            onTitleClick={onTitleClick}
+            onTitleSave={handleTitleSave}
           />
 
           {adhocGoalProp.domain && (
@@ -392,7 +392,6 @@ function AdhocGoalQuickViewContent({
                 details={goal.details ?? ''}
                 onDetailsChange={handleDetailsChange}
                 showSeparator={false}
-                onEditClick={onEditClick}
               />
               <Separator className="my-4" />
 

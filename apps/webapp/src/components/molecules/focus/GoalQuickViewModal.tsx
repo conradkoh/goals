@@ -19,7 +19,6 @@ import {
   GoalHeader,
   GoalInitiativeField,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../goal-details-popover/view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -41,7 +40,7 @@ import { resolveGoalType } from '@/domain/goal-actions';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
-import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useGoalTitleSave, useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { useSession } from '@/modules/auth/useSession';
@@ -126,7 +125,6 @@ function GoalQuickViewContentInternal({
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, createDailyGoalOptimistic } =
     useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const isComplete = goal.isComplete;
 
   // State for creating child goals
@@ -165,6 +163,8 @@ function GoalQuickViewContentInternal({
     },
     [goal._id, goalActions]
   );
+
+  const handleTitleSave = useGoalTitleSave(handleSave, goal);
 
   const handleToggleComplete = useCallback(async () => {
     await goalActions.toggleGoalCompletion({
@@ -262,7 +262,7 @@ function GoalQuickViewContentInternal({
             onToggleComplete={handleToggleComplete}
             statusControls={<GoalStatusIcons goalId={goal._id} />}
             actionMenu={<GoalActionMenuNew onSave={handleSave} goalType={resolveGoalType(goal)} />}
-            onTitleClick={onTitleClick}
+            onTitleSave={handleTitleSave}
           />
 
           {isComplete && goal.completedAt && <GoalCompletionDate completedAt={goal.completedAt} />}
@@ -288,7 +288,6 @@ function GoalQuickViewContentInternal({
                 details={goal.details ?? ''}
                 onDetailsChange={handleDetailsChange}
                 showSeparator={false}
-                onEditClick={onEditClick}
               />
 
               {/* Weekly Goals section for quarterly goals */}

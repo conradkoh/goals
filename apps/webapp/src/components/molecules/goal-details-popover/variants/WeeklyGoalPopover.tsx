@@ -16,7 +16,6 @@ import {
   GoalHeader,
   useGoalDisplayContext,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
@@ -35,7 +34,7 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
-import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useGoalTitleSave, useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
@@ -155,13 +154,13 @@ function WeeklyGoalPopoverContentInner({
 }: WeeklyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter, weekNumber } = useWeek();
 
   const hasChildren = goal.children && goal.children.length > 0;
 
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
   const handleDetailsChange = useStructuredGoalDetailsSave(onSave, goal);
 
   // Shared content for both popover and fullscreen modes
@@ -174,7 +173,7 @@ function WeeklyGoalPopoverContentInner({
         onToggleComplete={onToggleComplete}
         statusControls={<GoalStatusIcons goalId={goal._id} />}
         actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Weekly} />}
-        onTitleClick={onTitleClick}
+        onTitleSave={handleTitleSave}
       />
 
       <GoalCreatedDate createdAt={goal._creationTime} />
@@ -197,7 +196,6 @@ function WeeklyGoalPopoverContentInner({
             details={goal.details ?? ''}
             onDetailsChange={handleDetailsChange}
             showSeparator={false}
-            onEditClick={onEditClick}
           />
 
           <GoalChildrenSection
