@@ -118,11 +118,9 @@ export function GoalPageContent({
   const handleGoToDashboard = useCallback(() => {
     const params = new URLSearchParams();
     params.set('year', year.toString());
-    params.set('quarter', quarter.toString());
     params.set('week', weekNumber.toString());
-    params.set('viewMode', 'weekly');
-    router.push(`/app?${params.toString()}`);
-  }, [router, year, quarter, weekNumber]);
+    router.push(`/app/weekly?${params.toString()}`);
+  }, [router, year, weekNumber]);
 
   const goalType = goalDetails
     ? getGoalType(goalDetails as unknown as GoalWithDetailsAndChildren)

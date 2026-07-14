@@ -105,8 +105,7 @@ export function QuarterlyGoalPullPreviewContent({
     const params = new URLSearchParams();
     params.set('year', year.toString());
     params.set('quarter', quarter.toString());
-    params.set('viewMode', 'quarterly');
-    router.push(`/app?${params.toString()}`);
+    router.push(`/app/quarterly?${params.toString()}`);
   }, [router, year, quarter]);
 
   const goalTitle = goalDetails?.title ?? 'Loading...';

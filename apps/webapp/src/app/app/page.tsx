@@ -1,37 +1,31 @@
 'use client';
 
-import { DashboardFocusView } from '@/components/organisms/DashboardFocusView';
-import { useDashboard } from '@/hooks/useDashboard';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect } from 'react';
 
-/**
- * Main dashboard page displaying goals in quarterly, weekly, or daily views.
- */
-const DashboardPage = () => {
-  const {
-    selectedWeek,
-    selectedDayOfWeek,
-    viewMode,
-    handleViewModeChange,
-    handleYearQuarterChange,
-    handlePrevious,
-    handleNext,
-  } = useDashboard();
+import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
+import {
+  buildDashboardViewHref,
+  getLegacyViewModeRedirectHref,
+} from '@/lib/dashboard/dashboardUrlParams';
 
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-auto">
-        <DashboardFocusView
-          viewMode={viewMode}
-          selectedWeekNumber={selectedWeek}
-          selectedDayOfWeek={selectedDayOfWeek}
-          onViewModeChange={handleViewModeChange}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onYearQuarterChange={handleYearQuarterChange}
-        />
-      </div>
-    </div>
-  );
+const DashboardRedirectPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { isMobile } = useDeviceScreenInfo();
+
+  useEffect(() => {
+    const legacy = getLegacyViewModeRedirectHref(searchParams);
+    if (legacy) {
+      router.replace(legacy);
+      return;
+    }
+
+    const defaultViewMode = isMobile ? 'focused' : 'quarterly';
+    router.replace(buildDashboardViewHref(defaultViewMode));
+  }, [router, searchParams, isMobile]);
+
+  return null;
 };
 
-export default DashboardPage;
+export default DashboardRedirectPage;
