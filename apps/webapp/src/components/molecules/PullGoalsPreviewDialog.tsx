@@ -179,9 +179,11 @@ function TaskGroupList({ tasks }: { tasks: PreviewTask[] }) {
                   </div>
                 </h5>
                 <ul className="space-y-1">
-                  {weeklyGroup.tasks.map((task) => (
-                    <TaskPreviewItem key={task.id} task={task} />
-                  ))}
+                  {weeklyGroup.tasks
+                    .filter((task) => task.id !== weeklyGroup.weeklyGoal.id)
+                    .map((task) => (
+                      <TaskPreviewItem key={task.id} task={task} />
+                    ))}
                 </ul>
               </div>
             ))}

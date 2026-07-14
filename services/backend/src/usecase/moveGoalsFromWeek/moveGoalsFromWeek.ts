@@ -113,10 +113,7 @@ export async function moveGoalsFromWeekUsecase<T extends MoveGoalsFromWeekArgs>(
     const newerStates = await ctx.db
       .query('goalStateByWeek')
       .withIndex('by_user_and_year_and_quarter_and_week', (q) =>
-        q
-          .eq('userId', userId)
-          .eq('year', from.year)
-          .eq('quarter', from.quarter)
+        q.eq('userId', userId).eq('year', from.year).eq('quarter', from.quarter)
       )
       .filter((q) => q.gt(q.field('weekNumber'), from.weekNumber))
       .collect();
@@ -595,6 +592,7 @@ function createWeeklyGoalCarryOver(
       },
     },
     quarterlyGoalId: quarterlyGoal?._id,
+    quarterlyGoalTitle: quarterlyGoal?.title,
     dailyGoalsToMove,
   };
 
@@ -626,6 +624,7 @@ export async function generateDryRunPreview(
       carryOver: item.carryOver,
       dailyGoalsCount: item.dailyGoalsToMove.length,
       quarterlyGoalId: item.quarterlyGoalId,
+      quarterlyGoalTitle: item.quarterlyGoalTitle,
     }));
 
   // Filter out skipped goals from weekStatesToCopy
@@ -642,10 +641,12 @@ export async function generateDryRunPreview(
     canPull:
       goalsToActuallyMove.length > 0 || dailyGoalsToMove.length > 0 || adhocGoalsToMove.length > 0,
     weekStatesToCopy: goalsToActuallyMove.map((item) => ({
+      id: item.originalGoal._id,
       title: item.originalGoal.title,
       carryOver: item.carryOver,
       dailyGoalsCount: item.dailyGoalsToMove.length,
       quarterlyGoalId: item.quarterlyGoalId,
+      quarterlyGoalTitle: item.quarterlyGoalTitle,
     })),
     dailyGoalsToMove: dailyGoalsToMove.map((item) => ({
       id: item.goal._id,
