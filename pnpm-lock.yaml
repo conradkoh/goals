@@ -162,9 +162,6 @@ importers:
       '@tiptap/extension-task-list':
         specifier: ^3.13.0
         version: 3.19.0(@tiptap/extension-list@3.19.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))(@tiptap/pm@3.19.0))
-      '@tiptap/extension-underline':
-        specifier: ^3.13.0
-        version: 3.19.0(@tiptap/core@3.19.0(@tiptap/pm@3.19.0))
       '@tiptap/pm':
         specifier: ^3.13.0
         version: 3.19.0
