@@ -401,7 +401,7 @@
    CODE (Inline & Blocks)
    ========================================================================== */
 
-/* Inline code */
+/* Inline code — force readable contrast on muted backgrounds (prose defaults are grey-on-grey) */
 .prose :global(code) {
   padding: 0.125em 0.35em !important;
   border-radius: 0.25rem !important;
@@ -410,6 +410,8 @@
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
   max-width: 100% !important;
+  color: var(--foreground) !important;
+  background-color: var(--muted) !important;
 }
 
 /* Inline code only — pasted styled content can force block/nowrap and blow out containers */
@@ -420,7 +422,7 @@
   -webkit-box-decoration-break: clone !important;
 }
 
-/* Code blocks */
+/* Code blocks — same contrast fix for fenced blocks in view + edit modes */
 .prose :global(pre) {
   margin-top: 0.75em !important;
   margin-bottom: 0.75em !important;
@@ -431,9 +433,11 @@
   overflow-x: auto !important;
   font-size: 0.85em !important;
   line-height: 1.5 !important;
+  color: var(--foreground) !important;
+  background-color: var(--muted) !important;
 }
 
-/* Code inside pre - reset inline styles */
+/* Code inside pre - reset inline styles; inherit readable pre color */
 .prose :global(pre code) {
   display: block !important;
   padding: 0 !important;
