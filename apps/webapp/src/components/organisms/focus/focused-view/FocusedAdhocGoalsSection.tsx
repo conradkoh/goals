@@ -11,12 +11,14 @@ interface FocusedAdhocGoalsSectionProps {
   goals: FocusedGoalItem[] | undefined;
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   initiativeTitleMap: Map<Id<'initiatives'>, string>;
+  initiativeColorMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedAdhocGoalsSection({
   goals,
   onToggleComplete,
   initiativeTitleMap,
+  initiativeColorMap,
 }: FocusedAdhocGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -48,6 +50,9 @@ export function FocusedAdhocGoalsSection({
                 indentLevel={goal.indentLevel}
                 initiativeTitle={
                   goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                }
+                initiativeColor={
+                  goal.initiativeId ? initiativeColorMap.get(goal.initiativeId) : undefined
                 }
               />
             ))}

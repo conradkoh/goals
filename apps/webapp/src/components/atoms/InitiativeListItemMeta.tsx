@@ -6,14 +6,20 @@ import { cn } from '@/lib/utils';
 
 type InitiativeListItemMetaProps = {
   initiative: Pick<Doc<'initiatives'>, 'startDate' | 'endDate' | 'title'>;
+  color: string;
 };
 
-export function InitiativeListItemMeta({ initiative }: InitiativeListItemMetaProps) {
+export function InitiativeListItemMeta({ initiative, color }: InitiativeListItemMetaProps) {
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
   const badge = initiativeStatusBadge[status];
 
   return (
     <span className="flex items-center gap-2 min-w-0 flex-1">
+      <span
+        className="flex-shrink-0 w-2 h-2 rounded-full"
+        style={{ backgroundColor: color }}
+        aria-hidden
+      />
       <span className="truncate">{initiative.title}</span>
       <span
         className={cn(

@@ -11,12 +11,14 @@ interface FocusedUrgentSectionProps {
   goals: FocusedGoalItem[];
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   initiativeTitleMap: Map<Id<'initiatives'>, string>;
+  initiativeColorMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedUrgentSection({
   goals,
   onToggleComplete,
   initiativeTitleMap,
+  initiativeColorMap,
 }: FocusedUrgentSectionProps) {
   const incompleteCount = goals.filter((g) => !g.isComplete).length;
 
@@ -49,6 +51,9 @@ export function FocusedUrgentSection({
                 incompleteClassName="text-red-500 dark:text-red-400"
                 initiativeTitle={
                   goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                }
+                initiativeColor={
+                  goal.initiativeId ? initiativeColorMap.get(goal.initiativeId) : undefined
                 }
               />
             ))}

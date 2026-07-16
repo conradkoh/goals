@@ -22,6 +22,7 @@ interface FocusedGoalListItemProps {
   indentLevel?: number;
   leadingIndicator?: React.ReactNode;
   initiativeTitle?: string;
+  initiativeColor?: string;
 }
 
 export function FocusedGoalListItem({
@@ -37,6 +38,7 @@ export function FocusedGoalListItem({
   indentLevel = 0,
   leadingIndicator,
   initiativeTitle,
+  initiativeColor,
 }: FocusedGoalListItemProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -64,10 +66,12 @@ export function FocusedGoalListItem({
         >
           {title}
         </button>
-        {initiativeTitle && (
+        {initiativeTitle && initiativeColor && (
           <InitiativeBadge
             title={initiativeTitle}
-            className={cn('flex-shrink-0', isComplete && 'bg-muted text-muted-foreground')}
+            color={initiativeColor}
+            muted={isComplete}
+            className="flex-shrink-0"
           />
         )}
       </li>

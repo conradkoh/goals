@@ -12,6 +12,7 @@ interface FocusedQuarterlyGoalsSectionProps {
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   onAddGoal?: () => void;
   initiativeTitleMap: Map<Id<'initiatives'>, string>;
+  initiativeColorMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedQuarterlyGoalsSection({
@@ -19,6 +20,7 @@ export function FocusedQuarterlyGoalsSection({
   onToggleComplete,
   onAddGoal,
   initiativeTitleMap,
+  initiativeColorMap,
 }: FocusedQuarterlyGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -66,6 +68,9 @@ export function FocusedQuarterlyGoalsSection({
                   leadingIndicator={indicator}
                   initiativeTitle={
                     goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
+                  }
+                  initiativeColor={
+                    goal.initiativeId ? initiativeColorMap.get(goal.initiativeId) : undefined
                   }
                 />
               );

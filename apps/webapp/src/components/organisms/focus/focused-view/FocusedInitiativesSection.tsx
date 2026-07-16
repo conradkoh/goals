@@ -15,6 +15,10 @@ import {
 } from '@/components/molecules/focus/InitiativeFormDialog';
 import { InitiativesBrowseDialog } from '@/components/molecules/focus/InitiativesBrowseDialog';
 import { formatInitiativeDateRange, getInitiativeDateStatus } from '@/lib/date/initiative-dates';
+import {
+  buildInitiativeColorMap,
+  getInitiativeColorFromMap,
+} from '@/lib/initiative/initiative-color';
 import { filterInitiativesForFocusView } from '@/lib/initiative/initiative-focus-filters';
 import {
   initiativeStatusBadge,
@@ -43,10 +47,12 @@ function formatGoalCountLabel(counts: { total: number; open: number }): string |
 function InitiativeListRow({
   initiative,
   counts,
+  color,
   onView,
 }: {
   initiative: Doc<'initiatives'>;
   counts?: { total: number; open: number };
+  color: string;
   onView: () => void;
 }) {
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
@@ -57,12 +63,19 @@ function InitiativeListRow({
     <li>
       <div className="flex items-start gap-1 rounded-md hover:bg-accent/50 transition-colors">
         <button type="button" onClick={onView} className="flex-1 min-w-0 text-left px-2 py-2">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{initiative.title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
-              {goalCountLabel && <span>{` · ${goalCountLabel}`}</span>}
-            </p>
+          <div className="min-w-0 flex items-start gap-2">
+            <span
+              className="mt-1.5 flex-shrink-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: color }}
+              aria-hidden
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{initiative.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
+                {goalCountLabel && <span>{` · ${goalCountLabel}`}</span>}
+              </p>
+            </div>
           </div>
         </button>
         <span
@@ -99,6 +112,8 @@ export function FocusedInitiativesSection({
     () => sortInitiativesByStatusAndDate(focusInitiatives),
     [focusInitiatives]
   );
+
+  const colorMap = useMemo(() => buildInitiativeColorMap(initiatives), [initiatives]);
 
   const isFormOpen = isCreateOpen || editingInitiative !== null;
 
@@ -142,6 +157,7 @@ export function FocusedInitiativesSection({
                   key={initiative._id}
                   initiative={initiative}
                   counts={goalCounts?.[initiative._id]}
+                  color={getInitiativeColorFromMap(initiative._id, colorMap)}
                   onView={() => setViewingInitiative(initiative)}
                 />
               ))}
