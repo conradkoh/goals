@@ -75,8 +75,21 @@ export function InitiativeSelector({
             disabled={disabled}
             className={cn('w-full justify-between font-normal', className)}
           >
-            <span className="truncate">
-              {selectedInitiative ? selectedInitiative.title : placeholder}
+            <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-left">
+              {selectedInitiative ? (
+                <>
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: getInitiativeColorFromMap(selectedInitiative._id, colorMap),
+                    }}
+                    aria-hidden
+                  />
+                  <span className="truncate">{selectedInitiative.title}</span>
+                </>
+              ) : (
+                <span className="truncate text-muted-foreground">{placeholder}</span>
+              )}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
