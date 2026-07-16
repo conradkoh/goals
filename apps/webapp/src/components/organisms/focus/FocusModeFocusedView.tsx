@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useInitiatives } from '@/hooks/useInitiatives';
+import { useInitiativeColorMap } from '@/hooks/useInitiativeColorMap';
 import { useInitiativeTitleMap } from '@/hooks/useInitiativeTitleMap';
 import { useScratchpad } from '@/hooks/useScratchpad';
 import { useWeekData, WeekProvider } from '@/hooks/useWeek';
@@ -68,6 +69,7 @@ export function FocusModeFocusedView() {
     isDeleting,
   } = useInitiatives(sessionId);
   const initiativeTitleMap = useInitiativeTitleMap(initiatives);
+  const initiativeColorMap = useInitiativeColorMap(initiatives);
 
   // ── History dialog ─────────────────────────────────────────────────────
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -299,6 +301,7 @@ export function FocusModeFocusedView() {
               goals={filteredUrgent}
               onToggleComplete={handleUrgentCompleteChange}
               initiativeTitleMap={initiativeTitleMap}
+              initiativeColorMap={initiativeColorMap}
             />
 
             <FocusedInitiativesSection
@@ -320,6 +323,7 @@ export function FocusModeFocusedView() {
               onToggleComplete={handleNormalGoalCompleteChange}
               onAddGoal={() => setIsCreateQuarterlyGoalOpen(true)}
               initiativeTitleMap={initiativeTitleMap}
+              initiativeColorMap={initiativeColorMap}
             />
 
             <CreateQuarterlyGoalDialog
@@ -334,6 +338,7 @@ export function FocusModeFocusedView() {
               goals={filteredAdhoc}
               onToggleComplete={handleAdhocCompleteChange}
               initiativeTitleMap={initiativeTitleMap}
+              initiativeColorMap={initiativeColorMap}
             />
 
             {/* Inline add task */}

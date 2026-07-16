@@ -1,22 +1,21 @@
 'use client';
 
 import { getDomainPillColors } from '@/components/atoms/DomainPill/lib/colors';
-import { getInitiativeColorFromTitle } from '@/lib/initiative/initiative-color';
 import { cn } from '@/lib/utils';
 import { useIsDarkMode } from '@/modules/theme/ThemeProvider';
 
 interface InitiativeBadgeProps {
   title: string;
+  color: string;
   className?: string;
-  /** When true, uses muted styling instead of title-based color. */
+  /** When true, uses muted styling instead of color-based styling. */
   muted?: boolean;
 }
 
-/** Compact pill showing initiative title on goal rows, color-coded by title. */
-export function InitiativeBadge({ title, className, muted = false }: InitiativeBadgeProps) {
+/** Compact pill showing initiative title on goal rows, color-coded by sequential palette. */
+export function InitiativeBadge({ title, color, className, muted = false }: InitiativeBadgeProps) {
   const isDarkMode = useIsDarkMode();
-  const initiativeColor = getInitiativeColorFromTitle(title);
-  const colors = getDomainPillColors(initiativeColor, isDarkMode);
+  const colors = getDomainPillColors(color, isDarkMode);
 
   return (
     <span

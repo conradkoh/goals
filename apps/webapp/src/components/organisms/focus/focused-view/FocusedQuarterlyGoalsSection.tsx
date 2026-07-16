@@ -4,7 +4,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { Pin, Plus, Star, Target } from 'lucide-react';
 
-import { FocusedGoalListItem } from './FocusedGoalListItem';
+import { FocusedGoalListItemFromGoal } from './FocusedGoalListItemFromGoal';
 import { FocusedGoalSection } from './FocusedGoalSection';
 
 interface FocusedQuarterlyGoalsSectionProps {
@@ -12,6 +12,7 @@ interface FocusedQuarterlyGoalsSectionProps {
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   onAddGoal?: () => void;
   initiativeTitleMap: Map<Id<'initiatives'>, string>;
+  initiativeColorMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedQuarterlyGoalsSection({
@@ -19,6 +20,7 @@ export function FocusedQuarterlyGoalsSection({
   onToggleComplete,
   onAddGoal,
   initiativeTitleMap,
+  initiativeColorMap,
 }: FocusedQuarterlyGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -53,20 +55,14 @@ export function FocusedQuarterlyGoalsSection({
                 <Pin className="h-3 w-3 fill-blue-500 text-blue-800 dark:text-blue-400" />
               ) : null;
               return (
-                <FocusedGoalListItem
+                <FocusedGoalListItemFromGoal
                   key={goal._id}
-                  goalId={goal._id}
-                  title={goal.title}
-                  isComplete={goal.isComplete}
-                  isAdhoc={false}
-                  year={goal.year}
-                  quarter={goal.quarter as 1 | 2 | 3 | 4}
-                  weekNumber={goal.weekNumber}
+                  goal={goal}
                   onToggleComplete={onToggleComplete}
+                  initiativeTitleMap={initiativeTitleMap}
+                  initiativeColorMap={initiativeColorMap}
+                  isAdhoc={false}
                   leadingIndicator={indicator}
-                  initiativeTitle={
-                    goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
-                  }
                 />
               );
             })}

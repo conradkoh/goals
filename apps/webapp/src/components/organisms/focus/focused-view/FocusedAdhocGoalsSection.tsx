@@ -4,19 +4,21 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { ListTodo, Loader2 } from 'lucide-react';
 
-import { FocusedGoalListItem } from './FocusedGoalListItem';
+import { FocusedGoalListItemFromGoal } from './FocusedGoalListItemFromGoal';
 import { FocusedGoalSection } from './FocusedGoalSection';
 
 interface FocusedAdhocGoalsSectionProps {
   goals: FocusedGoalItem[] | undefined;
   onToggleComplete: (goalId: FocusedGoalItem['_id'], isComplete: boolean) => void;
   initiativeTitleMap: Map<Id<'initiatives'>, string>;
+  initiativeColorMap: Map<Id<'initiatives'>, string>;
 }
 
 export function FocusedAdhocGoalsSection({
   goals,
   onToggleComplete,
   initiativeTitleMap,
+  initiativeColorMap,
 }: FocusedAdhocGoalsSectionProps) {
   return (
     <FocusedGoalSection
@@ -35,20 +37,12 @@ export function FocusedAdhocGoalsSection({
         ) : (
           <ul className="space-y-1">
             {goals.map((goal) => (
-              <FocusedGoalListItem
+              <FocusedGoalListItemFromGoal
                 key={goal._id}
-                goalId={goal._id}
-                title={goal.title}
-                isComplete={goal.isComplete}
-                isAdhoc={goal.isAdhoc}
-                year={goal.year}
-                quarter={goal.quarter as 1 | 2 | 3 | 4}
-                weekNumber={goal.weekNumber}
+                goal={goal}
                 onToggleComplete={onToggleComplete}
-                indentLevel={goal.indentLevel}
-                initiativeTitle={
-                  goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
-                }
+                initiativeTitleMap={initiativeTitleMap}
+                initiativeColorMap={initiativeColorMap}
               />
             ))}
           </ul>

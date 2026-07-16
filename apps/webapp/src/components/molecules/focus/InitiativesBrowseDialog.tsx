@@ -13,6 +13,10 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import {
+  buildInitiativeColorMap,
+  getInitiativeColorFromMap,
+} from '@/lib/initiative/initiative-color';
 import { getInitiativesForBrowse } from '@/lib/initiative/initiative-focus-filters';
 import { sortInitiativesByStatusAndDate } from '@/lib/initiative/initiative-status-badge';
 
@@ -35,6 +39,8 @@ export function InitiativesBrowseDialog({
     () => sortInitiativesByStatusAndDate(getInitiativesForBrowse(initiatives, query)),
     [initiatives, query]
   );
+
+  const colorMap = useMemo(() => buildInitiativeColorMap(initiatives), [initiatives]);
 
   const handleSelect = (initiative: Doc<'initiatives'>) => {
     onSelectInitiative(initiative);
@@ -65,7 +71,10 @@ export function InitiativesBrowseDialog({
               onSelect={() => handleSelect(initiative)}
             >
               <Flag className="mr-2 h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <InitiativeListItemMeta initiative={initiative} />
+              <InitiativeListItemMeta
+                initiative={initiative}
+                color={getInitiativeColorFromMap(initiative._id, colorMap)}
+              />
             </CommandItem>
           ))}
         </CommandGroup>

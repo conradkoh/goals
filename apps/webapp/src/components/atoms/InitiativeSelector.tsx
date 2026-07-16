@@ -16,6 +16,10 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { formatInitiativeDateRange } from '@/lib/date/initiative-dates';
+import {
+  buildInitiativeColorMap,
+  getInitiativeColorFromMap,
+} from '@/lib/initiative/initiative-color';
 import { sortInitiativesByStatusAndDate } from '@/lib/initiative/initiative-status-badge';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +50,8 @@ export function InitiativeSelector({
     () => sortInitiativesByStatusAndDate(initiatives),
     [initiatives]
   );
+
+  const colorMap = useMemo(() => buildInitiativeColorMap(initiatives), [initiatives]);
 
   const selectedInitiative =
     selectedInitiativeId == null
@@ -110,7 +116,10 @@ export function InitiativeSelector({
                       <Check
                         className={cn('mr-2 h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')}
                       />
-                      <InitiativeListItemMeta initiative={initiative} />
+                      <InitiativeListItemMeta
+                        initiative={initiative}
+                        color={getInitiativeColorFromMap(initiative._id, colorMap)}
+                      />
                     </CommandItem>
                   );
                 })}
