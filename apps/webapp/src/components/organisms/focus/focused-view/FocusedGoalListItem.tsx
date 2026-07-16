@@ -65,10 +65,7 @@ export function FocusedGoalListItem({
           {title}
         </button>
         {initiativeTitle && (
-          <InitiativeBadge
-            title={initiativeTitle}
-            className={cn('flex-shrink-0', isComplete && 'bg-muted text-muted-foreground')}
-          />
+          <InitiativeBadge title={initiativeTitle} muted={isComplete} className="flex-shrink-0" />
         )}
       </li>
 

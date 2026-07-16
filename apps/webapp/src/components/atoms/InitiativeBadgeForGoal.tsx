@@ -27,9 +27,6 @@ export function InitiativeBadgeForGoal({
   const title = titleMap.get(initiativeId);
   if (!title) return null;
   return (
-    <InitiativeBadge
-      title={title}
-      className={cn('flex-shrink-0', isComplete && 'bg-muted text-muted-foreground', className)}
-    />
+    <InitiativeBadge title={title} muted={isComplete} className={cn('flex-shrink-0', className)} />
   );
 }

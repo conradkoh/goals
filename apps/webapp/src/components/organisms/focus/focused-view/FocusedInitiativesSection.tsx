@@ -15,6 +15,7 @@ import {
 } from '@/components/molecules/focus/InitiativeFormDialog';
 import { InitiativesBrowseDialog } from '@/components/molecules/focus/InitiativesBrowseDialog';
 import { formatInitiativeDateRange, getInitiativeDateStatus } from '@/lib/date/initiative-dates';
+import { getInitiativeColorFromTitle } from '@/lib/initiative/initiative-color';
 import { filterInitiativesForFocusView } from '@/lib/initiative/initiative-focus-filters';
 import {
   initiativeStatusBadge,
@@ -52,17 +53,25 @@ function InitiativeListRow({
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
   const badge = initiativeStatusBadge[status];
   const goalCountLabel = counts ? formatGoalCountLabel(counts) : null;
+  const initiativeColor = getInitiativeColorFromTitle(initiative.title);
 
   return (
     <li>
       <div className="flex items-start gap-1 rounded-md hover:bg-accent/50 transition-colors">
         <button type="button" onClick={onView} className="flex-1 min-w-0 text-left px-2 py-2">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{initiative.title}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
-              {goalCountLabel && <span>{` · ${goalCountLabel}`}</span>}
-            </p>
+          <div className="min-w-0 flex items-start gap-2">
+            <span
+              className="mt-1.5 flex-shrink-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: initiativeColor }}
+              aria-hidden
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{initiative.title}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {formatInitiativeDateRange(initiative.startDate, initiative.endDate)}
+                {goalCountLabel && <span>{` · ${goalCountLabel}`}</span>}
+              </p>
+            </div>
           </div>
         </button>
         <span
