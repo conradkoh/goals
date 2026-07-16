@@ -64,4 +64,18 @@ describe('InitiativeSelector', () => {
     expect(host.contains(search)).toBe(true);
     expect(container.contains(search)).toBe(true);
   });
+
+  it('shows a color dot for the selected initiative in the trigger', () => {
+    render(
+      <InitiativeSelector
+        initiatives={initiatives}
+        selectedInitiativeId="initiatives:alpha"
+        onInitiativeChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('combobox')).toHaveTextContent('Q1 Launch');
+    const colorDot = screen.getByRole('combobox').querySelector('[aria-hidden="true"]');
+    expect(colorDot).toHaveStyle({ backgroundColor: '#FF3B30' });
+  });
 });
