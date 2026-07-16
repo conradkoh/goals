@@ -1,6 +1,7 @@
 import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
 
 import { formatInitiativeDateRange, getInitiativeDateStatus } from '@/lib/date/initiative-dates';
+import { getInitiativeColorFromTitle } from '@/lib/initiative/initiative-color';
 import { initiativeStatusBadge } from '@/lib/initiative/initiative-status-badge';
 import { cn } from '@/lib/utils';
 
@@ -11,9 +12,15 @@ type InitiativeListItemMetaProps = {
 export function InitiativeListItemMeta({ initiative }: InitiativeListItemMetaProps) {
   const status = getInitiativeDateStatus(initiative.startDate, initiative.endDate);
   const badge = initiativeStatusBadge[status];
+  const initiativeColor = getInitiativeColorFromTitle(initiative.title);
 
   return (
     <span className="flex items-center gap-2 min-w-0 flex-1">
+      <span
+        className="flex-shrink-0 w-2 h-2 rounded-full"
+        style={{ backgroundColor: initiativeColor }}
+        aria-hidden
+      />
       <span className="truncate">{initiative.title}</span>
       <span
         className={cn(
