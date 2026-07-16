@@ -4,7 +4,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { FocusedGoalItem } from '@workspace/backend/convex/bff/focus';
 import { Flame } from 'lucide-react';
 
-import { FocusedGoalListItem } from './FocusedGoalListItem';
+import { FocusedGoalListItemFromGoal } from './FocusedGoalListItemFromGoal';
 import { FocusedGoalSection } from './FocusedGoalSection';
 
 interface FocusedUrgentSectionProps {
@@ -38,23 +38,13 @@ export function FocusedUrgentSection({
         <div className="px-4 py-2">
           <ul className="space-y-1">
             {goals.map((goal) => (
-              <FocusedGoalListItem
+              <FocusedGoalListItemFromGoal
                 key={goal._id}
-                goalId={goal._id}
-                title={goal.title}
-                isComplete={goal.isComplete}
-                isAdhoc={goal.isAdhoc}
-                year={goal.year}
-                quarter={goal.quarter as 1 | 2 | 3 | 4}
-                weekNumber={goal.weekNumber ?? undefined}
+                goal={goal}
                 onToggleComplete={onToggleComplete}
+                initiativeTitleMap={initiativeTitleMap}
+                initiativeColorMap={initiativeColorMap}
                 incompleteClassName="text-red-500 dark:text-red-400"
-                initiativeTitle={
-                  goal.initiativeId ? initiativeTitleMap.get(goal.initiativeId) : undefined
-                }
-                initiativeColor={
-                  goal.initiativeId ? initiativeColorMap.get(goal.initiativeId) : undefined
-                }
               />
             ))}
           </ul>

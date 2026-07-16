@@ -1,9 +1,11 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 
 /** Minimum palette size. */
+// fallow-ignore-next-line unused-export
 export const INITIATIVE_PALETTE_MIN_SIZE = 30;
 
 /** Curated distinct accessible colors — 30 hues with good contrast on light/dark themes. */
+// fallow-ignore-next-line unused-export
 export const INITIATIVE_COLOR_PALETTE: readonly string[] = [
   '#FF3B30',
   '#FF9500',
@@ -38,12 +40,12 @@ export const INITIATIVE_COLOR_PALETTE: readonly string[] = [
 ] as const;
 
 function hslToHex(h: number, s: number, l: number): string {
-  s /= 100;
-  l /= 100;
-  const a = s * Math.min(l, 1 - l);
+  const saturation = s / 100;
+  const lightness = l / 100;
+  const a = saturation * Math.min(lightness, 1 - lightness);
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    const color = lightness - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
     return Math.round(255 * color)
       .toString(16)
       .padStart(2, '0');
@@ -52,6 +54,7 @@ function hslToHex(h: number, s: number, l: number): string {
 }
 
 /** Returns a unique color at sequential index; uses palette for 0..palette.length-1, generates HSL golden-angle hues beyond. */
+// fallow-ignore-next-line unused-export
 export function getColorAtIndex(index: number): string {
   if (index < INITIATIVE_COLOR_PALETTE.length) {
     return INITIATIVE_COLOR_PALETTE[index];
