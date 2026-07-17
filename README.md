@@ -1,212 +1,126 @@
-# NextJS Convex Starter App
+# Goals
 
-This is a starter application using NextJS and Convex, managed with Turbo for monorepo capabilities.
+A goal-tracking application for managing objectives across quarterly, weekly, and daily time horizons. Built as a Next.js + Convex monorepo.
+
+## Features
+
+- **Hierarchical goal management** — Quarterly goals break down into weekly targets and daily tasks
+- **Focus view** — A streamlined daily workspace with urgent items, pinned quarterly goals, initiatives, and adhoc goals
+- **Initiatives** — Date-bounded efforts that group goals across multiple quarters
+- **Dashboard views** — Quarterly, weekly, and focused perspectives on your goal hierarchy
+- **Scratchpad** — Quick capture with history for transient notes
+- **Quarterly summaries** — Select goals or initiatives and export context for reporting or AI agents
+- **Real-time sync** — Powered by Convex reactive queries
+
+## Tech Stack
+
+- **Frontend:** Next.js (App Router), React, ShadCN UI, Tailwind CSS
+- **Backend:** Convex
+- **Monorepo:** pnpm workspaces, Turbo
 
 ## Getting Started
 
-### Pre-requisites
+### Prerequisites
 
-- Node.js 22 or later
-- pnpm package manager
-- Convex account - Register at https://www.convex.dev/
+- Node.js 22+
+- [pnpm](https://pnpm.io/)
+- [Convex](https://www.convex.dev/) account
 
 ### Setup
 
-1. Run `pnpm install` to install the dependencies
-2. Run `pnpm run setup` to initialize the Convex backend and configure the webapp
-
-   This script will:
-   - **Check and update branding** - Detects if you're using template branding and prompts you to customize:
-     - Application name and short name
-     - App description
-     - Landing page title
-     - Package name
-   - Initialize the Convex backend using `npx convex dev --once`
-   - Extract the CONVEX_URL from the backend's .env.local file
-   - Create/update the webapp's .env.local file with the NEXT_PUBLIC_CONVEX_URL
-
-   The setup script is **idempotent** - you can run it multiple times safely. It will:
-   - Show ✅ CONFIGURED for branding that's already customized
-   - Show ⚠️ TEMPLATE for branding that still uses default values
-   - Only prompt for updates if template values are detected
-
-   **Non-Interactive Mode**: For CI/CD or automated setups:
+1. Install dependencies:
 
    ```bash
-   node scripts/setup.js --non-interactive \
-     --app-name "My App" \
-     --app-short-name "MyApp" \
-     --app-description "Description" \
-     --landing-page-title "Welcome" \
-     --package-name "my-app"
-
-   # Or skip branding entirely
-   node scripts/setup.js --skip-branding
-
-   # Show all options
-   node scripts/setup.js --help
+   pnpm install
    ```
 
-3. Run `pnpm dev` in the root directory to start the NextJS application and Convex backend
+2. Initialize the project (Convex backend + webapp environment):
 
-#### Manual Setup (Alternative)
+   ```bash
+   pnpm run setup
+   ```
 
-If you prefer to set up manually:
+   This initializes the Convex backend in `services/backend` and writes `NEXT_PUBLIC_CONVEX_URL` to `apps/webapp/.env.local`.
 
-1. Go to `services/backend` and run `npx convex dev --once` - this should prompt you to login to Convex and create a new project.
-   Note: This will create a .env.local file with the CONVEX_URL environment variable.
-2. Create a `.env.local` file in the `apps/webapp` directory and add the following:
+3. Start development servers:
+
+   ```bash
+   pnpm dev
+   ```
+
+   - Webapp: http://localhost:3000
+   - Convex dev server runs alongside
+
+#### Manual Setup
+
+If you prefer to configure manually:
+
+1. In `services/backend`, run `npx convex dev --once` to create a Convex project and `.env.local`.
+2. Create `apps/webapp/.env.local` with:
+
    ```sh
-   NEXT_PUBLIC_CONVEX_URL=<your-convex-project-url> # copy this from the backend .env.local file
+   NEXT_PUBLIC_CONVEX_URL=<your-convex-project-url>
    ```
-3. Run `pnpm dev` in the root directory to start both services
 
-## System Administration Setup
+   Copy the URL from `services/backend/.env.local`.
 
-To create a system administrator:
+3. Run `pnpm dev` from the repo root.
 
-1. **Login anonymously** via the login page
-2. **Set admin privileges** in [Convex Dashboard](https://dashboard.convex.dev):
-   - Go to Data > `users` table
-   - Find your user record and set `accessLevel` to `"system_admin"`
-3. **Access admin dashboard** by clicking your username → "System Admin"
+## System Administration
 
-System admins can configure Google OAuth, manage authentication providers, and access system settings.
+To grant system admin access:
 
-## Google Auth Setup
+1. Sign in anonymously via the login page.
+2. In the [Convex Dashboard](https://dashboard.convex.dev), open Data → `users` and set `accessLevel` to `"system_admin"` for your user.
+3. Access **System Admin** from your username menu to configure auth providers and settings.
 
-To enable Google OAuth authentication:
+### Google OAuth
 
-1. **Configure Google OAuth** in your app's admin dashboard:
-   - Login with your system admin account
-   - Go to your username → "System Admin" → "Google Auth Config"
-   - Follow the instructions to set up Google OAuth credentials
-2. **Transfer admin role to Google account** (Recommended):
-   - After Google Auth is configured, sign in with your Google account
-   - In [Convex Dashboard](https://dashboard.convex.dev), go to Data > `users` table
-   - Find your Google account user record and set `accessLevel` to `"system_admin"`
-   - Remove the `system_admin` access level from the temporary anonymous account
-
-This ensures your system admin access is tied to a verified Google account for better security.
-
-## Project Structure
-
-- `apps/webapp`: The frontend NextJS application
-- `services/backend`: The Convex backend service
+1. As a system admin, go to **System Admin** → **Google Auth Config** and follow the setup instructions.
+2. After signing in with Google, transfer `system_admin` to your Google user in the Convex `users` table and remove it from the anonymous account.
 
 ## Development
 
-To run both the frontend and backend in parallel:
-
 ```bash
-pnpm run dev
+pnpm dev          # Start webapp + Convex
+pnpm test         # Run all tests
+pnpm test:watch   # Watch mode
+pnpm typecheck    # TypeScript checks
+pnpm lint         # ESLint
 ```
 
-This will start:
+See [AGENTS.md](AGENTS.md) for architecture, conventions, and coding standards.
 
-- The webapp at http://localhost:3000
-- The Convex backend development server
+### Project Structure
 
-## Testing
+- `apps/webapp/` — Next.js frontend
+- `services/backend/` — Convex backend
+- `docs/` — Application and developer documentation
+- `guides/` — Testing and other guides
 
-This project uses [Vitest](https://vitest.dev/) for testing across both frontend and backend.
+### Testing
 
-### Quick Start
-
-Run all tests:
-
-```bash
-pnpm test
-```
-
-Run tests in watch mode:
-
-```bash
-pnpm test:watch
-```
-
-For comprehensive testing guidelines, conventions, and examples, see the [Testing Guide](guides/testing/testing.md).
-
-## Turbo Configuration
-
-This project uses Turbo to manage the monorepo and run tasks in parallel. The main configuration files are:
-
-- `turbo.json`: Main Turbo configuration
-- `apps/webapp/package.json`: Webapp project configuration
-- `services/backend/package.json`: Backend project configuration
-
-The dev command is configured to run both services in parallel without dependencies between them, allowing for independent development.
-
-## Adding New Projects
-
-To add a new project to the monorepo:
-
-1. Create the project in the appropriate directory (`apps/` or `services/`)
-2. Add a `project.json` file to define the project's targets
-3. Update the root `package.json` to include the new project in the dev command if needed
+Run all tests with `pnpm test`. For conventions and examples, see the [Testing Guide](guides/testing/testing.md).
 
 ## Deployment
 
-### Convex Backend Deployment
+### Convex Backend
 
-To deploy your Convex backend to production:
+1. Generate a production deploy key in the [Convex Dashboard](https://dashboard.convex.dev) (Project Settings → Generate Production Deploy Key).
+2. Add it to GitHub Secrets as `CONVEX_DEPLOY_KEY_PROD`.
+3. Pushes to `master` deploy via [.github/workflows/deploy-prod.yml](.github/workflows/deploy-prod.yml).
 
-1. Generate a deployment key from the Convex dashboard:
-   - Go to your project in the [Convex dashboard](https://dashboard.convex.dev)
-   - Navigate to Project Settings > Settings > General > Generate Production Deploy Key
-   - Create a new deployment key
+### Vercel (Frontend)
 
-2. Add the deployment key to GitHub Secrets:
-   - Go to your GitHub repository
-   - Navigate to Settings > Secrets and variables > Actions
-   - Click "New repository secret"
-   - Name: `CONVEX_DEPLOY_KEY_PROD`
-   - Value: Your deployment key from the Convex dashboard
+1. Copy your Convex deployment URL from the Convex dashboard (Settings → URL & Deploy Key).
+2. In Vercel project settings:
+   - **Root Directory:** `apps/webapp`
+   - **Environment variable:** `NEXT_PUBLIC_CONVEX_URL` = your Convex deployment URL (include Production and Preview scopes)
+3. Deploy as usual.
 
-3. The GitHub Action workflow included in this template will handle deployment of your Convex backend automatically when you push to the main branch.
+## Documentation
 
-This setup allows for secure automated deployments of your Convex functions and schema without exposing your credentials.
-
-### Vercel Frontend Deployment
-
-To deploy your NextJS frontend to Vercel:
-
-1. Navigate to your Convex dashboard:
-   - Go to [Convex dashboard](https://dashboard.convex.dev)
-   - Navigate to Settings > URL & Deploy Key
-   - Copy the Deployment URL
-
-2. Set up the Vercel deployment
-   - Go to the Vercel dashboard
-   - Navigate to Project Settings > Build and Deployment > Root Directory
-     - Set the Root Directory to `apps/webapp`
-   - Navigate to Project Settings > Environment Variables
-     - Add a new variable:
-     - Name: `NEXT_PUBLIC_CONVEX_URL`
-     - Value: Paste the Deployment URL you copied from Convex
-
-3. Deploy your NextJS application to Vercel as usual.
-
-<br/>
-
-# FAQ
-
-## Why Convex?
-
-Convex is chosen as the backend service for the following reasons:
-
-1. **Simplicity of code generation and architecture**
-
-   Convex follows a reactive paradigm that allows reactive queries from the client to cause automatic re-renders when a dataset has been updated. This significantly reduces complexity and amount of code required, while solving the problem of cache invalidation.
-
-   Simple and less code required for a feature also means fewer chances for AI generated code to be incorrect.
-
-2. **Transactionality and consistency**
-
-   All convex mutations run "inside" of the database. Any error thrown in the mutation will result in an automatic rollback. This ensures that we are able to use a single language for both querying data and business logic, while maintaining transactionality.
-
-3. **Simple end to end reactivity**
-
-   Many platforms offer subscription to DB events (e.g. firebase, supabase). However, it still leaves a significant amount of code to transform the event into the actual state for your application. Convex solves this by simply providing the full state for the query's data, and does a re-render of that state when the data has been updated.
-
-4. **Single language for frontend and backend**
+- [Product overview (PRD)](docs/prd.md)
+- [Development guidelines](AGENTS.md)
+- [Application docs](docs/application/README.md)
+- [Design guidelines](docs/design/design-guidelines.md)
