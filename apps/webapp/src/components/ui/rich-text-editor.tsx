@@ -2,7 +2,6 @@ import { Extension } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
-import Underline from '@tiptap/extension-underline';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -387,7 +386,6 @@ export function RichTextEditor({
           class: 'task-item flex gap-2',
         },
       }),
-      Underline,
       Placeholder.configure({
         placeholder,
       }),
