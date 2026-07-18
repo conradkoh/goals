@@ -17,7 +17,6 @@ import {
   GoalInitiativeField,
   useGoalDisplayContext,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
@@ -29,7 +28,7 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
-import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useGoalTitleSave, useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
@@ -112,11 +111,11 @@ function DailyGoalPopoverContentInner({
 }: DailyGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter } = useWeek();
 
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
   const handleDetailsChange = useStructuredGoalDetailsSave(onSave, goal);
 
   const handleInitiativeChange = useCallback(
@@ -136,7 +135,7 @@ function DailyGoalPopoverContentInner({
         onToggleComplete={onToggleComplete}
         statusControls={<GoalStatusIcons goalId={goal._id} />}
         actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Daily} />}
-        onTitleClick={onTitleClick}
+        onTitleSave={handleTitleSave}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -167,7 +166,6 @@ function DailyGoalPopoverContentInner({
             details={goal.details ?? ''}
             onDetailsChange={handleDetailsChange}
             showSeparator={false}
-            onEditClick={onEditClick}
           />
 
           {additionalContent && (

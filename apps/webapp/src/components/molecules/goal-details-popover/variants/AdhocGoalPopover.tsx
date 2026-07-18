@@ -16,7 +16,6 @@ import {
   GoalHeader,
   useGoalDisplayContext,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 import { GoalDetailsPopoverView, GoalPopoverTrigger } from '../view/GoalDetailsPopoverView';
 
@@ -27,7 +26,7 @@ import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
-import { useAdhocGoalDetailsSaveViaHandler } from '@/hooks/useGoalDetailsSave';
+import { useAdhocGoalDetailsSaveViaHandler, useGoalTitleSave } from '@/hooks/useGoalDetailsSave';
 import type { GoalCompletionHandler, GoalSaveHandler } from '@/models/goal-handlers';
 
 export interface AdhocGoalPopoverProps {
@@ -150,10 +149,10 @@ function AdhocGoalPopoverContentInner({
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
   const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
   const handleDetailsChange = useAdhocGoalDetailsSaveViaHandler(onSave, goal);
 
   // Shared content for both popover and fullscreen modes
@@ -173,7 +172,7 @@ function AdhocGoalPopoverContentInner({
           />
         }
         statusControls={<GoalStatusIcons goalId={goal._id} />}
-        onTitleClick={onTitleClick}
+        onTitleSave={handleTitleSave}
       />
 
       {domain && <GoalDomainDisplay domain={domain} weekNumber={weekNumber} />}
@@ -200,7 +199,6 @@ function AdhocGoalPopoverContentInner({
             details={goal.details ?? ''}
             onDetailsChange={handleDetailsChange}
             showSeparator={false}
-            onEditClick={onEditClick}
           />
 
           {/* Sub-tasks section */}

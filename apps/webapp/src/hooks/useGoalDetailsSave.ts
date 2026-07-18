@@ -51,3 +51,25 @@ export function useAdhocGoalDetailsSaveViaHandler(
     [onSave, goal.title, goal.adhoc?.dueDate]
   );
 }
+
+type GoalTitleSaveSnapshot = {
+  details?: string;
+  dueDate?: number;
+  domainId?: Id<'domains'> | null;
+  initiativeId?: Id<'initiatives'> | null;
+  adhoc?: { dueDate?: number };
+};
+
+/** Title-only save via GoalSaveHandler — preserves details/dueDate/domain/initiative. */
+export function useGoalTitleSave(
+  onSave: GoalSaveHandler,
+  goal: GoalTitleSaveSnapshot
+): (title: string) => void {
+  return useCallback(
+    (title: string) => {
+      const dueDate = goal.adhoc?.dueDate ?? goal.dueDate;
+      void onSave(title, goal.details, dueDate, goal.domainId, goal.initiativeId);
+    },
+    [onSave, goal.details, goal.dueDate, goal.adhoc?.dueDate, goal.domainId, goal.initiativeId]
+  );
+}

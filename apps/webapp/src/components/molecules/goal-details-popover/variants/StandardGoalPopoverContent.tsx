@@ -26,7 +26,6 @@ import {
   GoalInitiativeField,
   GoalStatusIndicators,
   useGoalEditContext,
-  useStartEditingGoal,
 } from '../view/components';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
@@ -40,7 +39,7 @@ import { GoalType } from '@/domain/goal-actions';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { useGoalActions } from '@/hooks/useGoalActions';
-import { useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
+import { useGoalTitleSave, useStructuredGoalDetailsSave } from '@/hooks/useGoalDetailsSave';
 import { useWeek } from '@/hooks/useWeek';
 
 /**
@@ -74,7 +73,13 @@ interface StandardGoalPopoverContentInnerProps {
   /** Handler for toggling goal completion */
   onToggleComplete: () => Promise<void>;
   /** Handler for saving goal updates */
-  onSave: (title: string, details?: string, dueDate?: number) => Promise<void>;
+  onSave: (
+    title: string,
+    details?: string,
+    dueDate?: number,
+    domainId?: Id<'domains'> | null,
+    initiativeId?: Id<'initiatives'> | null
+  ) => Promise<void>;
   /** Handler for updating goal details content */
   onDetailsChange: (newDetails: string) => void;
   /** Current value of the new weekly goal input */
@@ -244,8 +249,8 @@ function StandardGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { year, quarter, weekNumber } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { onTitleClick, onEditClick } = useStartEditingGoal();
   const { handleNestedActiveChange } = useDialogEscapeHandler();
+  const handleTitleSave = useGoalTitleSave(onSave, goal);
 
   return (
     <>
@@ -268,7 +273,7 @@ function StandardGoalPopoverContentInner({
             </div>
           }
           actionMenu={<GoalActionMenuNew onSave={onSave} goalType={GoalType.Quarterly} />}
-          onTitleClick={onTitleClick}
+          onTitleSave={handleTitleSave}
         />
 
         <GoalStatusIndicators isStarred={isStarred} isPinned={isPinned} />
@@ -299,7 +304,6 @@ function StandardGoalPopoverContentInner({
               details={goal.details ?? ''}
               onDetailsChange={onDetailsChange}
               showSeparator={false}
-              onEditClick={onEditClick}
             />
 
             <GoalChildrenSection
