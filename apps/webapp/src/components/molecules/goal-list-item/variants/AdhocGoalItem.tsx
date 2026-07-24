@@ -179,77 +179,79 @@ export function AdhocGoalItem({
             disabled={isOptimistic}
           />
 
-          <div className="flex-1 min-w-0 flex items-center justify-between">
-            {onUpdate ? (
-              <AdhocGoalPopover
-                onSave={handleUpdate}
-                triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-                titleClassName={cn(goal.isComplete && 'line-through text-muted-foreground')}
-                onToggleComplete={handleToggleComplete}
-                domain={goal.domain}
-                weekNumber={goal.adhoc?.weekNumber}
-                isBacklog={'isBacklog' in goal ? goal.isBacklog : false}
-                onToggleBacklog={handleToggleBacklog}
-                subGoals={fullChildren}
-                depth={depth}
-                onChildCompleteChange={onCompleteChange}
-                onChildUpdate={onUpdate}
-                onChildDelete={onDelete}
-                onCreateChild={onCreateChild}
-              />
-            ) : (
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'text-sm',
-                      goal.isComplete && 'line-through text-muted-foreground'
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              {onUpdate ? (
+                <AdhocGoalPopover
+                  onSave={handleUpdate}
+                  triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+                  titleClassName={cn(goal.isComplete && 'line-through text-muted-foreground')}
+                  onToggleComplete={handleToggleComplete}
+                  domain={goal.domain}
+                  weekNumber={goal.adhoc?.weekNumber}
+                  isBacklog={'isBacklog' in goal ? goal.isBacklog : false}
+                  onToggleBacklog={handleToggleBacklog}
+                  subGoals={fullChildren}
+                  depth={depth}
+                  onChildCompleteChange={onCompleteChange}
+                  onChildUpdate={onUpdate}
+                  onChildDelete={onDelete}
+                  onCreateChild={onCreateChild}
+                />
+              ) : (
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'text-sm',
+                        goal.isComplete && 'line-through text-muted-foreground'
+                      )}
+                    >
+                      {goal.title}
+                    </span>
+                    {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    {showDueDate && goal.adhoc?.dueDate && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {_formatDueDate(goal.adhoc.dueDate)}
+                      </div>
                     )}
-                  >
-                    {goal.title}
-                  </span>
-                  {showDomain && goal.domain && <DomainBadge domain={goal.domain} />}
-                  <InitiativeBadgeForGoal
-                    initiativeId={goal.initiativeId}
-                    isComplete={goal.isComplete}
-                  />
+                  </div>
                 </div>
+              )}
 
-                <div className="flex items-center gap-2 mt-1">
-                  {showDueDate && goal.adhoc?.dueDate && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {_formatDueDate(goal.adhoc.dueDate)}
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <AdhocGoalActionIcons
+                  goalId={goal._id}
+                  title={goal.title}
+                  details={goal.details}
+                  initialDueDate={goal.adhoc?.dueDate}
+                  initialDomainId={effectiveDomainId}
+                  isComplete={goal.isComplete}
+                  isBacklog={goal.isBacklog}
+                  showSpinner={showSpinner}
+                  showFire
+                  showPending
+                  showBacklog={!!onBacklogChange}
+                  showEdit={!!onUpdate}
+                  showDelete={!!onDelete}
+                  showDomainSelector
+                  onSave={onUpdate ? handleUpdate : undefined}
+                  onUpdatePending={handleUpdatePending}
+                  onToggleBacklog={onBacklogChange ? handleToggleBacklog : undefined}
+                  onDelete={onDelete ? handleDelete : undefined}
+                />
               </div>
-            )}
-
-            <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
-
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <AdhocGoalActionIcons
-                goalId={goal._id}
-                title={goal.title}
-                details={goal.details}
-                initialDueDate={goal.adhoc?.dueDate}
-                initialDomainId={effectiveDomainId}
-                isComplete={goal.isComplete}
-                isBacklog={goal.isBacklog}
-                showSpinner={showSpinner}
-                showFire
-                showPending
-                showBacklog={!!onBacklogChange}
-                showEdit={!!onUpdate}
-                showDelete={!!onDelete}
-                showDomainSelector
-                onSave={onUpdate ? handleUpdate : undefined}
-                onUpdatePending={handleUpdatePending}
-                onToggleBacklog={onBacklogChange ? handleToggleBacklog : undefined}
-                onDelete={onDelete ? handleDelete : undefined}
-              />
             </div>
+
+            <InitiativeBadgeForGoal
+              initiativeId={goal.initiativeId}
+              isComplete={goal.isComplete}
+              layout="below"
+            />
           </div>
         </div>
 

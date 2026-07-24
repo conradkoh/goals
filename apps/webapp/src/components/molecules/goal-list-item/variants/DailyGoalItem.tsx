@@ -142,54 +142,61 @@ function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInterna
 
   return (
     <div className={cn('daily-goal-item group hover:bg-accent/50 rounded-sm', className)}>
-      <div className="text-sm flex items-center gap-2 group/title">
-        <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />
+      <div className="text-sm group/title">
+        <div className="flex items-center gap-2">
+          <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />
 
-        {/* DailyGoalPopover gets goal from context */}
-        <DailyGoalPopover
-          onSave={handleUpdateGoal}
-          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          titleClassName={cn(
-            getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
-          )}
-          onToggleComplete={handleToggleCompletion}
-          additionalContent={
-            <div className="flex items-center gap-2 pt-2 border-t">
-              <Select
-                value={currentDayOfWeek?.toString()}
-                onValueChange={(value) =>
-                  handleMoveToDayOfWeek(Number.parseInt(value) as DayOfWeekType)
-                }
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Move to day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(DayOfWeek).map((value) => (
-                    <SelectItem
-                      key={value}
-                      value={value.toString()}
-                      disabled={value === currentDayOfWeek}
-                    >
-                      {getDayName(value)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          }
-        />
-
-        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
-
-        <GoalPendingIndicator isOptimistic={isOptimistic}>
-          <GoalStatusIcons goalId={goal._id} />
-          <GoalActionButtons
+          {/* DailyGoalPopover gets goal from context */}
+          <DailyGoalPopover
             onSave={handleUpdateGoal}
-            onUpdatePending={setPendingUpdate}
-            deleteRequiresConfirmation={false}
+            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            titleClassName={cn(
+              getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+            )}
+            onToggleComplete={handleToggleCompletion}
+            additionalContent={
+              <div className="flex items-center gap-2 pt-2 border-t">
+                <Select
+                  value={currentDayOfWeek?.toString()}
+                  onValueChange={(value) =>
+                    handleMoveToDayOfWeek(Number.parseInt(value) as DayOfWeekType)
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Move to day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DayOfWeek).map((value) => (
+                      <SelectItem
+                        key={value}
+                        value={value.toString()}
+                        disabled={value === currentDayOfWeek}
+                      >
+                        {getDayName(value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            }
           />
-        </GoalPendingIndicator>
+
+          <GoalPendingIndicator isOptimistic={isOptimistic}>
+            <GoalStatusIcons goalId={goal._id} />
+            <GoalActionButtons
+              onSave={handleUpdateGoal}
+              onUpdatePending={setPendingUpdate}
+              deleteRequiresConfirmation={false}
+            />
+          </GoalPendingIndicator>
+        </div>
+
+        <InitiativeBadgeForGoal
+          initiativeId={goal.initiativeId}
+          isComplete={goal.isComplete}
+          layout="below"
+          className="ml-7"
+        />
       </div>
     </div>
   );

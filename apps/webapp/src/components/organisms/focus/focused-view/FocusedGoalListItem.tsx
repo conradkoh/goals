@@ -45,35 +45,34 @@ export function FocusedGoalListItem({
   return (
     <>
       <li
-        className="flex items-center gap-2 py-1"
+        className="flex items-start gap-2 py-1"
         style={indentLevel > 0 ? { paddingLeft: `${indentLevel * 16}px` } : undefined}
       >
         <Checkbox
           checked={isComplete}
           onCheckedChange={(checked) => onToggleComplete(goalId, Boolean(checked))}
-          className="flex-shrink-0"
+          className="flex-shrink-0 mt-0.5"
         />
         {leadingIndicator && <span className="flex-shrink-0">{leadingIndicator}</span>}
-        <button
-          type="button"
-          onClick={() => setPopoverOpen(true)}
-          className={cn(
-            'text-sm text-left flex-1 min-w-0 truncate transition-all duration-200',
-            isComplete
-              ? 'line-through text-muted-foreground/60 opacity-60'
-              : (incompleteClassName ?? 'text-foreground')
+        <div className="flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={() => setPopoverOpen(true)}
+            className={cn(
+              'text-sm text-left w-full truncate transition-all duration-200',
+              isComplete
+                ? 'line-through text-muted-foreground/60 opacity-60'
+                : (incompleteClassName ?? 'text-foreground')
+            )}
+          >
+            {title}
+          </button>
+          {initiativeTitle && initiativeColor && (
+            <div className="flex items-center mt-0.5">
+              <InitiativeBadge title={initiativeTitle} color={initiativeColor} muted={isComplete} />
+            </div>
           )}
-        >
-          {title}
-        </button>
-        {initiativeTitle && initiativeColor && (
-          <InitiativeBadge
-            title={initiativeTitle}
-            color={initiativeColor}
-            muted={isComplete}
-            className="flex-shrink-0"
-          />
-        )}
+        </div>
       </li>
 
       <StandaloneGoalModal

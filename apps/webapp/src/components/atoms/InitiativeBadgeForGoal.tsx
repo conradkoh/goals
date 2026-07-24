@@ -3,8 +3,8 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 
 import { InitiativeBadge } from '@/components/atoms/InitiativeBadge';
-import { useInitiatives } from '@/hooks/useInitiatives';
 import { useInitiativeColorMap } from '@/hooks/useInitiativeColorMap';
+import { useInitiatives } from '@/hooks/useInitiatives';
 import { useInitiativeTitleMap } from '@/hooks/useInitiativeTitleMap';
 import { getInitiativeColorFromMap } from '@/lib/initiative/initiative-color';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ interface InitiativeBadgeForGoalProps {
   initiativeId?: Id<'initiatives'> | null;
   isComplete?: boolean;
   className?: string;
+  layout?: 'inline' | 'below';
 }
 
 /** Resolves initiative title and color, then renders badge; null if no initiative or title. */
@@ -21,6 +22,7 @@ export function InitiativeBadgeForGoal({
   initiativeId,
   isComplete = false,
   className,
+  layout = 'inline',
 }: InitiativeBadgeForGoalProps) {
   const { sessionId } = useSession();
   const { initiatives } = useInitiatives(sessionId);
@@ -30,12 +32,16 @@ export function InitiativeBadgeForGoal({
   const title = titleMap.get(initiativeId);
   if (!title) return null;
   const color = getInitiativeColorFromMap(initiativeId, colorMap);
-  return (
+  const badge = (
     <InitiativeBadge
       title={title}
       color={color}
       muted={isComplete}
-      className={cn('flex-shrink-0', className)}
+      className={cn('flex-shrink-0', layout === 'inline' ? className : undefined)}
     />
   );
+  if (layout === 'below') {
+    return <div className={cn('flex items-center', className)}>{badge}</div>;
+  }
+  return badge;
 }

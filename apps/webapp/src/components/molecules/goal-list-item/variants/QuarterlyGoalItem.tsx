@@ -136,39 +136,46 @@ function QuarterlyGoalItemContentInternal({
         className
       )}
     >
-      <div className="flex items-center gap-2 group/title">
-        <GoalStarPinContainer>
-          <GoalStarPin
-            value={{
-              isStarred: goal.state?.isStarred || false,
-              isPinned: goal.state?.isPinned || false,
-            }}
-            onStarred={handleToggleStar}
-            onPinned={handleTogglePin}
-          />
-        </GoalStarPinContainer>
+      <div className="group/title">
+        <div className="flex items-center gap-2">
+          <GoalStarPinContainer>
+            <GoalStarPin
+              value={{
+                isStarred: goal.state?.isStarred || false,
+                isPinned: goal.state?.isPinned || false,
+              }}
+              onStarred={handleToggleStar}
+              onPinned={handleTogglePin}
+            />
+          </GoalStarPinContainer>
 
-        {/* QuarterlyGoalPopover gets goal from context */}
-        <QuarterlyGoalPopover
-          onSave={handleSaveGoal}
-          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          titleClassName={cn(
-            'text-muted-foreground flex items-center',
-            getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
-          )}
-          onToggleComplete={handleToggleCompletion}
-        />
-
-        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
-
-        <GoalPendingIndicator>
-          <GoalActionButtons
+          {/* QuarterlyGoalPopover gets goal from context */}
+          <QuarterlyGoalPopover
             onSave={handleSaveGoal}
-            onUpdatePending={setPendingUpdate}
-            showDeleteButton
-            deleteRequiresConfirmation={true}
+            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            titleClassName={cn(
+              'text-muted-foreground flex items-center',
+              getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+            )}
+            onToggleComplete={handleToggleCompletion}
           />
-        </GoalPendingIndicator>
+
+          <GoalPendingIndicator>
+            <GoalActionButtons
+              onSave={handleSaveGoal}
+              onUpdatePending={setPendingUpdate}
+              showDeleteButton
+              deleteRequiresConfirmation={true}
+            />
+          </GoalPendingIndicator>
+        </div>
+
+        <InitiativeBadgeForGoal
+          initiativeId={goal.initiativeId}
+          isComplete={goal.isComplete}
+          layout="below"
+          className="ml-7"
+        />
       </div>
     </div>
   );

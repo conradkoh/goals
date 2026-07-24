@@ -107,29 +107,36 @@ function WeeklyGoalItemContent({ className }: WeeklyGoalItemContentProps) {
 
   return (
     <div className={cn('weekly-goal-item ml-1 group rounded-sm hover:bg-accent/50', className)}>
-      <div className="text-sm flex items-center gap-2 group/title">
-        <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />
+      <div className="text-sm group/title">
+        <div className="flex items-center gap-2">
+          <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />
 
-        {/* WeeklyGoalPopover gets goal from context */}
-        <WeeklyGoalPopover
-          onSave={handleUpdateGoal}
-          triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
-          titleClassName={cn(
-            getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
-          )}
-          onToggleComplete={handleToggleCompletion}
-        />
-
-        <InitiativeBadgeForGoal initiativeId={goal.initiativeId} isComplete={goal.isComplete} />
-
-        <GoalPendingIndicator isOptimistic={isOptimistic}>
-          <GoalStatusIcons goalId={goal._id} />
-          <GoalActionButtons
+          {/* WeeklyGoalPopover gets goal from context */}
+          <WeeklyGoalPopover
             onSave={handleUpdateGoal}
-            onUpdatePending={setPendingUpdate}
-            deleteRequiresConfirmation={false}
+            triggerClassName="p-0 h-auto hover:bg-transparent font-normal justify-start text-left flex-1 focus-visible:ring-0 min-w-0 w-full"
+            titleClassName={cn(
+              getDueDateStyle(goal.dueDate ? new Date(goal.dueDate) : null, goal.isComplete)
+            )}
+            onToggleComplete={handleToggleCompletion}
           />
-        </GoalPendingIndicator>
+
+          <GoalPendingIndicator isOptimistic={isOptimistic}>
+            <GoalStatusIcons goalId={goal._id} />
+            <GoalActionButtons
+              onSave={handleUpdateGoal}
+              onUpdatePending={setPendingUpdate}
+              deleteRequiresConfirmation={false}
+            />
+          </GoalPendingIndicator>
+        </div>
+
+        <InitiativeBadgeForGoal
+          initiativeId={goal.initiativeId}
+          isComplete={goal.isComplete}
+          layout="below"
+          className="ml-7"
+        />
       </div>
     </div>
   );
