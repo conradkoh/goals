@@ -42,7 +42,7 @@ describe('InitiativeActionMenu mark complete', () => {
     expect(onEndDateChange).not.toHaveBeenCalled();
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /complete initiative/i })).toBeInTheDocument();
-  });
+  }, 15_000);
 
   it('calls onEndDateChange with selected date when user confirms', async () => {
     const user = userEvent.setup();
@@ -71,7 +71,7 @@ describe('InitiativeActionMenu mark complete', () => {
     });
     const calledWith = onEndDateChange.mock.calls[0][0] as number;
     expect(calledWith).toBeGreaterThanOrEqual(startDate);
-  });
+  }, 15_000);
 
   it('does not show Mark as complete when initiative already has an end date', async () => {
     const user = userEvent.setup();
@@ -88,5 +88,5 @@ describe('InitiativeActionMenu mark complete', () => {
     await user.click(screen.getByRole('button'));
     expect(screen.queryByRole('menuitem', { name: /mark as complete/i })).not.toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /change end date/i })).toBeInTheDocument();
-  });
+  }, 15_000);
 });

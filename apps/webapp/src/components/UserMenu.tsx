@@ -2,7 +2,15 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation } from 'convex-helpers/react/sessions';
-import { BookOpen, LayoutDashboard, LogOut, Settings, User, UserCircle } from 'lucide-react';
+import {
+  BookOpen,
+  ContactRound,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  User,
+  UserCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -157,6 +165,12 @@ function _renderUserDropdownMenu(
           <DropdownMenuItem className="cursor-pointer gap-2">
             <UserCircle className="h-4 w-4" />
             Profile
+          </DropdownMenuItem>
+        </Link>
+        <Link href="/app/contacts">
+          <DropdownMenuItem className="cursor-pointer gap-2">
+            <ContactRound className="h-4 w-4" />
+            Contacts
           </DropdownMenuItem>
         </Link>
         <Link href="/docs">
