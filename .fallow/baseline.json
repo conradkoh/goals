@@ -13,7 +13,6 @@
     "apps/webapp/src/components/organisms/DailyGoalListContainer.tsx",
     "apps/webapp/src/components/organisms/WeekCardPreviewDialog.tsx",
     "apps/webapp/src/components/ui/fixed-size-dialog.mdx",
-    "apps/webapp/src/components/ui/inline-rich-text-field.tsx",
     "apps/webapp/src/components/ui/keyboard-shortcut.tsx",
     "apps/webapp/src/components/ui/toaster.tsx",
     "apps/webapp/src/hooks/useAllowTouchSelection.tsx",

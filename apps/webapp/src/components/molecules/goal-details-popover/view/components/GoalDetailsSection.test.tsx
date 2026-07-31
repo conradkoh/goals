@@ -123,6 +123,37 @@ describe('GoalDetailsSection', () => {
     expect(screen.getByText('Hello')).toBeInTheDocument();
   });
 
+  it('enters inline editor when clicking details content area', () => {
+    const onDetailsChange = vi.fn();
+    render(
+      <GoalDetailsSection
+        title="Goal"
+        details="<p>Hello</p>"
+        onDetailsChange={onDetailsChange}
+        showSeparator={false}
+      />
+    );
+    const detailsContainer = screen.getByText('Hello').closest('[role="button"]');
+    expect(detailsContainer).not.toBeNull();
+    fireEvent.click(detailsContainer as Element);
+    expect(screen.getByRole('textbox', { name: /goal details editor/i })).toBeInTheDocument();
+  });
+
+  it('readOnly with onDetailsChange does not render an edit button', () => {
+    const onDetailsChange = vi.fn();
+    render(
+      <GoalDetailsSection
+        title="Goal"
+        details="<p>Hello</p>"
+        onDetailsChange={onDetailsChange}
+        readOnly={true}
+        showSeparator={false}
+      />
+    );
+    const detailsContainer = screen.getByText('Hello').closest('[role="button"]');
+    expect(detailsContainer).toBeNull();
+  });
+
   it('returns null when no details and not editable', () => {
     const { container } = render(
       <GoalDetailsSection title="Goal" details="" showSeparator={false} />
