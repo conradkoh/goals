@@ -172,7 +172,7 @@ export function QuarterGoalMovePreview({
       if (!grouped.has(key)) {
         grouped.set(key, []);
       }
-      grouped.get(key)!.push(goal);
+      grouped.get(key)?.push(goal);
     }
 
     const result: AdhocGoalsByDomain[] = [];
@@ -323,7 +323,7 @@ export function QuarterGoalMovePreview({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
-            <AlertDialogDescription asChild>
+            <AlertDialogDescription render={<div />}>
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
                 <span className="text-muted-foreground">
@@ -346,7 +346,7 @@ export function QuarterGoalMovePreview({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
-            <AlertDialogDescription asChild>
+            <AlertDialogDescription render={<div />}>
               <div className="space-y-4">
                 <span className="block">
                   There are no incomplete goals from the previous quarter to move to this quarter.
@@ -371,7 +371,7 @@ export function QuarterGoalMovePreview({
       <AlertDialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <AlertDialogHeader>
           <AlertDialogTitle>Pull Goals from Previous Quarter</AlertDialogTitle>
-          <AlertDialogDescription asChild>
+          <AlertDialogDescription render={<div />}>
             <div className="space-y-6">
               <ExplanationSection hasAdhocGoals={hasAdhocGoals} />
               <InstructionsSection />
@@ -543,7 +543,7 @@ function QuarterlyGoalsSection({
           <Checkbox
             checked={allSelected}
             onCheckedChange={onSelectAll}
-            className={cn(someSelected && 'data-[state=checked]:bg-primary/50')}
+            className={cn(someSelected && 'data-checked:bg-primary/50')}
           />
           <span className="text-xs text-muted-foreground">Select all</span>
         </div>
@@ -659,7 +659,7 @@ function AdhocGoalsSection({
           <Checkbox
             checked={allSelected}
             onCheckedChange={onSelectAll}
-            className={cn(someSelected && 'data-[state=checked]:bg-primary/50')}
+            className={cn(someSelected && 'data-checked:bg-primary/50')}
           />
           <span className="text-xs text-muted-foreground">Select all</span>
         </div>
@@ -752,7 +752,7 @@ function DomainGoalsGroup({
             onDomainToggle(domainGroup.domainId, domainGroup.goals, checked === true)
           }
           onClick={(e) => e.stopPropagation()}
-          className={cn(someInDomainSelected && 'data-[state=checked]:bg-primary/50')}
+          className={cn(someInDomainSelected && 'data-checked:bg-primary/50')}
         />
         <span
           className={cn(

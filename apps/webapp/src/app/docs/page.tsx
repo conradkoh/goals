@@ -4,7 +4,8 @@ import Link from 'next/link';
 
 import { DocCard, DocHeader, DocList, DocListItem } from './components/primitives';
 
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Goals Documentation',
@@ -97,17 +98,16 @@ export default function DocsPage() {
               </p>
             </div>
           </div>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 font-medium whitespace-nowrap"
+          <Link
+            href="/app"
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-700 font-medium whitespace-nowrap'
+            )}
           >
-            <Link href="/app" className="flex items-center gap-1.5">
-              Go to Dashboard
-              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          </Button>
+            Go to Dashboard
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import React from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,22 +79,22 @@ export const QuarterActionMenu = React.memo(
 
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant={buttonVariant}
-            size={buttonSize}
-            disabled={isDisabled}
-            className={cn('text-muted-foreground hover:text-foreground', className)}
-          >
-            {showLabel ? (
-              <>
-                {menuIcon || <ArrowDownToLine className="h-4 w-4 mr-2" />}
-                Pull from Previous Quarter
-              </>
-            ) : (
-              menuIcon || <ArrowDownToLine className="h-4 w-4" />
-            )}
-          </Button>
+        <DropdownMenuTrigger
+          className={cn(
+            buttonVariants({ variant: buttonVariant, size: buttonSize }),
+            'text-muted-foreground hover:text-foreground',
+            className
+          )}
+          disabled={isDisabled}
+        >
+          {showLabel ? (
+            <>
+              {menuIcon || <ArrowDownToLine className="h-4 w-4 mr-2" />}
+              Pull from Previous Quarter
+            </>
+          ) : (
+            menuIcon || <ArrowDownToLine className="h-4 w-4" />
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align={align}
@@ -142,18 +142,16 @@ export const QuarterActionMenu = React.memo(
           )}
 
           {isDisabled ? (
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider delay={0}>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="w-full cursor-not-allowed">
-                    <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
-                      <History className="mr-2 h-4 w-4" />
-                      <div className="flex flex-col w-full items-center">
-                        <span>Pull Incomplete</span>
-                        <span className="text-muted-foreground text-xs">from previous quarter</span>
-                      </div>
-                    </DropdownMenuItem>
-                  </div>
+                <TooltipTrigger render={<div className="w-full cursor-not-allowed" />}>
+                  <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
+                    <History className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col w-full items-center">
+                      <span>Pull Incomplete</span>
+                      <span className="text-muted-foreground text-xs">from previous quarter</span>
+                    </div>
+                  </DropdownMenuItem>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{tooltipContent}</p>

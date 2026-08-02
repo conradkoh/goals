@@ -30,7 +30,10 @@ export function YearSelector({ value, onChange, range = 2 }: YearSelectorProps):
   const years = Array.from({ length: range * 2 + 1 }, (_, i) => value - range + i);
 
   return (
-    <Select value={value.toString()} onValueChange={(year) => onChange(Number.parseInt(year, 10))}>
+    <Select
+      value={value.toString()}
+      onValueChange={(year) => year != null && onChange(Number.parseInt(year, 10))}
+    >
       <SelectTrigger className="w-[100px]">
         <SelectValue placeholder="Year" />
       </SelectTrigger>

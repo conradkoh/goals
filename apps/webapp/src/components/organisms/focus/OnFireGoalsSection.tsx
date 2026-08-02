@@ -8,7 +8,7 @@ import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { QuarterlyGoalPopover } from '@/components/molecules/goal-details-popover';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useGoalActionsContext } from '@/contexts/GoalActionsContext';
 import { GoalProvider } from '@/contexts/GoalContext';
@@ -303,11 +303,13 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-red-500" />
               <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
-              <TooltipProvider delayDuration={300}>
+              <TooltipProvider delay={300}>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
-                  </TooltipTrigger>
+                  <TooltipTrigger
+                    render={
+                      <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
+                    }
+                  />
                   <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                     <p className="text-xs max-w-xs">
                       These urgent items are stored locally in your browser.
@@ -319,15 +321,14 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
 
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant={'ghost'}
-                    size="sm"
-                    onClick={() => {}}
-                    className="text-red-600 hover:text-red-700 flex items-center gap-1"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <TooltipTrigger
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'text-red-600 hover:text-red-700 flex items-center gap-1'
+                  )}
+                  onClick={() => {}}
+                >
+                  <Eye className="h-4 w-4" />
                 </TooltipTrigger>
                 <TooltipContent>Show all goals</TooltipContent>
               </Tooltip>
@@ -346,11 +347,13 @@ export const OnFireGoalsSection: React.FC<OnFireGoalsSectionProps> = ({
         <div className="flex items-center gap-2">
           <Flame className="h-5 w-5 text-red-500" />
           <h2 className="text-lg font-semibold text-red-700">Urgent Items</h2>
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider delay={300}>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Info className="h-4 w-4 text-red-400 hover:text-red-500 transition-colors" />
+                }
+              />
               <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                 <p className="text-xs max-w-xs">
                   These urgent items are stored locally in your browser.

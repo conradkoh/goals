@@ -4,7 +4,7 @@ import { AlertCircle, Check, CheckSquare, ChevronDown, ChevronRight, Square } fr
 import React from 'react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -247,22 +247,21 @@ export function QuarterlyGoalSelector({
       {/* Empty goals in collapsed section */}
       {emptyGoals.length > 0 && (
         <Collapsible open={isEmptyGoalsOpen} onOpenChange={setIsEmptyGoalsOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-between text-muted-foreground hover:text-foreground"
-            >
-              <span className="flex items-center gap-2">
-                {isEmptyGoalsOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                Empty Goals ({emptyGoals.length})
-              </span>
-              <span className="text-xs">No weekly goals assigned</span>
-            </Button>
+          <CollapsibleTrigger
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
+              'w-full justify-between text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <span className="flex items-center gap-2">
+              {isEmptyGoalsOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              Empty Goals ({emptyGoals.length})
+            </span>
+            <span className="text-xs">No weekly goals assigned</span>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted/30">

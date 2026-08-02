@@ -115,7 +115,7 @@ export const PendingStatusDialog: React.FC<PendingStatusDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+      {children && <DialogTrigger render={children as React.ReactElement} />}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

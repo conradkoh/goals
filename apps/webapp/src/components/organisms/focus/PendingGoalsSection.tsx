@@ -232,11 +232,13 @@ export const PendingGoalsSection: React.FC<PendingGoalsSectionProps> = ({
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400" />
           <h2 className="text-lg font-semibold text-foreground">Pending Items</h2>
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider delay={300}>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground hover:text-orange-500 dark:hover:text-orange-400 transition-colors" />
-              </TooltipTrigger>
+              <TooltipTrigger
+                render={
+                  <Info className="h-4 w-4 text-muted-foreground hover:text-orange-500 dark:hover:text-orange-400 transition-colors" />
+                }
+              />
               <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                 <p className="text-xs max-w-xs">
                   These pending items are waiting for someone or something.

@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -240,7 +240,8 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const handleFromChange = (weekNumberStr: string) => {
+  const handleFromChange = (weekNumberStr: string | null) => {
+    if (weekNumberStr == null) return;
     const weekNumber = parseInt(weekNumberStr, 10);
     const match = weekOptions.find((w) => w.weekNumber === weekNumber);
     if (match) {
@@ -252,7 +253,8 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
     }
   };
 
-  const handleToChange = (weekNumberStr: string) => {
+  const handleToChange = (weekNumberStr: string | null) => {
+    if (weekNumberStr == null) return;
     const weekNumber = parseInt(weekNumberStr, 10);
     const match = weekOptions.find((w) => w.weekNumber === weekNumber);
     if (match) {
@@ -268,10 +270,7 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent
-        className="flex max-h-[90vh] flex-col"
-        onOverlayClick={() => onOpenChange(false)}
-      >
+      <AlertDialogContent className="flex max-h-[90vh] flex-col">
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <AlertDialogHeader className="shrink-0">
           <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
@@ -303,23 +302,19 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            <TooltipProvider delayDuration={0}>
+            <TooltipProvider delay={0}>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onJumpToLastNonEmpty}
-                    disabled={isRefreshingPreview || isPulling}
-                    className="shrink-0"
-                  >
-                    {isRefreshingPreview ? (
-                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Search className="mr-1 h-3.5 w-3.5" />
-                    )}
-                    Jump
-                  </Button>
+                <TooltipTrigger
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'shrink-0')}
+                  onClick={onJumpToLastNonEmpty}
+                  disabled={isRefreshingPreview || isPulling}
+                >
+                  {isRefreshingPreview ? (
+                    <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Search className="mr-1 h-3.5 w-3.5" />
+                  )}
+                  Jump
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs text-center">
                   Jump to the last earlier week in this quarter that still has incomplete goals

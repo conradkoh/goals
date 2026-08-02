@@ -144,7 +144,7 @@ export const TaskMovePreview = ({
       <AlertDialogContent className="max-h-[90vh] flex flex-col">
         <AlertDialogHeader className="flex-shrink-0">
           <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
-          <AlertDialogDescription asChild>
+          <AlertDialogDescription render={<div />}>
             <div>
               <p>
                 {!preview?.tasks.length

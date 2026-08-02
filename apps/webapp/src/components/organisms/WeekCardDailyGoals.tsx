@@ -481,7 +481,7 @@ export const WeekCardDailyGoals = forwardRef<WeekCardDailyGoalsRef, WeekCardDail
                 <Select
                   value={selectedDayOfWeek.toString()}
                   onValueChange={(value) =>
-                    setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
+                    value != null && setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
                   }
                 >
                   <SelectTrigger className="h-12 text-xs">

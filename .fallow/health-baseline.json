@@ -388,7 +388,7 @@
     },
     "apps/webapp/src/components/molecules/goal-details-popover/view/GoalDetailsPopoverView.tsx": {
       "crap_high": {
-        "count": 1
+        "count": 2
       }
     },
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx": {
@@ -761,6 +761,11 @@
       },
       "crap_high": {
         "count": 2
+      }
+    },
+    "apps/webapp/src/hooks/useDialogEscapeHandler.ts": {
+      "crap_moderate": {
+        "count": 1
       }
     },
     "apps/webapp/src/hooks/useFormSubmitShortcut.ts": {
@@ -1306,10 +1311,10 @@
     "apps/webapp/src/components/molecules/goal-details-popover/variants/StandaloneGoalModal.tsx:circular dependency",
     "services/backend/src/usecase/moveGoalsFromWeek/moveGoalsFromWeek.ts:dead code",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:circular dependency",
     "services/backend/convex/adhocGoal.ts:complexity",
     "apps/webapp/src/components/molecules/goal-list-item/variants/QuarterlyGoalItem.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:circular dependency",
-    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsChildrenList.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:circular dependency",

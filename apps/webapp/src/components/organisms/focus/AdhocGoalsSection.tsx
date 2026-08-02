@@ -450,11 +450,13 @@ export function AdhocGoalsSection({
             <div className="flex items-center gap-2">
               <ClipboardList className="h-5 w-5 text-orange-600 dark:text-orange-500" />
               <h2 className="text-lg font-semibold text-foreground">Adhoc Tasks</h2>
-              <TooltipProvider delayDuration={300}>
+              <TooltipProvider delay={300}>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground hover:text-orange-600 dark:hover:text-orange-500 transition-colors" />
-                  </TooltipTrigger>
+                  <TooltipTrigger
+                    render={
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-orange-600 dark:hover:text-orange-500 transition-colors" />
+                    }
+                  />
                   <TooltipContent sideOffset={5} className="animate-in fade-in-50 duration-300">
                     <p className="text-xs max-w-xs">
                       Quick tasks that don't fit into the quarterly/weekly structure.

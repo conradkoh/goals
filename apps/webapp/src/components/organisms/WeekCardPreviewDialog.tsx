@@ -297,7 +297,7 @@ export const WeekCardPreviewDialog = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Move Tasks from Last Non-Empty Week</AlertDialogTitle>
-            <AlertDialogDescription asChild>
+            <AlertDialogDescription render={<div />}>
               <div className="space-y-4">
                 <span className="block">
                   There are no incomplete tasks from the last non-empty week to move to this week.
@@ -415,7 +415,7 @@ export const WeekCardPreviewDialog = ({
       <AlertDialogContent className="max-w-3xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Move Tasks from Last Non-Empty Week</AlertDialogTitle>
-          <AlertDialogDescription asChild>
+          <AlertDialogDescription render={<div />}>
             <div className="space-y-4">
               {/* Explanation section */}
               <div className="space-y-2">

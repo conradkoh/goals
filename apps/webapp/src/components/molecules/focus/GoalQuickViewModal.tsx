@@ -73,7 +73,7 @@ export interface GoalQuickViewModalProps {
  * optimistic updates and new children are reflected in real-time.
  */
 export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQuickViewModalProps) {
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { createEscapeBlockingOpenChange, handleNestedActiveChange } = useDialogEscapeHandler();
   const { quarterlyGoals, weeklyGoals, dailyGoals } = useWeek();
 
   // Look up fresh goal data from WeekContext by ID
@@ -95,8 +95,8 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <FixedSizeDialog onEscapeKeyDown={handleEscapeKeyDown}>
+    <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
+      <FixedSizeDialog>
         <GoalProvider goal={goalToDisplay}>
           <GoalEditProvider>
             <GoalDisplayProvider>
@@ -333,6 +333,7 @@ function GoalQuickViewContentInternal({
                         <Select
                           value={selectedDayOfWeek.toString()}
                           onValueChange={(value) =>
+                            value != null &&
                             setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
                           }
                         >

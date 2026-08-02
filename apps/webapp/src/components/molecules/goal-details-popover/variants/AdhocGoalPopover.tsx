@@ -150,7 +150,7 @@ function AdhocGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { shouldBlockEscapeClose, handleNestedActiveChange } = useDialogEscapeHandler();
 
   const handleTitleSave = useGoalTitleSave(onSave, goal);
   const handleDetailsChange = useAdhocGoalDetailsSaveViaHandler(onSave, goal);
@@ -235,7 +235,7 @@ function AdhocGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -247,7 +247,7 @@ function AdhocGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>

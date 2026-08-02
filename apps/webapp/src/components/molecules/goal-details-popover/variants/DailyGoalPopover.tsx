@@ -112,7 +112,7 @@ function DailyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { shouldBlockEscapeClose, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter } = useWeek();
 
   const handleTitleSave = useGoalTitleSave(onSave, goal);
@@ -196,7 +196,7 @@ function DailyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -208,7 +208,7 @@ function DailyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>

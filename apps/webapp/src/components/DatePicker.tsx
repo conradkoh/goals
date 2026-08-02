@@ -4,7 +4,7 @@ import { CalendarIcon, XIcon } from 'lucide-react';
 import { DateTime } from 'luxon';
 import * as React from 'react';
 
-import { Button } from './ui/button';
+import { buttonVariants } from './ui/button';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
@@ -53,18 +53,16 @@ export function DatePicker({
   return (
     <div className={cn('flex items-center gap-1', className)}>
       <Popover modal open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn(
-              'w-full justify-start text-left font-normal',
-              !value && 'text-muted-foreground'
-            )}
-            disabled={disabled}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {formatDate()}
-          </Button>
+        <PopoverTrigger
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            'w-full justify-start text-left font-normal',
+            !value && 'text-muted-foreground'
+          )}
+          disabled={disabled}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {formatDate()}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
@@ -73,21 +71,21 @@ export function DatePicker({
             onSelect={handleSelect}
             defaultMonth={value}
             disabled={(date) => isDateDisabled(date, allowFutureDates, minDate)}
-            initialFocus
           />
         </PopoverContent>
       </Popover>
       {clearable && value && !disabled && (
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 flex-shrink-0"
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'icon' }),
+            'h-9 w-9 flex-shrink-0'
+          )}
           aria-label="Clear date"
           onClick={() => onChange(undefined)}
         >
           <XIcon className="h-4 w-4" />
-        </Button>
+        </button>
       )}
     </div>
   );

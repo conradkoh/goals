@@ -159,7 +159,7 @@ function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInterna
                 <Select
                   value={currentDayOfWeek?.toString()}
                   onValueChange={(value) =>
-                    handleMoveToDayOfWeek(Number.parseInt(value) as DayOfWeekType)
+                    value != null && handleMoveToDayOfWeek(Number.parseInt(value) as DayOfWeekType)
                   }
                 >
                   <SelectTrigger className="h-8 text-xs">

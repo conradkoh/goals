@@ -148,7 +148,9 @@ function QuarterlySummaryContent() {
             <p className="text-sm font-medium text-foreground mb-3">Summary pathway</p>
             <Tabs
               value={summaryPathway}
-              onValueChange={(value) => setSummaryPathway(value as 'initiative' | 'goal')}
+              onValueChange={(value) =>
+                value != null && setSummaryPathway(value as 'initiative' | 'goal')
+              }
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="initiative">By Initiative</TabsTrigger>
@@ -184,7 +186,10 @@ function QuarterlySummaryContent() {
                 </Button>
 
                 {/* Year Selector */}
-                <Select value={year.toString()} onValueChange={handleYearChange}>
+                <Select
+                  value={year.toString()}
+                  onValueChange={(value) => value != null && handleYearChange(value)}
+                >
                   <SelectTrigger className="w-28">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
@@ -198,7 +203,10 @@ function QuarterlySummaryContent() {
                 </Select>
 
                 {/* Quarter Selector */}
-                <Select value={quarter.toString()} onValueChange={handleQuarterChange}>
+                <Select
+                  value={quarter.toString()}
+                  onValueChange={(value) => value != null && handleQuarterChange(value)}
+                >
                   <SelectTrigger className="w-24">
                     <SelectValue placeholder="Quarter" />
                   </SelectTrigger>
@@ -234,7 +242,7 @@ function QuarterlySummaryContent() {
           {/* Tabs for Select Goals / Preview */}
           <Tabs
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value as 'select' | 'preview')}
+            onValueChange={(value) => value != null && setActiveTab(value as 'select' | 'preview')}
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">

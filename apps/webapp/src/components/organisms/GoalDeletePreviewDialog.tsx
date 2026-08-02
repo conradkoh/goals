@@ -59,7 +59,7 @@ export const GoalDeletePreviewDialog = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Goal</AlertDialogTitle>
-            <AlertDialogDescription asChild>
+            <AlertDialogDescription render={<div />}>
               <div className="space-y-4">
                 <span className="block">There are no goals to delete.</span>
                 <div className="text-center py-8 text-muted-foreground">
@@ -151,7 +151,7 @@ export const GoalDeletePreviewDialog = ({
             <AlertTriangle className="h-5 w-5 text-red-500" />
             <span>Delete Goal</span>
           </AlertDialogTitle>
-          <AlertDialogDescription asChild>
+          <AlertDialogDescription render={<div />}>
             <div className="space-y-6 max-h-[50vh] overflow-y-auto">
               {/* Warning section */}
               <div className="space-y-2">

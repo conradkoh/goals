@@ -116,7 +116,7 @@ export function AdhocGoalQuickViewModal({
   year,
   weekNumber,
 }: AdhocGoalQuickViewModalProps) {
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { createEscapeBlockingOpenChange, handleNestedActiveChange } = useDialogEscapeHandler();
 
   /**
    * Converts AdhocGoalWithChildren to GoalWithDetailsAndChildren format.
@@ -156,8 +156,8 @@ export function AdhocGoalQuickViewModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <FixedSizeDialog onEscapeKeyDown={handleEscapeKeyDown}>
+    <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
+      <FixedSizeDialog>
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>

@@ -5,7 +5,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { InitiativeListItemMeta } from '@/components/atoms/InitiativeListItemMeta';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -66,44 +66,41 @@ export function InitiativeSelector({
   return (
     <div className="space-y-1">
       <Popover modal open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled}
-            className={cn('w-full justify-between font-normal', className)}
-          >
-            <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-left">
-              {selectedInitiative ? (
-                <>
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: getInitiativeColorFromMap(selectedInitiative._id, colorMap),
-                    }}
-                    aria-hidden
-                  />
-                  <span className="truncate">{selectedInitiative.title}</span>
-                </>
-              ) : (
-                <span className="truncate text-muted-foreground">{placeholder}</span>
-              )}
-            </span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+        <PopoverTrigger
+          type="button"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled}
+          className={cn(
+            buttonVariants({ variant: 'outline' }),
+            'w-full justify-between font-normal',
+            className
+          )}
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-2 truncate text-left">
+            {selectedInitiative ? (
+              <>
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: getInitiativeColorFromMap(selectedInitiative._id, colorMap),
+                  }}
+                  aria-hidden
+                />
+                <span className="truncate">{selectedInitiative.title}</span>
+              </>
+            ) : (
+              <span className="truncate text-muted-foreground">{placeholder}</span>
+            )}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </PopoverTrigger>
         {/*
           portalled={false}: keep combobox in the dialog DOM tree so Safari can
           focus/click the search input (Radix portal + dialog focus trap blocks it).
           modal on Popover (above) still required so the list opens inside dialogs.
         */}
-        <PopoverContent
-          portalled={false}
-          className="w-[--radix-popover-trigger-width] p-0"
-          align="start"
-        >
+        <PopoverContent portalled={false} className="w-[var(--anchor-width)] p-0" align="start">
           <Command>
             <CommandInput placeholder="Search initiatives..." />
             <CommandList>

@@ -32,7 +32,7 @@ export function DaySelector({ value, onChange }: DaySelectorProps): ReactElement
   return (
     <Select
       value={value.toString()}
-      onValueChange={(day) => onChange(Number.parseInt(day, 10) as DayOfWeek)}
+      onValueChange={(day) => day != null && onChange(Number.parseInt(day, 10) as DayOfWeek)}
     >
       <SelectTrigger className="w-[120px]">
         <SelectValue placeholder="Day" />

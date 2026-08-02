@@ -29,7 +29,9 @@ export function QuarterSelector({ value, onChange }: QuarterSelectorProps): Reac
   return (
     <Select
       value={value.toString()}
-      onValueChange={(quarter) => onChange(Number.parseInt(quarter, 10) as 1 | 2 | 3 | 4)}
+      onValueChange={(quarter) =>
+        quarter != null && onChange(Number.parseInt(quarter, 10) as 1 | 2 | 3 | 4)
+      }
     >
       <SelectTrigger className="w-[100px]">
         <SelectValue placeholder="Quarter" />

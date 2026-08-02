@@ -34,7 +34,10 @@ export function WeekSelector({ value, year, onChange }: WeekSelectorProps): Reac
   const weeks = Array.from({ length: weeksInYear }, (_, i) => i + 1);
 
   return (
-    <Select value={value.toString()} onValueChange={(week) => onChange(parseInt(week, 10))}>
+    <Select
+      value={value.toString()}
+      onValueChange={(week) => week != null && onChange(parseInt(week, 10))}
+    >
       <SelectTrigger className="w-[100px]">
         <SelectValue placeholder="Week" />
       </SelectTrigger>

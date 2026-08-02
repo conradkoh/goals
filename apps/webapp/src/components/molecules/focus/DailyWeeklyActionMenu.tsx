@@ -9,7 +9,7 @@ import {
 import React, { type ReactElement } from 'react';
 
 import type { ViewMode } from '@/components/molecules/focus/constants';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,15 +76,15 @@ export const DailyWeeklyActionMenu = React.memo(
     return (
       <>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant={buttonVariant}
-              size={buttonSize}
-              disabled={isMenuDisabled}
-              className={cn('text-muted-foreground hover:text-foreground', className)}
-            >
-              {menuIcon || <MoreVertical className="h-4 w-4" />}
-            </Button>
+          <DropdownMenuTrigger
+            className={cn(
+              buttonVariants({ variant: buttonVariant, size: buttonSize }),
+              'text-muted-foreground hover:text-foreground',
+              className
+            )}
+            disabled={isMenuDisabled}
+          >
+            {menuIcon || <MoreVertical className="h-4 w-4" />}
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align={align}
@@ -150,15 +150,13 @@ export const DailyWeeklyActionMenu = React.memo(
                 </span>
               </DropdownMenuItem>
             ) : (
-              <TooltipProvider delayDuration={0}>
+              <TooltipProvider delay={0}>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-full cursor-not-allowed">
-                      <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
-                        <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm">Pull incomplete goals</span>
-                      </DropdownMenuItem>
-                    </div>
+                  <TooltipTrigger render={<div className="w-full cursor-not-allowed" />}>
+                    <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
+                      <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <span className="text-sm">Pull incomplete goals</span>
+                    </DropdownMenuItem>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{tooltipContent}</p>

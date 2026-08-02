@@ -155,7 +155,7 @@ function WeeklyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { shouldBlockEscapeClose, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter, weekNumber } = useWeek();
 
   const hasChildren = goal.children && goal.children.length > 0;
@@ -217,7 +217,7 @@ function WeeklyGoalPopoverContentInner({
                   <Select
                     value={selectedDayOfWeek.toString()}
                     onValueChange={(value) =>
-                      setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
+                      value != null && setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
                     }
                   >
                     <SelectTrigger className="h-9 text-xs">
@@ -258,7 +258,7 @@ function WeeklyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -270,7 +270,7 @@ function WeeklyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>

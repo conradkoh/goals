@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { DatePicker } from '@/components/DatePicker';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -137,17 +137,14 @@ export function InitiativeActionMenu({
   return (
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className={cn(
-              'h-8 px-2 text-xs text-muted-foreground hover:text-foreground',
-              className
-            )}
-          >
-            <MoreVertical className="h-3.5 w-3.5" />
-          </Button>
+        <DropdownMenuTrigger
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'h-8 px-2 text-xs text-muted-foreground hover:text-foreground',
+            className
+          )}
+        >
+          <MoreVertical className="h-3.5 w-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem

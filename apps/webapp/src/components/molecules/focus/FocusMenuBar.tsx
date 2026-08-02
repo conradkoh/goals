@@ -21,7 +21,7 @@ import {
   WeeklySelector,
 } from '@/components/molecules/focus-context-selector';
 import { QuarterActionMenu } from '@/components/molecules/quarter/QuarterActionMenu';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +33,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { type DayOfWeek, getDayNameShort } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
+import { cn } from '@/lib/utils';
 
 /**
  * Returns a platform-aware label for the search shortcut.
@@ -188,16 +189,15 @@ export const FocusMenuBar = ({
                   {onOpenCommandPalette && (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onOpenCommandPalette}
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            aria-label="Open search"
-                          >
-                            <Search className="h-4 w-4" />
-                          </Button>
+                        <TooltipTrigger
+                          className={cn(
+                            buttonVariants({ variant: 'ghost', size: 'icon' }),
+                            'h-8 w-8 text-muted-foreground hover:text-foreground'
+                          )}
+                          onClick={onOpenCommandPalette}
+                          aria-label="Open search"
+                        >
+                          <Search className="h-4 w-4" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{searchShortcutLabel}</p>
@@ -208,15 +208,11 @@ export const FocusMenuBar = ({
 
                   {/* View-switch + actions dropdown */}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        aria-label="Open focused view menu"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                    <DropdownMenuTrigger
+                      className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-8 w-8')}
+                      aria-label="Open focused view menu"
+                    >
+                      <MoreVertical className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
@@ -255,13 +251,11 @@ export const FocusMenuBar = ({
                       {!showPullGoals ? (
                         <TooltipProvider>
                           <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div>
-                                <DropdownMenuItem disabled>
-                                  <ArrowDownToLine className="mr-2 h-4 w-4" />
-                                  Pull incomplete goals
-                                </DropdownMenuItem>
-                              </div>
+                            <TooltipTrigger render={<div />}>
+                              <DropdownMenuItem disabled>
+                                <ArrowDownToLine className="mr-2 h-4 w-4" />
+                                Pull incomplete goals
+                              </DropdownMenuItem>
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>Navigate to current day/week to pull goals</p>
@@ -360,16 +354,15 @@ export const FocusMenuBar = ({
                   {onOpenCommandPalette && (
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={onOpenCommandPalette}
-                            className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                            aria-label="Open search"
-                          >
-                            <Search className="h-4 w-4" />
-                          </Button>
+                        <TooltipTrigger
+                          className={cn(
+                            buttonVariants({ variant: 'ghost', size: 'icon' }),
+                            'h-9 w-9 text-muted-foreground hover:text-foreground'
+                          )}
+                          onClick={onOpenCommandPalette}
+                          aria-label="Open search"
+                        >
+                          <Search className="h-4 w-4" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{searchShortcutLabel}</p>

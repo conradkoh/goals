@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -163,27 +163,20 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
             {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
             <label className="text-sm font-medium">Due Date</label>
             <Popover modal>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    'w-full justify-start text-left font-normal',
-                    !editDueDate && 'text-muted-foreground'
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {editDueDate
-                    ? DateTime.fromJSDate(editDueDate).toFormat('LLL dd, yyyy')
-                    : 'Set due date...'}
-                </Button>
+              <PopoverTrigger
+                className={cn(
+                  buttonVariants({ variant: 'outline' }),
+                  'w-full justify-start text-left font-normal',
+                  !editDueDate && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {editDueDate
+                  ? DateTime.fromJSDate(editDueDate).toFormat('LLL dd, yyyy')
+                  : 'Set due date...'}
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={editDueDate}
-                  onSelect={setEditDueDate}
-                  initialFocus
-                />
+                <Calendar mode="single" selected={editDueDate} onSelect={setEditDueDate} />
                 {editDueDate && (
                   <div className="p-3 border-t">
                     <Button

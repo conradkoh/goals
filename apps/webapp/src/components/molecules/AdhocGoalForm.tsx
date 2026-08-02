@@ -5,7 +5,7 @@ import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -192,17 +192,15 @@ export function AdhocGoalForm({
       <div>
         <Label>Due Date (optional)</Label>
         <Popover modal>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !dueDate && 'text-muted-foreground'
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dueDate ? format(dueDate, 'PPP') : 'Pick a date'}
-            </Button>
+          <PopoverTrigger
+            className={cn(
+              buttonVariants({ variant: 'outline' }),
+              'w-full justify-start text-left font-normal',
+              !dueDate && 'text-muted-foreground'
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {dueDate ? format(dueDate, 'PPP') : 'Pick a date'}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar

@@ -5,6 +5,8 @@ import { XIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useAllowTouchSelection } from '@/hooks/useAllowTouchSelection';
+import { useKeyboardInsetHeight } from '@/hooks/useKeyboardInsetHeight';
 import { cn } from '@/lib/utils';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -121,6 +123,41 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
   );
 }
 
+/**
+ * FullscreenDialogContent - Fixed fullscreen modal variant used on mobile/touch
+ * devices. Includes its own portal, overlay, and close button so callers can pass
+ * arbitrary layout classes (dvh-based height for iOS Safari).
+ */
+function FullscreenDialogContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
+  // Fix iOS text selection handles not being draggable
+  useAllowTouchSelection();
+  const keyboardInset = useKeyboardInsetHeight();
+
+  return (
+    <DialogPortal data-slot="dialog-portal">
+      <DialogOverlay />
+      <DialogPrimitive.Popup
+        data-slot="dialog-content"
+        className={cn(
+          'fixed inset-0 z-50 m-auto grid gap-4 bg-background p-6 shadow-lg data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 sm:rounded-lg',
+          className
+        )}
+        style={keyboardInset ? { paddingBottom: `${keyboardInset}px` } : undefined}
+        {...props}
+      >
+        {children}
+        <DialogPrimitive.Close
+          data-slot="dialog-close"
+          className="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 ring-offset-background focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-open:bg-accent data-open:text-muted-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+        >
+          <XIcon />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Popup>
+    </DialogPortal>
+  );
+}
+
 export {
   Dialog,
   DialogClose,
@@ -132,4 +169,5 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  FullscreenDialogContent,
 };

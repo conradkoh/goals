@@ -207,7 +207,10 @@ export function AdhocGoalList({
 
         {showFilters && (
           <div className="flex gap-2">
-            <Select value={filter} onValueChange={(value) => setFilter(value as _FilterOption)}>
+            <Select
+              value={filter}
+              onValueChange={(value) => value != null && setFilter(value as _FilterOption)}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -218,7 +221,10 @@ export function AdhocGoalList({
               </SelectContent>
             </Select>
 
-            <Select value={selectedDomainId} onValueChange={setSelectedDomainId}>
+            <Select
+              value={selectedDomainId}
+              onValueChange={(value) => value != null && setSelectedDomainId(value)}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>

@@ -165,7 +165,7 @@ function QuarterlyGoalPopoverContentInner({
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
   const { isFullScreenOpen, closeFullScreen } = useGoalDisplayContext();
-  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
+  const { shouldBlockEscapeClose, handleNestedActiveChange } = useDialogEscapeHandler();
   const { year, quarter, weekNumber } = useWeek();
 
   const hasChildren = goal.children && goal.children.length > 0;
@@ -261,7 +261,7 @@ function QuarterlyGoalPopoverContentInner({
             titleClassName={titleClassName}
           />
         }
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>
@@ -273,7 +273,7 @@ function QuarterlyGoalPopoverContentInner({
         fullScreen
         open={isFullScreenOpen}
         onOpenChange={(open) => !open && closeFullScreen()}
-        onEscapeKeyDown={handleEscapeKeyDown}
+        shouldBlockEscapeClose={shouldBlockEscapeClose}
       >
         {goalContent}
       </GoalDetailsPopoverView>

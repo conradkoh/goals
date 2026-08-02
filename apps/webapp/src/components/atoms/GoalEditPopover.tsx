@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
@@ -251,20 +251,18 @@ export function GoalEditPopover({
         {/* biome-ignore lint/a11y/noLabelWithoutControl: Label is visually associated with date picker below */}
         <label className="text-sm font-medium text-muted-foreground">Due Date</label>
         <Popover modal>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                'w-full justify-start text-left font-normal',
-                !dueDate && 'text-muted-foreground'
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dueDate ? DateTime.fromJSDate(dueDate).toFormat('LLL dd, yyyy') : 'Set due date...'}
-            </Button>
+          <PopoverTrigger
+            className={cn(
+              buttonVariants({ variant: 'outline' }),
+              'w-full justify-start text-left font-normal',
+              !dueDate && 'text-muted-foreground'
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {dueDate ? DateTime.fromJSDate(dueDate).toFormat('LLL dd, yyyy') : 'Set due date...'}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={dueDate} onSelect={setDueDate} initialFocus />
+            <Calendar mode="single" selected={dueDate} onSelect={setDueDate} />
             {dueDate && (
               <div className="p-3 border-t">
                 <Button

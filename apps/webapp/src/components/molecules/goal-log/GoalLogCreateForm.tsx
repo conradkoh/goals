@@ -9,7 +9,7 @@ import { CalendarIcon, Clock, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -196,24 +196,21 @@ export function GoalLogCreateForm({
         <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
         <div className="flex gap-2">
           <Popover modal>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  'flex-1 justify-start text-left font-normal',
-                  !logDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {isToday ? `Today (${formattedDate})` : formattedDate}
-              </Button>
+            <PopoverTrigger
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'flex-1 justify-start text-left font-normal',
+                !logDate && 'text-muted-foreground'
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {isToday ? `Today (${formattedDate})` : formattedDate}
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={logDate}
                 onSelect={(date) => date && setLogDate(date)}
-                initialFocus
               />
             </PopoverContent>
           </Popover>
@@ -369,24 +366,21 @@ export function GoalLogEditForm({
         <label className="text-sm font-medium text-muted-foreground">Log Date & Time</label>
         <div className="flex gap-2">
           <Popover modal>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  'flex-1 justify-start text-left font-normal',
-                  !logDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {isToday ? `Today (${formattedDate})` : formattedDate}
-              </Button>
+            <PopoverTrigger
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'flex-1 justify-start text-left font-normal',
+                !logDate && 'text-muted-foreground'
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {isToday ? `Today (${formattedDate})` : formattedDate}
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={logDate}
                 onSelect={(date) => date && setLogDate(date)}
-                initialFocus
               />
             </PopoverContent>
           </Popover>

@@ -31,8 +31,8 @@ export interface GoalDetailsPopoverViewProps {
   onOpenChange?: (open: boolean) => void;
   /** Whether to use fullscreen mode on mobile devices (default: true) */
   mobileFullScreen?: boolean;
-  /** Callback when escape key is pressed - can call e.preventDefault() to block dialog close */
-  onEscapeKeyDown?: (e: KeyboardEvent) => void;
+  /** Predicate that blocks Escape from closing the dialog when a nested element is active */
+  shouldBlockEscapeClose?: () => boolean;
 }
 
 /**
@@ -73,7 +73,7 @@ export function GoalDetailsPopoverView({
   open,
   onOpenChange,
   mobileFullScreen = true,
-  onEscapeKeyDown,
+  shouldBlockEscapeClose,
 }: GoalDetailsPopoverViewProps) {
   const { isHydrated, preferFullscreenDialogs } = useDeviceScreenInfo();
   const [mobileDialogOpen, setMobileDialogOpen] = useState(false);
@@ -89,6 +89,17 @@ export function GoalDetailsPopoverView({
   const dialogOpen = fullScreen ? open : mobileDialogOpen;
   const handleDialogOpenChange = fullScreen ? onOpenChange : setMobileDialogOpen;
 
+  // Block Escape close while a nested element (e.g. inline edit form) is active
+  const handleEscapeBlockingOpenChange = (
+    nextOpen: boolean,
+    eventDetails?: { reason?: string }
+  ) => {
+    if (!nextOpen && eventDetails?.reason === 'escape-key' && shouldBlockEscapeClose?.()) {
+      return;
+    }
+    handleDialogOpenChange?.(nextOpen);
+  };
+
   if (shouldUseFullScreen) {
     return (
       <>
@@ -99,7 +110,7 @@ export function GoalDetailsPopoverView({
         <span className="contents" onClick={() => handleDialogOpenChange?.(true)}>
           {trigger}
         </span>
-        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+        <Dialog open={dialogOpen} onOpenChange={handleEscapeBlockingOpenChange}>
           {preferFullscreenDialogs ? (
             <FullscreenDialogContent
               className={cn(
@@ -111,7 +122,6 @@ export function GoalDetailsPopoverView({
                 'overflow-hidden flex flex-col',
                 contentClassName
               )}
-              onEscapeKeyDown={onEscapeKeyDown}
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
@@ -130,7 +140,6 @@ export function GoalDetailsPopoverView({
                 'overflow-hidden flex flex-col',
                 contentClassName
               )}
-              onEscapeKeyDown={onEscapeKeyDown}
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Goal Details</DialogTitle>
@@ -156,8 +165,8 @@ export function GoalDetailsPopoverView({
       <span className="contents" onClick={() => handleDialogOpenChange?.(true)}>
         {trigger}
       </span>
-      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
-        <FixedSizeDialog onEscapeKeyDown={onEscapeKeyDown}>
+      <Dialog open={dialogOpen} onOpenChange={handleEscapeBlockingOpenChange}>
+        <FixedSizeDialog>
           <DialogHeader className="sr-only">
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>
@@ -185,7 +194,7 @@ export interface GoalPopoverTriggerProps extends Omit<
 /**
  * Standard trigger button for goal details popover.
  * Renders the goal title as a clickable button.
- * Must forward ref and props for PopoverTrigger asChild to work.
+ * Must forward ref and props for PopoverTrigger composition to work.
  */
 export const GoalPopoverTrigger = forwardRef<HTMLButtonElement, GoalPopoverTriggerProps>(
   (

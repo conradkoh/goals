@@ -241,28 +241,22 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
         <div className="bg-muted py-1 px-3 rounded-md">
           <div className="flex items-center justify-between">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="p-0 h-auto hover:bg-transparent font-bold text-foreground text-sm w-full cursor-pointer flex items-center gap-2">
-                  <span>{getDayName(dayOfWeek)}</span>
-                  <span className="text-muted-foreground font-normal">{formattedDate}</span>
-                </div>
+              <DropdownMenuTrigger className="p-0 h-auto hover:bg-transparent font-bold text-foreground text-sm w-full cursor-pointer flex items-center gap-2">
+                <span>{getDayName(dayOfWeek)}</span>
+                <span className="text-muted-foreground font-normal">{formattedDate}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {isDisabled ? (
-                  <TooltipProvider delayDuration={0}>
+                  <TooltipProvider delay={0}>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-full cursor-not-allowed">
-                          <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
-                            <History className="mr-2 h-4 w-4" />
-                            <div className="flex flex-col w-full items-center">
-                              <span>Pull Incomplete</span>
-                              <span className="text-muted-foreground text-xs">
-                                from previous day
-                              </span>
-                            </div>
-                          </DropdownMenuItem>
-                        </div>
+                      <TooltipTrigger render={<div className="w-full cursor-not-allowed" />}>
+                        <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
+                          <History className="mr-2 h-4 w-4" />
+                          <div className="flex flex-col w-full items-center">
+                            <span>Pull Incomplete</span>
+                            <span className="text-muted-foreground text-xs">from previous day</span>
+                          </div>
+                        </DropdownMenuItem>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>{tooltipContent}</p>
