@@ -21,4 +21,21 @@ describe('Tabs', () => {
     await user.click(screen.getByRole('tab', { name: 'Tab 2' }));
     expect(screen.getByText('Content 2')).toBeVisible();
   });
+
+  it('applies orientation-aware layout classes on root', () => {
+    const { container } = render(
+      <Tabs defaultValue="tab1">
+        <TabsList>
+          <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+        </TabsList>
+        <TabsContent value="tab1">Content</TabsContent>
+      </Tabs>
+    );
+    const root = container.querySelector('[data-slot="tabs"]');
+    expect(root).toHaveAttribute('data-orientation', 'horizontal');
+    expect(root?.className).toContain('data-[orientation=horizontal]:flex-col');
+
+    const tabsList = container.querySelector('[data-slot="tabs-list"]');
+    expect(tabsList?.className).toContain('group-data-[orientation=horizontal]/tabs:h-9');
+  });
 });
