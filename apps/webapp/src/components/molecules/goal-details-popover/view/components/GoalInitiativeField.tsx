@@ -2,9 +2,9 @@
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
-import { toast } from '@/components/ui/use-toast';
 import { useInitiatives } from '@/hooks/useInitiatives';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -43,19 +43,14 @@ export function GoalInitiativeField({
       await onInitiativeChange(initiativeId as Id<'initiatives'> | null);
       setDisplayedInitiativeId(initiativeId as Id<'initiatives'> | null);
       const initiative = initiatives.find((item) => item._id === initiativeId);
-      toast({
-        title: initiativeId ? 'Initiative updated' : 'Initiative removed',
+      toast.success(initiativeId ? 'Initiative updated' : 'Initiative removed', {
         description: initiativeId
           ? `Tagged to "${initiative?.title ?? 'initiative'}".`
           : 'Goal is no longer linked to an initiative.',
       });
     } catch (error) {
       console.error('Failed to update initiative:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Could not update initiative',
-        description: 'Please try again.',
-      });
+      toast.error('Could not update initiative', { description: 'Please try again.' });
     } finally {
       setIsSaving(false);
     }

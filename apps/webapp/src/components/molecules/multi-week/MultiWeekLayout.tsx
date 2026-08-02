@@ -13,6 +13,7 @@ import { ClipboardList, CalendarDays, Rocket, Target } from 'lucide-react';
 import { DateTime } from 'luxon';
 import type React from 'react';
 import { memo, useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { useMultiWeek } from './MultiWeekContext';
 import { MultiWeekGrid } from './MultiWeekGrid';
@@ -31,7 +32,6 @@ import { AdhocGoalsSection } from '@/components/organisms/focus/AdhocGoalsSectio
 import { WeekCardDailyGoals } from '@/components/organisms/WeekCardDailyGoals';
 import { WeekCardQuarterlyGoals } from '@/components/organisms/WeekCardQuarterlyGoals';
 import { WeekCardWeeklyGoals } from '@/components/organisms/WeekCardWeeklyGoals';
-import { toast } from '@/components/ui/use-toast';
 import { useCurrentDateInfo } from '@/hooks/useCurrentDateTime';
 import { useWeekData, type WeekData } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
@@ -203,11 +203,7 @@ export const MultiWeekLayout = memo(() => {
       }
 
       if (!sessionId) {
-        toast({
-          title: 'Not authenticated',
-          description: 'Please log in to move goals',
-          variant: 'destructive',
-        });
+        toast.error('Not authenticated', { description: 'Please log in to move goals' });
         return;
       }
 
@@ -228,16 +224,13 @@ export const MultiWeekLayout = memo(() => {
           },
         });
 
-        toast({
-          title: 'Goal moved',
+        toast.success('Goal moved', {
           description: `"${dragData.goalTitle}" moved to Week ${dropData.weekNumber}`,
         });
       } catch (error) {
         console.error('[DnD] Failed to move goal:', error);
-        toast({
-          title: 'Failed to move goal',
+        toast.error('Failed to move goal', {
           description: error instanceof Error ? error.message : 'An error occurred',
-          variant: 'destructive',
         });
       } finally {
         setIsProcessingDrop(false);
@@ -257,11 +250,7 @@ export const MultiWeekLayout = memo(() => {
       }
 
       if (!sessionId) {
-        toast({
-          title: 'Not authenticated',
-          description: 'Please log in to reparent goals',
-          variant: 'destructive',
-        });
+        toast.error('Not authenticated', { description: 'Please log in to reparent goals' });
         return;
       }
 
@@ -273,16 +262,13 @@ export const MultiWeekLayout = memo(() => {
           newParentId: dropData.quarterlyGoalId,
         });
 
-        toast({
-          title: 'Goal reparented',
+        toast.success('Goal reparented', {
           description: `"${dragData.goalTitle}" moved under "${dropData.quarterlyGoalTitle}"`,
         });
       } catch (error) {
         console.error('[DnD] Failed to reparent goal:', error);
-        toast({
-          title: 'Failed to reparent goal',
+        toast.error('Failed to reparent goal', {
           description: error instanceof Error ? error.message : 'An error occurred',
-          variant: 'destructive',
         });
       } finally {
         setIsProcessingDrop(false);

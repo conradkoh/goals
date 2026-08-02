@@ -3,6 +3,7 @@ import { DayOfWeek } from '@workspace/backend/src/constants';
 import { getQuarterWeeks } from '@workspace/backend/src/usecase/quarter';
 import { useMutation, useQuery, useConvex } from 'convex/react';
 import { type ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { useGoalActions } from './useGoalActions';
 
@@ -11,7 +12,6 @@ import {
   type PreviewTask,
   type WeekRef,
 } from '@/components/molecules/PullGoalsPreviewDialog';
-import { toast } from '@/components/ui/use-toast';
 import { useCurrentWeekInfo } from '@/hooks/useCurrentDateTime';
 import { getDayName } from '@/lib/constants';
 import { buildWeekPullPreviewTasks } from '@/lib/pull-goals/buildWeekPullPreviewTasks';
@@ -274,11 +274,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
       setShowDialog(true);
     } catch (error) {
       console.error('Failed to preview goals:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to preview goals to pull.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to preview goals to pull.' });
     } finally {
       setIsPulling(false);
     }
@@ -333,11 +329,7 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
       setShowDialog(false);
     } catch (error) {
       console.error('Failed to pull goals:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to pull goals.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to pull goals.' });
     } finally {
       setIsPulling(false);
     }
@@ -406,18 +398,13 @@ export const usePullGoals = (_props: UsePullGoalsProps): UsePullGoalsReturn => {
           totalTasks: weekTasks.length + pastDayTasks.length,
         });
       } else {
-        toast({
-          title: 'No earlier week found',
+        toast.success('No earlier week found', {
           description: 'No earlier week with incomplete goals in this quarter.',
         });
       }
     } catch (error) {
       console.error('Failed to find last non-empty week:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to find earlier week.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to find earlier week.' });
     } finally {
       setIsRefreshingPreview(false);
     }

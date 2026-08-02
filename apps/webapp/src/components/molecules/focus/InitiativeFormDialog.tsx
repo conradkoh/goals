@@ -7,6 +7,7 @@ import { ConvexError } from 'convex/values';
 import { Flag, Trash2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DatePicker } from '@/components/DatePicker';
 import {
@@ -31,7 +32,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from '@/components/ui/use-toast';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { normalizeInitiativeDates } from '@/lib/date/initiative-dates';
 import { useSession } from '@/modules/auth/useSession';
@@ -167,9 +167,7 @@ export function InitiativeFormDialog({
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to save initiative:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Could not save initiative',
+      toast.error('Could not save initiative', {
         description: getInitiativeErrorDetails(error).message ?? 'Please try again.',
       });
     }
@@ -211,11 +209,10 @@ export function InitiativeFormDialog({
       console.error('Failed to delete initiative:', error);
       const { code, message } = getInitiativeErrorDetails(error);
 
-      toast({
-        variant: 'destructive',
-        title: code === 'RESOURCE_IN_USE' ? 'Initiative in use' : 'Could not delete initiative',
-        description: message ?? 'Please try again.',
-      });
+      toast.error(
+        code === 'RESOURCE_IN_USE' ? 'Initiative in use' : 'Could not delete initiative',
+        { description: message ?? 'Please try again.' }
+      );
     } finally {
       setIsDeleting(false);
     }

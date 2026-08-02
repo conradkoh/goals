@@ -16,8 +16,8 @@ vi.mock('@/modules/auth/useSession', () => ({
   useSession: vi.fn(),
 }));
 
-vi.mock('@/components/ui/use-toast', () => ({
-  toast: vi.fn(),
+vi.mock('sonner', () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 
 const SESSION_ID = 'session-test' as SessionId;

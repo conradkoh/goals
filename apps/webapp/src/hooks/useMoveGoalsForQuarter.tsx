@@ -13,9 +13,9 @@ import { useAction } from 'convex/react';
 import { useSessionQuery } from 'convex-helpers/react/sessions';
 import type React from 'react';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { QuarterGoalMovePreview } from '@/components/molecules/quarter/QuarterGoalMovePreview';
-import { toast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 
 /**
@@ -235,11 +235,7 @@ export function useMoveGoalsForQuarter({
     if (isFirstQuarter) return;
 
     if (!sessionId) {
-      toast({
-        title: 'Error',
-        description: 'User not authenticated.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'User not authenticated.' });
       return;
     }
 
@@ -273,17 +269,10 @@ export function useMoveGoalsForQuarter({
         });
 
         setShowConfirmDialog(false);
-        toast({
-          title: 'Success',
-          description: 'Goals have been pulled to this quarter.',
-        });
+        toast.success('Success', { description: 'Goals have been pulled to this quarter.' });
       } catch (error) {
         console.error('Failed to move goals from previous quarter:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to move goals from previous quarter.',
-          variant: 'destructive',
-        });
+        toast.error('Error', { description: 'Failed to move goals from previous quarter.' });
       } finally {
         setIsMovingGoals(false);
       }

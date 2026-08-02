@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { GoalHeader } from './GoalHeader';
 
-vi.mock('@/components/ui/use-toast', () => ({
-  toast: vi.fn(),
+vi.mock('sonner', () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 
 describe('GoalHeader', () => {

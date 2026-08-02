@@ -1,10 +1,9 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 import { useGoalActions } from './useGoalActions';
-
-import { toast } from '@/components/ui/use-toast';
 
 export interface SummaryGoalActions {
   handleToggleComplete: (goal: GoalWithDetailsAndChildren, weekNumber: number) => Promise<void>;
@@ -43,9 +42,7 @@ export function useSummaryGoalActions({
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to toggle goal completion:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to update goal',
+        toast.error('Failed to update goal', {
           description: 'There was an error updating the goal completion status.',
         });
       }
@@ -69,9 +66,7 @@ export function useSummaryGoalActions({
         onDataRefresh?.();
       } catch (error) {
         console.error('Failed to edit goal:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Failed to update goal',
+        toast.error('Failed to update goal', {
           description: 'There was an error updating the goal.',
         });
       }

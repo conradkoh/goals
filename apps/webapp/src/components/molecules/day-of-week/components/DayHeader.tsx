@@ -1,6 +1,7 @@
 import { CalendarDays, History } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { TaskMovePreview, type TaskMovePreviewData } from './TaskMovePreview';
 
@@ -12,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 import { useWeek } from '@/hooks/useWeek';
 import { DayOfWeek, getDayName } from '@/lib/constants';
 import { getQuarterFromWeek } from '@/lib/date/iso-week';
@@ -154,11 +154,7 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
       }
     } catch (error) {
       console.error('Failed to preview tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to preview tasks to move.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to preview tasks to move.' });
     }
   };
 
@@ -221,11 +217,7 @@ export const DayHeader = ({ dayOfWeek, weekNumber, dateTimestamp }: DayHeaderPro
       }
     } catch (error) {
       console.error('Failed to move tasks:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to move tasks.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to move tasks.' });
     } finally {
       setIsMovingTasks(false);
     }

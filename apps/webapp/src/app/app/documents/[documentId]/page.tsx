@@ -6,11 +6,11 @@ import { useMutation, useQuery } from 'convex/react';
 import { ArrowLeft, Check, Loader2, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { useToast } from '@/components/ui/use-toast';
 import { useSession } from '@/modules/auth/useSession';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -22,7 +22,6 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 export default function DocumentEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
   const { sessionId } = useSession();
 
   const documentId = params.documentId as Id<'documents'>;
@@ -123,20 +122,15 @@ export default function DocumentEditorPage() {
   const handleDelete = useCallback(async () => {
     try {
       await deleteDocument({ sessionId, documentId });
-      toast({
-        title: 'Document deleted',
+      toast.success('Document deleted', {
         description: 'The document has been permanently deleted.',
       });
       router.push('/app/documents');
     } catch (error) {
       console.error('Failed to delete document:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete document.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to delete document.' });
     }
-  }, [sessionId, documentId, deleteDocument, router, toast]);
+  }, [sessionId, documentId, deleteDocument, router]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {

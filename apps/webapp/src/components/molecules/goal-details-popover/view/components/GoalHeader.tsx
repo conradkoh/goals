@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { toast } from 'sonner';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
 
 export interface GoalHeaderProps {
   /** The goal title */
@@ -72,11 +72,7 @@ export function GoalHeader({
     }
     const trimmed = draft.trim();
     if (!trimmed) {
-      toast({
-        title: 'Error',
-        description: 'Goal title cannot be empty',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Goal title cannot be empty' });
       return;
     }
     if (trimmed !== title) onTitleSave?.(trimmed);

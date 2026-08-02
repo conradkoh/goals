@@ -28,8 +28,8 @@ vi.mock('@/hooks/useWeek', () => ({
   WeekProvider: ({ children }: { children: ReactNode }) => children,
 }));
 
-vi.mock('@/components/ui/use-toast', () => ({
-  toast: vi.fn(),
+vi.mock('sonner', () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 
 vi.mock('./StandardGoalPopoverContent', () => ({

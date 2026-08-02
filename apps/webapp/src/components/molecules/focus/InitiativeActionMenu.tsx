@@ -5,6 +5,7 @@ import { ConvexError } from 'convex/values';
 import { CalendarDays, Check, Edit2, MoreVertical, X } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { DatePicker } from '@/components/DatePicker';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from '@/components/ui/use-toast';
 import { normalizeInitiativeDates } from '@/lib/date/initiative-dates';
 import { cn } from '@/lib/utils';
 
@@ -89,9 +89,7 @@ export function InitiativeActionMenu({
 
   const handleEndDateError = (error: unknown) => {
     console.error('Failed to update initiative end date:', error);
-    toast({
-      variant: 'destructive',
-      title: 'Could not update end date',
+    toast.error('Could not update end date', {
       description: getInitiativeErrorDetails(error).message ?? 'Please try again.',
     });
   };

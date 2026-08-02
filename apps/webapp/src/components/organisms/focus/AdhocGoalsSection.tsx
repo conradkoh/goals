@@ -1,6 +1,7 @@
 import type { Doc, Id } from '@workspace/backend/convex/_generated/dataModel';
 import { ClipboardList, Info } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { DomainPill } from '@/components/atoms/DomainPill';
@@ -9,7 +10,6 @@ import { AdhocGoalItem } from '@/components/molecules/AdhocGoalItem';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toast } from '@/components/ui/use-toast';
 import { buildAdhocGoalMutationArgs } from '@/domain/goal-updates';
 import { useAdhocGoals, useAdhocGoalsForWeek } from '@/hooks/useAdhocGoals';
 import { useDomains } from '@/hooks/useDomains';
@@ -43,11 +43,7 @@ type _OptimisticAdhocGoal = Doc<'goals'> & {
 
 const showErrorToast = (title: string, error: unknown) => {
   console.error(title, error);
-  toast({
-    variant: 'destructive',
-    title,
-    description: 'Please try again.',
-  });
+  toast.error(title, { description: 'Please try again.' });
 };
 
 /**

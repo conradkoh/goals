@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { CalendarIcon, Edit2 } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
@@ -17,7 +18,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { toast } from '@/components/ui/use-toast';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
@@ -171,10 +171,8 @@ export function GoalEditPopover({
       await savePromise;
     } catch (error) {
       console.error('Failed to save goal:', error);
-      toast({
-        title: 'Failed to save goal',
+      toast.error('Failed to save goal', {
         description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);

@@ -3,6 +3,7 @@ import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/
 import { CalendarIcon } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DomainSelector } from '@/components/atoms/DomainSelector';
 import { InitiativeSelector } from '@/components/atoms/InitiativeSelector';
@@ -12,7 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { toast } from '@/components/ui/use-toast';
 import { useDomains } from '@/hooks/useDomains';
 import { useFormSubmitShortcut } from '@/hooks/useFormSubmitShortcut';
 import { useInitiatives } from '@/hooks/useInitiatives';
@@ -88,11 +88,7 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
 
     const trimmedTitle = editTitle.trim();
     if (!trimmedTitle) {
-      toast({
-        title: 'Error',
-        description: 'Goal title cannot be empty',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Goal title cannot be empty' });
       return;
     }
 
@@ -111,11 +107,7 @@ export function GoalEditModal({ isOpen, goal, onSave, onClose }: GoalEditModalPr
       setHasInitialized(false);
     } catch (error) {
       console.error('[GoalEditModal] Failed to save goal:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save goal. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Error', { description: 'Failed to save goal. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

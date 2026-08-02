@@ -1,8 +1,8 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useCallback, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
-import { toast } from '@/components/ui/use-toast';
 import { useDeviceScreenInfo } from '@/hooks/useDeviceScreenInfo';
 import type { DayOfWeek } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -57,10 +57,8 @@ export const AddTaskInput = ({
         }, 10);
       } catch (error) {
         console.error('Failed to create goal:', error);
-        toast({
-          title: 'Failed to create task',
+        toast.error('Failed to create task', {
           description: error instanceof Error ? error.message : 'An unexpected error occurred',
-          variant: 'destructive',
         });
       }
     }

@@ -2,6 +2,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { Edit2 } from 'lucide-react';
 import { forwardRef, useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DeleteGoalIconButton } from './DeleteGoalIconButton';
 import { CreateGoalInput } from '../atoms/CreateGoalInput';
@@ -27,7 +28,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { toast } from '@/components/ui/use-toast';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { useFireGoals } from '@/contexts/GoalStatusContext';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
@@ -273,9 +273,7 @@ const WeeklyGoalGroup = ({
       // Restore the previous title
       setNewGoalTitle(previousTitle);
       console.error('Failed to create weekly goal:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Failed to create goal',
+      toast.error('Failed to create goal', {
         description: 'There was an error creating your goal. Please try again.',
       });
     }

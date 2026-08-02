@@ -4,8 +4,8 @@ import { errorTitles } from '@workspace/backend/errors';
 import type { DayOfWeek } from '@workspace/backend/src/constants';
 import { useMutation } from 'convex/react';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
-import { toast } from '@/components/ui/use-toast';
 import { buildStructuredGoalMutationArgs } from '@/domain/goal-updates';
 import { parseConvexError } from '@/lib/error';
 import { useSession } from '@/modules/auth/useSession';
@@ -531,11 +531,7 @@ export const useGoalActions = (): GoalActions => {
         } catch (error) {
           console.error('Failed to delete goal:', error);
           const errorData = parseConvexError(error);
-          toast({
-            variant: 'destructive',
-            title: errorTitles[errorData.code],
-            description: errorData.message,
-          });
+          toast.error(errorTitles[errorData.code], { description: errorData.message });
         }
       },
 
