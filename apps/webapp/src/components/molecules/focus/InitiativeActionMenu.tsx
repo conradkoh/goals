@@ -148,7 +148,7 @@ export function InitiativeActionMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem
-            onSelect={(e) => {
+            onClick={(e) => {
               e.preventDefault();
               handleEdit();
             }}
@@ -160,7 +160,7 @@ export function InitiativeActionMenu({
           <DropdownMenuSeparator />
           {initiative.endDate === undefined ? (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 openCompleteDialog();
               }}
@@ -171,7 +171,7 @@ export function InitiativeActionMenu({
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 setIsOpen(false);
                 openEndDateDialog();
@@ -184,7 +184,7 @@ export function InitiativeActionMenu({
           )}
           {initiative.endDate !== undefined && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 void handleRemoveEndDate();
               }}

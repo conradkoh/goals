@@ -271,7 +271,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
         <DropdownMenuContent align="end" className="w-48">
           {availableActions.has(GoalActionId.ViewFullDetails) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleFullScreenClick();
               }}
@@ -283,7 +283,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
           )}
           {availableActions.has(GoalActionId.ViewSummary) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleSummaryClick();
               }}
@@ -295,7 +295,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
           )}
           {availableActions.has(GoalActionId.MoveToWeek) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleMoveToWeekClick();
               }}
@@ -307,7 +307,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
           )}
           {availableActions.has(GoalActionId.Edit) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleEditClick();
               }}
@@ -322,7 +322,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
 
           {availableActions.has(GoalActionId.ToggleFireStatus) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleFireToggle();
               }}
@@ -338,7 +338,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
 
           {availableActions.has(GoalActionId.MarkPending) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handlePendingClick();
               }}
@@ -354,7 +354,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
 
           {availableActions.has(GoalActionId.ToggleBacklog) && onToggleBacklog && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleBacklogToggle();
               }}
@@ -378,7 +378,7 @@ export const GoalActionMenuNew: React.FC<GoalActionMenuNewProps> = ({
 
           {availableActions.has(GoalActionId.Delete) && (
             <DropdownMenuItem
-              onSelect={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 handleDeleteClick();
               }}

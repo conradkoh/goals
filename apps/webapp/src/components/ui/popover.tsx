@@ -29,6 +29,8 @@ function PopoverContent({
   Pick<PopoverPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'> & {
     portalled?: boolean;
   }) {
+  const inlineContainerRef = React.useRef<HTMLDivElement>(null);
+
   const popup = (
     <PopoverPrimitive.Positioner
       align={align}
@@ -49,7 +51,15 @@ function PopoverContent({
   );
 
   if (!portalled) {
-    return popup;
+    // Render content in the trigger's own DOM subtree (not document.body) so
+    // Safari can focus nested inputs (e.g. combobox search inside a dialog).
+    // The portal container keeps the Base UI Positioner happy while the
+    // `contents` wrapper avoids affecting layout.
+    return (
+      <div ref={inlineContainerRef} className="contents">
+        <PopoverPrimitive.Portal container={inlineContainerRef}>{popup}</PopoverPrimitive.Portal>
+      </div>
+    );
   }
 
   return <PopoverPrimitive.Portal>{popup}</PopoverPrimitive.Portal>;

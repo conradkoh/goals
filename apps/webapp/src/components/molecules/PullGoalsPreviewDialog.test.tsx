@@ -130,7 +130,7 @@ describe('PullGoalsPreviewDialog', () => {
     renderDialog();
 
     const jumpButton = screen.getByRole('button', { name: /Jump/i });
-    fireEvent.pointerMove(jumpButton);
+    fireEvent.mouseEnter(jumpButton);
     fireEvent.focus(jumpButton);
 
     const tooltip = await screen.findByRole('tooltip');
@@ -147,6 +147,7 @@ describe('PullGoalsPreviewDialog', () => {
     if (!overlay) {
       throw new Error('Expected alert-dialog overlay to be present');
     }
+    fireEvent.pointerDown(overlay);
     fireEvent.click(overlay);
 
     expect(props.onOpenChange).toHaveBeenCalledWith(false);

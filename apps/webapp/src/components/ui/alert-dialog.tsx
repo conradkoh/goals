@@ -34,13 +34,16 @@ function AlertDialogOverlay({ className, ...props }: AlertDialogPrimitive.Backdr
 function AlertDialogContent({
   className,
   size = 'default',
+  onOverlayClick,
   ...props
 }: AlertDialogPrimitive.Popup.Props & {
   size?: 'default' | 'sm';
+  /** Optional: dismiss when the dimmed overlay is clicked (AlertDialog does not do this by default). */
+  onOverlayClick?: React.MouseEventHandler<HTMLDivElement>;
 }) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay onClick={onOverlayClick} />
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-content"
         data-size={size}

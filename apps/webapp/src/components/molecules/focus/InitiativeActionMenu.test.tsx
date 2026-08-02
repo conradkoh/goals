@@ -37,7 +37,7 @@ describe('InitiativeActionMenu mark complete', () => {
     );
 
     await user.click(screen.getByRole('button'));
-    await user.click(screen.getByRole('menuitem', { name: /mark as complete/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /mark as complete/i }));
 
     expect(onEndDateChange).not.toHaveBeenCalled();
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
@@ -61,7 +61,7 @@ describe('InitiativeActionMenu mark complete', () => {
     );
 
     await user.click(screen.getByRole('button'));
-    await user.click(screen.getByRole('menuitem', { name: /mark as complete/i }));
+    await user.click(await screen.findByRole('menuitem', { name: /mark as complete/i }));
 
     const confirmButton = await screen.findByRole('button', { name: /^confirm$/i });
     await user.click(confirmButton);
@@ -87,6 +87,6 @@ describe('InitiativeActionMenu mark complete', () => {
 
     await user.click(screen.getByRole('button'));
     expect(screen.queryByRole('menuitem', { name: /mark as complete/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /change end date/i })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /change end date/i })).toBeInTheDocument();
   });
 });

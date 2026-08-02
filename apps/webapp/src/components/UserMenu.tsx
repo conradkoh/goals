@@ -125,11 +125,12 @@ function _renderUserDropdownMenu(
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          buttonVariants({ variant: 'ghost', size: 'icon' }),
-          'relative flex items-center focus:outline-none text-muted-foreground hover:text-foreground'
+          buttonVariants({ variant: 'ghost', size: 'sm' }),
+          'relative flex items-center gap-2 focus:outline-none text-muted-foreground hover:text-foreground'
         )}
       >
         <User className="h-5 w-5" />
+        <span className="hidden text-sm font-medium sm:inline">{authState.user.name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal px-2 py-2">

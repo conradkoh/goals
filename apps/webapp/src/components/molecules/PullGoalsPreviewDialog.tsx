@@ -270,7 +270,10 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="flex max-h-[90vh] flex-col">
+      <AlertDialogContent
+        className="flex max-h-[90vh] flex-col"
+        onOverlayClick={() => onOpenChange(false)}
+      >
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <AlertDialogHeader className="shrink-0">
           <AlertDialogTitle>Pull Incomplete Goals</AlertDialogTitle>
@@ -291,7 +294,12 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
                 disabled={fromOptions.length === 0}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="No prior week" />
+                  <SelectValue placeholder="No prior week">
+                    {fromWeek
+                      ? (fromOptions.find((o) => o.weekNumber === fromWeek.weekNumber)?.label ??
+                        `Week ${fromWeek.weekNumber}`)
+                      : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {fromOptions.map((option) => (
@@ -328,7 +336,10 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
             <Label>To week</Label>
             <Select value={String(toWeek.weekNumber)} onValueChange={handleToChange}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>
+                  {toOptions.find((o) => o.weekNumber === toWeek.weekNumber)?.label ??
+                    `Week ${toWeek.weekNumber}`}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {toOptions.map((option) => (
