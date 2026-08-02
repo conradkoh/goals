@@ -354,6 +354,7 @@ export function GoalSearchDialog({
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
+      shouldFilter={false}
       className={isGoalModalOpen ? 'opacity-50 pointer-events-auto' : ''}
     >
       <CommandInput

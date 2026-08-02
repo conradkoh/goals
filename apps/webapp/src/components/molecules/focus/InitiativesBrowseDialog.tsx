@@ -55,6 +55,7 @@ export function InitiativesBrowseDialog({
         onOpenChange(next);
         if (!next) setQuery('');
       }}
+      shouldFilter={false}
       title="Initiatives"
       description="Initiatives active in the last 6 months. Search to find older ones."
     >

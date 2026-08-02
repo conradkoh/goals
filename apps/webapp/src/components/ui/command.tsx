@@ -1,6 +1,5 @@
 'use client';
 
-import { Command as CommandPrimitive } from 'cmdk';
 import { SearchIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -13,9 +12,55 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
+type ItemId = string;
+
+interface CommandItemRegistration {
+  id: ItemId;
+  value: string;
+  disabled: boolean;
+  groupId?: string;
+  onSelect?: (value: string) => void;
+  element: HTMLElement | null;
+}
+
+interface CommandContextValue {
+  search: string;
+  setSearch: (value: string) => void;
+  shouldFilter: boolean;
+  items: CommandItemRegistration[];
+  visibleItems: CommandItemRegistration[];
+  selectedId: ItemId | null;
+  setSelectedId: (id: ItemId | null) => void;
+  selectItem: (id: ItemId) => void;
+  registerItem: (item: CommandItemRegistration) => () => void;
+}
+
+const CommandContext = React.createContext<CommandContextValue | null>(null);
+
+function useCommandContext() {
+  const context = React.useContext(CommandContext);
+  if (!context) {
+    throw new Error('Command components must be used within a <Command>');
+  }
+  return context;
+}
+
+/**
+ * Default command filter: splits the search query on whitespace and requires
+ * every word to appear as a case-insensitive substring of the item value.
+ */
+export function defaultFilter(search: string, value: string): boolean {
+  const words = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) {
+    return true;
+  }
+  const haystack = value.toLowerCase();
+  return words.every((word) => haystack.includes(word));
+}
+
 /**
  * Root command menu component that provides a styled container for command palette UIs.
- * Wraps the cmdk Command primitive with consistent styling.
+ * Manages search state, item registration, and keyboard-selection state for children.
  *
  * @public
  *
@@ -31,16 +76,77 @@ import { cn } from '@/lib/utils';
  * </Command>
  * ```
  */
-function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
+function Command({
+  shouldFilter = true,
+  className,
+  children,
+  ...props
+}: Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> & {
+  /** Whether to filter items by the search query. Disable when items are pre-filtered externally. */
+  shouldFilter?: boolean;
+}) {
+  const [search, setSearch] = React.useState('');
+  const [items, setItems] = React.useState<CommandItemRegistration[]>([]);
+  const [selectedId, setSelectedId] = React.useState<ItemId | null>(null);
+
+  const registerItem = React.useCallback((item: CommandItemRegistration) => {
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (!existing) {
+        return [...prev, item];
+      }
+      return prev.map((i) => (i.id === item.id ? item : i));
+    });
+    return () => {
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+    };
+  }, []);
+
+  const selectItem = React.useCallback(
+    (id: ItemId) => {
+      const item = items.find((i) => i.id === id);
+      if (item && !item.disabled) {
+        item.onSelect?.(item.value);
+      }
+    },
+    [items]
+  );
+
+  const visibleItems = React.useMemo(() => {
+    if (!shouldFilter) {
+      return items;
+    }
+    return items.filter((item) => defaultFilter(search, item.value));
+  }, [items, search, shouldFilter]);
+
+  const contextValue = React.useMemo<CommandContextValue>(
+    () => ({
+      search,
+      setSearch,
+      shouldFilter,
+      items,
+      visibleItems,
+      selectedId,
+      setSelectedId,
+      selectItem,
+      registerItem,
+    }),
+    [search, shouldFilter, items, visibleItems, selectedId, selectItem, registerItem]
+  );
+
   return (
-    <CommandPrimitive
-      data-slot="command"
-      className={cn(
-        'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
-        className
-      )}
-      {...props}
-    />
+    <CommandContext.Provider value={contextValue}>
+      <div
+        data-slot="command"
+        className={cn(
+          'bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </CommandContext.Provider>
   );
 }
 
@@ -67,11 +173,13 @@ function CommandDialog({
   description = 'Search for a command to run...',
   children,
   className,
+  shouldFilter = true,
   ...props
 }: Omit<React.ComponentProps<typeof Dialog>, 'children'> & {
   title?: string;
   description?: string;
   className?: string;
+  shouldFilter?: boolean;
   children?: React.ReactNode;
 }) {
   return (
@@ -81,7 +189,10 @@ function CommandDialog({
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
       <DialogContent className={cn('overflow-hidden p-0', className)}>
-        <Command className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+        <Command
+          shouldFilter={shouldFilter}
+          className="[&_[data-slot=command-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:font-medium [&_[data-slot=command-group]]:px-2 [&_[data-slot=command-group]:not([hidden])_~[data-slot=command-group]]:pt-0 [&_[data-slot=command-input-wrapper]_svg]:h-5 [&_[data-slot=command-input-wrapper]_svg]:w-5 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-item]]:px-2 [&_[data-slot=command-item]]:py-3 [&_[data-slot=command-item]_svg]:h-5 [&_[data-slot=command-item]_svg]:w-5"
+        >
           {children}
         </Command>
       </DialogContent>
@@ -107,26 +218,74 @@ function CommandDialog({
  * />
  * ```
  */
-const CommandInput = React.forwardRef<
-  React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => {
-  return (
-    <div data-slot="command-input-wrapper" className="flex h-9 items-center gap-2 border-b px-3">
-      <SearchIcon className="size-4 shrink-0 opacity-50" />
-      <CommandPrimitive.Input
-        ref={ref}
-        data-slot="command-input"
-        className={cn(
-          'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
-        {...props}
-      />
-    </div>
-  );
-});
-CommandInput.displayName = CommandPrimitive.Input.displayName;
+const CommandInput = React.forwardRef<HTMLInputElement, CommandInputProps>(
+  ({ className, value, onValueChange, onKeyDown, ...props }, ref) => {
+    const { search, setSearch, visibleItems, selectedId, setSelectedId, selectItem } =
+      useCommandContext();
+
+    const isControlled = value !== undefined;
+    const inputValue = isControlled ? value : search;
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const nextValue = event.target.value;
+      setSearch(nextValue);
+      onValueChange?.(nextValue);
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+      onKeyDown?.(event);
+      if (event.defaultPrevented) {
+        return;
+      }
+      const currentIndex = selectedId
+        ? visibleItems.findIndex((item) => item.id === selectedId)
+        : -1;
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < visibleItems.length) {
+          setSelectedId(visibleItems[nextIndex].id);
+        }
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevIndex = currentIndex - 1;
+        if (prevIndex >= 0) {
+          setSelectedId(visibleItems[prevIndex].id);
+        }
+      } else if (event.key === 'Enter' && selectedId) {
+        event.preventDefault();
+        selectItem(selectedId);
+      }
+    };
+
+    return (
+      <div data-slot="command-input-wrapper" className="flex h-9 items-center gap-2 border-b px-3">
+        <SearchIcon className="size-4 shrink-0 opacity-50" />
+        <input
+          ref={ref}
+          data-slot="command-input"
+          value={inputValue}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          className={cn(
+            'placeholder:text-muted-foreground flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
+            className
+          )}
+          {...props}
+        />
+      </div>
+    );
+  }
+);
+CommandInput.displayName = 'CommandInput';
+
+interface CommandInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'onChange'
+> {
+  value?: string;
+  onValueChange?: (value: string) => void;
+}
 
 /**
  * Scrollable container for command items. Automatically manages overflow.
@@ -144,9 +303,9 @@ CommandInput.displayName = CommandPrimitive.Input.displayName;
  * </CommandList>
  * ```
  */
-function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
+function CommandList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <CommandPrimitive.List
+    <div
       data-slot="command-list"
       className={cn('h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto', className)}
       {...props}
@@ -156,6 +315,7 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
 
 /**
  * Empty state component shown when no command items match the search.
+ * Renders nothing while at least one item is visible.
  *
  * @public
  *
@@ -169,11 +329,16 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
  * </CommandList>
  * ```
  */
-function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
+function CommandEmpty({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  const { visibleItems } = useCommandContext();
+
+  if (visibleItems.length > 0) {
+    return null;
+  }
   return (
-    <CommandPrimitive.Empty
+    <div
       data-slot="command-empty"
-      className="py-6 text-center text-sm"
+      className={cn('py-6 text-center text-sm', className)}
       {...props}
     />
   );
@@ -181,6 +346,7 @@ function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive
 
 /**
  * Groups related command items together under an optional heading.
+ * Hides itself when all of its items are filtered out by the search.
  *
  * @public
  *
@@ -197,18 +363,53 @@ function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive
  */
 function CommandGroup({
   className,
+  heading,
+  children,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+}: React.HTMLAttributes<HTMLDivElement> & {
+  heading?: React.ReactNode;
+}) {
+  const { items, visibleItems } = useCommandContext();
+  const groupId = React.useId();
+  const groupRef = React.useRef<HTMLDivElement>(null);
+
+  const hasVisibleItems = React.useMemo(() => {
+    const groupItems = items.filter((item) => item.groupId === groupId);
+    if (groupItems.length === 0) {
+      return true;
+    }
+    return visibleItems.some((item) => item.groupId === groupId);
+  }, [items, visibleItems, groupId]);
+
+  // Reflect filtered-out groups as hidden so sibling-group spacing CSS applies.
+  React.useLayoutEffect(() => {
+    if (groupRef.current) {
+      groupRef.current.hidden = !hasVisibleItems;
+    }
+  }, [hasVisibleItems]);
+
   return (
-    <CommandPrimitive.Group
-      data-slot="command-group"
-      className={cn(
-        'text-foreground [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium',
-        className
-      )}
-      {...props}
-    />
+    <CommandGroupContext.Provider value={groupId}>
+      <div
+        ref={groupRef}
+        data-slot="command-group"
+        className={cn(
+          'text-foreground [&_[data-slot=command-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[data-slot=command-group-heading]]:px-2 [&_[data-slot=command-group-heading]]:py-1.5 [&_[data-slot=command-group-heading]]:text-xs [&_[data-slot=command-group-heading]]:font-medium',
+          className
+        )}
+        {...props}
+      >
+        {heading ? <div data-slot="command-group-heading">{heading}</div> : null}
+        {children}
+      </div>
+    </CommandGroupContext.Provider>
   );
+}
+
+const CommandGroupContext = React.createContext<string | null>(null);
+
+function useCommandGroupId() {
+  return React.useContext(CommandGroupContext);
 }
 
 /**
@@ -227,13 +428,11 @@ function CommandGroup({
  * </CommandGroup>
  * ```
  */
-function CommandSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+function CommandSeparator({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <CommandPrimitive.Separator
+    <div
       data-slot="command-separator"
+      role="separator"
       className={cn('bg-border -mx-1 h-px', className)}
       {...props}
     />
@@ -255,16 +454,75 @@ function CommandSeparator({
  * </CommandItem>
  * ```
  */
-function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+function CommandItem({
+  className,
+  value,
+  disabled = false,
+  onSelect,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  value?: string;
+  disabled?: boolean;
+  onSelect?: (value: string) => void;
+}) {
+  const { search, shouldFilter, registerItem, selectedId, setSelectedId, selectItem } =
+    useCommandContext();
+  const groupId = useCommandGroupId();
+  const id = React.useId();
+  const itemRef = React.useRef<HTMLDivElement>(null);
+  const [resolvedValue, setResolvedValue] = React.useState(value ?? '');
+
+  React.useLayoutEffect(() => {
+    // cmdk derives the item value from its text content when no explicit value is given.
+    const nextValue = value ?? itemRef.current?.textContent?.trim() ?? '';
+    setResolvedValue(nextValue);
+    return registerItem({
+      id,
+      value: nextValue,
+      disabled,
+      groupId: groupId ?? undefined,
+      onSelect,
+      element: itemRef.current,
+    });
+  }, [registerItem, id, value, disabled, groupId, onSelect]);
+
+  const isSelected = selectedId === id;
+  const isFilteredOut = shouldFilter && !defaultFilter(search, resolvedValue);
+  const hidden = isFilteredOut || undefined;
+
+  // Scroll the selected item into view when selection changes via keyboard.
+  React.useLayoutEffect(() => {
+    if (isSelected && itemRef.current?.scrollIntoView) {
+      itemRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isSelected]);
+
   return (
-    <CommandPrimitive.Item
+    <div
+      ref={itemRef}
       data-slot="command-item"
+      data-selected={isSelected ? true : undefined}
+      data-disabled={disabled ? true : undefined}
+      hidden={hidden}
+      role="option"
+      aria-selected={isSelected}
       className={cn(
         "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
+      onMouseEnter={() => {
+        if (!disabled) {
+          setSelectedId(id);
+        }
+      }}
+      onClick={() => {
+        selectItem(id);
+      }}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 }
 
@@ -282,7 +540,7 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
  * </CommandItem>
  * ```
  */
-function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
+function CommandShortcut({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       data-slot="command-shortcut"
