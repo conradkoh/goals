@@ -1,29 +1,16 @@
 'use client';
 
-import * as SeparatorPrimitive from '@radix-ui/react-separator';
-import type * as React from 'react';
+import { Separator as SeparatorPrimitive } from '@base-ui/react/separator';
 
 import { cn } from '@/lib/utils';
 
-/**
- * V2 Industrial Design System - Separator Component
- *
- * Features:
- * - 2px height for horizontal separators (industrial thick dividers)
- */
-function Separator({
-  className,
-  orientation = 'horizontal',
-  decorative = true,
-  ...props
-}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
+function Separator({ className, orientation = 'horizontal', ...props }: SeparatorPrimitive.Props) {
   return (
-    <SeparatorPrimitive.Root
-      data-slot="separator-root"
-      decorative={decorative}
+    <SeparatorPrimitive
+      data-slot="separator"
       orientation={orientation}
       className={cn(
-        'bg-border shrink-0 data-[orientation=horizontal]:h-[2px] data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-[2px]',
+        'shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch',
         className
       )}
       {...props}

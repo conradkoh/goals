@@ -1,7 +1,6 @@
 {
   "unused_files": [
     "apps/webapp/src/app/docs/installation/metadata.ts",
-    "apps/webapp/src/components/ThemeToggle.tsx",
     "apps/webapp/src/components/atoms/ClientOnly.tsx",
     "apps/webapp/src/components/atoms/contexts/ConvexClientProvider.tsx",
     "apps/webapp/src/components/molecules/AdhocGoalsList.tsx",
@@ -14,7 +13,6 @@
     "apps/webapp/src/components/organisms/WeekCardPreviewDialog.tsx",
     "apps/webapp/src/components/ui/fixed-size-dialog.mdx",
     "apps/webapp/src/components/ui/keyboard-shortcut.tsx",
-    "apps/webapp/src/components/ui/toaster.tsx",
     "apps/webapp/src/hooks/useAllowTouchSelection.tsx",
     "apps/webapp/src/hooks/useDay.tsx",
     "apps/webapp/src/lib/colors/index.ts",

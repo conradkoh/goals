@@ -46,6 +46,37 @@ export const setUserAccessLevelDefault = migrations.define({
   },
 });
 
+/**
+ * Migration: Backfill roleNames from legacy accessLevel.
+ * system_admin → ['system_admin'], all others → ['user'].
+ */
+export const backfillUserRoleNames = migrations.define({
+  table: 'users',
+  migrateOne: async (_ctx, user) => {
+    if (user.roleNames !== undefined) {
+      return;
+    }
+    const roleNames =
+      user.accessLevel === 'system_admin' ? (['system_admin'] as const) : (['user'] as const);
+    return { roleNames: [...roleNames] };
+  },
+});
+
+/**
+ * Migration: Strip legacy `manager` role from roleNames.
+ * Starter now ships only `user` and `system_admin`; forks add custom roles.
+ */
+export const stripManagerRoleNames = migrations.define({
+  table: 'users',
+  migrateOne: async (_ctx, user) => {
+    if (!user.roleNames?.includes('manager')) {
+      return;
+    }
+    const filtered = user.roleNames.filter((role) => role !== 'manager');
+    return { roleNames: filtered.length > 0 ? filtered : ['user'] };
+  },
+});
+
 // ========================================
 // Batch Runners
 // ========================================
@@ -57,4 +88,6 @@ export const setUserAccessLevelDefault = migrations.define({
 export const runAll = migrations.runner([
   internal.migrations.unsetSessionExpiration,
   internal.migrations.setUserAccessLevelDefault,
+  internal.migrations.backfillUserRoleNames,
+  internal.migrations.stripManagerRoleNames,
 ]);

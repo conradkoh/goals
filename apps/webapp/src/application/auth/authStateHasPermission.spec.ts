@@ -2,8 +2,8 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AuthState } from '@workspace/backend/modules/auth/types/AuthState';
 import { describe, expect, it } from 'vitest';
 
-import { SYSTEM_ADMIN_ACCESS_PERMISSION } from '../permissions';
-import { authStateHasPermission } from '../resolve';
+import { SYSTEM_ADMIN_ACCESS_PERMISSION } from './permissions';
+import { authStateHasPermission } from './resolve';
 
 const authenticatedUser = {
   _id: 'user-1' as Id<'users'>,

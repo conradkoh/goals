@@ -40,7 +40,7 @@ A goal-tracking application for managing objectives across quarterly, weekly, an
    pnpm run setup
    ```
 
-   This initializes the Convex backend in `services/backend` and writes `NEXT_PUBLIC_CONVEX_URL` to `apps/webapp/.env.local`.
+   This initializes the Convex backend in `services/backend` and writes `NEXT_PUBLIC_CONVEX_URL` to `apps/webapp/.env.local`. After pulling schema changes, run `pnpm migrate` while `convex dev` is running (see [AGENTS.md](AGENTS.md#database-migrations)).
 
 3. Start development servers:
 
@@ -97,6 +97,12 @@ See [AGENTS.md](AGENTS.md) for architecture, conventions, and coding standards.
 - `services/backend/` — Convex backend
 - `docs/` — Application and developer documentation
 - `guides/` — Testing and other guides
+
+### Documentation
+
+- **[Shadcn → Base UI Migration Guide](docs/developer/shadcn-base-ui-migration.md)** — upgrading UI components from Radix-based shadcn to Base UI (`base-vega`); includes a downstream migration playbook for forks built on this template.
+- [Testing Guide](guides/testing/testing.md)
+- [AGENTS.md](AGENTS.md) — development guidelines for agents and contributors
 
 ### Testing
 

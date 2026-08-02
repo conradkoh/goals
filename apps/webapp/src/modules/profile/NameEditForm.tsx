@@ -1,11 +1,10 @@
 'use client';
 
-import { ChevronDownIcon } from '@radix-ui/react-icons';
 import { api } from '@workspace/backend/convex/_generated/api';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import { useSessionMutation } from 'convex-helpers/react/sessions';
-import { X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -546,20 +545,15 @@ function _renderThirdPartyAccounts(
             <div className="flex items-center gap-3">
               {googleProvider.isConnected ? (
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <span>
-                        Connected
-                        {googleProvider.connectedEmail && (
-                          <span className="ml-1">({googleProvider.connectedEmail})</span>
-                        )}
-                      </span>
-                      <ChevronDownIcon className="h-3 w-3" />
-                    </button>
+                  <DropdownMenuTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>
+                      Connected
+                      {googleProvider.connectedEmail && (
+                        <span className="ml-1">({googleProvider.connectedEmail})</span>
+                      )}
+                    </span>
+                    <ChevronDown className="h-3 w-3" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem

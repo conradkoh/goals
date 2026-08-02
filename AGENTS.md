@@ -25,14 +25,19 @@ See **[docs/design/design-guidelines.md](docs/design/design-guidelines.md)** —
 
 ### UI Components & Icons
 
-- **Components**: ShadCN UI
-- **Icons**: @radix-ui/react-icons, lucide-react, react-icons
+- **Components**: ShadCN UI with **Base UI** backend (`base-vega` style in `apps/webapp/components.json`)
+- **Primitives**: `@base-ui/react` (not Radix UI)
+- **Icons**: lucide-react, react-icons
 
 **Add a new ShadCN component:**
 
 ```bash
 cd apps/webapp && npx shadcn@latest add <component-name>
 ```
+
+**Migrating from Radix-based shadcn (downstream forks):**
+
+See **[docs/developer/shadcn-base-ui-migration.md](docs/developer/shadcn-base-ui-migration.md)** — strategy, API changes (`asChild` removal, data-attribute selectors), and a playbook for older apps.
 
 ### Next.js App Router
 
@@ -44,6 +49,10 @@ export default async function MyPage({ params }: { params: Promise<{ id: string 
   return <div>{id}</div>;
 }
 ```
+
+### Reactive local state (Legend State)
+
+For **real-time local stores** and coordination that would otherwise use `useEffect` to sync Convex data into `useState`, use [Legend State signals](docs/developer/legend-state-signals.md) (`observable` / `computed` / `useObserve`) — keep Convex as server SSOT and `useEffect` for DOM/timers only.
 
 ### Authentication (Frontend)
 
@@ -117,6 +126,19 @@ pnpm dev
 # Run initial setup
 pnpm setup
 ```
+
+### Database migrations
+
+Run pending Convex data migrations as a **one-off command** while `pnpm dev` is already running — do not restart the dev server.
+
+```bash
+# From repo root (local dev — same logic as production CI)
+pnpm migrate
+```
+
+- Uses `scripts/migrate-lib.ts` → `migrations:runAll`.
+- Local when `CONVEX_DEPLOY_KEY` is unset; production when set (CI only).
+- Idempotent — safe to re-run.
 
 ### Testing
 

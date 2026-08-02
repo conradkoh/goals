@@ -8,31 +8,21 @@
  * @module
  */
 
-import type * as adhocGoal from "../adhocGoal.js";
 import type * as appinfo from "../appinfo.js";
 import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as auth_google from "../auth/google.js";
-import type * as bff_focus from "../bff/focus.js";
 import type * as checklists from "../checklists.js";
 import type * as cleanupTasks from "../cleanupTasks.js";
 import type * as crypto from "../crypto.js";
-import type * as dashboard from "../dashboard.js";
 import type * as discussions from "../discussions.js";
-import type * as documents from "../documents.js";
-import type * as domain from "../domain.js";
-import type * as fireGoal from "../fireGoal.js";
-import type * as goal from "../goal.js";
-import type * as goalLogs from "../goalLogs.js";
-import type * as initiative from "../initiative.js";
-import type * as migration from "../migration.js";
+import type * as e2e from "../e2e.js";
 import type * as migrations from "../migrations.js";
-import type * as pendingGoals from "../pendingGoals.js";
 import type * as presentations from "../presentations.js";
-import type * as scratchpad from "../scratchpad.js";
 import type * as serviceDesk from "../serviceDesk.js";
 import type * as sessions from "../sessions.js";
 import type * as system_auth_google from "../system/auth/google.js";
+import type * as system_users from "../system/users.js";
 
 import type {
   ApiFromModules,
@@ -41,31 +31,21 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  adhocGoal: typeof adhocGoal;
   appinfo: typeof appinfo;
   attendance: typeof attendance;
   auth: typeof auth;
   "auth/google": typeof auth_google;
-  "bff/focus": typeof bff_focus;
   checklists: typeof checklists;
   cleanupTasks: typeof cleanupTasks;
   crypto: typeof crypto;
-  dashboard: typeof dashboard;
   discussions: typeof discussions;
-  documents: typeof documents;
-  domain: typeof domain;
-  fireGoal: typeof fireGoal;
-  goal: typeof goal;
-  goalLogs: typeof goalLogs;
-  initiative: typeof initiative;
-  migration: typeof migration;
+  e2e: typeof e2e;
   migrations: typeof migrations;
-  pendingGoals: typeof pendingGoals;
   presentations: typeof presentations;
-  scratchpad: typeof scratchpad;
   serviceDesk: typeof serviceDesk;
   sessions: typeof sessions;
   "system/auth/google": typeof system_auth_google;
+  "system/users": typeof system_users;
 }>;
 
 /**

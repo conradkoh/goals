@@ -19,3 +19,4 @@ test-results/
 # Misc
 .env*.local
 .chatroom/
+package-lock.json

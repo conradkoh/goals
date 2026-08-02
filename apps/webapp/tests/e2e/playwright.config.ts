@@ -67,7 +67,12 @@ export default defineConfig({
     command: 'pnpm dev',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    cwd: '../..', // webapp root relative to config location
+    cwd: '../../..', // repo root — turbo starts webapp + Convex
+    timeout: 120_000,
+    // turbo runs each dev task in its own process group, so Playwright's default
+    // SIGKILL of the shell group leaves an orphaned `next dev` holding the port.
+    // SIGTERM lets turbo forward shutdown to its child tasks and exit cleanly.
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
     env: {
       PORT: port,
     },

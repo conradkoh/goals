@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { allPermissions, type Permission } from '../permissions';
+import { allPermissions, type Permission } from './permissions';
 import {
   getPermissionsForUser,
   getResolvedPermissionsForUser,
@@ -8,8 +8,8 @@ import {
   hasPermission,
   permissionGrantMatches,
   unionPermissionsForRoles,
-} from '../resolve';
-import { systemAdminPermissions } from '../roles';
+} from './resolve';
+import { systemAdminPermissions } from './roles';
 
 describe('permissionGrantMatches', () => {
   it('matches exact permissions', () => {
@@ -33,6 +33,53 @@ describe('getRolesForUser', () => {
     expect(getRolesForUser({ accessLevel: undefined })).toEqual(['user']);
     expect(getRolesForUser({ accessLevel: 'user' })).toEqual(['user']);
     expect(getRolesForUser({ accessLevel: 'system_admin' })).toEqual(['system_admin']);
+  });
+});
+
+describe('getRolesForUser with roleNames', () => {
+  it('reads roleNames when present', () => {
+    expect(getRolesForUser({ roleNames: ['user'] })).toEqual(['user']);
+  });
+
+  it('filters legacy manager role from roleNames after removal from registry', () => {
+    expect(getRolesForUser({ roleNames: ['user', 'manager'] })).toEqual(['user']);
+  });
+
+  it('falls back to accessLevel when roleNames is empty', () => {
+    expect(getRolesForUser({ roleNames: [], accessLevel: 'system_admin' })).toEqual([
+      'system_admin',
+    ]);
+  });
+
+  it('falls back to accessLevel when roleNames is undefined', () => {
+    expect(getRolesForUser({ accessLevel: 'user' })).toEqual(['user']);
+  });
+
+  it('filters unknown role names', () => {
+    expect(getRolesForUser({ roleNames: ['user', 'nonexistent'] })).toEqual(['user']);
+  });
+
+  it('falls back to accessLevel when all roleNames are unknown', () => {
+    expect(getRolesForUser({ roleNames: ['bogus'], accessLevel: 'system_admin' })).toEqual([
+      'system_admin',
+    ]);
+  });
+
+  it('always grants system_admin when accessLevel is system_admin, regardless of roleNames', () => {
+    expect(getRolesForUser({ accessLevel: 'system_admin', roleNames: ['user'] })).toEqual([
+      'system_admin',
+    ]);
+    expect(getRolesForUser({ accessLevel: 'system_admin' })).toEqual(['system_admin']);
+  });
+});
+
+describe('hasPermission with roleNames', () => {
+  it('grants system admin permissions without roleNames migration', () => {
+    const user = { accessLevel: 'system_admin' as const };
+    expect(hasPermission(user, 'system_admin:access')).toBe(true);
+    expect(
+      hasPermission({ accessLevel: 'system_admin', roleNames: ['user'] }, 'system_admin:access')
+    ).toBe(true);
   });
 });
 

@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +28,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 import { useAuthState } from '@/modules/auth/AuthProvider';
-
 /**
  * User menu dropdown component with profile links and logout functionality.
  * Shows user information and navigation options, including a system-admin portal link when allowed.
@@ -123,14 +123,13 @@ function _renderUserDropdownMenu(
 ) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative flex items-center focus:outline-none text-muted-foreground hover:text-foreground"
-        >
-          <User className="h-5 w-5" />
-        </Button>
+      <DropdownMenuTrigger
+        className={cn(
+          buttonVariants({ variant: 'ghost', size: 'icon' }),
+          'relative flex items-center focus:outline-none text-muted-foreground hover:text-foreground'
+        )}
+      >
+        <User className="h-5 w-5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal px-2 py-2">

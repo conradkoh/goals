@@ -137,6 +137,7 @@ export default defineSchema({
         email: v.string(),
         recoveryCode: v.optional(v.string()),
         accessLevel: v.optional(v.union(v.literal('user'), v.literal('system_admin'))),
+        roleNames: v.optional(v.array(v.string())),
         google: v.optional(
           v.object({
             id: v.string(),
@@ -157,6 +158,7 @@ export default defineSchema({
         name: v.string(),
         recoveryCode: v.optional(v.string()),
         accessLevel: v.optional(v.union(v.literal('user'), v.literal('system_admin'))),
+        roleNames: v.optional(v.array(v.string())),
       })
     )
   )

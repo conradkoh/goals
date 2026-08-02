@@ -1,10 +1,8 @@
 import path from 'path';
 
 import createMDX from '@next/mdx';
-import type { NextConfig } from 'next';
 
-/** @type {import('next').NextConfig} */
-const nextConfig: NextConfig = {
+const nextConfig = {
   // Configure `pageExtensions` to include markdown and MDX files
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   // Enable typed routes for compile-time type safety (moved from experimental in Next.js 16)
@@ -14,6 +12,11 @@ const nextConfig: NextConfig = {
   // Use absolute path to ensure correct resolution
   turbopack: {
     root: path.resolve(__dirname, '../../'),
+  },
+  // Disable when `.next/dev/cache/turbopack` grows unbounded and compaction pegs CPU.
+  // Use: TURBOPACK_FS_CACHE=1 pnpm dev to opt in
+  experimental: {
+    turbopackFileSystemCacheForDev: process.env.TURBOPACK_FS_CACHE === '1',
   },
 };
 

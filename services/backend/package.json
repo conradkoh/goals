@@ -6,28 +6,28 @@
   "scripts": {
     "dev": "CONVEX_NON_INTERACTIVE=true convex dev",
     "deploy": "convex deploy",
-    "migrate": "convex run migrations:runAll",
+    "migrate": "bun ../../scripts/migrate.ts",
     "typecheck": "tsc --build",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "bash ../../scripts/kill-stale-vitest.sh \"$PWD\" && vitest run",
+    "test:watch": "bash ../../scripts/kill-stale-vitest.sh \"$PWD\" && vitest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@convex-dev/aggregate": "^0.2.1",
-    "@convex-dev/migrations": "^0.3.4",
-    "convex": "^1.39.1",
-    "convex-helpers": "^0.1.118",
+    "@convex-dev/aggregate": "^0.2.2",
+    "@convex-dev/migrations": "^0.3.5",
+    "convex": "^1.42.2",
+    "convex-helpers": "^0.1.120",
     "luxon": "^3.6.1",
-    "zod": "^4.0.5"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@types/luxon": "^3.6.2",
-    "convex-test": "^0.0.52",
+    "convex-test": "^0.0.54",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
-    "vitest": "^4.0.6"
+    "vitest": "^4.1.10"
   }
 }

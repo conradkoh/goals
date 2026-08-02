@@ -4,3 +4,6 @@ pnpm run test
 
 # Run typecheck before pushing
 pnpm run typecheck
+
+# Run e2e before pushing
+pnpm run e2e
