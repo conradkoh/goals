@@ -23,6 +23,7 @@ import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -133,49 +134,47 @@ function _renderUserDropdownMenu(
         <span className="hidden text-sm font-medium sm:inline">{authState.user.name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="font-normal px-2 py-2">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
-              <User className="h-4 w-4" />
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal px-2 py-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                <User className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">{authState.user.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {authState.user.type === 'anonymous' ? 'Anonymous User' : authState.user.email}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{authState.user.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {authState.user.type === 'anonymous' ? 'Anonymous User' : authState.user.email}
-              </span>
-            </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <Link href="/app">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <LayoutDashboard className="h-4 w-4" />
-            Dashboard
-          </DropdownMenuItem>
-        </Link>
-        <Link href="/app/profile">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <UserCircle className="h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
-        </Link>
-        <Link href="/docs">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <BookOpen className="h-4 w-4" />
-            Documentation
-          </DropdownMenuItem>
-        </Link>
-        {showSystemAdminLink && (
-          <>
-            <DropdownMenuSeparator />
+          </DropdownMenuLabel>
+          <Link href="/app">
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/app/profile">
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <UserCircle className="h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/docs">
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <BookOpen className="h-4 w-4" />
+              Documentation
+            </DropdownMenuItem>
+          </Link>
+          {showSystemAdminLink && (
             <Link href="/app/admin">
               <DropdownMenuItem className="cursor-pointer gap-2">
                 <Settings className="h-4 w-4" />
                 System Admin
               </DropdownMenuItem>
             </Link>
-          </>
-        )}
+          )}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"

@@ -428,6 +428,42 @@ expect(root?.className).toContain('data-[orientation=horizontal]:flex-col');
 
 ---
 
+#### Menu GroupLabel requires Menu.Group
+
+**Problem:** Radix `DropdownMenuLabel` worked standalone. Base UI `Menu.GroupLabel` **must** be inside `Menu.Group` or `Menu.RadioGroup`. Using `<DropdownMenuLabel>` without a group wrapper throws at runtime:
+
+`Base UI: MenuGroupContext is missing. Menu group parts must be used within <Menu.Group> or <Menu.RadioGroup>.`
+
+**Find:**
+
+```bash
+rg 'DropdownMenuLabel' apps/webapp/src/
+```
+
+For each usage, ensure the label and its related items are wrapped in `<DropdownMenuGroup>`.
+
+```tsx
+// Before (Radix — broken on Base UI)
+<DropdownMenuContent>
+  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+  <DropdownMenuItem>Profile</DropdownMenuItem>
+</DropdownMenuContent>
+
+// After (Base UI — real fix in UserMenu.tsx)
+<DropdownMenuContent>
+  <DropdownMenuGroup>
+    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+    <DropdownMenuItem>Profile</DropdownMenuItem>
+  </DropdownMenuGroup>
+</DropdownMenuContent>
+```
+
+**Also applies:** `SelectLabel` requires `SelectGroup` (same GroupLabel pattern). Audit with `rg 'SelectLabel' apps/webapp/src/`.
+
+**Do not** replace `DropdownMenuLabel` with a plain `<div>` — use `DropdownMenuGroup` to preserve Base UI group semantics and accessibility.
+
+---
+
 ### 5. Migrating react-hook-form `Form` to Base UI `Field`
 
 **Problem:** This is the **largest breaking change** for form-heavy apps. Base UI introduces a `Field` component that replaces shadcn's `Form`/`FormField`/`FormItem` pattern.

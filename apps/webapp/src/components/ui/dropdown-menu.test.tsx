@@ -5,7 +5,9 @@ import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from './dropdown-menu';
 
@@ -22,5 +24,21 @@ describe('DropdownMenu', () => {
     );
     expect(screen.getByText('Item 1')).toBeInTheDocument();
     expect(screen.getByText('Item 2')).toBeInTheDocument();
+  });
+
+  it('renders label inside group without MenuGroupContext error', () => {
+    render(
+      <DropdownMenu open>
+        <DropdownMenuTrigger render={<Button />}>Open</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Section</DropdownMenuLabel>
+            <DropdownMenuItem>Item</DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+    expect(screen.getByText('Section')).toBeInTheDocument();
+    expect(screen.getByText('Item')).toBeInTheDocument();
   });
 });

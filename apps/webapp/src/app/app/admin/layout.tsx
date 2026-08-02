@@ -20,9 +20,9 @@ import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -141,22 +141,23 @@ function _renderMobileHeader(pathname: string) {
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>System Admin</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {SYSTEM_ADMIN_MODULES.map((module) => {
-              const Icon = module.icon;
-              const isActive = module.href === activeModule.href;
-              return (
-                <Link key={module.href} href={module.href}>
-                  <DropdownMenuItem
-                    className={cn('cursor-pointer gap-2', isActive && 'bg-muted font-medium')}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {module.label}
-                  </DropdownMenuItem>
-                </Link>
-              );
-            })}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>System Admin</DropdownMenuLabel>
+              {SYSTEM_ADMIN_MODULES.map((module) => {
+                const Icon = module.icon;
+                const isActive = module.href === activeModule.href;
+                return (
+                  <Link key={module.href} href={module.href}>
+                    <DropdownMenuItem
+                      className={cn('cursor-pointer gap-2', isActive && 'bg-muted font-medium')}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {module.label}
+                    </DropdownMenuItem>
+                  </Link>
+                );
+              })}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         <Link href="/app">
