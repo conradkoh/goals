@@ -164,7 +164,7 @@ function RecoveryCodeSection() {
   }, [isRegenerating]);
 
   return (
-    <div className="border-t pt-6">
+    <div className="mt-6 border-t pt-6">
       <h2 className="text-xl font-semibold mb-2">Account Recovery</h2>
       <p className="text-sm text-muted-foreground mb-4">
         Keep this recovery code in a safe place. It's the only way to regain access to your
