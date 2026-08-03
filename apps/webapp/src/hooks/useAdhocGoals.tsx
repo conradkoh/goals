@@ -51,7 +51,8 @@ export function useAdhocGoals(sessionId: SessionId) {
     weekNumber: number,
     dayOfWeek?: DayOfWeek,
     dueDate?: number,
-    parentId?: Id<'goals'>
+    parentId?: Id<'goals'>,
+    initiativeId?: Id<'initiatives'>
   ): Promise<Id<'goals'>> => {
     setIsCreating(true);
     try {
@@ -65,6 +66,7 @@ export function useAdhocGoals(sessionId: SessionId) {
         dayOfWeek,
         dueDate,
         parentId,
+        initiativeId,
       });
       return goalId;
     } finally {

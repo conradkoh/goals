@@ -484,4 +484,270 @@ describe('initiative', () => {
 
     expect(counts[initiativeId]).toEqual({ total: 2, open: 1 });
   });
+
+  test('createQuarterlyGoal with initiativeId appears in getGoalsByInitiative quarterly', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Create Quarterly Tag',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Tagged Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId,
+    });
+
+    const result = await ctx.query(api.initiative.getGoalsByInitiative, {
+      sessionId,
+      initiativeId,
+    });
+
+    expect(result.quarterly.map((g) => g.title)).toContain('Tagged Quarterly');
+  });
+
+  test('createWeeklyGoal with explicit initiativeId under quarterly parent', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Create Weekly Tag',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId,
+    });
+
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Tagged Weekly',
+      parentId: quarterlyGoalId,
+      weekNumber: 1,
+      initiativeId,
+    });
+
+    const weekly = await ctx.run(async (dbCtx) => dbCtx.db.get('goals', weeklyGoalId));
+    expect(weekly?.initiativeId).toBe(initiativeId);
+  });
+
+  test('createWeeklyGoal inherits initiativeId from quarterly parent when arg omitted', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Inherit Weekly',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId,
+    });
+
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Inherited Weekly',
+      parentId: quarterlyGoalId,
+      weekNumber: 1,
+    });
+
+    const weekly = await ctx.run(async (dbCtx) => dbCtx.db.get('goals', weeklyGoalId));
+    expect(weekly?.initiativeId).toBe(initiativeId);
+  });
+
+  test('createWeeklyGoal rejects initiativeId mismatching parent initiative', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const parentInitiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Parent Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+    const otherInitiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Other Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId: parentInitiativeId,
+    });
+
+    await expect(
+      ctx.mutation(api.dashboard.createWeeklyGoal, {
+        sessionId,
+        title: 'Mismatched Weekly',
+        parentId: quarterlyGoalId,
+        weekNumber: 1,
+        initiativeId: otherInitiativeId,
+      })
+    ).rejects.toThrow(ConvexError);
+  });
+
+  test('createDailyGoal with initiativeId under weekly parent', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Create Daily Tag',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId,
+    });
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Weekly',
+      parentId: quarterlyGoalId,
+      weekNumber: 1,
+    });
+
+    const dailyGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Tagged Daily',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+      initiativeId,
+    });
+
+    const daily = await ctx.run(async (dbCtx) => dbCtx.db.get('goals', dailyGoalId));
+    expect(daily?.initiativeId).toBe(initiativeId);
+  });
+
+  test('createDailyGoal inherits initiativeId from weekly parent when arg omitted', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Inherit Daily',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    const quarterlyGoalId = await ctx.mutation(api.dashboard.createQuarterlyGoal, {
+      sessionId,
+      title: 'Quarterly',
+      year: 2024,
+      quarter: 1,
+      weekNumber: 1,
+      initiativeId,
+    });
+    const weeklyGoalId = await ctx.mutation(api.dashboard.createWeeklyGoal, {
+      sessionId,
+      title: 'Weekly',
+      parentId: quarterlyGoalId,
+      weekNumber: 1,
+    });
+
+    const dailyGoalId = await ctx.mutation(api.dashboard.createDailyGoal, {
+      sessionId,
+      title: 'Inherited Daily',
+      parentId: weeklyGoalId,
+      weekNumber: 1,
+      dayOfWeek: DayOfWeek.MONDAY,
+    });
+
+    const daily = await ctx.run(async (dbCtx) => dbCtx.db.get('goals', dailyGoalId));
+    expect(daily?.initiativeId).toBe(initiativeId);
+  });
+
+  test('createAdhocGoal with initiativeId appears in getGoalsByInitiative adhoc', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+
+    const initiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId,
+      title: 'Create Adhoc Tag',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    await ctx.mutation(api.adhocGoal.createAdhocGoal, {
+      sessionId,
+      title: 'Tagged Adhoc',
+      year: 2024,
+      weekNumber: 10,
+      initiativeId,
+    });
+
+    const result = await ctx.query(api.initiative.getGoalsByInitiative, {
+      sessionId,
+      initiativeId,
+    });
+
+    expect(result.adhoc.map((g) => g.title)).toContain('Tagged Adhoc');
+  });
+
+  test('create goals with unowned or invalid initiativeId throws', async () => {
+    const ctx = convexTest(schema);
+    const sessionId = await createTestSession(ctx);
+    const otherSessionId = await createTestSession(ctx);
+
+    const otherInitiativeId = await ctx.mutation(api.initiative.createInitiative, {
+      sessionId: otherSessionId,
+      title: 'Other Users Initiative',
+      startDate: 1_700_000_000_000,
+      endDate: 1_700_500_000_000,
+    });
+
+    await expect(
+      ctx.mutation(api.dashboard.createQuarterlyGoal, {
+        sessionId,
+        title: 'Quarterly',
+        year: 2024,
+        quarter: 1,
+        weekNumber: 1,
+        initiativeId: otherInitiativeId,
+      })
+    ).rejects.toThrow('Initiative not found');
+
+    await expect(
+      ctx.mutation(api.adhocGoal.createAdhocGoal, {
+        sessionId,
+        title: 'Adhoc',
+        year: 2024,
+        weekNumber: 10,
+        initiativeId: otherInitiativeId,
+      })
+    ).rejects.toThrow('Initiative not found');
+  });
 });

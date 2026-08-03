@@ -5,7 +5,7 @@ import { DayOfWeek } from '../src/constants';
 import type { Doc, Id } from './_generated/dataModel';
 import { type MutationCtx, mutation, type QueryCtx, query } from './_generated/server';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { initiativeIdGoalPatch } from '../src/util/goalInitiative';
+import { assertInitiativeOwnedByUser, initiativeIdGoalPatch } from '../src/util/goalInitiative';
 import { propagateInitiativeToDescendants } from '../src/util/propagateInitiativeToDescendants';
 
 /**
@@ -126,6 +126,7 @@ export const createAdhocGoal = mutation({
     ),
     dueDate: v.optional(v.number()),
     parentId: v.optional(v.id('goals')), // Parent adhoc goal for nesting
+    initiativeId: v.optional(v.id('initiatives')),
   },
   handler: async (ctx, args): Promise<Id<'goals'>> => {
     const {
@@ -137,6 +138,7 @@ export const createAdhocGoal = mutation({
       dayOfWeek: _dayOfWeek,
       dueDate,
       parentId,
+      initiativeId,
     } = args;
     let { weekNumber } = args;
     const user = await requireLogin(ctx, sessionId);
@@ -198,6 +200,11 @@ export const createAdhocGoal = mutation({
       }
     }
 
+    // Validate initiative if provided
+    if (initiativeId) {
+      await assertInitiativeOwnedByUser(ctx, userId, initiativeId);
+    }
+
     // adhocYear is provided directly from args
 
     // Create the adhoc goal
@@ -216,6 +223,7 @@ export const createAdhocGoal = mutation({
       inPath: '/', // Adhoc goals don't use hierarchical paths
       depth: -1, // Special depth for adhoc goals
       isComplete: false,
+      ...initiativeIdGoalPatch(initiativeId),
     });
 
     // Create the adhoc goal state

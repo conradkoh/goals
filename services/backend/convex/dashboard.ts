@@ -15,7 +15,11 @@ import {
 } from '../src/usecase/getWeekDetails';
 import { getQuarterWeeks } from '../src/usecase/quarter/getQuarterWeeks';
 import { requireLogin } from '../src/usecase/requireLogin';
-import { initiativeIdGoalPatch, patchGoalAndPropagateInitiative } from '../src/util/goalInitiative';
+import {
+  assertInitiativeOwnedByUser,
+  initiativeIdGoalPatch,
+  patchGoalAndPropagateInitiative,
+} from '../src/util/goalInitiative';
 import { getRootGoalId } from '../src/util/goalUtils';
 import { joinPath, validateGoalPath } from '../src/util/path';
 
@@ -272,10 +276,21 @@ export const createQuarterlyGoal = mutation({
     weekNumber: v.number(),
     isPinned: v.optional(v.boolean()),
     isStarred: v.optional(v.boolean()),
+    initiativeId: v.optional(v.id('initiatives')),
   },
   handler: async (ctx, args) => {
-    const { sessionId, year, quarter, title, details, dueDate, weekNumber, isPinned, isStarred } =
-      args;
+    const {
+      sessionId,
+      year,
+      quarter,
+      title,
+      details,
+      dueDate,
+      weekNumber,
+      isPinned,
+      isStarred,
+      initiativeId,
+    } = args;
     console.log('[Backend] createQuarterlyGoal received:', {
       year,
       quarter,
@@ -291,6 +306,10 @@ export const createQuarterlyGoal = mutation({
     });
     const user = await requireLogin(ctx, sessionId);
     const userId = user._id;
+
+    if (initiativeId) {
+      await assertInitiativeOwnedByUser(ctx, userId, initiativeId);
+    }
 
     // Validate the path for quarterly goals
     const inPath = '/';
@@ -324,6 +343,7 @@ export const createQuarterlyGoal = mutation({
       inPath,
       depth, // 0 for quarterly goals
       isComplete: false,
+      ...initiativeIdGoalPatch(initiativeId),
     });
     console.log('[Backend] createQuarterlyGoal created goal:', goalId);
 
@@ -498,9 +518,10 @@ export const createWeeklyGoal = mutation({
     dueDate: v.optional(v.number()),
     parentId: v.id('goals'),
     weekNumber: v.number(),
+    initiativeId: v.optional(v.id('initiatives')),
   },
   handler: async (ctx, args) => {
-    const { sessionId, title, details, dueDate, parentId, weekNumber } = args;
+    const { sessionId, title, details, dueDate, parentId, weekNumber, initiativeId } = args;
     console.log('[Backend] createWeeklyGoal received:', {
       title,
       hasDetails: !!details,
@@ -522,6 +543,17 @@ export const createWeeklyGoal = mutation({
         code: 'INVALID_ARGUMENT',
         message: 'Parent must be a quarterly goal (depth 0)',
       });
+    }
+
+    const resolvedInitiativeId = initiativeId ?? parentGoal.initiativeId;
+    if (initiativeId && parentGoal.initiativeId && initiativeId !== parentGoal.initiativeId) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'initiativeId does not match parent goal initiative',
+      });
+    }
+    if (resolvedInitiativeId) {
+      await assertInitiativeOwnedByUser(ctx, userId, resolvedInitiativeId);
     }
 
     // Construct the path
@@ -548,6 +580,7 @@ export const createWeeklyGoal = mutation({
       inPath,
       depth: 1, // 1 for weekly goals
       isComplete: false,
+      ...initiativeIdGoalPatch(resolvedInitiativeId),
     });
     console.log('[Backend] createWeeklyGoal created:', goalId);
 
@@ -584,6 +617,7 @@ export const createDailyGoal = mutation({
       v.literal(DayOfWeek.SUNDAY)
     ),
     dateTimestamp: v.optional(v.number()),
+    initiativeId: v.optional(v.id('initiatives')),
   },
   handler: async (ctx, args) => {
     console.log('[Backend] createDailyGoal received:', {
@@ -608,6 +642,21 @@ export const createDailyGoal = mutation({
         code: 'INVALID_ARGUMENT',
         message: 'Parent must be a weekly goal (depth 1)',
       });
+    }
+
+    const resolvedInitiativeId = args.initiativeId ?? weeklyParent.initiativeId;
+    if (
+      args.initiativeId &&
+      weeklyParent.initiativeId &&
+      args.initiativeId !== weeklyParent.initiativeId
+    ) {
+      throw new ConvexError({
+        code: 'INVALID_ARGUMENT',
+        message: 'initiativeId does not match parent goal initiative',
+      });
+    }
+    if (resolvedInitiativeId) {
+      await assertInitiativeOwnedByUser(ctx, userId, resolvedInitiativeId);
     }
 
     // Get the quarterly parent goal
@@ -643,6 +692,7 @@ export const createDailyGoal = mutation({
       inPath,
       depth: 2, // Daily goals are depth 2
       isComplete: false,
+      ...initiativeIdGoalPatch(resolvedInitiativeId),
     });
     console.log('[Backend] createDailyGoal created:', goalId);
 

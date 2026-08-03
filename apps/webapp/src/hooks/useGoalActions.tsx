@@ -32,6 +32,8 @@ export interface CreateQuarterlyGoalParams {
   year: number;
   /** Quarter number (1-4) */
   quarter: number;
+  /** Optional initiative ID to tag the goal with */
+  initiativeId?: Id<'initiatives'>;
 }
 
 /**
@@ -50,6 +52,8 @@ export interface CreateWeeklyGoalParams {
   parentId: Id<'goals'>;
   /** Week number within the quarter (1-13) */
   weekNumber: number;
+  /** Optional initiative ID to tag the goal with */
+  initiativeId?: Id<'initiatives'>;
 }
 
 /**
@@ -72,6 +76,8 @@ export interface CreateDailyGoalParams {
   dayOfWeek: DayOfWeek;
   /** Optional timestamp representing the specific date */
   dateTimestamp?: number;
+  /** Optional initiative ID to tag the goal with */
+  initiativeId?: Id<'initiatives'>;
 }
 
 /**
@@ -453,7 +459,17 @@ export const useGoalActions = (): GoalActions => {
   return useMemo(
     () => ({
       createQuarterlyGoal: async (params: CreateQuarterlyGoalParams) => {
-        const { title, details, dueDate, weekNumber, isPinned, isStarred, year, quarter } = params;
+        const {
+          title,
+          details,
+          dueDate,
+          weekNumber,
+          isPinned,
+          isStarred,
+          year,
+          quarter,
+          initiativeId,
+        } = params;
         await createQuarterlyGoalMutation({
           sessionId,
           year,
@@ -464,11 +480,12 @@ export const useGoalActions = (): GoalActions => {
           dueDate,
           isPinned,
           isStarred,
+          initiativeId,
         });
       },
 
       createWeeklyGoal: async (params: CreateWeeklyGoalParams) => {
-        const { title, details, dueDate, parentId, weekNumber } = params;
+        const { title, details, dueDate, parentId, weekNumber, initiativeId } = params;
         await createWeeklyGoalMutation({
           sessionId,
           title,
@@ -476,11 +493,21 @@ export const useGoalActions = (): GoalActions => {
           dueDate,
           parentId,
           weekNumber,
+          initiativeId,
         });
       },
 
       createDailyGoal: async (params: CreateDailyGoalParams) => {
-        const { title, details, dueDate, parentId, weekNumber, dayOfWeek, dateTimestamp } = params;
+        const {
+          title,
+          details,
+          dueDate,
+          parentId,
+          weekNumber,
+          dayOfWeek,
+          dateTimestamp,
+          initiativeId,
+        } = params;
         await createDailyGoalMutation({
           sessionId,
           title,
@@ -490,6 +517,7 @@ export const useGoalActions = (): GoalActions => {
           weekNumber,
           dayOfWeek,
           dateTimestamp,
+          initiativeId,
         });
       },
 

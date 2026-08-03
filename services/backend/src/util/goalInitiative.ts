@@ -2,7 +2,7 @@ import { propagateInitiativeToDescendants } from './propagateInitiativeToDescend
 import type { Doc, Id } from '../../convex/_generated/dataModel';
 import type { MutationCtx } from '../../convex/_generated/server';
 
-async function assertInitiativeOwnedByUser(
+export async function assertInitiativeOwnedByUser(
   ctx: MutationCtx,
   userId: Id<'users'>,
   initiativeId: Id<'initiatives'>
