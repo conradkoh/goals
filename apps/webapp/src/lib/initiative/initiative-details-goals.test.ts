@@ -3,10 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import {
   formatInitiativeGoalsTabLabel,
+  formatInitiativeParentGoalLabel,
   getDefaultInitiativeGoalsTab,
   getEmptyTabMessage,
+  getInitiativeCreateBlockedMessage,
   getOpenWorkSummary,
   partitionGoalsOpenCompleted,
+  pickDefaultParentGoal,
   type GoalsByInitiative,
 } from './initiative-details-goals';
 
@@ -142,5 +145,77 @@ describe('getEmptyTabMessage', () => {
     expect(getEmptyTabMessage('adhoc', [makeGoal({ isComplete: true })])).toBe(
       'All adhoc goals are complete.'
     );
+  });
+});
+
+describe('formatInitiativeParentGoalLabel', () => {
+  it('formats quarter, year, title', () => {
+    const goal = makeGoal({ isComplete: false, quarter: 2, year: 2025, title: 'Launch' });
+    expect(formatInitiativeParentGoalLabel(goal)).toBe('Q2 2025 — Launch');
+  });
+
+  it('marks completed goals', () => {
+    const goal = makeGoal({ isComplete: true, quarter: 1, year: 2024, title: 'Launch' });
+    expect(formatInitiativeParentGoalLabel(goal)).toBe('Q1 2024 — Launch (done)');
+  });
+});
+
+describe('getInitiativeCreateBlockedMessage', () => {
+  it('blocks weekly when no quarterly goals exist', () => {
+    expect(getInitiativeCreateBlockedMessage('weekly', emptyGoals)).toBe(
+      'Add a quarterly goal in the Quarterly tab first.'
+    );
+  });
+
+  it('does not block weekly when quarterly goals exist', () => {
+    const goals: GoalsByInitiative = {
+      ...emptyGoals,
+      quarterly: [makeGoal({ isComplete: false })],
+    };
+    expect(getInitiativeCreateBlockedMessage('weekly', goals)).toBeNull();
+  });
+
+  it('blocks daily when no weekly goals exist', () => {
+    expect(getInitiativeCreateBlockedMessage('daily', emptyGoals)).toBe(
+      'Add a weekly goal in the Weekly tab first.'
+    );
+  });
+
+  it('does not block daily when weekly goals exist', () => {
+    const goals: GoalsByInitiative = {
+      ...emptyGoals,
+      weekly: [makeGoal({ isComplete: false, depth: 1 })],
+    };
+    expect(getInitiativeCreateBlockedMessage('daily', goals)).toBeNull();
+  });
+});
+
+describe('pickDefaultParentGoal', () => {
+  it('prefers a parent in the focus year and quarter', () => {
+    const inFocus = makeGoal({ isComplete: false, year: 2026, quarter: 1, title: 'Focus' });
+    const other = makeGoal({
+      isComplete: false,
+      year: 2025,
+      quarter: 3,
+      title: 'Other',
+      _id: 'goal2' as Doc<'goals'>['_id'],
+    });
+    expect(pickDefaultParentGoal([other, inFocus], 2026, 1)).toBe(inFocus);
+  });
+
+  it('falls back to the first parent when none match focus', () => {
+    const first = makeGoal({ isComplete: false, year: 2025, quarter: 3, title: 'First' });
+    const second = makeGoal({
+      isComplete: false,
+      year: 2024,
+      quarter: 2,
+      title: 'Second',
+      _id: 'goal2' as Doc<'goals'>['_id'],
+    });
+    expect(pickDefaultParentGoal([first, second], 2026, 1)).toBe(first);
+  });
+
+  it('returns null when no parents exist', () => {
+    expect(pickDefaultParentGoal([], 2026, 1)).toBeNull();
   });
 });

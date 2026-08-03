@@ -7,6 +7,7 @@ import { CheckCircle2, Circle, Flag } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { InitiativeActionMenu } from '@/components/molecules/focus/InitiativeActionMenu';
+import { InitiativeGoalTabCreate } from '@/components/molecules/focus/InitiativeGoalTabCreate';
 import { StandaloneGoalModal } from '@/components/molecules/goal-details-popover/variants/StandaloneGoalModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +29,7 @@ import {
   formatInitiativeGoalsTabLabel,
   getDefaultInitiativeGoalsTab,
   getEmptyTabMessage,
+  getInitiativeCreateBlockedMessage,
   getOpenWorkSummary,
   partitionGoalsOpenCompleted,
   type InitiativeGoalsTab,
@@ -329,36 +331,70 @@ export function InitiativeDetailsDialog({
                     {formatInitiativeGoalsTabLabel('adhoc', goalsByType.adhoc)}
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="quarterly" className="flex-1 mt-0 py-2 overflow-y-auto">
-                  <GoalTabPanel
-                    goals={goalsByType.quarterly}
-                    emptyMessage={getEmptyTabMessage('quarterly', goalsByType.quarterly)}
-                    getContextLabel={formatQuarterlyGoalLabel}
-                    onGoalClick={setSelectedGoal}
+                <TabsContent value="quarterly" className="flex-1 mt-0 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto py-2">
+                    <GoalTabPanel
+                      goals={goalsByType.quarterly}
+                      emptyMessage={getEmptyTabMessage('quarterly', goalsByType.quarterly)}
+                      getContextLabel={formatQuarterlyGoalLabel}
+                      onGoalClick={setSelectedGoal}
+                    />
+                  </div>
+                  <InitiativeGoalTabCreate
+                    tab="quarterly"
+                    initiativeId={initiative._id}
+                    goalsByType={goalsByType}
                   />
                 </TabsContent>
-                <TabsContent value="weekly" className="flex-1 mt-0 py-2 overflow-y-auto">
-                  <GoalTabPanel
-                    goals={goalsByType.weekly}
-                    emptyMessage={getEmptyTabMessage('weekly', goalsByType.weekly)}
-                    getContextLabel={formatStructuredWeeklyLabel}
-                    onGoalClick={setSelectedGoal}
+                <TabsContent value="weekly" className="flex-1 mt-0 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto py-2">
+                    <GoalTabPanel
+                      goals={goalsByType.weekly}
+                      emptyMessage={
+                        getInitiativeCreateBlockedMessage('weekly', goalsByType) ??
+                        getEmptyTabMessage('weekly', goalsByType.weekly)
+                      }
+                      getContextLabel={formatStructuredWeeklyLabel}
+                      onGoalClick={setSelectedGoal}
+                    />
+                  </div>
+                  <InitiativeGoalTabCreate
+                    tab="weekly"
+                    initiativeId={initiative._id}
+                    goalsByType={goalsByType}
                   />
                 </TabsContent>
-                <TabsContent value="daily" className="flex-1 mt-0 py-2 overflow-y-auto">
-                  <GoalTabPanel
-                    goals={goalsByType.daily}
-                    emptyMessage={getEmptyTabMessage('daily', goalsByType.daily)}
-                    getContextLabel={formatDailyGoalLabel}
-                    onGoalClick={setSelectedGoal}
+                <TabsContent value="daily" className="flex-1 mt-0 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto py-2">
+                    <GoalTabPanel
+                      goals={goalsByType.daily}
+                      emptyMessage={
+                        getInitiativeCreateBlockedMessage('daily', goalsByType) ??
+                        getEmptyTabMessage('daily', goalsByType.daily)
+                      }
+                      getContextLabel={formatDailyGoalLabel}
+                      onGoalClick={setSelectedGoal}
+                    />
+                  </div>
+                  <InitiativeGoalTabCreate
+                    tab="daily"
+                    initiativeId={initiative._id}
+                    goalsByType={goalsByType}
                   />
                 </TabsContent>
-                <TabsContent value="adhoc" className="flex-1 mt-0 py-2 overflow-y-auto">
-                  <GoalTabPanel
-                    goals={goalsByType.adhoc}
-                    emptyMessage={getEmptyTabMessage('adhoc', goalsByType.adhoc)}
-                    getContextLabel={formatAdhocGoalLabel}
-                    onGoalClick={setSelectedGoal}
+                <TabsContent value="adhoc" className="flex-1 mt-0 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto py-2">
+                    <GoalTabPanel
+                      goals={goalsByType.adhoc}
+                      emptyMessage={getEmptyTabMessage('adhoc', goalsByType.adhoc)}
+                      getContextLabel={formatAdhocGoalLabel}
+                      onGoalClick={setSelectedGoal}
+                    />
+                  </div>
+                  <InitiativeGoalTabCreate
+                    tab="adhoc"
+                    initiativeId={initiative._id}
+                    goalsByType={goalsByType}
                   />
                 </TabsContent>
               </Tabs>

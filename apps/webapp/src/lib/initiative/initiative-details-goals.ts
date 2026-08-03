@@ -95,3 +95,40 @@ export function getEmptyTabMessage(tab: InitiativeGoalsTab, goals: Doc<'goals'>[
   }
   return `All ${label} goals are complete.`;
 }
+
+/** Label used in parent-goal selects, e.g. "Q1 2026 — Launch website". */
+export function formatInitiativeParentGoalLabel(goal: Doc<'goals'>): string {
+  const complete = goal.isComplete ? ' (done)' : '';
+  return `Q${goal.quarter} ${goal.year} — ${goal.title}${complete}`;
+}
+
+/**
+ * Returns a blocking message when a tab's create input is unavailable because
+ * no parent goals exist in this initiative, or null when creation is allowed.
+ */
+// fallow-ignore-next-line complexity
+export function getInitiativeCreateBlockedMessage(
+  tab: 'weekly' | 'daily',
+  goalsByType: GoalsByInitiative
+): string | null {
+  if (tab === 'weekly' && goalsByType.quarterly.length === 0) {
+    return 'Add a quarterly goal in the Quarterly tab first.';
+  }
+  if (tab === 'daily' && goalsByType.weekly.length === 0) {
+    return 'Add a weekly goal in the Weekly tab first.';
+  }
+  return null;
+}
+
+/**
+ * Pick the default parent goal for weekly/daily creation, preferring one in the
+ * focus week's year/quarter and falling back to the first available parent.
+ */
+export function pickDefaultParentGoal(
+  parents: Doc<'goals'>[],
+  focusYear: number,
+  focusQuarter: number
+): Doc<'goals'> | null {
+  const inFocus = parents.find((g) => g.year === focusYear && g.quarter === focusQuarter);
+  return inFocus ?? parents[0] ?? null;
+}
