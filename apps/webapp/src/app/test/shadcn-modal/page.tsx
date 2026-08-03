@@ -120,7 +120,7 @@ export default function ShadcnModalTestPage() {
               </h3>
               <p className="text-green-700 dark:text-green-300 mb-2">
                 Modal primitives now use <code>@base-ui/react</code> instead of Radix UI. The
-                previous Radix <code>react-dismissable-layer</code> pnpm override is no longer
+                previous <code>@radix-ui/react-dismissable-layer</code> pnpm override is no longer
                 required.
               </p>
             </div>
