@@ -33,6 +33,29 @@ export function stripTrailingEmptyParagraphs(html: string): string {
 }
 
 /**
+ * Decides whether the caret should be scrolled into view when the editor gains
+ * focus.
+ *
+ * Scrolling only makes sense when focus came from an explicit pointer
+ * interaction (tapping/clicking into the editor) so the on-screen keyboard can
+ * stay visible on mobile. Passive refocus — e.g. the user alt-tabs back into
+ * the browser or returns from another tab — must NOT scroll, otherwise the
+ * scratchpad would jump back to the caret after the user scrolled away.
+ *
+ * `skipScrollFromVisibilityRestore` is set when the document became visible
+ * again after being hidden; the next focus is consumed (and skipped) so a
+ * visibility restore never triggers a scroll.
+ */
+export function shouldScrollCaretOnFocus(input: {
+  focusFromPointer: boolean;
+  skipScrollFromVisibilityRestore: boolean;
+}): boolean {
+  if (input.skipScrollFromVisibilityRestore) return false;
+  if (!input.focusFromPointer) return false;
+  return true;
+}
+
+/**
  * Custom Tiptap extension that prevents new lines from being added when Cmd/Ctrl + Enter is pressed.
  * This is used in conjunction with the form submission shortcut (useFormSubmitShortcut) to ensure
  * that pressing Cmd/Ctrl + Enter only submits the form and doesn't add a new line in the editor.
@@ -476,12 +499,39 @@ export function RichTextEditor({
     };
   }, [editor]);
 
-  // Keep the caret visible above the on-screen keyboard on mobile when focusing.
+  // Keep the caret visible above the on-screen keyboard on mobile when the user
+  // taps into the editor. Skip on window refocus (alt-tab) so scroll position
+  // is preserved.
   useEffect(() => {
     if (!editor) return;
     const el = editor.view.dom as HTMLElement;
 
+    let focusFromPointer = false;
+    let skipScrollFromVisibilityRestore = false;
+
+    const markPointerFocus = () => {
+      focusFromPointer = true;
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Next focus after tab/window restore should not scroll
+        skipScrollFromVisibilityRestore = true;
+        focusFromPointer = false;
+      }
+    };
+
     const scrollCaretIntoView = () => {
+      const shouldScroll = shouldScrollCaretOnFocus({
+        focusFromPointer,
+        skipScrollFromVisibilityRestore,
+      });
+      if (skipScrollFromVisibilityRestore) {
+        skipScrollFromVisibilityRestore = false;
+      }
+      if (!shouldScroll) return;
+      focusFromPointer = false;
+
       // Defer to next frame so the keyboard/viewport has begun resizing.
       requestAnimationFrame(() => {
         if (!editor || editor.isDestroyed) return;
@@ -498,9 +548,16 @@ export function RichTextEditor({
       });
     };
 
+    el.addEventListener('pointerdown', markPointerFocus, true);
+    el.addEventListener('touchstart', markPointerFocus, true);
     el.addEventListener('focus', scrollCaretIntoView, true);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
+      el.removeEventListener('pointerdown', markPointerFocus, true);
+      el.removeEventListener('touchstart', markPointerFocus, true);
       el.removeEventListener('focus', scrollCaretIntoView, true);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [editor]);
 
