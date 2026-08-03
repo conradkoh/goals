@@ -13,6 +13,7 @@ import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -94,76 +95,80 @@ export const DailyWeeklyActionMenu = React.memo(
             {/* View Mode Section */}
             {onViewModeChange && (
               <>
-                <DropdownMenuLabel className="font-semibold px-3 py-2">View</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => handleViewModeChange('quarterly')}
-                  className={cn('flex items-center', viewMode === 'quarterly' && 'bg-accent')}
-                >
-                  <LayoutGrid className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">Quarterly</span>
-                  <span className="ml-auto text-xs text-muted-foreground">Q</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleViewModeChange('weekly')}
-                  className={cn('flex items-center', viewMode === 'weekly' && 'bg-accent')}
-                >
-                  <CalendarDays className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">Weekly</span>
-                  <span className="ml-auto text-xs text-muted-foreground">W</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleViewModeChange('daily')}
-                  className={cn('flex items-center', viewMode === 'daily' && 'bg-accent')}
-                >
-                  <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">Daily</span>
-                  <span className="ml-auto text-xs text-muted-foreground">D</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleViewModeChange('focused')}
-                  className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
-                >
-                  <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">Focused</span>
-                  <span className="ml-auto text-xs text-muted-foreground">F</span>
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="font-semibold px-3 py-2">View</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => handleViewModeChange('quarterly')}
+                    className={cn('flex items-center', viewMode === 'quarterly' && 'bg-accent')}
+                  >
+                    <LayoutGrid className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">Quarterly</span>
+                    <span className="ml-auto text-xs text-muted-foreground">Q</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleViewModeChange('weekly')}
+                    className={cn('flex items-center', viewMode === 'weekly' && 'bg-accent')}
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">Weekly</span>
+                    <span className="ml-auto text-xs text-muted-foreground">W</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleViewModeChange('daily')}
+                    className={cn('flex items-center', viewMode === 'daily' && 'bg-accent')}
+                  >
+                    <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">Daily</span>
+                    <span className="ml-auto text-xs text-muted-foreground">D</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleViewModeChange('focused')}
+                    className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
+                  >
+                    <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">Focused</span>
+                    <span className="ml-auto text-xs text-muted-foreground">F</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
               </>
             )}
 
-            <DropdownMenuLabel className="font-semibold px-3 py-2">Actions</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="font-semibold px-3 py-2">Actions</DropdownMenuLabel>
 
-            {showPullGoals ? (
-              <DropdownMenuItem
-                disabled={isPulling}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!isPulling) {
-                    onPullGoals();
-                  }
-                }}
-                className="flex items-center"
-              >
-                <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">
-                  {isPulling ? 'Pulling...' : 'Pull incomplete goals'}
-                </span>
-              </DropdownMenuItem>
-            ) : (
-              <TooltipProvider delay={0}>
-                <Tooltip>
-                  <TooltipTrigger render={<div className="w-full cursor-not-allowed" />}>
-                    <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
-                      <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm">Pull incomplete goals</span>
-                    </DropdownMenuItem>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{tooltipContent}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+              {showPullGoals ? (
+                <DropdownMenuItem
+                  disabled={isPulling}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isPulling) {
+                      onPullGoals();
+                    }
+                  }}
+                  className="flex items-center"
+                >
+                  <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">
+                    {isPulling ? 'Pulling...' : 'Pull incomplete goals'}
+                  </span>
+                </DropdownMenuItem>
+              ) : (
+                <TooltipProvider delay={0}>
+                  <Tooltip>
+                    <TooltipTrigger render={<div className="w-full cursor-not-allowed" />}>
+                      <DropdownMenuItem className="cursor-not-allowed opacity-50" disabled>
+                        <ArrowDownToLine className="mr-2 h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">Pull incomplete goals</span>
+                      </DropdownMenuItem>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{tooltipContent}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
 

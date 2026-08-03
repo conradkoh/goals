@@ -15,6 +15,7 @@ import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -104,39 +105,41 @@ export const QuarterActionMenu = React.memo(
           {/* View Mode Section */}
           {onViewModeChange && (
             <>
-              <DropdownMenuLabel className="font-semibold px-3 py-2">View</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => handleViewModeChange('quarterly')}
-                className={cn('flex items-center', viewMode === 'quarterly' && 'bg-accent')}
-              >
-                <LayoutGrid className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">Quarterly</span>
-                <span className="ml-auto text-xs text-muted-foreground">Q</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleViewModeChange('weekly')}
-                className={cn('flex items-center', viewMode === 'weekly' && 'bg-accent')}
-              >
-                <CalendarDays className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">Weekly</span>
-                <span className="ml-auto text-xs text-muted-foreground">W</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleViewModeChange('daily')}
-                className={cn('flex items-center', viewMode === 'daily' && 'bg-accent')}
-              >
-                <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">Daily</span>
-                <span className="ml-auto text-xs text-muted-foreground">D</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleViewModeChange('focused')}
-                className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
-              >
-                <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">Focused</span>
-                <span className="ml-auto text-xs text-muted-foreground">F</span>
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-semibold px-3 py-2">View</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('quarterly')}
+                  className={cn('flex items-center', viewMode === 'quarterly' && 'bg-accent')}
+                >
+                  <LayoutGrid className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Quarterly</span>
+                  <span className="ml-auto text-xs text-muted-foreground">Q</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('weekly')}
+                  className={cn('flex items-center', viewMode === 'weekly' && 'bg-accent')}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Weekly</span>
+                  <span className="ml-auto text-xs text-muted-foreground">W</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('daily')}
+                  className={cn('flex items-center', viewMode === 'daily' && 'bg-accent')}
+                >
+                  <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Daily</span>
+                  <span className="ml-auto text-xs text-muted-foreground">D</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleViewModeChange('focused')}
+                  className={cn('flex items-center', viewMode === 'focused' && 'bg-accent')}
+                >
+                  <Focus className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">Focused</span>
+                  <span className="ml-auto text-xs text-muted-foreground">F</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
             </>
           )}
@@ -159,7 +162,7 @@ export const QuarterActionMenu = React.memo(
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <>
+            <DropdownMenuGroup>
               <DropdownMenuLabel className="font-semibold px-3 py-2">
                 Quarter Actions
               </DropdownMenuLabel>
@@ -188,7 +191,7 @@ export const QuarterActionMenu = React.memo(
                 <History className="mr-2 h-4 w-4 flex-shrink-0" />
                 <span className="text-sm">Pull incomplete goals from previous quarter</span>
               </DropdownMenuItem>
-            </>
+            </DropdownMenuGroup>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

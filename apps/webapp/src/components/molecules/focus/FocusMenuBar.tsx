@@ -25,6 +25,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -215,64 +216,68 @@ export const FocusMenuBar = ({
                       <MoreVertical className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
-                        View
-                      </DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onViewModeChange?.('quarterly')}>
-                        <LayoutGrid className="mr-2 h-4 w-4" />
-                        <span className="flex-1">Quarterly</span>
-                        <span className="ml-4 text-xs text-muted-foreground">Q</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onViewModeChange?.('weekly')}>
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        <span className="flex-1">Weekly</span>
-                        <span className="ml-4 text-xs text-muted-foreground">W</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onViewModeChange?.('daily')}>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        <span className="flex-1">Daily</span>
-                        <span className="ml-4 text-xs text-muted-foreground">D</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="bg-accent"
-                        onClick={() => onViewModeChange?.('focused')}
-                      >
-                        <Focus className="mr-2 h-4 w-4" />
-                        <span className="flex-1">Focused</span>
-                        <span className="ml-4 text-xs text-muted-foreground">F</span>
-                      </DropdownMenuItem>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+                          View
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => onViewModeChange?.('quarterly')}>
+                          <LayoutGrid className="mr-2 h-4 w-4" />
+                          <span className="flex-1">Quarterly</span>
+                          <span className="ml-4 text-xs text-muted-foreground">Q</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onViewModeChange?.('weekly')}>
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          <span className="flex-1">Weekly</span>
+                          <span className="ml-4 text-xs text-muted-foreground">W</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onViewModeChange?.('daily')}>
+                          <Calendar className="mr-2 h-4 w-4" />
+                          <span className="flex-1">Daily</span>
+                          <span className="ml-4 text-xs text-muted-foreground">D</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="bg-accent"
+                          onClick={() => onViewModeChange?.('focused')}
+                        >
+                          <Focus className="mr-2 h-4 w-4" />
+                          <span className="flex-1">Focused</span>
+                          <span className="ml-4 text-xs text-muted-foreground">F</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
 
                       <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
-                        Actions
-                      </DropdownMenuLabel>
+                      <DropdownMenuGroup>
+                        <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2">
+                          Actions
+                        </DropdownMenuLabel>
 
-                      {/* Pull incomplete goals */}
-                      {!showPullGoals ? (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger render={<div />}>
-                              <DropdownMenuItem disabled>
-                                <ArrowDownToLine className="mr-2 h-4 w-4" />
-                                Pull incomplete goals
-                              </DropdownMenuItem>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Navigate to current day/week to pull goals</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <DropdownMenuItem
-                          disabled={isPullingGoals}
-                          onClick={() => {
-                            onPullGoals?.();
-                          }}
-                        >
-                          <ArrowDownToLine className="mr-2 h-4 w-4" />
-                          {isPullingGoals ? 'Pulling...' : 'Pull incomplete goals'}
-                        </DropdownMenuItem>
-                      )}
+                        {/* Pull incomplete goals */}
+                        {!showPullGoals ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger render={<div />}>
+                                <DropdownMenuItem disabled>
+                                  <ArrowDownToLine className="mr-2 h-4 w-4" />
+                                  Pull incomplete goals
+                                </DropdownMenuItem>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Navigate to current day/week to pull goals</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <DropdownMenuItem
+                            disabled={isPullingGoals}
+                            onClick={() => {
+                              onPullGoals?.();
+                            }}
+                          >
+                            <ArrowDownToLine className="mr-2 h-4 w-4" />
+                            {isPullingGoals ? 'Pulling...' : 'Pull incomplete goals'}
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
