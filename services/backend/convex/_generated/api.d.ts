@@ -9,6 +9,8 @@
  */
 
 import type * as adhocGoal from "../adhocGoal.js";
+import type * as admin_invites from "../admin/invites.js";
+import type * as admin_users from "../admin/users.js";
 import type * as appinfo from "../appinfo.js";
 import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
@@ -34,7 +36,6 @@ import type * as scratchpad from "../scratchpad.js";
 import type * as serviceDesk from "../serviceDesk.js";
 import type * as sessions from "../sessions.js";
 import type * as system_auth_google from "../system/auth/google.js";
-import type * as system_users from "../system/users.js";
 
 import type {
   ApiFromModules,
@@ -44,6 +45,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adhocGoal: typeof adhocGoal;
+  "admin/invites": typeof admin_invites;
+  "admin/users": typeof admin_users;
   appinfo: typeof appinfo;
   attendance: typeof attendance;
   auth: typeof auth;
@@ -69,7 +72,6 @@ declare const fullApi: ApiFromModules<{
   serviceDesk: typeof serviceDesk;
   sessions: typeof sessions;
   "system/auth/google": typeof system_auth_google;
-  "system/users": typeof system_users;
 }>;
 
 /**

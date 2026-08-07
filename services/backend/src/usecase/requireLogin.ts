@@ -27,10 +27,11 @@ export const requireLogin = async (
     }
   }
 
-  if (!session) {
+  const userId = session?.userId;
+  if (!userId) {
     throw new Error('Login required');
   }
-  const user = await ctx.db.get('users', session.userId);
+  const user = await ctx.db.get('users', userId);
   if (!user) {
     throw new Error('User not found');
   }

@@ -8,33 +8,6 @@
         "count": 2
       }
     },
-    "apps/webapp/src/app/api/auth/google/callback/page.tsx": {
-      "crap_critical": {
-        "count": 1
-      }
-    },
-    "apps/webapp/src/app/app/admin/google-auth/page.tsx": {
-      "complexity_critical": {
-        "count": 1
-      },
-      "crap_critical": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      },
-      "crap_moderate": {
-        "count": 4
-      }
-    },
-    "apps/webapp/src/app/app/admin/page.tsx": {
-      "crap_critical": {
-        "count": 1
-      },
-      "crap_moderate": {
-        "count": 1
-      }
-    },
     "apps/webapp/src/app/app/documents/[documentId]/page.tsx": {
       "crap_moderate": {
         "count": 1
@@ -87,36 +60,12 @@
         "count": 1
       }
     },
-    "apps/webapp/src/app/login/[loginRequestId]/page.tsx": {
-      "complexity_critical": {
-        "count": 1
-      },
-      "crap_critical": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      }
-    },
-    "apps/webapp/src/app/login/google/components/GoogleCallback.tsx": {
-      "crap_high": {
-        "count": 1
-      },
-      "crap_moderate": {
-        "count": 1
-      }
-    },
     "apps/webapp/src/app/recover/page.tsx": {
       "crap_high": {
         "count": 1
       }
     },
-    "apps/webapp/src/components/CallbackErrorCard.tsx": {
-      "crap_moderate": {
-        "count": 1
-      }
-    },
-    "apps/webapp/src/components/CallbackSuccessCard.tsx": {
+    "apps/webapp/src/components/UserMenu.tsx": {
       "crap_moderate": {
         "count": 1
       }
@@ -931,11 +880,6 @@
         "count": 1
       }
     },
-    "apps/webapp/src/modules/auth/GoogleLoginButton.tsx": {
-      "crap_high": {
-        "count": 1
-      }
-    },
     "apps/webapp/src/modules/auth/LoginCodeGenerator.tsx": {
       "complexity_critical": {
         "count": 1
@@ -1056,17 +1000,8 @@
       }
     },
     "apps/webapp/src/modules/profile/NameEditForm.tsx": {
-      "complexity_critical": {
-        "count": 1
-      },
-      "crap_critical": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      },
       "crap_moderate": {
-        "count": 2
+        "count": 3
       }
     },
     "services/backend/convex/adhocGoal.ts": {
@@ -1093,28 +1028,6 @@
         "count": 1
       }
     },
-    "services/backend/convex/auth.ts": {
-      "crap_critical": {
-        "count": 2
-      },
-      "crap_moderate": {
-        "count": 6
-      }
-    },
-    "services/backend/convex/auth/google.ts": {
-      "complexity_critical": {
-        "count": 2
-      },
-      "crap_critical": {
-        "count": 5
-      },
-      "crap_high": {
-        "count": 4
-      },
-      "crap_moderate": {
-        "count": 1
-      }
-    },
     "services/backend/convex/bff/focus.ts": {
       "complexity_critical": {
         "count": 1
@@ -1134,13 +1047,13 @@
         "count": 1
       },
       "crap_critical": {
-        "count": 2
+        "count": 4
       },
       "crap_high": {
         "count": 4
       },
       "crap_moderate": {
-        "count": 4
+        "count": 3
       }
     },
     "services/backend/convex/documents.ts": {
@@ -1274,7 +1187,7 @@
       }
     },
     "services/backend/src/usecase/requireLogin.ts": {
-      "crap_moderate": {
+      "crap_high": {
         "count": 1
       }
     },
@@ -1292,13 +1205,12 @@
   "runtime_coverage_findings": [],
   "target_keys": [
     "services/backend/src/usecase/quarter/debugQuarterCalculations.ts:circular dependency",
-    "services/backend/application/auth/requirePermission.ts:dead code",
     "apps/webapp/src/application/auth/resolve.ts:dead code",
     "apps/webapp/src/components/organisms/DailyGoalList.tsx:dead code",
-    "apps/webapp/src/components/molecules/goal-list-item/variants/AdhocGoalItem.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-list-item/variants/DailyGoalItem.tsx:circular dependency",
-    "apps/webapp/src/components/molecules/goal-list-item/variants/WeeklyGoalItem.tsx:circular dependency",
     "services/backend/application/auth/resolve.ts:dead code",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/AdhocGoalItem.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/WeeklyGoalItem.tsx:circular dependency",
     "apps/webapp/src/hooks/useCurrentDateTime.tsx:dead code",
     "services/backend/convex/bff/focus.ts:complexity",
     "apps/webapp/src/components/molecules/goal-list-item/view/GoalListItemView.tsx:dead code",
@@ -1309,21 +1221,21 @@
     "apps/webapp/src/components/molecules/goal-details-popover/variants/GoalPageContent.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/StandaloneGoalModal.tsx:circular dependency",
+    "services/backend/application/auth/requirePermission.ts:dead code",
     "services/backend/src/usecase/moveGoalsFromWeek/moveGoalsFromWeek.ts:dead code",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:circular dependency",
-    "services/backend/convex/adhocGoal.ts:complexity",
-    "apps/webapp/src/components/molecules/goal-list-item/variants/QuarterlyGoalItem.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:circular dependency",
+    "apps/webapp/src/components/molecules/goal-list-item/variants/QuarterlyGoalItem.tsx:circular dependency",
+    "services/backend/convex/adhocGoal.ts:complexity",
     "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsChildrenList.tsx:circular dependency",
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:circular dependency",
     "apps/webapp/src/lib/html-to-markdown.ts:untested risk",
+    "apps/webapp/src/modules/presentation/presentation-controls.tsx:complexity",
     "apps/webapp/src/modules/attendance/components/AttendanceDialog.tsx:complexity",
     "apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalBreadcrumb.tsx:circular dependency",
     "apps/webapp/src/modules/checklist/use-checklist-sync.ts:complexity",
-    "apps/webapp/src/modules/presentation/use-presentation-sync.ts:complexity",
-    "apps/webapp/src/modules/presentation/presentation-controls.tsx:complexity",
-    "services/backend/convex/auth/google.ts:complexity"
+    "apps/webapp/src/modules/presentation/use-presentation-sync.ts:complexity"
   ]
 }

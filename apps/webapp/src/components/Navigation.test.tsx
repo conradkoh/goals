@@ -78,4 +78,46 @@ describe('Navigation', () => {
     expect(screen.queryByRole('link', { name: /login/i })).not.toBeInTheDocument();
     expect(screen.queryByTestId('user-menu')).not.toBeInTheDocument();
   });
+
+  it('renders brand as non-link while auth state is loading', () => {
+    vi.mocked(useAuthState).mockReturnValue(undefined);
+
+    render(<Navigation />);
+
+    expect(screen.getByText('Goals')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /goals/i })).not.toBeInTheDocument();
+  });
+
+  it('links brand to / when user is unauthenticated', () => {
+    vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
+      state: 'unauthenticated',
+      reason: 'test',
+    });
+
+    render(<Navigation />);
+
+    const brandLink = screen.getByRole('link', { name: /goals/i });
+    expect(brandLink).toHaveAttribute('href', '/');
+  });
+
+  it('links brand to /app when user is authenticated', () => {
+    vi.mocked(useAuthState).mockReturnValue({
+      sessionId: 'test-session',
+      state: 'authenticated',
+      user: {
+        _id: 'test-user-id' as Id<'users'>,
+        _creationTime: Date.now(),
+        type: 'anonymous',
+        name: 'Test User',
+      },
+      accessLevel: 'user',
+      permissions: ['attendance:read', 'presentation:read'],
+    });
+
+    render(<Navigation />);
+
+    const brandLink = screen.getByRole('link', { name: /goals/i });
+    expect(brandLink).toHaveAttribute('href', '/app');
+  });
 });

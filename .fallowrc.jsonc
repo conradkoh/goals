@@ -70,6 +70,13 @@
       "services/backend/application/auth/permissions.ts",
       "services/backend/application/auth/roles.ts",
       "services/backend/application/auth/resolve.ts",
+      "services/backend/convex/auth.ts",
+      "services/backend/convex/auth/**",
+      // Transitional: /app/system-admin is an intentional copy of /app/admin
+      // while the route migration is in progress. Remove when /app/admin is deleted.
+      "apps/webapp/src/app/app/system-admin/**",
+      // Markdown viewer mirrors mdx-components.tsx styling intentionally (not shared to avoid MDX hook coupling)
+      "apps/webapp/src/components/markdown-editor/markdown-components.tsx",
     ],
   },
   "health": {
@@ -79,6 +86,10 @@
       "**/*.test.{ts,tsx}",
       "**/*.spec.{ts,tsx}",
       "**/tests/**",
+      "services/backend/convex/auth.ts",
+      "services/backend/convex/auth/**",
+      // Transitional: mirror of /app/admin during route migration
+      "apps/webapp/src/app/app/system-admin/**",
     ],
   },
   "audit": {

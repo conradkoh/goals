@@ -151,6 +151,7 @@ export default defineSchema({
             hd: v.optional(v.string()),
           })
         ),
+        invitedByInviteId: v.optional(v.id('invites')),
       }),
       // Anonymous user type
       v.object({
@@ -172,9 +173,10 @@ export default defineSchema({
    * Combined schema supporting both template and app session types.
    */
   sessions: defineTable({
-    sessionId: v.optional(v.string()), // Template style - client-provided session ID
-    userId: v.id('users'),
-    createdAt: v.optional(v.number()),
+    sessionId: v.string(), // this is provided by the client
+    userId: v.optional(v.id('users')), // undefined for pre-auth invite sessions
+    pendingInviteId: v.optional(v.id('invites')), // invite signup flow
+    createdAt: v.number(),
     status: v.optional(v.literal('active')), // App style status
     lastActiveAt: v.optional(v.number()), // App style activity tracking
     authMethod: v.optional(
@@ -255,6 +257,23 @@ export default defineSchema({
   /**
    * Connect requests for authentication provider account linking flows.
    */
+  /**
+   * Invite codes for controlled signup via invite-only registration.
+   */
+  invites: defineTable({
+    code: v.string(),
+    inviteeName: v.string(),
+    inviteeEmail: v.string(),
+    createdBy: v.id('users'),
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()), // undefined = indefinite
+    disabled: v.boolean(),
+    usedAt: v.optional(v.number()),
+    usedByUserId: v.optional(v.id('users')),
+  })
+    .index('by_code', ['code'])
+    .index('by_createdBy', ['createdBy']),
+
   auth_connectRequests: defineTable({
     sessionId: v.string(),
     status: v.union(v.literal('pending'), v.literal('completed'), v.literal('failed')),

@@ -2,8 +2,11 @@
 # Run tests before pushing
 pnpm run test
 
+# Run script unit tests (bun)
+bun run test:scripts
+
 # Run typecheck before pushing
 pnpm run typecheck
 
-# Run e2e before pushing
-pnpm run e2e
+# Run e2e before pushing — suite selected by push destination (@upstream for template, @downstream for forks).
+bun scripts/run-pre-push-e2e.ts "$1" "$2"

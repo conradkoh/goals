@@ -11,7 +11,12 @@ export default defineConfig({
     globals: true,
     css: true,
     maxWorkers: 4,
-    exclude: ['tests/e2e/**', 'node_modules/**'],
+    exclude: [
+      'tests/e2e/specs/**',
+      'tests/e2e/fixtures/**',
+      'tests/e2e/pages/**',
+      'node_modules/**',
+    ],
   },
   resolve: {
     alias: {

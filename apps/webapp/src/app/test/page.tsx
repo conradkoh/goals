@@ -53,6 +53,15 @@ const testPages: TestPage[] = [
     status: 'stable',
   },
   {
+    path: '/test/markdown-editor',
+    title: 'Markdown WYSIWYG Editor',
+    description:
+      'MDXEditor-based WYSIWYG markdown editor with read-only viewer for downstream apps.',
+    icon: FileText,
+    badges: ['WYSIWYG', 'Read-only Viewer'],
+    status: 'demo',
+  },
+  {
     path: '/test/password-protection',
     title: 'Password Protection',
     description:

@@ -1,4 +1,8 @@
-export { AUTH_PROVIDER_MANAGE_PERMISSION, type Permission } from './permissions';
+export {
+  INVITES_MANAGE_PERMISSION,
+  SYSTEM_ADMIN_ACCESS_PERMISSION,
+  type Permission,
+} from './permissions';
 export {
   type AppRole,
   getPermissionsForRole,
@@ -7,4 +11,4 @@ export {
   type WildcardGrant,
 } from './roles';
 export { getResolvedPermissionsForUser, type UserForPermissions } from './resolve';
-export { requireAuthenticatedPermission } from './requirePermission';
+export { requireAuthenticatedPermission, requireSystemAdminAccess } from './requirePermission';

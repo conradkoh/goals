@@ -208,9 +208,7 @@ export const findLastNonEmptyWeekBefore = query({
     // Only consider weeks that actually exist in this quarter (from getQuarterWeeks)
     // and are strictly before the given weekNumber. Search descending (most recent first).
     const { weeks } = getQuarterWeeks(year, quarter);
-    const candidates = weeks
-      .filter((w) => w < weekNumber)
-      .sort((a, b) => b - a);
+    const candidates = weeks.filter((w) => w < weekNumber).sort((a, b) => b - a);
 
     for (const candidateWeek of candidates) {
       // Cheap existence probe: check for both regular goals and adhoc goals
@@ -228,10 +226,7 @@ export const findLastNonEmptyWeekBefore = query({
         ctx.db
           .query('goals')
           .withIndex('by_user_and_adhoc_year_week', (q) =>
-            q
-              .eq('userId', userId)
-              .eq('year', year)
-              .eq('adhoc.weekNumber', candidateWeek)
+            q.eq('userId', userId).eq('year', year).eq('adhoc.weekNumber', candidateWeek)
           )
           .filter((q) => q.eq(q.field('isComplete'), false))
           .first(),
@@ -628,8 +623,7 @@ type CleanupOrphanedGoalStatesCommitResult = {
 };
 
 type CleanupOrphanedGoalStatesResult =
-  | CleanupOrphanedGoalStatesDryRunResult
-  | CleanupOrphanedGoalStatesCommitResult;
+  CleanupOrphanedGoalStatesDryRunResult | CleanupOrphanedGoalStatesCommitResult;
 
 export const cleanupOrphanedGoalStatesForUser = internalMutation({
   args: {
@@ -723,8 +717,7 @@ interface MoveQuarterlyGoalResultError {
  * @internal
  */
 type MoveQuarterlyGoalMigrationResult =
-  | MoveQuarterlyGoalResultSuccess
-  | MoveQuarterlyGoalResultError;
+  MoveQuarterlyGoalResultSuccess | MoveQuarterlyGoalResultError;
 
 /**
  * Result returned from the moveGoalsFromQuarter action.
@@ -774,7 +767,7 @@ export const moveGoalsFromQuarter = action({
 
     // Auth check - look up session by sessionId field
     const session = await ctx.runQuery(internal.goal.getSessionBySessionId, { sessionId });
-    if (!session) {
+    if (!session || !session.userId) {
       throw new ConvexError({
         code: 'UNAUTHORIZED',
         message: 'Session not found',
@@ -1859,7 +1852,11 @@ export const moveQuarterlyGoal = mutation({
     // Process all daily goals in parallel
     const dailyGoalPromises = deduplicatedDailyGoals.map(async (dailyGoal) => {
       // Get the parent weekly goal's new ID
-      const newWeeklyGoalId = weeklyGoalIdMap.get(dailyGoal.parentId!);
+      const parentId = dailyGoal.parentId;
+      if (!parentId) {
+        return;
+      }
+      const newWeeklyGoalId = weeklyGoalIdMap.get(parentId);
       if (!newWeeklyGoalId) {
         // This should not happen if the data is consistent, but log for debugging
         console.warn(

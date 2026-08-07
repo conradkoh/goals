@@ -6,7 +6,57 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+const SELECT_ITEM_MARKER = Symbol.for('select-item');
+
+type ExtractedItem = { value: string; label: React.ReactNode };
+
+function extractSelectItems(node: React.ReactNode): ExtractedItem[] {
+  const items: ExtractedItem[] = [];
+
+  function walk(children: React.ReactNode) {
+    React.Children.forEach(children, (child) => {
+      if (!React.isValidElement(child)) return;
+
+      const type = child.type as { [SELECT_ITEM_MARKER]?: boolean };
+      if (type?.[SELECT_ITEM_MARKER]) {
+        const { value, children: label } = child.props as {
+          value: string;
+          children?: React.ReactNode;
+        };
+        if (value != null) {
+          items.push({ value, label: label ?? value });
+        }
+        return;
+      }
+
+      const props = child.props as { children?: React.ReactNode };
+      if (props?.children) {
+        walk(props.children);
+      }
+    });
+  }
+
+  walk(node);
+  return items;
+}
+
+function Select<Value, Multiple extends boolean | undefined = false>({
+  children,
+  items: itemsProp,
+  ...props
+}: SelectPrimitive.Root.Props<Value, Multiple>) {
+  const items = React.useMemo(() => {
+    if (itemsProp != null) return itemsProp;
+    const extracted = extractSelectItems(children);
+    return extracted.length > 0 ? extracted : undefined;
+  }, [children, itemsProp]);
+
+  return (
+    <SelectPrimitive.Root items={items} {...props}>
+      {children}
+    </SelectPrimitive.Root>
+  );
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
@@ -129,6 +179,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
     </SelectPrimitive.Item>
   );
 }
+(SelectItem as unknown as { [SELECT_ITEM_MARKER]: boolean })[SELECT_ITEM_MARKER] = true;
 
 function SelectSeparator({ className, ...props }: SelectPrimitive.Separator.Props) {
   return (

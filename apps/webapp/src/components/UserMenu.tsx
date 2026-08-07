@@ -2,13 +2,25 @@
 
 import { api } from '@workspace/backend/convex/_generated/api';
 import { useSessionMutation } from 'convex-helpers/react/sessions';
-import { BookOpen, LayoutDashboard, LogOut, Settings, User, UserCircle } from 'lucide-react';
+import {
+  BookOpen,
+  Download,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  User,
+  UserCircle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 
-import { SYSTEM_ADMIN_ACCESS_PERMISSION, useHasPermission } from '@/application/auth';
+import {
+  ADMIN_ACCESS_PERMISSION,
+  SYSTEM_ADMIN_ACCESS_PERMISSION,
+  useHasPermission,
+} from '@/application/auth';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,17 +43,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useAuthState } from '@/modules/auth/AuthProvider';
+import { usePwaInstall } from '@/modules/pwa-install';
 /**
- * User menu dropdown component with profile links and logout functionality.
- * Shows user information and navigation options, including a system-admin portal link when allowed.
+ * User menu dropdown with profile links and logout.
+ * Shows Admin and/or System Admin portal links when the user has the matching permissions.
  */
 export function UserMenu() {
   const authState = useAuthState();
   const showSystemAdminLink = useHasPermission(SYSTEM_ADMIN_ACCESS_PERMISSION);
+  const showAdminLink = useHasPermission(ADMIN_ACCESS_PERMISSION);
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const logout = useSessionMutation(api.auth.logout);
+  const { isInstalled, isReady, setDialogOpen } = usePwaInstall();
 
   const handleLogout = useCallback(async () => {
     setIsLoggingOut(true);
@@ -77,13 +92,39 @@ export function UserMenu() {
         authState,
         showLogoutConfirmation,
         isLoggingOut,
-        showSystemAdminLink
+        showSystemAdminLink,
+        showAdminLink,
+        isInstalled,
+        isReady,
+        () => setDialogOpen(true)
       )}
     </>
   );
 }
 
 // 5. Internal helper functions
+/**
+ * Renders the "Install App" dropdown item when PWA install is available.
+ * Hidden once the app is running in standalone/installed mode.
+ */
+function InstallAppMenuItem({
+  isReady,
+  isInstalled,
+  onOpen,
+}: {
+  isReady: boolean;
+  isInstalled: boolean;
+  onOpen: () => void;
+}) {
+  if (!isReady || isInstalled) return null;
+  return (
+    <DropdownMenuItem className="cursor-pointer" onClick={onOpen}>
+      <Download className="h-4 w-4" />
+      Install App
+    </DropdownMenuItem>
+  );
+}
+
 /**
  * Renders the logout confirmation dialog.
  */
@@ -120,7 +161,11 @@ function _renderUserDropdownMenu(
   authState: Extract<NonNullable<ReturnType<typeof useAuthState>>, { state: 'authenticated' }>,
   showLogoutConfirmation: () => void,
   isLoggingOut: boolean,
-  showSystemAdminLink: boolean
+  showSystemAdminLink: boolean,
+  showAdminLink: boolean,
+  isInstalled: boolean,
+  isReady: boolean,
+  openInstallDialog: () => void
 ) {
   return (
     <DropdownMenu>
@@ -166,14 +211,27 @@ function _renderUserDropdownMenu(
               Documentation
             </DropdownMenuItem>
           </Link>
-          {showSystemAdminLink && (
+          {showAdminLink && (
             <Link href="/app/admin">
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <Settings className="h-4 w-4" />
+                Admin
+              </DropdownMenuItem>
+            </Link>
+          )}
+          {showSystemAdminLink && (
+            <Link href="/app/system-admin">
               <DropdownMenuItem className="cursor-pointer gap-2">
                 <Settings className="h-4 w-4" />
                 System Admin
               </DropdownMenuItem>
             </Link>
           )}
+          <InstallAppMenuItem
+            isReady={isReady}
+            isInstalled={isInstalled}
+            onOpen={openInstallDialog}
+          />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem

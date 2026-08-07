@@ -28,19 +28,45 @@ A goal-tracking application for managing objectives across quarterly, weekly, an
 
 ### Setup
 
-1. Install dependencies:
+1. Run `pnpm install` to install the dependencies
+2. Run `pnpm run setup` to initialize the Convex backend and configure the webapp
+
+   This script will:
+   - **Check and update branding** - Detects if you're using template branding and prompts you to customize:
+     - Application name and short name
+     - App description
+     - Landing page title
+     - Package name
+   - Initialize the Convex backend using `npx convex dev --once`
+   - Extract the CONVEX_URL from the backend's .env.local file
+   - Create/update the webapp's .env.local file with the NEXT_PUBLIC_CONVEX_URL
+   - Assign a random `PORT` in the IANA ephemeral range (49152–65535) to `apps/webapp/.env.local` if not already configured
+
+   The setup script is **idempotent** - you can run it multiple times safely. It will:
+   - Show ✅ CONFIGURED for branding that's already customized
+   - Show ⚠️ TEMPLATE for branding that still uses default values
+   - Only prompt for updates if template values are detected
+
+   **Non-Interactive Mode**: For CI/CD or automated setups:
 
    ```bash
-   pnpm install
+   bun scripts/setup.ts --non-interactive \
+     --app-name "My App" \
+     --app-short-name "MyApp" \
+     --app-description "Description" \
+     --landing-page-title "Welcome" \
+     --package-name "my-app"
    ```
-
-2. Initialize the project (Convex backend + webapp environment):
 
    ```bash
-   pnpm run setup
+   # Or skip branding entirely
+   bun scripts/setup.ts --skip-branding
+
+   # Show all options
+   bun scripts/setup.ts --help
    ```
 
-   This initializes the Convex backend in `services/backend` and writes `NEXT_PUBLIC_CONVEX_URL` to `apps/webapp/.env.local`. After pulling schema changes, run `pnpm migrate` while `convex dev` is running (see [AGENTS.md](AGENTS.md#database-migrations)).
+   After pulling schema changes, run `pnpm migrate` while `convex dev` is running (see [AGENTS.md](AGENTS.md#database-migrations)).
 
 3. Start development servers:
 
@@ -48,7 +74,7 @@ A goal-tracking application for managing objectives across quarterly, weekly, an
    pnpm dev
    ```
 
-   - Webapp: http://localhost:3000
+   - Webapp at http://localhost:<PORT> (see `PORT` in `apps/webapp/.env.local`, assigned during setup)
    - Convex dev server runs alongside
 
 #### Manual Setup
