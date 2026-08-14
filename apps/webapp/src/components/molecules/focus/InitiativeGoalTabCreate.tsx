@@ -136,6 +136,7 @@ export function InitiativeGoalTabCreate({
   };
 
   const hasParentSelect = tab === 'weekly' || tab === 'daily';
+  const hasDaySelect = tab === 'daily';
 
   return (
     <div className="flex-shrink-0 border-t px-4 py-2 bg-background">
@@ -146,45 +147,51 @@ export function InitiativeGoalTabCreate({
         onSubmit={handleSubmit}
         onEscape={() => setNewGoalTitle('')}
       >
-        {hasParentSelect && (
-          <div className="mt-2">
-            <Select
-              value={selectedParentId?.toString() ?? ''}
-              onValueChange={(value) => value != null && setSelectedParentId(value as Id<'goals'>)}
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select parent goal" />
-              </SelectTrigger>
-              <SelectContent>
-                {parents.map((goal) => (
-                  <SelectItem key={goal._id} value={goal._id}>
-                    {formatInitiativeParentGoalLabel(goal)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {tab === 'daily' && (
-          <div className="mt-2">
-            <Select
-              value={selectedDayOfWeek.toString()}
-              onValueChange={(value) =>
-                value != null && setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
-              }
-            >
-              <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="Select day" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.values(DayOfWeek).map((value) => (
-                  <SelectItem key={value} value={value.toString()}>
-                    {getDayName(value)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {(hasParentSelect || hasDaySelect) && (
+          <>
+            {hasParentSelect && (
+              <div className="mt-2">
+                <Select
+                  value={selectedParentId?.toString() ?? ''}
+                  onValueChange={(value) =>
+                    value != null && setSelectedParentId(value as Id<'goals'>)
+                  }
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Select parent goal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parents.map((goal) => (
+                      <SelectItem key={goal._id} value={goal._id}>
+                        {formatInitiativeParentGoalLabel(goal)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {hasDaySelect && (
+              <div className="mt-2">
+                <Select
+                  value={selectedDayOfWeek.toString()}
+                  onValueChange={(value) =>
+                    value != null && setSelectedDayOfWeek(Number.parseInt(value) as DayOfWeek)
+                  }
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(DayOfWeek).map((value) => (
+                      <SelectItem key={value} value={value.toString()}>
+                        {getDayName(value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </>
         )}
       </CreateGoalInput>
     </div>
