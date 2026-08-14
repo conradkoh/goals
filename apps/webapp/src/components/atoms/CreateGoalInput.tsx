@@ -1,4 +1,4 @@
-import { type ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
+import { Children, type ForwardedRef, forwardRef, useEffect, useRef, useState } from 'react';
 
 import { CreateInputView } from '@/components/atoms/CreateInput';
 
@@ -43,6 +43,7 @@ export const CreateGoalInput = forwardRef(
 
     // Use the forwarded ref if provided, otherwise use internal ref
     const inputRef = ref || internalInputRef;
+    const visibleChildren = Children.toArray(children);
 
     // Handle escape key for the entire component
     useEffect(() => {
@@ -90,7 +91,7 @@ export const CreateGoalInput = forwardRef(
           autoFocus={autoFocus}
           disabled={disabled}
         />
-        {isEditing && children && (
+        {isEditing && visibleChildren.length > 0 && (
           <div className="mt-2 border-t border-border pt-2">{children}</div>
         )}
       </div>
