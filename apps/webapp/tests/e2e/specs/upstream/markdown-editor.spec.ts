@@ -13,10 +13,11 @@ test.describe('Markdown Editor Demo', { tag: [TAG_UPSTREAM, TAG_MARKDOWN] }, () 
     await expect(markdownPage.interactiveEditorSection).toBeVisible();
     await expect(markdownPage.livePreviewSection).toBeVisible();
     await expect(markdownPage.standaloneViewerSection).toBeVisible();
+    await expect(markdownPage.clickToEditSection).toBeVisible();
 
     await expect(markdownPage.interactiveEditor).toBeVisible();
     await expect(markdownPage.interactiveToolbar).toBeVisible();
-    await expect(markdownPage.insertCodeBlockButton).toBeVisible();
+    await expect(markdownPage.interactiveToolbar).toBeVisible();
     await expect(markdownPage.interactiveEditorEditable).toBeVisible();
   });
 
@@ -60,37 +61,100 @@ test.describe('Markdown Editor Demo', { tag: [TAG_UPSTREAM, TAG_MARKDOWN] }, () 
     await expect(viewer.locator('li').filter({ hasText: 'Same typography' })).toBeVisible();
   });
 
-  test('existing code blocks are editable without runtime errors', async ({ page }) => {
-    const runtimeErrors: string[] = [];
-    page.on('pageerror', (error) => runtimeErrors.push(error.message));
-
+  test('interactive editor applies default prose classes to EditorContent wrapper', async ({
+    page,
+  }) => {
     const markdownPage = new MarkdownEditorTestPage(page);
     await markdownPage.navigate();
-
-    const firstCodeEditor = markdownPage.interactiveCodeMirrorEditors.first();
-    const codeContent = firstCodeEditor.locator('.cm-content');
-    await expect(codeContent).toBeVisible({ timeout: 15_000 });
-    await codeContent.click();
-    await expect(codeContent).toBeFocused();
-
-    await page.keyboard.insertText('E2E-CODE-777');
-    await expect(markdownPage.livePreviewViewer).toContainText('E2E-CODE-777');
-
-    expect(runtimeErrors.some((message) => message.includes('No CodeBlockEditor registered'))).toBe(
-      false
-    );
-    await expect(page.getByText('No CodeBlockEditor registered')).toHaveCount(0);
+    const editor = markdownPage.interactiveEditor;
+    await expect(editor).toBeVisible();
+    const wrapper = editor.locator('.p-4');
+    await expect(wrapper).toHaveClass(/prose/);
+    await expect(wrapper).toHaveClass(/prose-invert/);
   });
 
-  test('inserting a code block adds an editable CodeMirror editor', async ({ page }) => {
+  test('extends selection upward from final soft-wrap tail in code block', async ({ page }) => {
     const markdownPage = new MarkdownEditorTestPage(page);
     await markdownPage.navigate();
 
-    const codeEditors = markdownPage.interactiveCodeMirrorEditors;
-    await expect(codeEditors.first().locator('.cm-content')).toBeVisible({ timeout: 15_000 });
-    const before = await codeEditors.count();
-    await markdownPage.insertCodeBlockButton.click();
-    await expect(codeEditors).toHaveCount(before + 1);
-    await expect(codeEditors.nth(before).locator('.cm-content')).toBeVisible();
+    const repro =
+      '[<div class="px-4 py-8 text-...">No files found. Ensure the workspace daemon is running.</div> in WorkspaceFileExplorer (at .../WorkspaceFileExplorer.tsx:68:12) in FileExplorerPanel (at .../FileExplorerPanel.tsx:494:13) in next in ChatroomDashboard (at .../ChatroomDashboard.tsx:1909:25)]';
+    const editable = markdownPage.interactiveEditorEditable;
+    const code = editable.locator('pre code').first();
+
+    await code.evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      (node.closest('[contenteditable="true"]') as HTMLElement | null)?.focus();
+    });
+    await page.keyboard.insertText(repro);
+    await expect(code).toHaveText(repro);
+
+    await code.evaluate((node) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      range.collapse(false);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    });
+    await page.keyboard.press('Shift+Alt+ArrowUp');
+
+    const selection = await code.evaluate((node) => {
+      const current = window.getSelection();
+      const anchorNode = current?.anchorNode;
+      const focusNode = current?.focusNode;
+      return {
+        isCollapsed: current?.isCollapsed ?? true,
+        selectedText: current?.toString() ?? '',
+        anchorInsideCode: anchorNode ? node.contains(anchorNode) : false,
+        focusInsideCode: focusNode ? node.contains(focusNode) : false,
+      };
+    });
+
+    expect(selection.isCollapsed).toBe(false);
+    expect(selection.selectedText.length).toBeGreaterThan(0);
+    expect(selection.anchorInsideCode).toBe(true);
+    expect(selection.focusInsideCode).toBe(true);
+  });
+
+  test('toolbar bold toggle applies formatting', async ({ page }) => {
+    const markdownPage = new MarkdownEditorTestPage(page);
+    await markdownPage.navigate();
+    const editor = markdownPage.livePreviewSection.getByTestId('markdown-editor');
+    const editable = editor.locator('.ProseMirror');
+    await editable.click();
+    const boldButton = editor.locator('button[title="Bold"]');
+    await boldButton.click();
+    await editable.click();
+    await page.keyboard.type('Bold E2E marker');
+    await expect(editable).toContainText('Bold E2E marker');
+    await expect(boldButton).toHaveClass(/bg-muted/);
+  });
+
+  test('click to edit: view → edit → save returns to pristine rendered view', async ({ page }) => {
+    const markdownPage = new MarkdownEditorTestPage(page);
+    await markdownPage.navigate();
+
+    const view = markdownPage.clickToEditView;
+    await expect(view).toBeVisible();
+
+    // Click view area (not a link) to enter edit mode
+    await view.click();
+    await expect(markdownPage.clickToEditSaveButton).toBeVisible();
+    await expect(markdownPage.clickToEditSection.getByTestId('markdown-editor')).toBeVisible();
+
+    // Type unique marker in editor
+    const editable = markdownPage.clickToEditSection.locator('.ProseMirror');
+    await editable.click();
+    await page.keyboard.insertText(' E2E-EDITABLE-MARKER');
+
+    // Save — editor chrome should disappear, marker visible in rendered view
+    await markdownPage.clickToEditSaveButton.click();
+    await expect(markdownPage.clickToEditSection.getByTestId('markdown-editor')).toHaveCount(0);
+    await expect(view).toContainText('E2E-EDITABLE-MARKER');
   });
 });

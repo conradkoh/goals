@@ -86,6 +86,7 @@
       "**/*.test.{ts,tsx}",
       "**/*.spec.{ts,tsx}",
       "**/tests/**",
+      "scripts/start-convex-dev.ts",
       "services/backend/convex/auth.ts",
       "services/backend/convex/auth/**",
       // Transitional: mirror of /app/admin during route migration

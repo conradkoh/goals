@@ -13,6 +13,17 @@ A quick reference for working with the Next.js + Convex monorepo.
 - **docs** — Project documentation
   - `application/` — App-specific documentation (see [README](docs/application/README.md))
 
+### Memory (OKF)
+
+Agent memory is stored as an [Open Knowledge Format (OKF)](https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf) bundle in **`memory/`**.
+
+- **Bundle root:** [memory/index.md](memory/index.md)
+- **Taxonomy (folders &amp; document types):** [memory/architecture/okf-document-taxonomy.md](memory/architecture/okf-document-taxonomy.md)
+- **What is OKF?:** [memory/development/what-is-okf.md](memory/development/what-is-okf.md)
+
+Allowed folders: `architecture`, `product`, `testing`, `development`.  
+Allowed document types (`type` frontmatter): `decision-log`, `best-practice`, `guide`, `tech-debt`.
+
 ---
 
 ## Frontend (apps/webapp)
@@ -188,5 +199,10 @@ next-convex-starter-app/
 │   └── application/       # App-specific backend code
 ├── docs/                  # Documentation
 │   └── application/       # App-specific documentation
+├── memory/                # OKF agent memory bundle
+│   ├── architecture/
+│   ├── product/
+│   ├── testing/
+│   └── development/
 └── scripts/               # Utility scripts
 ```

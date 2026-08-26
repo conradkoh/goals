@@ -2,7 +2,6 @@ node_modules
 .DS_Store
 dist/
 *.tsbuildinfo
-package-lock.json
 
 # Turborepo
 .turbo
@@ -18,5 +17,8 @@ test-results/
 
 # Misc
 .env*.local
-.chatroom/
 package-lock.json
+.chatroom/pi-sessions/
+
+# pnpm
+.pnpm-store/

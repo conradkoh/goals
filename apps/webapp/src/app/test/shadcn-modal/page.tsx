@@ -1,10 +1,10 @@
 'use client';
 
-import { CalendarIcon, MoreHorizontal, Plus } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 
 export default function ShadcnModalTestPage() {
   const [date, setDate] = useState<Date>();
@@ -203,22 +201,16 @@ export default function ShadcnModalTestPage() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Date</Label>
+                <Label htmlFor="item-date" className="text-right">
+                  Date
+                </Label>
                 <div className="col-span-3">
-                  <Popover>
-                    <PopoverTrigger
-                      className={cn(
-                        buttonVariants({ variant: 'outline' }),
-                        'w-full justify-start text-left font-normal'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? date.toDateString() : <span>Pick a date</span>}
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={date} onSelect={setDate} />
-                    </PopoverContent>
-                  </Popover>
+                  <DatePicker
+                    id="item-date"
+                    date={date}
+                    onSelect={setDate}
+                    placeholder="Pick a date"
+                  />
                 </div>
               </div>
             </div>

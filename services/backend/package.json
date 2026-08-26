@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "CONVEX_NON_INTERACTIVE=true convex dev",
+    "dev": "CONVEX_NON_INTERACTIVE=true DOCUMENT_RETENTION_DELAY=1 INDEX_RETENTION_DELAY=1 RETENTION_DELETE_FREQUENCY=10 bun ../../scripts/start-convex-dev.ts",
     "deploy": "convex deploy",
     "migrate": "bun ../../scripts/migrate.ts",
     "typecheck": "tsc --build",
@@ -15,9 +15,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@workspace/shared": "workspace:*",
     "@convex-dev/aggregate": "^0.2.2",
     "@convex-dev/migrations": "^0.3.5",
-    "convex": "^1.42.2",
+    "convex": "^1.45.0",
     "convex-helpers": "^0.1.120",
     "luxon": "^3.6.1",
     "zod": "^4.4.3"

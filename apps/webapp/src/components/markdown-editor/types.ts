@@ -1,17 +1,40 @@
-import type { MDXEditorProps } from '@mdxeditor/editor';
+export type MarkdownContentNormalizer = (input: string) => string;
 
 export type MarkdownEditorProps = {
-  /** Initial markdown content. Avoid rebinding on every onChange. */
+  normalizeContent?: (input: string) => string;
+  /** Markdown source only; legacy HTML is normalized lossily before callbacks. */
   defaultMarkdown?: string;
-  /** Called when content changes. */
+  /** Called with markdown-only content changes. */
   onChange?: (markdown: string) => void;
   /** Placeholder when empty. */
   placeholder?: string;
   className?: string;
-  readOnly?: never;
-} & Omit<MDXEditorProps, 'markdown' | 'onChange' | 'readOnly' | 'plugins'>;
+  /** Tailwind prose classes for editor typography. */
+  proseClassName: string;
+  autoFocus?: boolean;
+  onCmdEnter?: () => void;
+  initialClickCoords?: { left: number; top: number } | null;
+  /** Stretch editor content to fill flex parent (modal layouts). Default false. */
+  fillHeight?: boolean;
+};
 
 export type MarkdownViewerProps = {
   markdown: string;
   className?: string;
+};
+
+export type EditableMarkdownProps = {
+  /** Markdown source only (controlled). */
+  markdown: string;
+  /** Called when user saves edited content. */
+  onChange: (markdown: string) => void;
+  /** Optional callback after save (receives saved markdown). */
+  onSave?: (markdown: string) => void;
+  /** Optional callback when user cancels editing. */
+  onCancel?: () => void;
+  /** Placeholder shown in empty view mode and in editor. */
+  placeholder?: string;
+  className?: string;
+  /** Tailwind prose classes for editor mode only; view mode uses MarkdownViewer. */
+  proseClassName: string;
 };

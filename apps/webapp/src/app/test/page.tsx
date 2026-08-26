@@ -1,6 +1,14 @@
 'use client';
 
-import { CheckSquare, FileText, Lock, MessageCircle, Monitor, Settings } from 'lucide-react';
+import {
+  Calendar,
+  CheckSquare,
+  FileText,
+  Lock,
+  MessageCircle,
+  Monitor,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +67,15 @@ const testPages: TestPage[] = [
       'MDXEditor-based WYSIWYG markdown editor with read-only viewer for downstream apps.',
     icon: FileText,
     badges: ['WYSIWYG', 'Read-only Viewer'],
+    status: 'demo',
+  },
+  {
+    path: '/test/luxon',
+    title: 'Luxon DateTime',
+    description:
+      'Datetime parsing, formatting, and timezone conversion using luxon — the preferred library for date/time transformations.',
+    icon: Calendar,
+    badges: ['DateTime', 'Timezones'],
     status: 'demo',
   },
   {
