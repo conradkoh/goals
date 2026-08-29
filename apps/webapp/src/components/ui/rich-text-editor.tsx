@@ -12,6 +12,16 @@ import styles from './rich-text-editor.module.css';
 
 import { cn } from '@/lib/utils';
 
+/** Returns true when the event target is a TipTap task-list checkbox or its label. */
+export function isTaskCheckboxInteraction(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(
+      'li[data-type="taskItem"] > label, li.task-item > label, li[data-type="taskItem"] > input[type="checkbox"], li.task-item > input[type="checkbox"]'
+    )
+  );
+}
+
 /** Helper function to check if HTML content is effectively empty */
 export function isHTMLEmpty(html: string) {
   // Remove all HTML tags
@@ -49,7 +59,9 @@ export function stripTrailingEmptyParagraphs(html: string): string {
 export function shouldScrollCaretOnFocus(input: {
   focusFromPointer: boolean;
   skipScrollFromVisibilityRestore: boolean;
+  isTaskCheckboxInteraction: boolean;
 }): boolean {
+  if (input.isTaskCheckboxInteraction) return false;
   if (input.skipScrollFromVisibilityRestore) return false;
   if (!input.focusFromPointer) return false;
   return true;
@@ -348,6 +360,7 @@ export function RichTextEditor({
   editorRef,
 }: RichTextEditorProps) {
   const isExternalUpdateRef = useRef(false);
+  const lastPointerTargetRef = useRef<EventTarget | null>(null);
   const isUncontrolled = editorRef !== undefined;
 
   const editor = useEditor({
@@ -426,6 +439,10 @@ export function RichTextEditor({
           styles.prose,
           className
         ),
+      },
+      handleScrollToSelection: () => {
+        if (isTaskCheckboxInteraction(lastPointerTargetRef.current)) return true;
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -508,8 +525,14 @@ export function RichTextEditor({
 
     let focusFromPointer = false;
     let skipScrollFromVisibilityRestore = false;
+    let isTaskCheckboxInteractionActive = false;
 
-    const markPointerFocus = () => {
+    const markPointerFocus = (event: Event) => {
+      lastPointerTargetRef.current = event.target;
+      if (isTaskCheckboxInteraction(event.target)) {
+        isTaskCheckboxInteractionActive = true;
+        return;
+      }
       focusFromPointer = true;
     };
 
@@ -525,10 +548,12 @@ export function RichTextEditor({
       const shouldScroll = shouldScrollCaretOnFocus({
         focusFromPointer,
         skipScrollFromVisibilityRestore,
+        isTaskCheckboxInteraction: isTaskCheckboxInteractionActive,
       });
       if (skipScrollFromVisibilityRestore) {
         skipScrollFromVisibilityRestore = false;
       }
+      if (isTaskCheckboxInteractionActive) isTaskCheckboxInteractionActive = false;
       if (!shouldScroll) return;
       focusFromPointer = false;
 
