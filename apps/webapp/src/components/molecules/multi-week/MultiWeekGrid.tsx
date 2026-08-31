@@ -115,7 +115,7 @@ export const MultiWeekGrid = ({
             zIndex: 10,
           }}
           className={cn(
-            'flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-medium text-blue-600 dark:text-blue-400 bg-card/90 backdrop-blur-sm rounded-full shadow-sm border border-blue-100 dark:border-blue-900 transition-all duration-200',
+            'flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-medium text-blue-600 dark:text-blue-400 bg-card  rounded-full shadow-sm border border-blue-100 dark:border-blue-900 transition-all duration-200',
             isCurrentWeekVisible
               ? 'opacity-0 pointer-events-none translate-y-1'
               : 'opacity-100 hover:bg-blue-50 dark:hover:bg-blue-950/30'

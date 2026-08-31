@@ -137,7 +137,7 @@ const WeeklyGoal = ({
       <div
         className={cn(
           'group rounded-sm',
-          isSoftComplete ? 'bg-green-50 dark:bg-green-950/20' : 'hover:bg-accent/50'
+          isSoftComplete ? 'bg-green-50 dark:bg-green-950' : 'hover:bg-accent'
         )}
       >
         <div className="px-2 py-1">
@@ -449,7 +449,7 @@ export const WeekCardWeeklyGoals = forwardRef<HTMLDivElement, WeekCardWeeklyGoal
                   <div
                     className={cn(
                       'px-3 space-y-2 rounded-md',
-                      isAllWeeklyGoalsComplete ? 'bg-green-50 dark:bg-green-950/20' : ''
+                      isAllWeeklyGoalsComplete ? 'bg-green-50 dark:bg-green-950' : ''
                     )}
                   >
                     <div

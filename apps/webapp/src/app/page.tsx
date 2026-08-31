@@ -27,7 +27,7 @@ export default function Home() {
         <div className="space-y-4 max-w-xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
             {/* V2 Industrial: Sharp corners, 2px borders, glassmorphism */}
-            <div className="p-4 border-2 border-border/10 bg-card/60 backdrop-blur-sm">
+            <div className="p-4 border-2 border-border bg-card ">
               <h3 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-muted-foreground">
                 Quarterly Goals
               </h3>
@@ -35,7 +35,7 @@ export default function Home() {
                 Set and track your big-picture objectives for the quarter
               </p>
             </div>
-            <div className="p-4 border-2 border-border/10 bg-card/60 backdrop-blur-sm">
+            <div className="p-4 border-2 border-border bg-card ">
               <h3 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-muted-foreground">
                 Weekly Planning
               </h3>
@@ -43,7 +43,7 @@ export default function Home() {
                 Break down goals into manageable weekly milestones
               </p>
             </div>
-            <div className="p-4 border-2 border-border/10 bg-card/60 backdrop-blur-sm">
+            <div className="p-4 border-2 border-border bg-card ">
               <h3 className="text-[10px] font-bold uppercase tracking-wider mb-2 text-muted-foreground">
                 Daily Tasks
               </h3>

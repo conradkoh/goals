@@ -31,7 +31,7 @@ export const GoogleLoginButton = ({
     return (
       <button
         type="button"
-        className="flex items-center justify-between w-full h-16 px-6 hover:bg-muted/50 transition-colors cursor-pointer group border-0 bg-transparent text-left disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex items-center justify-between w-full h-16 px-6 hover:bg-muted transition-colors cursor-pointer group border-0 bg-transparent text-left disabled:cursor-not-allowed disabled:opacity-50"
         onClick={startGoogleLogin}
         disabled={isLoading || !isAvailable}
         aria-label="Sign in with Google"

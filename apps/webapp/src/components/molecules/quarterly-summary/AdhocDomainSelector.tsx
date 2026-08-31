@@ -224,8 +224,8 @@ export function AdhocDomainSelector({
               key={domain._id}
               className={cn(
                 'flex items-center space-x-3 p-3 rounded-lg border transition-colors',
-                'hover:bg-accent/50 dark:hover:bg-accent/30',
-                isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
+                'hover:bg-accent dark:hover:bg-accent',
+                isSelected && 'bg-accent bg-accent border-primary',
                 !hasGoals && 'opacity-60'
               )}
             >
@@ -277,8 +277,8 @@ export function AdhocDomainSelector({
             <div
               className={cn(
                 'flex items-center space-x-3 p-3 rounded-lg border transition-colors',
-                'hover:bg-accent/50 dark:hover:bg-accent/30',
-                isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
+                'hover:bg-accent dark:hover:bg-accent',
+                isSelected && 'bg-accent bg-accent border-primary',
                 !hasGoals && 'opacity-60'
               )}
             >

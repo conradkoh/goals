@@ -141,7 +141,7 @@ function DailyGoalItemContentInternal({ className }: DailyGoalItemContentInterna
   );
 
   return (
-    <div className={cn('daily-goal-item group hover:bg-accent/50 rounded-sm', className)}>
+    <div className={cn('daily-goal-item group hover:bg-accent rounded-sm', className)}>
       <div className="text-sm group/title">
         <div className="flex items-center gap-2">
           <GoalCheckbox onToggleComplete={handleToggleCompletion} disabled={isOptimistic} />

@@ -343,7 +343,7 @@ export function FocusModeFocusedView() {
 
             {/* Inline add task */}
             <div className="px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
-              <div className="flex items-center gap-2 border border-border/60 rounded-md bg-background/50 px-3 py-2 transition-colors hover:bg-background/80 focus-within:bg-background focus-within:border-border">
+              <div className="flex items-center gap-2 border border-border rounded-md bg-background px-3 py-2 transition-colors hover:bg-background focus-within:bg-background focus-within:border-border">
                 <button
                   type="button"
                   onClick={handleAddTask}

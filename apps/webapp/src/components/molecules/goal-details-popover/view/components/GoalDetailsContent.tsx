@@ -64,8 +64,8 @@ export function GoalDetailsContent({
       <div
         onClick={onEditClick ? handleDetailsClick : undefined}
         className={cn(
-          'min-w-0 overflow-x-hidden overflow-y-auto rounded-md pt-4 pb-4 px-3 bg-muted/30',
-          onEditClick && 'cursor-pointer hover:bg-muted/50 transition-colors',
+          'min-w-0 overflow-x-hidden overflow-y-auto rounded-md pt-4 pb-4 px-3 bg-muted',
+          onEditClick && 'cursor-pointer hover:bg-muted transition-colors',
           className
         )}
         role={onEditClick ? 'button' : undefined}

@@ -366,7 +366,7 @@ function ChecklistItemComponent({
   const itemClassName = useMemo(() => {
     const baseClasses =
       'flex items-center gap-3 p-2 rounded-lg border bg-card transition-colors group';
-    const stateClasses = isPending ? 'bg-muted/50 opacity-75' : 'hover:bg-accent/50';
+    const stateClasses = isPending ? 'bg-muted opacity-75' : 'hover:bg-accent';
     const dragClasses = isDragging
       ? 'opacity-50 scale-95'
       : isDraggedOver

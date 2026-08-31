@@ -60,26 +60,26 @@ const layouts: Layout[] = [
     key: 'full',
     title: 'Full width',
     description: 'Inputs stretch across a visible full-width parent.',
-    className: 'w-full space-y-4 rounded-md border bg-muted/20 p-4',
+    className: 'w-full space-y-4 rounded-md border bg-muted p-4',
   },
   {
     key: 'constrained',
     title: 'Constrained parent (max-w-md)',
     description: 'Parent capped at max-w-md — key Safari overflow scenario.',
-    className: 'w-full space-y-4 rounded-md border bg-muted/20 p-4 sm:max-w-md',
+    className: 'w-full space-y-4 rounded-md border bg-muted p-4 sm:max-w-md',
   },
   {
     key: 'flex',
     title: 'Flex side by side',
     description: 'Two date fields in a flex row (forced on mobile for storybook testing).',
-    className: 'flex flex-row flex-wrap gap-4 rounded-md border bg-muted/20 p-4',
+    className: 'flex flex-row flex-wrap gap-4 rounded-md border bg-muted p-4',
     twoFields: true,
   },
   {
     key: 'grid',
     title: 'Grid layout (2 columns)',
     description: 'Two fields in a 2-column grid (forced on mobile for storybook testing).',
-    className: 'grid grid-cols-2 gap-4 rounded-md border bg-muted/20 p-4',
+    className: 'grid grid-cols-2 gap-4 rounded-md border bg-muted p-4',
     twoFields: true,
   },
 ];
@@ -244,7 +244,7 @@ export default function DatePickerStorybookPage() {
           iOS, including dark mode and constrained layouts.
         </p>
       </header>
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-4">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted p-4">
         <span className="mr-2 font-medium">Theme:</span>
         <Button
           variant={theme === 'light' ? 'default' : 'outline'}

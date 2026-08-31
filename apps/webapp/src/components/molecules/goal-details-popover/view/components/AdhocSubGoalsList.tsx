@@ -254,7 +254,7 @@ function SubGoalItem({
       <div className="space-y-1">
         <div
           className={cn(
-            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent/50 transition-colors group/goal-item',
+            'flex items-center gap-2 py-1 px-2 rounded-sm hover:bg-accent transition-colors group/goal-item',
             goal.isComplete && 'opacity-60',
             isOptimistic && 'opacity-70'
           )}
@@ -318,7 +318,7 @@ function SubGoalItem({
 
         {/* Render nested children recursively */}
         {goal.children && goal.children.length > 0 && (
-          <div className="ml-6 border-l border-border/50 pl-2 space-y-1">
+          <div className="ml-6 border-l border-border pl-2 space-y-1">
             {goal.children.map((child) => (
               <SubGoalItem
                 key={child._id}

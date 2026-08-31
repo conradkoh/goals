@@ -233,7 +233,7 @@ export function AttendanceDialog({
           <div className="space-y-2">
             {/* Name input for anonymous users or when no name is provided */}
             {(!isAuthenticated || !personName) && (
-              <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+              <div className="space-y-3 p-4 bg-muted rounded-lg">
                 <Label htmlFor="name-input" className="text-sm font-medium">
                   Your Name
                 </Label>
@@ -248,7 +248,7 @@ export function AttendanceDialog({
             )}
 
             {isAuthenticated && (
-              <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+              <div className="space-y-3 p-4 bg-muted rounded-lg">
                 <Label htmlFor="respond-as" className="text-sm font-medium">
                   Who are you responding as?
                 </Label>
@@ -277,7 +277,7 @@ export function AttendanceDialog({
               </div>
             )}
 
-            <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+            <div className="space-y-4 p-4 bg-muted rounded-lg">
               <div>
                 <Label htmlFor="status" className="text-sm font-medium mb-2">
                   Attendance Status

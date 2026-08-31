@@ -91,7 +91,7 @@ export function QuarterlySummaryMarkdownExportView({
                 </Button>
               </div>
 
-              <div className="border rounded-lg p-4 bg-muted/30 max-h-96 overflow-y-auto">
+              <div className="border rounded-lg p-4 bg-muted max-h-96 overflow-y-auto">
                 <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
                   {allGoalsMarkdown}
                 </pre>
@@ -122,7 +122,7 @@ export function QuarterlySummaryMarkdownExportView({
                 </Button>
               </div>
 
-              <div className="border rounded-lg p-4 bg-muted/30 max-h-96 overflow-y-auto">
+              <div className="border rounded-lg p-4 bg-muted max-h-96 overflow-y-auto">
                 <pre className="whitespace-pre-wrap text-sm font-mono leading-relaxed">
                   {completedGoalsMarkdown}
                 </pre>

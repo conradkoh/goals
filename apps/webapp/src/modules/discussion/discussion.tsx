@@ -258,7 +258,7 @@ export function Discussion({ title, discussionKey, className }: DiscussionProps)
             {discussionConclusions.map((item, index) => (
               <div
                 key={`conclusion-${item.text.substring(0, 15)}-${index}`}
-                className="flex items-center border rounded-md py-2 px-3 bg-background/50"
+                className="flex items-center border rounded-md py-2 px-3 bg-background"
               >
                 <div className="mr-2 bg-primary/10 text-primary rounded-full h-5 w-5 flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-medium">{index + 1}</span>
@@ -308,7 +308,7 @@ export function Discussion({ title, discussionKey, className }: DiscussionProps)
 
   return (
     <>
-      <div className={`bg-card/60 backdrop-blur-sm border rounded-md overflow-hidden ${className}`}>
+      <div className={`bg-card  border rounded-md overflow-hidden ${className}`}>
         <div className="p-3 flex flex-row items-center justify-between border-b">
           <div className="flex items-center gap-2">
             <h3 className="text-base font-medium">

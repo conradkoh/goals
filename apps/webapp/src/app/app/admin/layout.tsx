@@ -167,7 +167,7 @@ function _renderMobileHeader(pathname: string, visibleModules: AdminModule[]) {
 
 function _renderDesktopSidebar(pathname: string, visibleModules: AdminModule[]) {
   return (
-    <div className="hidden lg:block w-64 border-r bg-muted/10 p-4">
+    <div className="hidden lg:block w-64 border-r bg-muted p-4">
       {_renderSidebarContent(pathname, visibleModules)}
     </div>
   );

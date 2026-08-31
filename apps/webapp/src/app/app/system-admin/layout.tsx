@@ -171,7 +171,7 @@ function _renderMobileHeader(pathname: string) {
 
 function _renderDesktopSidebar(pathname: string) {
   return (
-    <div className="hidden lg:block w-64 border-r bg-muted/10 p-4">
+    <div className="hidden lg:block w-64 border-r bg-muted p-4">
       {_renderSidebarContent(pathname)}
     </div>
   );

@@ -54,8 +54,8 @@ function GoalItem({ goal, isSelected, onToggle }: GoalItemProps) {
     <div
       className={cn(
         'flex items-start space-x-3 p-3 rounded-lg transition-colors',
-        'hover:bg-accent/50 dark:hover:bg-accent/30',
-        isSelected && 'bg-accent/30 dark:bg-accent/20'
+        'hover:bg-accent dark:hover:bg-accent',
+        isSelected && 'bg-accent bg-accent'
       )}
     >
       <Checkbox
@@ -264,7 +264,7 @@ export function QuarterlyGoalSelector({
             <span className="text-xs">No weekly goals assigned</span>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted/30">
+            <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted">
               {emptyGoals.map((goal) => (
                 <GoalItem
                   key={goal._id}

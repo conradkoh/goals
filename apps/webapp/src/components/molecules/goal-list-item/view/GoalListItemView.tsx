@@ -50,7 +50,7 @@ export function GoalListItemView({
   const content = (
     <div
       className={cn(
-        'group rounded-sm hover:bg-accent/50 transition-colors',
+        'group rounded-sm hover:bg-accent transition-colors',
         backgroundClassName,
         className
       )}

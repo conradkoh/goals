@@ -129,10 +129,10 @@ function QuarterlyGoalItemContentInternal({
       className={cn(
         'group px-2 py-1 rounded-sm',
         isComplete
-          ? 'bg-green-50 dark:bg-green-950/20'
+          ? 'bg-green-50 dark:bg-green-950'
           : isAllWeeklyGoalsComplete
             ? 'bg-green-50/50 dark:bg-green-950/10'
-            : 'hover:bg-accent/50',
+            : 'hover:bg-accent',
         className
       )}
     >

@@ -122,8 +122,8 @@ export function GoalLogEntry({
         {/* Log entry content - compact inline layout */}
         <div
           className={cn(
-            'rounded-md bg-muted/30 px-3 py-2 transition-colors',
-            hasActions && 'cursor-pointer hover:bg-muted/50'
+            'rounded-md bg-muted px-3 py-2 transition-colors',
+            hasActions && 'cursor-pointer hover:bg-muted'
           )}
           onClick={handleEntryClick}
         >
@@ -147,7 +147,7 @@ export function GoalLogEntry({
 
           {/* Action buttons - revealed when expanded */}
           {isExpanded && hasActions && (
-            <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50">
+            <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-border">
               {onEdit && (
                 <Button
                   variant="ghost"

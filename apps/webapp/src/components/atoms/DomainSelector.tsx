@@ -240,7 +240,7 @@ export function DomainSelector({
                     type="button"
                     onClick={() => setNewDomainColor(preset.value)}
                     className={cn(
-                      'w-9 h-9 rounded-full border border-border/40 bg-background/90 shadow-sm transition-all hover:scale-110',
+                      'w-9 h-9 rounded-full border border-border bg-background shadow-sm transition-all hover:scale-110',
                       newDomainColor === preset.value && 'ring-2 ring-offset-2 ring-foreground'
                     )}
                     style={{ backgroundColor: preset.value }}
@@ -295,7 +295,7 @@ export function DomainSelector({
             </DialogHeader>
             <div className="space-y-4">
               {/* Live preview */}
-              <div className="flex items-center justify-between rounded-md border bg-muted/40 px-3 py-2">
+              <div className="flex items-center justify-between rounded-md border bg-muted px-3 py-2">
                 <div className="flex items-center gap-2">
                   <div
                     className="h-3 w-3 rounded-full"
@@ -341,7 +341,7 @@ export function DomainSelector({
                       type="button"
                       onClick={() => setEditingDomain({ ...editingDomain, color: preset.value })}
                       className={cn(
-                        'w-9 h-9 rounded-full border border-border/40 bg-background/90 shadow-sm transition-all hover:scale-110',
+                        'w-9 h-9 rounded-full border border-border bg-background shadow-sm transition-all hover:scale-110',
                         editingDomain.color === preset.value &&
                           'ring-2 ring-offset-2 ring-foreground'
                       )}

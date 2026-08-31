@@ -93,7 +93,7 @@ export function WeekSection({
   return (
     <div className={cn('border rounded-lg bg-card', className)}>
       {/* Week Header */}
-      <div className="p-4 border-b bg-muted/30">
+      <div className="p-4 border-b bg-muted">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button

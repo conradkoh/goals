@@ -61,7 +61,7 @@ function InitiativeListRow({
 
   return (
     <li>
-      <div className="flex items-start gap-1 rounded-md hover:bg-accent/50 transition-colors">
+      <div className="flex items-start gap-1 rounded-md hover:bg-accent transition-colors">
         <button type="button" onClick={onView} className="flex-1 min-w-0 text-left px-2 py-2">
           <div className="min-w-0 flex items-start gap-2">
             <span

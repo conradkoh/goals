@@ -134,7 +134,7 @@ const AttendanceContentInner = ({
               <Skeleton className="h-6 w-20" />
             ) : (
               <>
-                <Badge variant="outline" className="bg-green-50 dark:bg-green-950/20">
+                <Badge variant="outline" className="bg-green-50 dark:bg-green-950">
                   <CheckCircle2 className="h-3 w-3 mr-1" /> {attendingCount}
                 </Badge>
                 <Badge variant="outline" className="bg-red-50 dark:bg-red-950/20">
@@ -260,7 +260,7 @@ const AttendanceContentInner = ({
                       return (
                         <div
                           key={name}
-                          className="p-2 border rounded-md relative hover:bg-accent/50"
+                          className="p-2 border rounded-md relative hover:bg-accent"
                         >
                           <button
                             className="cursor-pointer w-full text-left p-0 inline-block"
@@ -333,7 +333,7 @@ const AttendanceContentInner = ({
                       return (
                         <div
                           key={name}
-                          className="p-2 border rounded-md relative hover:bg-accent/50"
+                          className="p-2 border rounded-md relative hover:bg-accent"
                         >
                           <button
                             className="cursor-pointer w-full text-left p-0 inline-block"
@@ -427,7 +427,7 @@ const AttendanceContentInner = ({
                     const isYou = isCurrentUser(name, attendanceMap, isAuthenticated, currentUser);
 
                     return (
-                      <div key={name} className="p-2 border rounded-md relative hover:bg-accent/50">
+                      <div key={name} className="p-2 border rounded-md relative hover:bg-accent">
                         <button
                           className="cursor-pointer w-full text-left p-0 inline-block"
                           type="button"

@@ -55,7 +55,7 @@ export function DocumentCard({ document, onClick, className }: DocumentCardProps
 
   return (
     <Card
-      className={cn('cursor-pointer transition-colors hover:bg-accent/50', className)}
+      className={cn('cursor-pointer transition-colors hover:bg-accent', className)}
       onClick={onClick}
     >
       <CardHeader className="pb-2">

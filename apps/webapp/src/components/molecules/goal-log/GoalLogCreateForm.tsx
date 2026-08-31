@@ -353,7 +353,7 @@ export function GoalLogEditForm({
 
   return (
     <div
-      className={cn('space-y-4 p-4 border rounded-md bg-muted/20', className)}
+      className={cn('space-y-4 p-4 border rounded-md bg-muted', className)}
       onKeyDownCapture={handleKeyDown}
     >
       <div className="flex items-center justify-between">

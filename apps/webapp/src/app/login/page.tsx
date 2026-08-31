@@ -65,7 +65,7 @@ function LoginPageContent() {
 
 function _renderSignupDisabledBanner() {
   return (
-    <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
+    <div className="rounded-lg border border-border bg-muted p-4 text-center">
       <p className="text-sm font-medium">Sign-ups are currently closed</p>
       <p className="text-xs text-muted-foreground mt-1">Returning users can still sign in below.</p>
     </div>
@@ -83,7 +83,7 @@ function _renderInviteOnlyHint() {
 function _renderInviteSignupOption() {
   return (
     <Link href="/signup/invite" className="block no-underline">
-      <div className="flex items-center justify-between h-16 px-6 hover:bg-muted/50 transition-colors cursor-pointer group">
+      <div className="flex items-center justify-between h-16 px-6 hover:bg-muted transition-colors cursor-pointer group">
         <div className="flex items-center gap-4">
           <div className="flex items-center justify-center w-8 h-8">
             <Ticket className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -247,7 +247,7 @@ function _renderLoginOptions(options: {
 function _renderCodeLoginOption() {
   return (
     <Link href="/login/code" className="block no-underline">
-      <div className="flex items-center justify-between h-16 px-6 hover:bg-muted/50 transition-colors cursor-pointer group">
+      <div className="flex items-center justify-between h-16 px-6 hover:bg-muted transition-colors cursor-pointer group">
         <div className="flex items-center gap-4">
           <div className="flex items-center justify-center w-8 h-8">
             <KeyRound className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -272,7 +272,7 @@ function _renderRecoverySection() {
   return (
     <div className="border-t border-border">
       <Link href="/recover" className="block">
-        <div className="flex items-center justify-between h-14 px-6 hover:bg-muted/30 transition-colors cursor-pointer group">
+        <div className="flex items-center justify-between h-14 px-6 hover:bg-muted transition-colors cursor-pointer group">
           <div className="flex items-center gap-4">
             <div className="flex items-center justify-center w-8 h-8">
               <KeySquare className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />

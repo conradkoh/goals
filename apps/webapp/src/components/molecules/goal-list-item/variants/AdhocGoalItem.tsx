@@ -163,11 +163,11 @@ export function AdhocGoalItem({
 
   return (
     <GoalProvider goal={goalWithChildren}>
-      <div className={cn('space-y-0.5', depth > 0 && 'ml-4 border-l border-border/50 pl-2')}>
+      <div className={cn('space-y-0.5', depth > 0 && 'ml-4 border-l border-border pl-2')}>
         {/* Main goal item */}
         <div
           className={cn(
-            'flex items-start gap-2 group/goal-item rounded-sm hover:bg-accent/50 transition-colors py-1',
+            'flex items-start gap-2 group/goal-item rounded-sm hover:bg-accent transition-colors py-1',
             goal.isComplete && 'opacity-60',
             className
           )}

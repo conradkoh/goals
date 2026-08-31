@@ -356,7 +356,7 @@ export function PullGoalsPreviewDialog(props: PullGoalsPreviewDialogProps) {
         <div className="relative min-h-0 flex-1 overflow-y-auto pr-2 -mr-2">
           {/* Loading overlay */}
           {isRefreshingPreview && totalTasks > 0 && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background/60">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-md bg-background">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}

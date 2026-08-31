@@ -166,7 +166,7 @@ function QuarterlySummaryContent() {
 
           {/* Year and Quarter Selector */}
           <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-            <div className="p-6 border-b bg-muted/30">
+            <div className="p-6 border-b bg-muted">
               <h2 className="text-lg font-semibold text-foreground">Select Period</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Choose the year and quarter for your report

@@ -491,7 +491,7 @@ function _renderThirdPartyAccounts(
 function _renderUserTypeSpecificInfo(user: { type: string }) {
   if (user.type === 'anonymous') {
     return (
-      <div className="text-sm text-muted-foreground bg-muted/30 rounded-md p-3">
+      <div className="text-sm text-muted-foreground bg-muted rounded-md p-3">
         <p>Personalize your account by updating your display name above.</p>
       </div>
     );

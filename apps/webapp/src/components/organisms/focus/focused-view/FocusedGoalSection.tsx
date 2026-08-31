@@ -6,7 +6,7 @@ export type FocusedGoalSectionTone = 'muted' | 'urgent';
 
 const toneStyles: Record<FocusedGoalSectionTone, { badge: string; dot: string; text: string }> = {
   muted: {
-    badge: 'bg-muted/60',
+    badge: 'bg-muted',
     dot: 'bg-muted-foreground',
     text: 'text-muted-foreground',
   },

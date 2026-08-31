@@ -89,7 +89,7 @@ export function EditableMarkdown({
       onKeyDown={handleViewKeyDown}
       className={cn(
         'rounded-lg p-4 cursor-pointer transition-colors',
-        'hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isEmpty && 'text-muted-foreground',
         className
       )}

@@ -481,7 +481,7 @@ function ExplanationSection({ hasAdhocGoals }: ExplanationSectionProps) {
  */
 function InstructionsSection() {
   return (
-    <div className="bg-muted/50 dark:bg-muted/30 rounded-lg p-3">
+    <div className="bg-muted bg-muted rounded-lg p-3">
       <p className="text-sm text-muted-foreground">
         <span className="font-medium text-foreground">Select goals to pull:</span> Check the goals
         you want to move to this quarter. Click &quot;View&quot; to open the previous quarter and
@@ -559,7 +559,7 @@ function QuarterlyGoalsSection({
                 'flex items-start gap-3 p-3 rounded-lg border transition-colors',
                 isSelected
                   ? 'bg-primary/5 dark:bg-primary/10 border-primary/20'
-                  : 'bg-muted/30 dark:bg-muted/20 border-transparent hover:border-border'
+                  : 'bg-muted bg-muted border-transparent hover:border-border'
               )}
             >
               <Checkbox
@@ -725,12 +725,12 @@ function DomainGoalsGroup({
     domainGroup.goals.some((g) => selectedIds.has(g.id.toString())) && !allInDomainSelected;
 
   return (
-    <div className="border rounded-lg overflow-hidden dark:border-border/50">
+    <div className="border rounded-lg overflow-hidden border-border">
       <div
         className={cn(
           'flex items-center gap-2 px-3 py-2 cursor-pointer',
           domainGroup.domainId === null
-            ? 'bg-muted/50 dark:bg-muted/30'
+            ? 'bg-muted bg-muted'
             : 'bg-purple-50 dark:bg-purple-950/20'
         )}
         onClick={() => onCollapseToggle(domainKey)}
@@ -781,7 +781,7 @@ function DomainGoalsGroup({
                   'flex items-start gap-3 px-3 py-2 pl-10 transition-colors',
                   isSelected
                     ? 'bg-primary/5 dark:bg-primary/10'
-                    : 'hover:bg-muted/30 dark:hover:bg-muted/20'
+                    : 'hover:bg-muted dark:hover:bg-muted'
                 )}
               >
                 <Checkbox

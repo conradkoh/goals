@@ -54,7 +54,7 @@ export function ThemeSettings() {
           onValueChange={handleThemeChange}
           className="grid gap-4 md:grid-cols-3"
         >
-          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent/50">
+          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent">
             <RadioGroupItem value="light" id="theme-light" />
             <Label htmlFor="theme-light" className="flex flex-1 items-center gap-2 cursor-pointer">
               <Sun className="h-5 w-5" />
@@ -65,7 +65,7 @@ export function ThemeSettings() {
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent/50">
+          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent">
             <RadioGroupItem value="dark" id="theme-dark" />
             <Label htmlFor="theme-dark" className="flex flex-1 items-center gap-2 cursor-pointer">
               <Moon className="h-5 w-5" />
@@ -76,7 +76,7 @@ export function ThemeSettings() {
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent/50">
+          <div className="flex items-center space-x-2 rounded-md border p-4 cursor-pointer hover:bg-accent">
             <RadioGroupItem value="system" id="theme-system" />
             <Label htmlFor="theme-system" className="flex flex-1 items-center gap-2 cursor-pointer">
               <Laptop className="h-5 w-5" />

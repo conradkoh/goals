@@ -84,7 +84,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     li: ({ children }: ContentProps) => <li className="text-foreground">{children}</li>,
     // Clean blockquote with lighter gray text (GitHub-style)
     blockquote: ({ children }: ContentProps) => (
-      <blockquote className="border-l-4 border-border my-6 bg-muted/30 rounded-md px-5 py-3 text-muted-foreground/80 [&>p]:mb-0 [&>p]:text-muted-foreground/80">
+      <blockquote className="border-l-4 border-border my-6 bg-muted rounded-md px-5 py-3 text-muted-foreground/80 [&>p]:mb-0 [&>p]:text-muted-foreground/80">
         {children}
       </blockquote>
     ),
@@ -100,7 +100,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         );
       }
       return (
-        <code className="relative rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground border border-border/50">
+        <code className="relative rounded bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground border border-border">
           {children}
         </code>
       );
@@ -128,13 +128,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         <table className="w-full border-collapse text-sm">{children}</table>
       </div>
     ),
-    thead: ({ children }: ContentProps) => <thead className="bg-muted/50">{children}</thead>,
+    thead: ({ children }: ContentProps) => <thead className="bg-muted">{children}</thead>,
     tbody: ({ children }: ContentProps) => <tbody>{children}</tbody>,
     tr: ({ children }: ContentProps) => (
       <tr className="border-b border-border last:border-b-0">{children}</tr>
     ),
     th: ({ children }: ContentProps) => (
-      <th className="px-4 py-3 text-left font-semibold text-foreground bg-muted/30 border-r border-border last:border-r-0">
+      <th className="px-4 py-3 text-left font-semibold text-foreground bg-muted border-r border-border last:border-r-0">
         {children}
       </th>
     ),

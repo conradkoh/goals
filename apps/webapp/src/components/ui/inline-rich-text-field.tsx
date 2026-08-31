@@ -97,7 +97,7 @@ export function InlineRichTextEditorChrome({
 
   return (
     <div
-      className={cn('min-w-0 rounded-md pt-4 pb-4 px-3 bg-muted/30', className)}
+      className={cn('min-w-0 rounded-md pt-4 pb-4 px-3 bg-muted', className)}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
           onSave();
@@ -133,7 +133,7 @@ export function InlineRichTextEmptyTrigger({
       type="button"
       onClick={onClick}
       className={cn(
-        'w-full text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md px-3 py-4 transition-colors cursor-pointer',
+        'w-full text-left text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-3 py-4 transition-colors cursor-pointer',
         className
       )}
     >

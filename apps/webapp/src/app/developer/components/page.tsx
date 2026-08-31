@@ -23,7 +23,7 @@ export default function DeveloperComponentsIndexPage() {
             Organized visual and compatibility stories for UI components. Each story isolates a
             component or pattern for Safari/iOS regression checking.
           </p>
-          <div className="mt-4 rounded-lg border bg-muted/50 p-4">
+          <div className="mt-4 rounded-lg border bg-muted p-4">
             <p className="text-sm text-muted-foreground">
               <strong>Note:</strong> These pages are only available in development mode. For broader
               feature demos, see the{' '}
@@ -91,7 +91,7 @@ export default function DeveloperComponentsIndexPage() {
                         <Badge
                           key={badge}
                           variant="outline"
-                          className="border-border bg-accent/50 text-xs"
+                          className="border-border bg-accent text-xs"
                         >
                           {badge}
                         </Badge>

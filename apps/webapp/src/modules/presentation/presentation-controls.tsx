@@ -212,7 +212,7 @@ export function PresentationControls() {
       {/* Main Controls - Fixed bar at bottom of screen */}
       <div
         className={cn(
-          'fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-3 transition-opacity duration-300 bg-background/80 text-foreground backdrop-blur-sm px-4 py-2 rounded-full shadow-md border border-border',
+          'fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 gap-3 transition-opacity duration-300 bg-background text-foreground  px-4 py-2 rounded-full shadow-md border border-border',
           // Hide controls in fullscreen mode when not interacting
           isFullScreen && !controlsVisible && 'opacity-0'
         )}
@@ -304,7 +304,7 @@ export function PresentationControls() {
       {/* Info Dialog - Shown when info button is clicked */}
       {showSyncInfo && isMounted && (
         <div
-          className="fixed inset-0 z-50 bg-black/30"
+          className="fixed inset-0 z-50"
           onClick={handleCloseModal}
           onKeyDown={handleKeyDown}
           aria-hidden="true"

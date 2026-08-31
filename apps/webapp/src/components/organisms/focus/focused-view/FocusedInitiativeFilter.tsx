@@ -29,7 +29,7 @@ export function FocusedInitiativeFilter({
   const value = selectedInitiativeId ?? '__all__';
 
   return (
-    <div className="px-4 py-2 border-b bg-muted/30">
+    <div className="px-4 py-2 border-b bg-muted">
       <div className="flex items-center gap-2">
         <Flag className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
         <Select

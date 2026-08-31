@@ -28,7 +28,7 @@ export default function DeveloperIndexPage() {
             Internal developer resources for component compatibility, patterns, and regression
             stories. Available in development mode only.
           </p>
-          <div className="mt-4 rounded-lg border bg-muted/50 p-4">
+          <div className="mt-4 rounded-lg border bg-muted p-4">
             <p className="text-sm text-muted-foreground">
               <strong>Note:</strong> For broader feature demos and interactive tests, see the{' '}
               <Link href="/test" className="text-primary underline-offset-4 hover:underline">
@@ -72,7 +72,7 @@ export default function DeveloperIndexPage() {
                         <Badge
                           key={badge}
                           variant="outline"
-                          className="border-border bg-accent/50 text-xs"
+                          className="border-border bg-accent text-xs"
                         >
                           {badge}
                         </Badge>

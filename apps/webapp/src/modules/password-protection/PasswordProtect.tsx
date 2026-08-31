@@ -88,7 +88,7 @@ export function PasswordProtect({
               <DropdownMenuTrigger
                 className={cn(
                   buttonVariants({ variant: 'ghost', size: 'sm' }),
-                  'h-8 w-8 p-0 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background/90'
+                  'h-8 w-8 p-0 bg-background  border border-border hover:bg-background'
                 )}
               >
                 <MoreVerticalIcon className="h-4 w-4" />
@@ -120,12 +120,12 @@ export function PasswordProtect({
 
         {/* Unhide overlay when temporarily hidden */}
         {isTemporarilyHidden && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-sm">
+          <div className="absolute inset-0 flex items-center justify-center bg-background ">
             <Button
               onClick={unhide}
               variant="secondary"
               size="sm"
-              className="bg-background/90 backdrop-blur-sm border border-border/50"
+              className="bg-background  border border-border"
             >
               <HideIcon className="mr-2 h-4 w-4" />
               Show content

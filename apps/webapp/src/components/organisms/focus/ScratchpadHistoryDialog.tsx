@@ -165,7 +165,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
       <div className="space-y-4 pr-3 py-2">
         {groupArchivesByDay(archivedScratchpads).map(({ dateLabel, items }) => (
           <div key={dateLabel}>
-            <div className="sticky top-0 bg-muted/50 dark:bg-muted/30 backdrop-blur-sm z-10 py-2 px-1">
+            <div className="sticky top-0 bg-muted bg-muted  z-10 py-2 px-1">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {dateLabel}
               </h3>
@@ -175,7 +175,7 @@ export function ScratchpadHistoryDialog({ open, onOpenChange }: ScratchpadHistor
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item._id)}
-                  className={`rounded-md px-3 py-2 cursor-pointer hover:bg-accent/50 transition-colors duration-150 ${
+                  className={`rounded-md px-3 py-2 cursor-pointer hover:bg-accent transition-colors duration-150 ${
                     selectedId === item._id ? 'bg-accent border-l-2 border-primary' : ''
                   }`}
                 >

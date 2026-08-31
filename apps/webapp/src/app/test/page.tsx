@@ -144,7 +144,7 @@ export default function TestIndexPage() {
             Explore and test various components, features, and functionality. Each test page
             demonstrates different aspects of the application with interactive examples.
           </p>
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+          <div className="mt-4 p-4 bg-muted rounded-lg border">
             <p className="text-sm text-muted-foreground">
               <strong>Note:</strong> Test pages are only available in development mode. They provide
               a playground for testing components and features before integration.
@@ -192,7 +192,7 @@ export default function TestIndexPage() {
                           <Badge
                             key={badge}
                             variant="outline"
-                            className="text-xs bg-accent/50 hover:bg-accent border-border"
+                            className="text-xs bg-accent hover:bg-accent border-border"
                           >
                             {badge}
                           </Badge>
@@ -210,7 +210,7 @@ export default function TestIndexPage() {
         <div className="mt-12 border-t border-border pt-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="space-y-2">
-              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 inline-block">
+              <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950 inline-block">
                 <CheckSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold text-foreground">Interactive Components</h3>

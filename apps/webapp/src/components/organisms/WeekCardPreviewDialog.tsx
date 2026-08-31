@@ -132,7 +132,7 @@ const GoalListSection = ({
             {Array.from(quarterlyGoals.values()).map((goal) => (
               <div
                 key={`quarterly-${goal.id}`}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted dark:bg-muted/50"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted bg-muted"
               >
                 {goal.isStarred && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
                 {goal.isPinned && <Pin className="h-3.5 w-3.5 fill-blue-400 text-blue-400" />}
@@ -156,7 +156,7 @@ const GoalListSection = ({
               return (
                 <div
                   key={`weekly-${goal.id}`}
-                  className="px-2 py-1 rounded-md bg-muted dark:bg-muted/50"
+                  className="px-2 py-1 rounded-md bg-muted bg-muted"
                 >
                   <div className="font-medium text-sm text-foreground break-words">
                     {goal.title}
@@ -201,7 +201,7 @@ const GoalListSection = ({
                         ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800'
                         : quarterlyGroup.goal.isPinned
                           ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
-                          : 'bg-muted dark:bg-muted/50 border-border'
+                          : 'bg-muted bg-muted border-border'
                     )}
                   >
                     {Object.entries(quarterlyGroup.weeklyGoals).map(([weeklyId, weeklyGroup]) => {
@@ -495,7 +495,7 @@ export const WeekCardPreviewDialog = ({
                           {(preview?.skippedGoals ?? []).map((goal) => (
                             <div
                               key={`skipped-${goal.id}`}
-                              className="px-2 py-1 rounded-md bg-muted dark:bg-muted/50 border border-border"
+                              className="px-2 py-1 rounded-md bg-muted bg-muted border border-border"
                             >
                               <div className="font-medium text-sm text-muted-foreground break-words">
                                 {goal.title}

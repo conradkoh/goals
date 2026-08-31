@@ -103,7 +103,7 @@ function GoalListItem({
         <button
           type="button"
           onClick={onClick}
-          className="w-full flex items-start gap-2 rounded-md px-2 py-2 hover:bg-accent/40 text-left"
+          className="w-full flex items-start gap-2 rounded-md px-2 py-2 hover:bg-accent text-left"
         >
           {content}
         </button>
@@ -282,7 +282,7 @@ export function InitiativeDetailsDialog({
                 <button
                   type="button"
                   onClick={() => onEdit(initiative)}
-                  className="text-sm text-muted-foreground text-left hover:text-foreground hover:bg-muted/50 rounded-md px-0 py-1 transition-colors cursor-pointer w-full"
+                  className="text-sm text-muted-foreground text-left hover:text-foreground hover:bg-muted rounded-md px-0 py-1 transition-colors cursor-pointer w-full"
                 >
                   No description — click to add
                 </button>

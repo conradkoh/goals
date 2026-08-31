@@ -86,7 +86,7 @@ export function QuarterlyGoalSelectorPanel() {
   if (isLoadingQuarterlyGoals) {
     return (
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b bg-muted/30">
+        <div className="p-6 border-b bg-muted">
           <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Strategic high-level goals for the quarter
@@ -102,7 +102,7 @@ export function QuarterlyGoalSelectorPanel() {
   if (!quarterlyGoals) {
     return (
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b bg-muted/30">
+        <div className="p-6 border-b bg-muted">
           <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
         </div>
         <div className="p-6">
@@ -118,7 +118,7 @@ export function QuarterlyGoalSelectorPanel() {
   if (quarterlyGoals.length === 0) {
     return (
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b bg-muted/30">
+        <div className="p-6 border-b bg-muted">
           <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
         </div>
         <div className="p-6">
@@ -135,7 +135,7 @@ export function QuarterlyGoalSelectorPanel() {
 
   return (
     <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-6 border-b bg-muted/30">
+      <div className="p-6 border-b bg-muted">
         <h2 className="text-lg font-semibold text-foreground">Quarterly Goals</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Strategic high-level goals for the quarter
@@ -184,8 +184,8 @@ export function QuarterlyGoalSelectorPanel() {
                   htmlFor={`goal-${goal._id}`}
                   className={cn(
                     'flex items-start space-x-3 p-3 rounded-lg transition-colors cursor-pointer',
-                    'hover:bg-accent/50 dark:hover:bg-accent/30',
-                    isSelected && 'bg-accent/30 dark:bg-accent/20'
+                    'hover:bg-accent dark:hover:bg-accent',
+                    isSelected && 'bg-accent bg-accent'
                   )}
                 >
                   <Checkbox
@@ -247,7 +247,7 @@ export function QuarterlyGoalSelectorPanel() {
               <span className="text-xs">No weekly goals assigned</span>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted/30">
+              <div className="space-y-2 border rounded-lg p-3 mt-2 bg-muted">
                 {emptyGoals.map((goal) => {
                   const isSelected = selectedGoalIds.includes(goal._id);
                   return (
@@ -256,8 +256,8 @@ export function QuarterlyGoalSelectorPanel() {
                       htmlFor={`empty-goal-${goal._id}`}
                       className={cn(
                         'flex items-start space-x-3 p-3 rounded-lg transition-colors cursor-pointer',
-                        'hover:bg-accent/50 dark:hover:bg-accent/30',
-                        isSelected && 'bg-accent/30 dark:bg-accent/20'
+                        'hover:bg-accent dark:hover:bg-accent',
+                        isSelected && 'bg-accent bg-accent'
                       )}
                     >
                       <Checkbox
@@ -342,7 +342,7 @@ export function InitiativeSelectorPanel() {
   if (isLoadingInitiatives) {
     return (
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b bg-muted/30">
+        <div className="p-6 border-b bg-muted">
           <h2 className="text-lg font-semibold text-foreground">Initiatives</h2>
         </div>
         <div className="p-6">
@@ -378,7 +378,7 @@ export function InitiativeSelectorPanel() {
 
   return (
     <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-6 border-b bg-muted/30">
+      <div className="p-6 border-b bg-muted">
         <h2 className="text-lg font-semibold text-foreground">Initiatives</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Select initiatives active this quarter to build agent-ready summary context
@@ -421,8 +421,8 @@ export function InitiativeSelectorPanel() {
                 key={initiative._id}
                 htmlFor={`initiative-${initiative._id}`}
                 className={cn(
-                  'flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent/50',
-                  isSelected && 'bg-accent/30 border-primary/30'
+                  'flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent',
+                  isSelected && 'bg-accent border-primary'
                 )}
               >
                 <Checkbox
@@ -554,7 +554,7 @@ export function AdhocDomainSelectorPanel() {
   if (!domains || domains.length === 0) {
     return (
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-        <div className="p-6 border-b bg-muted/30">
+        <div className="p-6 border-b bg-muted">
           <h2 className="text-lg font-semibold text-foreground">Adhoc Goals</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Tactical tasks and smaller wins - select domains to include
@@ -573,7 +573,7 @@ export function AdhocDomainSelectorPanel() {
 
   return (
     <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
-      <div className="p-6 border-b bg-muted/30">
+      <div className="p-6 border-b bg-muted">
         <h2 className="text-lg font-semibold text-foreground">Adhoc Goals</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Tactical tasks and smaller wins - select domains to include
@@ -624,8 +624,8 @@ export function AdhocDomainSelectorPanel() {
                 htmlFor={`domain-${domain._id}`}
                 className={cn(
                   'flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer',
-                  'hover:bg-accent/50 dark:hover:bg-accent/30',
-                  isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
+                  'hover:bg-accent dark:hover:bg-accent',
+                  isSelected && 'bg-accent bg-accent border-primary',
                   !hasGoals && 'opacity-60'
                 )}
               >
@@ -675,8 +675,8 @@ export function AdhocDomainSelectorPanel() {
                 htmlFor="domain-uncategorized"
                 className={cn(
                   'flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer',
-                  'hover:bg-accent/50 dark:hover:bg-accent/30',
-                  isSelected && 'bg-accent/30 dark:bg-accent/20 border-primary/30',
+                  'hover:bg-accent dark:hover:bg-accent',
+                  isSelected && 'bg-accent bg-accent border-primary',
                   !hasGoals && 'opacity-60'
                 )}
               >
