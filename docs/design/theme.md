@@ -110,7 +110,7 @@ A sophisticated dark theme that balances professionalism with industrial charact
 
 ```css
 Background:        #09090b (zinc-950)
-Surface:           rgba(24, 24, 27, 0.5) (zinc-900/50) + backdrop-blur
+Surface:           #18181b (zinc-900) — solid, opaque
 Text Primary:      #fafafa (zinc-100)
 Text Muted:        #71717a (zinc-500)
 Accent:            #fafafa (zinc-100) on #09090b (zinc-950)
@@ -137,15 +137,15 @@ Info:              #60a5fa (blue-400)
 - Reduces eye strain during extended use
 - Premium, modern aesthetic
 
-### Neutral Glass (Secondary Recommendation)
+### Neutral Light (Secondary Recommendation)
 
-A light theme with subtle glassmorphism effects, ideal for daytime use.
+A light theme with solid opaque surfaces, ideal for daytime use.
 
 **Colors:**
 
 ```css
 Background:        #f5f5f5 (neutral-100)
-Surface:           rgba(255, 255, 255, 0.6) (white/60) + backdrop-blur
+Surface:           #ffffff (white) — solid, opaque
 Text Primary:      #171717 (neutral-900)
 Text Muted:        #737373 (neutral-500)
 Accent:            #171717 (neutral-900) on #fafafa (neutral-50)
@@ -169,8 +169,7 @@ Info:              #1d4ed8 (blue-700)
 
 - Clean, professional appearance
 - Excellent readability in bright environments
-- Softer, less intense than pure white
-- Subtle depth through glassmorphism
+- Solid surfaces with border-based depth (no translucency or backdrop blur)
 
 ## Layout & Spacing
 
@@ -366,9 +365,7 @@ Tight spacing:         0.5rem (gap-2)
     <Icon className="w-3.5 h-3.5 text-muted" strokeWidth={2} />
     <span className="text-[10px] font-mono font-bold text-success">+12.3%</span>
   </div>
-  <div className="text-[10px] text-muted uppercase tracking-wider font-bold mb-0.5">
-    Throughput
-  </div>
+  <div className="text-[10px] text-muted uppercase tracking-wider font-bold mb-0.5">Throughput</div>
   <div className="flex items-baseline gap-0.5">
     <span className="text-lg font-bold tracking-tight tabular-nums">12.4K</span>
     <span className="text-[10px] text-muted font-bold">/s</span>
@@ -382,9 +379,7 @@ Tight spacing:         0.5rem (gap-2)
 <div className="flex items-center gap-2">
   <div className="w-1.5 h-1.5 bg-emerald-400"></div>
   <span className="text-xs font-bold uppercase tracking-wide">Database</span>
-  <span className="text-emerald-400 text-[10px] font-bold font-mono">
-    OPERATIONAL
-  </span>
+  <span className="text-emerald-400 text-[10px] font-bold font-mono">OPERATIONAL</span>
 </div>
 ```
 
@@ -394,12 +389,12 @@ Tight spacing:         0.5rem (gap-2)
 
 ```js
 const spacing = {
-  cardPadding: "1rem", // p-4
-  tightPadding: "0.75rem", // p-3
-  gridGap: "0.75rem", // gap-3
-  rowGap: "0.5rem", // gap-2
-  iconSize: "0.875rem", // w-3.5 h-3.5
-  indicatorSize: "0.375rem", // w-1.5 h-1.5
+  cardPadding: '1rem', // p-4
+  tightPadding: '0.75rem', // p-3
+  gridGap: '0.75rem', // gap-3
+  rowGap: '0.5rem', // gap-2
+  iconSize: '0.875rem', // w-3.5 h-3.5
+  indicatorSize: '0.375rem', // w-1.5 h-1.5
 };
 ```
 
@@ -408,21 +403,21 @@ const spacing = {
 ```js
 const typography = {
   header: {
-    fontSize: "0.875rem", // text-sm
-    fontWeight: "700", // font-bold
-    textTransform: "uppercase",
-    letterSpacing: "0.05em", // tracking-wider
+    fontSize: '0.875rem', // text-sm
+    fontWeight: '700', // font-bold
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em', // tracking-wider
   },
   label: {
-    fontSize: "10px",
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    fontSize: '10px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
   },
   metric: {
-    fontSize: "1.125rem", // text-lg
-    fontWeight: "700",
-    fontVariantNumeric: "tabular-nums",
+    fontSize: '1.125rem', // text-lg
+    fontWeight: '700',
+    fontVariantNumeric: 'tabular-nums',
   },
 };
 ```

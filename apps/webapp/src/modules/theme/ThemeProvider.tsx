@@ -87,7 +87,7 @@ export const themeScript = `
         }
         case 'light': {
           document.documentElement.classList.remove('dark');
-          // V2 Industrial: Neutral Glass theme background (neutral-100)
+          // V2 Industrial: Neutral Light theme background (neutral-100)
           document.documentElement.style.backgroundColor = '#f5f5f5';
           break;
         }

@@ -115,7 +115,7 @@ A sophisticated dark theme that balances professionalism with industrial charact
 
 ```css
 Background:        #09090b (zinc-950)
-Surface:           rgba(24, 24, 27, 0.5) (zinc-900/50) + backdrop-blur
+Surface:           #18181b (zinc-900) — solid, opaque
 Text Primary:      #fafafa (zinc-100)
 Text Muted:        #71717a (zinc-500)
 Accent:            #fafafa (zinc-100) on #09090b (zinc-950)
@@ -142,15 +142,15 @@ Info:              #60a5fa (blue-400)
 - Reduces eye strain during extended use
 - Premium, modern aesthetic
 
-### Neutral Glass (Secondary Recommendation)
+### Neutral Light (Secondary Recommendation)
 
-A light theme with subtle glassmorphism effects, ideal for daytime use.
+A light theme with solid opaque surfaces, ideal for daytime use.
 
 **Colors:**
 
 ```css
 Background:        #f5f5f5 (neutral-100)
-Surface:           rgba(255, 255, 255, 0.6) (white/60) + backdrop-blur
+Surface:           #ffffff (white) — solid, opaque
 Text Primary:      #171717 (neutral-900)
 Text Muted:        #737373 (neutral-500)
 Accent:            #171717 (neutral-900) on #fafafa (neutral-50)
@@ -174,8 +174,7 @@ Info:              #1d4ed8 (blue-700)
 
 - Clean, professional appearance
 - Excellent readability in bright environments
-- Softer, less intense than pure white
-- Subtle depth through glassmorphism
+- Solid surfaces with border-based depth (no translucency or backdrop blur)
 
 ## Layout & Spacing
 
