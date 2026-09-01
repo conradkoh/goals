@@ -8,7 +8,10 @@ export class AppDashboardPage extends BasePage {
   }
 
   get heading(): Locator {
-    return this.page.getByRole('heading', { name: 'Welcome to the App' });
+    // The dashboard no longer renders the old "Welcome to the App" heading.
+    // The focus menu is shared by every authenticated dashboard view and is
+    // rendered only after the app shell has mounted.
+    return this.page.locator('#focus-menu-bar');
   }
 
   get viewProfileButton(): Locator {
