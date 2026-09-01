@@ -43,6 +43,11 @@ export default defineConfig({
       testMatch: /specs\/upstream\/markdown-editor\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
+    {
+      name: 'webkit-scratchpad',
+      testMatch: /specs\/downstream\/scratchpad\.spec\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    },
   ],
 
   /* Run your local dev server before starting the tests */
