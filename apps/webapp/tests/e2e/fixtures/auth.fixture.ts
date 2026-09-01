@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, type Page } from '@playwright/test';
 
 import { AppDashboardPage } from '../pages/app-dashboard.page';
 import { LoginPage } from '../pages/login.page';
@@ -22,5 +22,5 @@ export async function loginAnonymously(page: Page): Promise<void> {
   await loginPage.navigate();
   await loginPage.loginAnonymously();
   const dashboard = new AppDashboardPage(page);
-  await expect(dashboard.heading).toBeVisible();
+  await dashboard.waitForReady();
 }

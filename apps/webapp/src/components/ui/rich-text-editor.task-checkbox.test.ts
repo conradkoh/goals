@@ -49,6 +49,25 @@ function mockView({ checked, position = 7 }: { checked: boolean; position?: numb
   return { dispatch, node, setNodeMarkup, view };
 }
 
+function mockContentPositionView() {
+  const setNodeMarkup = vi.fn().mockReturnValue('task-item-transaction');
+  const dispatch = vi.fn();
+  const taskItemNode = { attrs: { checked: false }, type: { name: 'taskItem' } };
+  const paragraphNode = { attrs: {}, type: { name: 'paragraph' } };
+  const view = {
+    posAtDOM: vi.fn().mockReturnValue(8),
+    state: {
+      doc: {
+        nodeAt: vi.fn((position: number) => (position === 7 ? taskItemNode : paragraphNode)),
+      },
+      tr: { setNodeMarkup },
+    },
+    dispatch,
+  } as unknown as EditorView;
+
+  return { dispatch, setNodeMarkup, view };
+}
+
 describe('syncTaskCheckboxFromDOM', () => {
   it('dispatches a checked task-item transaction when the native checkbox changed', () => {
     const { checkbox, taskItem } = taskCheckboxFixture(true);
@@ -69,6 +88,16 @@ describe('syncTaskCheckboxFromDOM', () => {
 
     expect(setNodeMarkup).not.toHaveBeenCalled();
     expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('reconciles NodeView mappings that resolve to the task-item content position', () => {
+    const { checkbox } = taskCheckboxFixture(true);
+    const { dispatch, setNodeMarkup, view } = mockContentPositionView();
+
+    expect(syncTaskCheckboxFromDOM(view, eventFor(checkbox))).toBe(false);
+
+    expect(setNodeMarkup).toHaveBeenCalledWith(7, undefined, { checked: true });
+    expect(dispatch).toHaveBeenCalledWith('task-item-transaction');
   });
 
   it('ignores non-task checkboxes and safely ignores unmappable DOM nodes', () => {

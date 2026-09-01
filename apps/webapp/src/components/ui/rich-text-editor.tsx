@@ -42,7 +42,18 @@ export function syncTaskCheckboxFromDOM(view: EditorView, event: Event): boolean
     return false;
   }
 
-  const node = view.state.doc.nodeAt(position);
+  let node = view.state.doc.nodeAt(position);
+  // A custom NodeView can map its outer DOM node to the start of its content.
+  // In that case, the task item itself is immediately before the mapped node.
+  if (node?.type.name !== 'taskItem' && position > 0) {
+    const taskItemPosition = position - 1;
+    const precedingNode = view.state.doc.nodeAt(taskItemPosition);
+    if (precedingNode?.type.name === 'taskItem') {
+      position = taskItemPosition;
+      node = precedingNode;
+    }
+  }
+
   if (!node || node.type.name !== 'taskItem' || node.attrs.checked === target.checked) {
     return false;
   }

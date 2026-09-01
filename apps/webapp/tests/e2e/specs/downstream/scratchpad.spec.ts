@@ -35,13 +35,43 @@ test.describe('Scratchpad', { tag: [TAG_DOWNSTREAM] }, () => {
     const checkbox = page.getByRole('checkbox', { name: TASK_CHECKBOX_LABEL });
     await expect(checkbox).toBeVisible();
     const taskItem = checkbox.locator('xpath=ancestor::li[1]');
-    const taskContent = taskItem.locator(':scope > div');
 
-    await checkbox.check();
-    await expect(checkbox).toBeChecked();
-    await expect(taskItem).toHaveAttribute('data-checked', 'true');
-    await expect(taskContent).toHaveCSS('text-decoration-line', 'line-through');
+    // Establish the unchecked item as a persisted baseline and reset the
+    // in-memory save status before testing the checkbox transaction.
+    await expect(checkbox).not.toBeChecked();
+    await expect(taskItem).toHaveAttribute('data-checked', 'false');
+    await expect(page.getByText('Saved', { exact: true })).toBeVisible();
 
+    await page.reload();
+    await expect(editor).toBeVisible();
+    const baselineCheckbox = page.getByRole('checkbox', { name: TASK_CHECKBOX_LABEL });
+    await expect(baselineCheckbox).not.toBeChecked();
+    await expect(baselineCheckbox.locator('xpath=ancestor::li[1]')).toHaveAttribute(
+      'data-checked',
+      'false'
+    );
+
+    const checkboxAfterReload = baselineCheckbox;
+    const taskItemAfterReload = checkboxAfterReload.locator('xpath=ancestor::li[1]');
+    const taskContentAfterReload = taskItemAfterReload.locator(':scope > div');
+
+    await checkboxAfterReload.check();
+    await expect(checkboxAfterReload).toBeChecked();
+    await expect(taskItemAfterReload).toHaveAttribute('data-checked', 'true');
+    await expect(taskContentAfterReload).toHaveCSS('text-decoration-line', 'line-through');
+
+    await checkboxAfterReload.uncheck();
+    await expect(checkboxAfterReload).not.toBeChecked();
+    await expect(taskItemAfterReload).toHaveAttribute('data-checked', 'false');
+    await expect(taskContentAfterReload).not.toHaveCSS('text-decoration-line', 'line-through');
+
+    await checkboxAfterReload.check();
+    await expect(checkboxAfterReload).toBeChecked();
+    await expect(taskItemAfterReload).toHaveAttribute('data-checked', 'true');
+    await expect(taskContentAfterReload).toHaveCSS('text-decoration-line', 'line-through');
+
+    // The baseline reload reset saveStatus, so this Saved indicator belongs to
+    // the final checked state rather than the initial paste.
     await expect(page.getByText('Saved', { exact: true })).toBeVisible();
 
     await page.reload();
