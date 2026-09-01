@@ -22,6 +22,40 @@ export function isTaskCheckboxInteraction(target: EventTarget | null): boolean {
   );
 }
 
+/**
+ * Reconciles a native TipTap task checkbox with the ProseMirror task-item node.
+ * TipTap's node view handles this in most browsers; the DOM-event fallback is
+ * intentionally idempotent so it repairs browsers that update the native input
+ * without dispatching the corresponding editor transaction.
+ */
+export function syncTaskCheckboxFromDOM(view: EditorView, event: Event): boolean {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement) || target.type !== 'checkbox') return false;
+
+  const taskItem = target.closest<HTMLLIElement>('li[data-type="taskItem"], li.task-item');
+  if (!taskItem) return false;
+
+  let position: number;
+  try {
+    position = view.posAtDOM(taskItem, 0);
+  } catch {
+    return false;
+  }
+
+  const node = view.state.doc.nodeAt(position);
+  if (!node || node.type.name !== 'taskItem' || node.attrs.checked === target.checked) {
+    return false;
+  }
+
+  view.dispatch(
+    view.state.tr.setNodeMarkup(position, undefined, {
+      ...node.attrs,
+      checked: target.checked,
+    })
+  );
+  return false;
+}
+
 /** Helper function to check if HTML content is effectively empty */
 export function isHTMLEmpty(html: string) {
   // Remove all HTML tags
@@ -439,6 +473,10 @@ export function RichTextEditor({
           styles.prose,
           className
         ),
+      },
+      handleDOMEvents: {
+        change: syncTaskCheckboxFromDOM,
+        click: syncTaskCheckboxFromDOM,
       },
       handleScrollToSelection: () => {
         if (isTaskCheckboxInteraction(lastPointerTargetRef.current)) return true;
