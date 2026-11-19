@@ -62,10 +62,15 @@ for `complete` and `reopen`; the error names the current ISO week. Quarterly goa
 the first week of the quarter server-side, and a quarterly goal created without `--week` also
 uses the first week of the quarter.
 
-Scopes: `quarterly` needs `--year` and `--quarter`; `weekly` and `daily` need `--year`,
-`--quarter` and `--week`, and daily goals also need `--day`; `adhoc` needs `--year` and
-rejects `--quarter`. `--domain` applies to adhoc goals only and cannot be combined with
-`--no-adhoc` on export.
+Scopes for `goal list`: `quarterly` needs `--year` and `--quarter`; `weekly` and `daily` need
+`--year`, `--quarter` and `--week`; `adhoc` needs `--year` and rejects `--quarter`. `--domain`
+applies to adhoc goals only and cannot be combined with `--no-adhoc` on export.
+
+Scopes for `goal create`: weekly and daily goals use `--parent <id>` (the parent quarterly/weekly
+goal); daily also needs `--day`, and `--week` is optional and defaults to the current ISO week.
+Adhoc goals take optional `--year` and `--week` that default to now, but `--week` is required
+when `--year` is not the current ISO year. Quarterly goals need `--year` and `--quarter` and
+omit `week` unless `--week` is passed.
 
 ## Command map
 
