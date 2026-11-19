@@ -145,6 +145,35 @@ const NoNewLineOnSubmit = Extension.create({
 });
 
 /**
+ * Keeps Tab / Shift-Tab inside the editor.
+ *
+ * List indent/outdent (sinkListItem / liftListItem) is bound by the list extensions at the
+ * default priority and runs first. When it declines (nothing valid to indent/outdent, first
+ * list item, plain paragraph, ...) no handler would return true, ProseMirror would leave the
+ * key unhandled and the browser would move focus to another element. This low-priority guard
+ * claims those leftover presses so they are a no-op while the caret is in the editor.
+ * Modified Tab (Ctrl/Cmd/Alt+Tab) is left alone so OS/browser shortcuts keep working.
+ */
+const KeepTabInEditor = Extension.create({
+  name: 'keep_tab_in_editor',
+  priority: 1, // lower than the default (100) so list keymaps handle Tab first
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('keepTabInEditor'),
+        props: {
+          handleKeyDown: (_view: EditorView, event: KeyboardEvent) => {
+            if (event.key !== 'Tab') return false;
+            if (event.ctrlKey || event.metaKey || event.altKey) return false;
+            return true; // handled -> ProseMirror calls preventDefault, focus stays put
+          },
+        },
+      }),
+    ];
+  },
+});
+
+/**
  * Custom Tiptap extension that handles pasting of markdown task list syntax.
  * Converts `- [ ] task` or `- [x] task` syntax to proper task list nodes.
  */
@@ -471,6 +500,7 @@ export function RichTextEditor({
         placeholder,
       }),
       NoNewLineOnSubmit,
+      KeepTabInEditor,
       MarkdownLineShortcuts,
       LinkPasteHandler,
       PWALinkClickHandler,
