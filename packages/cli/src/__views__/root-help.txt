@@ -1,0 +1,15 @@
+Usage: goals <command> [options]
+
+Command-line access to your Goals app data.
+
+Commands:
+  auth  Log in, log out and manage identities.
+
+Global options:
+  --help, -h  Show help for a command.
+  --version   Print the installed version.
+
+Getting started:
+  goals auth login
+  goals auth status
+  goals <command> --help

@@ -1,0 +1,17 @@
+Usage: goals auth login [--name <label>] [--env <qualifier>] [--webapp-url <url> --convex-url <url>]
+
+Log in through your browser and store a credential.
+
+Options:
+  --name <label>      Name this identity (default: the environment qualifier, else "default").
+  --env <qualifier>   Environment qualifier such as "dev"; shown in status and list.
+  --webapp-url <url>  Webapp origin used for browser approval. Pass together with --convex-url.
+  --convex-url <url>  Goals HTTP origin (the .convex.site URL). Pass together with --webapp-url.
+
+Examples:
+  goals auth login
+  goals auth login --name dev --env dev --webapp-url http://localhost:3000 --convex-url http://127.0.0.1:3211
+
+Notes:
+  The approval URL and a verification code are printed on stderr; type the code in the browser to approve.
+  The credential is saved in your user config directory (goals/credentials.json, mode 0600) and is never printed.

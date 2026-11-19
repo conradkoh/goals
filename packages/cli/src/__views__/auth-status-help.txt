@@ -1,0 +1,15 @@
+Usage: goals auth status [--as <label>] [--json]
+
+Show the current identity and whether its credential is valid.
+
+Options:
+  --as <label>  Identity to inspect (default: the default identity).
+  --json        Print one JSON object instead of text.
+
+Examples:
+  goals auth status
+  goals auth status --as dev --json
+
+Notes:
+  The credential itself is never shown.
+  Identity selection: --as, then GOALS_AS, then the default identity, then the only stored identity.

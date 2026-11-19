@@ -1,0 +1,12 @@
+Usage: goals auth <action> [options]
+
+Log in, log out and manage identities.
+
+Actions:
+  login   Log in through your browser and store a credential.
+  logout  Revoke the credential and remove it from this machine.
+  status  Show the current identity and whether its credential is valid.
+  list    List stored identities.
+  use     Set the default identity.
+
+Run `goals auth <action> --help` for details.
