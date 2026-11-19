@@ -41,8 +41,6 @@ async function sha256Hex(input: string): Promise<string> {
  *
  * The token is shown to the CLI machine once and never persisted server-side.
  */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export function generateToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return `gcl_${toBase64Url(bytes)}`;
@@ -52,8 +50,6 @@ export function generateToken(): string {
  * Generates a high-entropy device code: 32 random bytes as 64 lowercase hex
  * characters. Only its hash is stored.
  */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export function generateDeviceCode(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return toHex(bytes.buffer);
@@ -63,8 +59,6 @@ export function generateDeviceCode(): string {
  * Generates a six-digit user code in the range `100000`–`999999` using
  * rejection sampling over a `Uint32`, so there is no modulo bias.
  */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export function generateUserCode(): string {
   const limit = Math.floor(0x100000000 / 900000) * 900000;
   const draw = new Uint32Array(1);
@@ -77,15 +71,11 @@ export function generateUserCode(): string {
 }
 
 /** Generates a request id as a random UUID v4. */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export function generateRequestId(): string {
   return crypto.randomUUID();
 }
 
 /** Hashes a device code for storage: `sha256hex('goals-cli:device:v1:' + code)`. */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export async function hashDeviceCode(code: string): Promise<string> {
   return sha256Hex(DEVICE_CODE_DOMAIN + code);
 }
@@ -96,8 +86,6 @@ export async function hashDeviceCode(code: string): Promise<string> {
  *
  * The handle is never stored; `requireLogin` re-derives its lookup hash.
  */
-// consumed by the CLI device-code mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export async function deriveSessionHandle(token: string): Promise<string> {
   return `cli_${await sha256Hex(HANDLE_DOMAIN + token)}`;
 }
@@ -128,8 +116,6 @@ export function constantTimeEqual(a: string, b: string): boolean {
  * every other shape (wrong scheme, wrong case, extra whitespace, wrong token
  * length, missing prefix) yields `null`.
  */
-// consumed by the Bearer HTTP routes in Pass 3.
-// fallow-ignore-next-line unused-export
 export function bearerFromHeader(header: string | null): string | null {
   if (header === null) return null;
   const match = /^Bearer (gcl_[A-Za-z0-9_-]{43})$/.exec(header);

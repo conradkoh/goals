@@ -22,3 +22,10 @@ export const CLI_MAX_PENDING_GLOBAL = 200;
 export const CLI_MAX_PENDING_PER_INSTALLATION = 5;
 export const CLI_MAX_CODE_ATTEMPTS = 5;
 export const CLI_MAX_ACTIVE_CREDENTIALS_PER_USER = 25;
+
+/** Minimum CLI poll interval returned to clients (ms). */
+export const CLI_POLL_INTERVAL_MS = 2_000;
+/** Max body size for the unauthenticated POST routes (bytes). */
+export const CLI_UNAUTH_BODY_LIMIT = 8_192;
+/** Retry-After (seconds) sent with 429 responses on login request creation. */
+export const CLI_RATE_LIMIT_RETRY_AFTER_S = 60;
