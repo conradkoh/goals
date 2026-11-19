@@ -20,6 +20,7 @@ export interface AllCleanupResults {
     loginRequests: LoginRequestsCleanupResult;
     loginCodes: CleanupResult;
     loginAttempts: CleanupResult;
+    cliData: CleanupResult;
   };
 }
 
@@ -175,6 +176,7 @@ export const runAllCleanupTasks = internalMutation({
       loginRequests: await ctx.runMutation(internal.cleanupTasks.cleanupExpiredLoginRequests, {}),
       loginCodes: await ctx.runMutation(internal.cleanupTasks.cleanupExpiredLoginCodes, {}),
       loginAttempts: await ctx.runMutation(internal.cleanupTasks.cleanupOldLoginAttempts, {}),
+      cliData: await ctx.runMutation(internal.cli.authInternal.cleanupExpiredCliData, {}),
     };
 
     return {
