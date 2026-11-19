@@ -6,6 +6,7 @@ import {
   CLI_RATE_LIMIT_RETRY_AFTER_S,
   CLI_UNAUTH_BODY_LIMIT,
 } from '../../modules/cli/constants';
+import { callCliOp, gatewayInternalError } from '../../modules/cli/gateway/call';
 import { errorResponse, jsonResponse, readJson } from '../../modules/cli/httpHelpers';
 import {
   bearerFromHeader,
@@ -22,12 +23,13 @@ import type { Id } from '../_generated/dataModel';
 import { httpAction } from '../_generated/server';
 
 /**
- * Unauthenticated HTTP routes of the CLI device-code login.
+ * HTTP routes of the CLI: the unauthenticated device-code login plus the
+ * authenticated `/cli/v1/call` data gateway.
  *
  * Handlers are deliberately thin: read and validate the body, generate and
  * hash randomness, run exactly one internal mutation, then map its result to a
  * status. All state lives in `cli/authInternal`; all framing lives in
- * `modules/cli/httpHelpers`.
+ * `modules/cli/httpHelpers`; all gateway logic lives in `modules/cli/gateway`.
  *
  * Security invariants:
  *   - The bearer token appears in exactly one response: the 200 token exchange.
@@ -205,5 +207,19 @@ export const cliAuthRevokeHandler = httpAction(async (ctx, request): Promise<Res
       : errorResponse(401, 'unauthorized');
   } catch {
     return errorResponse(500, 'internal');
+  }
+});
+
+/**
+ * `POST /cli/v1/call` — the authenticated gateway.
+ *
+ * `callCliOp` maps every expected failure itself; this wrapper only covers an
+ * unexpected throw and answers with the same fixed 500 body. Nothing is logged.
+ */
+export const cliCallHandler = httpAction(async (ctx, request): Promise<Response> => {
+  try {
+    return await callCliOp(ctx, request);
+  } catch {
+    return gatewayInternalError();
   }
 });
