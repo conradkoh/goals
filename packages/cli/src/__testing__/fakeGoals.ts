@@ -1,4 +1,6 @@
 import { isoWeekOf } from '../iso-week.js';
+import type { ExportQuarterSummaryArgs } from './fakeExport.js';
+import { exportQuarterSummary } from './fakeExport.js';
 import type {
   CliGoalCreateArgs,
   CliGoalDetail,
@@ -72,7 +74,29 @@ export interface FakeGoalsOptions {
   currentUserId: () => string;
 }
 
-interface StoredGoal {
+/**
+ * The read-only view `fakeExport.ts` needs over one user's goals: it keeps the export projection
+ * free of store internals while every query still runs against the same seeded data.
+ */
+export interface StoredGoalReader {
+  ok(data: unknown): CallResult;
+  invalid(message: string): CallResult;
+  notFound(): CallResult;
+  ownedGoal(id: string): StoredGoal | undefined;
+  /** Direct children of one goal in one scope, in seed order. */
+  childrenOf(parentId: string, scope: CliScope): StoredGoal[];
+  /** Quarterly goals of one year and quarter, in seed order. */
+  quarterlyGoalsOf(year: number, quarter: number): StoredGoal[];
+  /** Adhoc goals inside `weeks`, ordered by week then seed order (the backend's index walk). */
+  adhocGoalsOf(year: number, weeks: readonly number[]): StoredGoal[];
+  /** ISO weeks of a quarter, first to last. */
+  quarterWeeks(year: number, quarter: number): number[];
+  /** First and last ISO week of a quarter. */
+  quarterWeekRange(year: number, quarter: number): { startWeek: number; endWeek: number };
+}
+
+/** One stored goal, with everything the fake engine knows about it. */
+export interface StoredGoal {
   id: string;
   userId: string;
   scope: CliScope;
@@ -192,6 +216,36 @@ export function createFakeGoals(options: FakeGoalsOptions): FakeGoals {
     const id = `goal_${goalCount}`;
     goalsOf(userId).push({ ...fields, id, userId, isComplete: fields.isComplete ?? false });
     return id;
+  }
+
+  /** First and last ISO week of a quarter, matching `getQuarterWeeks` on the backend. */
+  function quarterWeekRange(year: number, quarter: number): { startWeek: number; endWeek: number } {
+    const weeks = quarterWeeks(year, quarter);
+    return { startWeek: weeks[0] ?? 0, endWeek: weeks[weeks.length - 1] ?? 0 };
+  }
+
+  /** The export projection's read-only view over this user's goals. */
+  function reader(userId: string): StoredGoalReader {
+    return {
+      ok,
+      invalid,
+      notFound,
+      ownedGoal: (id) => ownedGoal(userId, id),
+      childrenOf: (parentId, scope) =>
+        goalsOf(userId).filter((goal) => goal.parentId === parentId && goal.scope === scope),
+      quarterlyGoalsOf: (year, quarter) =>
+        goalsOf(userId).filter(
+          (goal) => goal.scope === 'quarterly' && goal.year === year && goal.quarter === quarter
+        ),
+      adhocGoalsOf: (year, weeks) =>
+        weeks.flatMap((week) =>
+          goalsOf(userId).filter(
+            (goal) => goal.scope === 'adhoc' && goal.year === year && goal.week === week
+          )
+        ),
+      quarterWeeks,
+      quarterWeekRange,
+    };
   }
 
   function descendants(userId: string, id: string): StoredGoal[] {
@@ -501,6 +555,9 @@ export function createFakeGoals(options: FakeGoalsOptions): FakeGoals {
     if (op === 'goal.delete') return remove(userId, (args as { id: string }).id);
     if (op === 'initiative.list') return listInitiatives(userId, args as { limit?: number });
     if (op === 'initiative.get') return getInitiative(userId, (args as { id: string }).id);
+    if (op === 'export.quarterSummary') {
+      return exportQuarterSummary(reader(userId), args as ExportQuarterSummaryArgs);
+    }
     return invalid('Unknown operation');
   }
 

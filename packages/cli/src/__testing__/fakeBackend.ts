@@ -66,8 +66,8 @@ export interface FakeBackend {
   seedInitiative(fields: SeedInitiativeFields): string;
   /** Every goal of the current user, as `goal.list` would project it. */
   goals(): readonly CliGoalRow[];
-  /** Makes the next `/cli/v1/call` answer with this gateway failure. */
-  failNextCall(failure: GatewayFailure | undefined): void;
+  /** Makes the next `/cli/v1/call` answer with this gateway failure (after skipping `after`). */
+  failNextCall(failure: GatewayFailure | undefined, after?: number): void;
   /** Every `/cli/v1/call` body sent so far, in order. */
   ops(): RecordedOp[];
 }
@@ -181,6 +181,7 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
   const revoked = new Set<string>();
   let credentialCount = 0;
   let nextFailure: GatewayFailure | undefined;
+  let callsBeforeFailure = 0;
   const goals: FakeGoals = createFakeGoals({
     now: options.now,
     currentUserId: () => state.user.userId,
@@ -321,7 +322,7 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
         error: { code: 'unauthorized', message: 'Unauthorized' },
       });
     }
-    if (nextFailure !== undefined) {
+    if (nextFailure !== undefined && callsBeforeFailure === 0) {
       const failure = nextFailure;
       nextFailure = undefined;
       return jsonResponse(failure.status, {
@@ -329,6 +330,7 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
         error: { code: failure.code, message: failure.message },
       });
     }
+    if (callsBeforeFailure > 0) callsBeforeFailure -= 1;
     const fields = recordBody(body);
     if (fields.op === 'auth.whoami') return jsonResponse(200, { ok: true, data: whoami(token) });
     const result = goals.call(fields.op, fields.args, token.userId);
@@ -387,8 +389,9 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
     seedGoal: (fields) => goals.seedGoal(fields),
     seedInitiative: (fields) => goals.seedInitiative(fields),
     goals: () => goals.goals(),
-    failNextCall: (failure) => {
+    failNextCall: (failure, after) => {
       nextFailure = failure;
+      callsBeforeFailure = after ?? 0;
     },
     ops: () =>
       recorded

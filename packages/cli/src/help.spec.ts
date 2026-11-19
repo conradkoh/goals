@@ -30,6 +30,8 @@ const HELP_PAGES: [string, string[]][] = [
   ['initiative-help', ['initiative', '--help']],
   ['initiative-list-help', ['initiative', 'list', '--help']],
   ['initiative-get-help', ['initiative', 'get', '--help']],
+  ['export-help', ['export', '--help']],
+  ['export-markdown-help', ['export', 'markdown', '--help']],
 ];
 
 describe('help output', () => {

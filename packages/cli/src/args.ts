@@ -2,10 +2,10 @@ import { parseArgs } from 'node:util';
 
 import { UsageError } from './errors.js';
 
-export type FlagSpec = Record<string, { type: 'string' | 'boolean' }>;
+export type FlagSpec = Record<string, { type: 'string' | 'boolean'; multiple?: boolean }>;
 
 export interface ParsedArgs {
-  flags: Record<string, string | boolean | undefined>;
+  flags: Record<string, string | boolean | string[] | undefined>;
   positionals: string[];
 }
 
@@ -40,10 +40,39 @@ function singleValue(
   return Array.isArray(value) ? value[value.length - 1] : value;
 }
 
+type RawValue = string | boolean | (string | boolean)[] | undefined;
+
+function isMultipleFlag(spec: FlagSpec, name: string): boolean {
+  return spec[name]?.multiple === true;
+}
+
+/** Every string value of a `multiple` flag, or `undefined` when it was not passed. */
+function multipleValues(value: RawValue): string[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) return [String(value)];
+  return value.filter((entry): entry is string => typeof entry === 'string');
+}
+
+/**
+ * A `multiple` flag keeps every value as `string[]` (absent stays `undefined`); every other flag
+ * keeps `parseArgs`'s last-wins behaviour.
+ */
+function normalizedValue(
+  spec: FlagSpec,
+  name: string,
+  value: RawValue
+): string | boolean | string[] | undefined {
+  if (isMultipleFlag(spec, name)) return multipleValues(value);
+  return singleValue(value);
+}
+
 function normalizeValues(
-  values: Record<string, string | boolean | (string | boolean)[] | undefined>
-): Record<string, string | boolean | undefined> {
-  const entries = Object.entries(values).map(([key, value]) => [key, singleValue(value)] as const);
+  values: Record<string, RawValue>,
+  spec: FlagSpec
+): Record<string, string | boolean | string[] | undefined> {
+  const entries = Object.entries(values).map(
+    ([key, value]) => [key, normalizedValue(spec, key, value)] as const
+  );
   return Object.fromEntries(entries);
 }
 
@@ -83,7 +112,7 @@ export function parseFlags(
   }
   const collected = [...parsed.positionals];
   checkPositionals(collected, positionals, hint);
-  return { flags: normalizeValues(parsed.values), positionals: collected };
+  return { flags: normalizeValues(parsed.values, spec), positionals: collected };
 }
 
 /**
@@ -103,4 +132,10 @@ export function stringFlag(parsed: ParsedArgs, name: string): string | undefined
 /** True only when the flag was passed. */
 export function booleanFlag(parsed: ParsedArgs, name: string): boolean {
   return parsed.flags[name] === true;
+}
+
+/** Every value of a `multiple` flag, in the order given; `[]` when absent. */
+export function listFlag(parsed: ParsedArgs, name: string): string[] {
+  const value = parsed.flags[name];
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }

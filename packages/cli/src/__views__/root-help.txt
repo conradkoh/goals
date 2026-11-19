@@ -6,6 +6,7 @@ Commands:
   auth        Log in, log out and manage identities.
   goal        Read and change your goals.
   initiative  Read your initiatives.
+  export      Export your goals as markdown.
 
 Global options:
   --help, -h  Show help for a command.

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { booleanFlag, parseFlags, stringFlag } from './args.js';
+import { booleanFlag, listFlag, parseFlags, stringFlag } from './args.js';
 import { UsageError } from './errors.js';
 
 const HINT = 'goals demo --help';
 const SPEC = { quarter: { type: 'string' }, all: { type: 'boolean' } } as const;
+const MULTI_SPEC = {
+  goal: { type: 'string', multiple: true },
+  quarter: { type: 'string' },
+} as const;
 
 function capture(run: () => unknown): Error {
   try {
@@ -82,5 +86,26 @@ describe('parseFlags', () => {
     const parsed = parseFlags(['--quarter', ''], SPEC, HINT);
 
     expect(stringFlag(parsed, 'quarter')).toBe('');
+  });
+});
+
+describe('listFlag', () => {
+  it('collects every value of a repeated flag in order', () => {
+    const parsed = parseFlags(['--goal', 'a', '--goal', 'b'], MULTI_SPEC, HINT);
+
+    expect(listFlag(parsed, 'goal')).toEqual(['a', 'b']);
+  });
+
+  it('returns an empty list for an absent flag', () => {
+    const parsed = parseFlags([], MULTI_SPEC, HINT);
+
+    expect(listFlag(parsed, 'goal')).toEqual([]);
+  });
+
+  it('keeps last-value-wins for a flag without multiple', () => {
+    const parsed = parseFlags(['--quarter', '3', '--quarter', '4'], MULTI_SPEC, HINT);
+
+    expect(stringFlag(parsed, 'quarter')).toBe('4');
+    expect(listFlag(parsed, 'quarter')).toEqual([]);
   });
 });

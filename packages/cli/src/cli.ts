@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { runAuthCommand } from './auth/command.js';
 import { authHelp } from './auth/help.js';
+import { exportHelp } from './commands/export-help.js';
+import { runExportCommand } from './commands/export.js';
 import { goalHelp } from './commands/goal-help.js';
 import { runGoalCommand } from './commands/goal.js';
 import { initiativeHelp } from './commands/initiative-help.js';
@@ -21,6 +23,7 @@ export const commandHelpFamilies: readonly CommandFamilyHelp[] = [
   authHelp,
   goalHelp,
   initiativeHelp,
+  exportHelp,
 ];
 
 type FamilyRunner = (args: readonly string[], ctx: CommandContext) => Promise<void>;
@@ -29,6 +32,7 @@ const FAMILIES: Record<string, FamilyRunner> = {
   auth: runAuthCommand,
   goal: runGoalCommand,
   initiative: runInitiativeCommand,
+  export: runExportCommand,
 };
 
 const ROOT_USAGE = 'goals <command> [options]. Run `goals --help` for commands.';

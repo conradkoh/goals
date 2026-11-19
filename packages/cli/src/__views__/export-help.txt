@@ -1,0 +1,8 @@
+Usage: goals export <action> [options]
+
+Export your goals as markdown.
+
+Actions:
+  markdown  Print the quarterly summary markdown for a quarter or a year.
+
+Run `goals export <action> --help` for details.
