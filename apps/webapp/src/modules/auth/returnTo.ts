@@ -26,7 +26,6 @@ export function sanitizeReturnTo(value: string | null | undefined): string | nul
  * `/login?returnTo=<encoded>`. Caller passes a same-origin path+search (it is sanitized; unsafe → plain `/login`).
  * Public helper for sign-in flows that need to send the user back to a protected route.
  */
-// fallow-ignore-next-line unused-export
 export function buildLoginHref(returnTo: string): string {
   const safe = sanitizeReturnTo(returnTo);
   return safe ? `/login?returnTo=${encodeURIComponent(safe)}` : '/login';
