@@ -1,4 +1,5 @@
 import type { QuarterlyGoalSummary } from '@workspace/backend/src/usecase/getWeekDetails';
+import { generateQuarterlySummaryMarkdown } from '@workspace/shared/utilities/quarterly-markdown';
 import { Check, Copy } from 'lucide-react';
 import React from 'react';
 
@@ -6,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useClipboard } from '@/hooks/useClipboard';
-import { generateQuarterlySummaryMarkdown } from '@/lib/markdown/quarterlyMarkdown';
 import { cn } from '@/lib/utils';
 
 interface QuarterlySummaryMarkdownViewProps {

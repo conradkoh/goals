@@ -30,6 +30,8 @@
     "react-day-picker",
     "@legendapp/state",
     "@base-ui/react",
+    // Used by apps/webapp/src/components/ui/*, which dead-code analysis ignores
+    "dompurify",
   ],
   "ignoreUnresolvedImports": [
     "**/convex/_generated/**",

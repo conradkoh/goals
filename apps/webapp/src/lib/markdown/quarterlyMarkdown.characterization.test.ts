@@ -6,13 +6,13 @@ import type {
   MultipleQuarterlyGoalsSummary,
   QuarterlyGoalSummary,
 } from '@workspace/backend/src/usecase/getWeekDetails';
-import { Settings } from 'luxon';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import {
   generateMultipleQuarterlyGoalsMarkdown,
   generateQuarterlySummaryMarkdown,
-} from './quarterlyMarkdown';
+  type MarkdownQuarterlyGoalSummary,
+  type MarkdownQuarterSummary,
+} from '@workspace/shared/utilities/quarterly-markdown';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 const FIXTURES = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -30,40 +30,37 @@ const matrix = readJson('cases.json') as {
   }[];
 };
 
-describe('quarterly markdown characterization (webapp)', () => {
-  const originalZone = Settings.defaultZone;
-  const originalLocale = Settings.defaultLocale;
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(matrix.now));
-    Settings.defaultLocale = 'en-US';
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-    Settings.defaultZone = originalZone;
-    Settings.defaultLocale = originalLocale;
-  });
-
+describe('quarterly markdown (webapp consumption of shared generator)', () => {
   for (const zone of matrix.zones) {
     for (const c of matrix.cases) {
       it(`${c.name} in ${zone.id}`, () => {
-        Settings.defaultZone = zone.id;
         const data = readJson(c.fixture);
         const out =
           c.generator === 'quarter'
             ? generateQuarterlySummaryMarkdown(data as unknown as QuarterlyGoalSummary, {
                 omitIncomplete: c.omitIncomplete,
+                now: Date.parse(matrix.now),
+                timeZone: zone.id,
               })
             : generateMultipleQuarterlyGoalsMarkdown(
                 data as unknown as MultipleQuarterlyGoalsSummary,
                 {
                   omitIncomplete: c.omitIncomplete,
+                  now: Date.parse(matrix.now),
+                  timeZone: zone.id,
                 }
               );
-        return expect(out).toMatchFileSnapshot(
-          path.join(FIXTURES, 'golden', `${c.name}.${zone.label}.md`)
+        const golden = readFileSync(
+          path.join(FIXTURES, 'golden', `${c.name}.${zone.label}.md`),
+          'utf8'
         );
+        expect(out).toBe(golden);
       });
     }
   }
+
+  it('backend summaries stay assignable to the shared structural types', () => {
+    expectTypeOf<MultipleQuarterlyGoalsSummary>().toExtend<MarkdownQuarterSummary>();
+    expectTypeOf<QuarterlyGoalSummary>().toExtend<MarkdownQuarterlyGoalSummary>();
+  });
 });
