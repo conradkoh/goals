@@ -54,4 +54,19 @@ describe('getOAuthCallbackReturnTo', () => {
   it('returns /login for invalid state', () => {
     expect(getOAuthCallbackReturnTo('not-valid-json')).toBe('/login');
   });
+
+  it('ignores an absolute returnTo in state and defaults to /login', () => {
+    const state = createOAuthState('login', 'req-123', 'https://evil.example');
+    expect(getOAuthCallbackReturnTo(state)).toBe('/login');
+  });
+
+  it('ignores a protocol-relative returnTo in state and defaults to /login', () => {
+    const state = createOAuthState('login', 'req-123', '//evil.example');
+    expect(getOAuthCallbackReturnTo(state)).toBe('/login');
+  });
+
+  it('ignores an unsafe returnTo on the connect flow and defaults to /app/profile', () => {
+    const state = createOAuthState('connect', 'req-123', 'https://evil.example');
+    expect(getOAuthCallbackReturnTo(state)).toBe('/app/profile');
+  });
 });
