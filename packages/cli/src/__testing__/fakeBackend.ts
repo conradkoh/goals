@@ -1,5 +1,15 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 
+import type {
+  FakeGoals,
+  GatewayFailure,
+  RecordedOp,
+  SeedGoalFields,
+  SeedInitiativeFields,
+} from './fakeGoals.js';
+import { createFakeGoals } from './fakeGoals.js';
+import type { CliGoalRow } from '../vendor/cli-contract/index.js';
+
 export interface FakeUser {
   userId: string;
   name: string;
@@ -50,6 +60,16 @@ export interface FakeBackend {
   revoked: Set<string>;
   /** Server-side revocation (the credential then gets 401). */
   invalidate(token: string): void;
+  /** Seeds a goal for the current user (or `ownerUserId`) and returns its id. */
+  seedGoal(fields: SeedGoalFields): string;
+  /** Seeds an initiative for the current user (or `ownerUserId`) and returns its id. */
+  seedInitiative(fields: SeedInitiativeFields): string;
+  /** Every goal of the current user, as `goal.list` would project it. */
+  goals(): readonly CliGoalRow[];
+  /** Makes the next `/cli/v1/call` answer with this gateway failure. */
+  failNextCall(failure: GatewayFailure | undefined): void;
+  /** Every `/cli/v1/call` body sent so far, in order. */
+  ops(): RecordedOp[];
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -135,6 +155,7 @@ interface RecordedBody {
   requestId?: string;
   deviceCode?: string;
   op?: string;
+  args?: unknown;
 }
 
 function recordBody(body: unknown): RecordedBody {
@@ -159,6 +180,11 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
   const created: CreatedLogin[] = [];
   const revoked = new Set<string>();
   let credentialCount = 0;
+  let nextFailure: GatewayFailure | undefined;
+  const goals: FakeGoals = createFakeGoals({
+    now: options.now,
+    currentUserId: () => state.user.userId,
+  });
 
   function bearerToken(init: RequestInit): string | undefined {
     const authorization = headerRecord(init.headers).Authorization ?? '';
@@ -295,13 +321,18 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
         error: { code: 'unauthorized', message: 'Unauthorized' },
       });
     }
-    if (recordBody(body).op !== 'auth.whoami') {
-      return jsonResponse(400, {
+    if (nextFailure !== undefined) {
+      const failure = nextFailure;
+      nextFailure = undefined;
+      return jsonResponse(failure.status, {
         ok: false,
-        error: { code: 'invalid_argument', message: 'Unknown operation' },
+        error: { code: failure.code, message: failure.message },
       });
     }
-    return jsonResponse(200, { ok: true, data: whoami(token) });
+    const fields = recordBody(body);
+    if (fields.op === 'auth.whoami') return jsonResponse(200, { ok: true, data: whoami(token) });
+    const result = goals.call(fields.op, fields.args, token.userId);
+    return jsonResponse(result.status, result.body);
   }
 
   function route(url: URL, init: RequestInit, body: unknown): Response {
@@ -353,5 +384,18 @@ export function createFakeBackend(options: FakeBackendOptions): FakeBackend {
     invalidate: (token) => {
       revoked.add(token);
     },
+    seedGoal: (fields) => goals.seedGoal(fields),
+    seedInitiative: (fields) => goals.seedInitiative(fields),
+    goals: () => goals.goals(),
+    failNextCall: (failure) => {
+      nextFailure = failure;
+    },
+    ops: () =>
+      recorded
+        .filter((request) => request.url.endsWith('/cli/v1/call'))
+        .map((request) => {
+          const fields = recordBody(request.body);
+          return { op: fields.op ?? '', args: fields.args };
+        }),
   };
 }
