@@ -48,7 +48,9 @@ describe('errorResponse', () => {
   const cases: [HttpErrorCode, number, string][] = [
     ['invalid_argument', 400, 'Invalid request'],
     ['unauthorized', 401, 'Unauthorized'],
+    ['forbidden', 403, 'Forbidden'],
     ['not_found', 404, 'Not found'],
+    ['conflict', 409, 'Conflict'],
     ['rate_limited', 429, 'Too many requests'],
     ['payload_too_large', 413, 'Request body too large'],
     ['login_disabled', 503, 'Login is currently disabled'],
@@ -68,6 +70,16 @@ describe('errorResponse', () => {
 
     expect(response.headers.get('retry-after')).toBe('60');
     expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+
+  test('accepts a gateway-authored message override', async () => {
+    const response = errorResponse(401, 'unauthorized', undefined, 'Invalid or revoked credential');
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toEqual({
+      error: { code: 'unauthorized', message: 'Invalid or revoked credential' },
+    });
   });
 });
 
