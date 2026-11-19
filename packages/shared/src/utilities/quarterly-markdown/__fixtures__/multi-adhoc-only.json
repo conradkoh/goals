@@ -1,0 +1,41 @@
+{
+  "quarterlyGoals": [],
+  "adhocGoals": [
+    {
+      "title": "Capture legacy goldens",
+      "details": "Before any code moves.\nNever regenerate.",
+      "isComplete": true,
+      "adhoc": { "weekNumber": 45 },
+      "logs": [
+        {
+          "logDate": 1794468600000,
+          "content": "<p>Goldens committed.</p>"
+        }
+      ]
+    },
+    {
+      "title": "Unfinished tooling",
+      "isComplete": false,
+      "adhoc": { "weekNumber": 45 }
+    },
+    {
+      "title": "Publish workflow",
+      "isComplete": false,
+      "adhoc": { "weekNumber": 46 }
+    },
+    {
+      "title": "Review shared PR",
+      "isComplete": true,
+      "adhoc": { "weekNumber": 46 },
+      "logs": [
+        {
+          "logDate": 1794820500000,
+          "content": "<p>Approved after one pass.</p><p>No changes requested.</p>"
+        }
+      ]
+    }
+  ],
+  "year": 2026,
+  "quarter": 4,
+  "weekRange": { "startWeek": 40, "endWeek": 52 }
+}

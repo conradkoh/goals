@@ -11,6 +11,9 @@ build
 **/next-env.d.ts
 coverage
 .pnpm-debug.log
+
+# Golden/fixture files must stay byte-exact
+**/__fixtures__/**
 # Convex codegen (glob + explicit backend path)
 **/convex/_generated/**
 services/backend/convex/_generated/**
