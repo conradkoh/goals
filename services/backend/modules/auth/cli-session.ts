@@ -12,8 +12,10 @@ type DbCtx = QueryCtx | MutationCtx;
  * Looks up the credential row behind a handle and applies the active-state
  * rules (exists, not revoked, not expired). Returns `null` when unusable so
  * callers never see a stale credential.
+ *
+ * Also used by `internal.cli.authInternal.resolveHandle`.
  */
-async function findActiveCredential(ctx: DbCtx, handle: string) {
+export async function findActiveCredential(ctx: DbCtx, handle: string) {
   const handleHash = await hashHandle(handle); // compute BEFORE the query builder; never await inside the callback
   const row = await ctx.db
     .query('cliCredentials')

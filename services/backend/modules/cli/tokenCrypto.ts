@@ -112,8 +112,6 @@ export async function hashHandle(handle: string): Promise<string> {
  * in the accumulator. Used for user-code comparisons so timing does not leak
  * a matching prefix.
  */
-// consumed by the CLI approval mutation in Pass 2.
-// fallow-ignore-next-line unused-export
 export function constantTimeEqual(a: string, b: string): boolean {
   const length = Math.max(a.length, b.length);
   let diff = a.length ^ b.length;
