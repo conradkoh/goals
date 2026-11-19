@@ -56,6 +56,19 @@ function loginArgs(options: { name?: string; environment?: string; convexUrl?: s
   ];
 }
 
+/** A second CLI process wired to the same backend and the same credential file. */
+function createSharingHarness(backend: FakeBackend, source: Harness): Harness {
+  const harness = createHarness(backend, { storeOptions: { filePath: source.credentialsPath } });
+  cleanups.push(() => {
+    harness.cleanup();
+  });
+  return harness;
+}
+
+function requestUrl(input: string | URL | Request): string {
+  return typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+}
+
 function readStore(harness: Harness): CredentialsFile {
   return JSON.parse(readFileSync(harness.credentialsPath, 'utf8')) as CredentialsFile;
 }
@@ -405,6 +418,63 @@ describe('goals auth logout', () => {
     const store = readStore(harness);
     expect(store.accounts.map((account) => account.label)).toEqual(['default']);
     expect(store.defaultLabel).toBe('default');
+  });
+
+  it('keeps an identity added while the logout waits for the revoke', async () => {
+    const { backend, harness } = createWorld();
+    await harness.run(loginArgs({ name: 'x', environment: 'x' }));
+    await harness.run(loginArgs({ name: 'y', environment: 'y' }));
+    backend.setUser({ userId: 'user_2', name: 'Grace Hopper' });
+    const other = createSharingHarness(backend, harness);
+    let ran = false;
+
+    const result = await harness.run(['auth', 'logout', '--as', 'x'], {
+      fetch: async (input, init) => {
+        if (!ran && requestUrl(input).endsWith('/cli/auth/revoke')) {
+          ran = true;
+          const added = await other.run(loginArgs({ name: 'z', environment: 'z' }));
+          expect(added.code).toBe(0);
+        }
+        return backend.fetch(input, init);
+      },
+    });
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe("Logged out of 'x'.\n");
+    const store = readStore(harness);
+    expect(store.accounts.map((account) => account.label)).toEqual(['y', 'z']);
+    expect(store.accounts.map((account) => account.token)).toEqual([
+      backend.issued[1]?.token,
+      backend.issued[2]?.token,
+    ]);
+    expect(backend.revoked.has(backend.issued[0]?.token ?? '')).toBe(true);
+  });
+
+  it('keeps a credential that replaced the label while the logout was in flight', async () => {
+    const { backend, harness } = createWorld();
+    await harness.run(loginArgs({ name: 'L' }));
+    const other = createSharingHarness(backend, harness);
+    let ran = false;
+
+    const result = await harness.run(['auth', 'logout', '--as', 'L'], {
+      fetch: async (input, init) => {
+        if (!ran && requestUrl(input).endsWith('/cli/auth/revoke')) {
+          ran = true;
+          const relogin = await other.run(loginArgs({ name: 'L' }));
+          expect(relogin.code).toBe(0);
+        }
+        return backend.fetch(input, init);
+      },
+    });
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe("Logged out of 'L'.\n");
+    const store = readStore(harness);
+    expect(store.accounts).toHaveLength(1);
+    expect(store.accounts[0]?.label).toBe('L');
+    expect(store.accounts[0]?.credentialId).toBe('cred_2');
+    expect(store.accounts[0]?.token).toBe(backend.issued[1]?.token);
+    expect(store.accounts[0]?.token).not.toBe(backend.issued[0]?.token);
   });
 
   it('reports a missing login', async () => {

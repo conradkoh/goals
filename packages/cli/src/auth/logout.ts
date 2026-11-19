@@ -1,5 +1,5 @@
 import type { FlagSpec } from '../args.js';
-import { removeCredential, writeCredentials } from '../credentials.js';
+import { readCredentials, removeCredential, writeCredentials } from '../credentials.js';
 import type { CommandContext } from '../deps.js';
 import { safeMessage } from '../errors.js';
 import { parseAndSelect } from './select.js';
@@ -13,7 +13,7 @@ function warningText(error: unknown): string {
 }
 
 export async function runLogout(args: readonly string[], ctx: CommandContext): Promise<void> {
-  const { credential, file } = await parseAndSelect(args, FLAGS, HINT, ctx);
+  const { credential } = await parseAndSelect(args, FLAGS, HINT, ctx);
 
   try {
     await ctx.api.revoke(credential);
@@ -21,6 +21,11 @@ export async function runLogout(args: readonly string[], ctx: CommandContext): P
     ctx.deps.stderr.write(warningText(error));
   }
 
-  await writeCredentials(removeCredential(file, credential.label), ctx.deps.storeOptions);
+  // Re-read: another login/logout may have changed the file while the revoke was in flight.
+  const { credentials } = await readCredentials(ctx.deps.storeOptions);
+  const current = credentials.accounts.find((account) => account.label === credential.label);
+  if (current?.credentialId === credential.credentialId) {
+    await writeCredentials(removeCredential(credentials, credential.label), ctx.deps.storeOptions);
+  }
   ctx.deps.stdout.write(`Logged out of '${credential.label}'.\n`);
 }

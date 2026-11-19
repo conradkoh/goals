@@ -8,6 +8,7 @@ import { createFakeBackend } from '../__testing__/fakeBackend.js';
 import type { Harness } from '../__testing__/harness.js';
 import { createHarness } from '../__testing__/harness.js';
 import type { CredentialsFile } from '../credentials.js';
+import { validateCredentials } from '../credentials.js';
 
 const WEBAPP = 'http://localhost:3000';
 const CONVEX = 'http://127.0.0.1:3211';
@@ -28,6 +29,15 @@ function createWorld(options: Partial<FakeBackendOptions> = {}): {
     harness.cleanup();
   });
   return { backend, harness };
+}
+
+/** A second CLI process wired to the same backend and the same credential file. */
+function createSharingHarness(backend: FakeBackend, source: Harness): Harness {
+  const harness = createHarness(backend, { storeOptions: { filePath: source.credentialsPath } });
+  cleanups.push(() => {
+    harness.cleanup();
+  });
+  return harness;
 }
 
 function readStore(harness: Harness): CredentialsFile {
@@ -271,6 +281,56 @@ describe('goals auth login', () => {
     expect(result.code).toBe(0);
     expect(store.accounts.map((account) => account.label)).toEqual(['default', 'dev']);
     expect(store.defaultLabel).toBe('default');
+  });
+
+  it('keeps an identity added while another login waits for approval', async () => {
+    const { backend, harness } = createWorld({ pendingPolls: 1 });
+    const other = createSharingHarness(backend, harness);
+
+    const result = await harness.run([...LOGIN, '--name', 'a'], {
+      sleep: async () => {
+        backend.setUser({ userId: 'user_2', name: 'Grace Hopper' });
+        const second = await other.run([...LOGIN, '--name', 'b']);
+        expect(second.code).toBe(0);
+        backend.setUser({ userId: 'user_1', name: 'Ada Lovelace' });
+      },
+    });
+
+    expect(result.code).toBe(0);
+    const store = readStore(harness);
+    expect(store.accounts.map((account) => account.label)).toEqual(['b', 'a']);
+    expect(store.accounts.map((account) => account.userId)).toEqual(['user_2', 'user_1']);
+    expect(store.accounts.map((account) => account.token)).toEqual([
+      backend.issued[1]?.token,
+      backend.issued[0]?.token,
+    ]);
+    expect(store.defaultLabel).toBe('b');
+    expect(() => validateCredentials(store)).not.toThrow();
+  });
+
+  it('rejects a label taken while the login waited and revokes the fresh token', async () => {
+    const { backend, harness } = createWorld({ pendingPolls: 1 });
+    const other = createSharingHarness(backend, harness);
+
+    const result = await harness.run([...LOGIN, '--name', 'shared'], {
+      sleep: async () => {
+        backend.setUser({ userId: 'user_2', name: 'Grace Hopper' });
+        const second = await other.run([...LOGIN, '--name', 'shared']);
+        expect(second.code).toBe(0);
+        backend.setUser({ userId: 'user_1', name: 'Ada Lovelace' });
+      },
+    });
+
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain(
+      "identity label 'shared' is already used by another account; pass --name shared to choose a different one"
+    );
+    const store = readStore(harness);
+    expect(store.accounts).toHaveLength(1);
+    expect(store.accounts[0]?.label).toBe('shared');
+    expect(store.accounts[0]?.userId).toBe('user_2');
+    expect(store.accounts[0]?.token).toBe(backend.issued[1]?.token);
+    expect(backend.revoked.has(backend.issued[0]?.token ?? '')).toBe(true);
   });
 
   it('rejects a label collision after approval and revokes the new token', async () => {

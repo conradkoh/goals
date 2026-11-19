@@ -229,16 +229,31 @@ function finalLabel(
   return existing?.label ?? draft.label;
 }
 
-/** Writes the credential; a rejected write revokes the fresh server token so nothing is orphaned. */
+/**
+ * Re-reads the credential file right before writing so a login/logout that finished while this
+ * one waited for browser approval is never overwritten. A rejected write (or a label that was
+ * taken in the meantime) revokes the fresh server token so nothing is orphaned.
+ */
 async function persist(
   ctx: CommandContext,
-  credentials: CredentialsFile,
-  stored: StoredCredential
-): Promise<void> {
+  options: LoginOptions,
+  draft: StoredCredential,
+  installationId: string
+): Promise<StoredCredential> {
   try {
-    await writeCredentials(upsertCredential(credentials, stored), ctx.deps.storeOptions);
+    const { credentials } = await readCredentials(ctx.deps.storeOptions);
+    // The re-read makes a new installationId when the file is still missing; keep the one the
+    // create request already sent so this machine is identified consistently by the server.
+    const file =
+      credentials.accounts.length === 0 ? { ...credentials, installationId } : credentials;
+    const label = finalLabel(file, draft, options.requestedName);
+    const slot = accountsInSlot(file.accounts, draft.convexUrl, draft.environment);
+    ensureLabelAvailable(file.accounts, label, slot);
+    const stored = { ...draft, label };
+    await writeCredentials(upsertCredential(file, stored), ctx.deps.storeOptions);
+    return stored;
   } catch (error) {
-    await ctx.api.revoke(stored).catch(() => undefined);
+    await ctx.api.revoke(draft).catch(() => undefined);
     throw error;
   }
 }
@@ -272,9 +287,12 @@ export async function runLogin(args: readonly string[], ctx: CommandContext): Pr
     unregister();
   }
 
-  const draft = credentialDraft(options, approved, ctx.deps.now());
-  const stored = { ...draft, label: finalLabel(credentials, draft, options.requestedName) };
-  await persist(ctx, credentials, stored);
+  const stored = await persist(
+    ctx,
+    options,
+    credentialDraft(options, approved, ctx.deps.now()),
+    credentials.installationId
+  );
   ctx.deps.stdout.write(
     `Logged in as ${stored.name} (identity '${stored.label}', environment ${stored.environment ?? 'default'}).\n`
   );
