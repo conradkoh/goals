@@ -14,26 +14,28 @@
  *     characters.
  */
 
-/** Wire error codes (subset of the `CliErrorCode` union planned for the shared contract). */
-export type HttpErrorCode =
-  | 'invalid_argument'
-  | 'unauthorized'
-  | 'not_found'
-  | 'rate_limited'
-  | 'payload_too_large'
-  | 'login_disabled'
-  | 'internal';
+import type { CliErrorCode } from '@workspace/shared/utilities/cli-contract';
+
+/** Wire error codes, identical to the shared contract. */
+export type HttpErrorCode = CliErrorCode;
 
 /** Fixed client-facing message per error code. Never derived from request content. */
 const ERROR_MESSAGES: Record<HttpErrorCode, string> = {
   invalid_argument: 'Invalid request',
   unauthorized: 'Unauthorized',
+  forbidden: 'Forbidden',
   not_found: 'Not found',
+  conflict: 'Conflict',
   rate_limited: 'Too many requests',
   payload_too_large: 'Request body too large',
   login_disabled: 'Login is currently disabled',
   internal: 'Internal error',
 };
+
+/** Returns the fixed message for `code`; safe to include in a body. */
+export function errorMessage(code: HttpErrorCode): string {
+  return ERROR_MESSAGES[code];
+}
 
 /** Headers every CLI response carries. */
 const BASE_HEADERS = { 'cache-control': 'no-store' };
@@ -62,13 +64,19 @@ export function jsonResponse(
  * @param status - HTTP status code
  * @param code - wire error code
  * @param extraHeaders - additional headers (e.g. `retry-after`)
+ * @param message - gateway-authored literal overriding the fixed message
  */
 export function errorResponse(
   status: number,
   code: HttpErrorCode,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
+  message?: string
 ): Response {
-  return jsonResponse(status, { error: { code, message: ERROR_MESSAGES[code] } }, extraHeaders);
+  return jsonResponse(
+    status,
+    { error: { code, message: message ?? ERROR_MESSAGES[code] } },
+    extraHeaders
+  );
 }
 
 /** Parsed body, or the response to return instead of parsing. */

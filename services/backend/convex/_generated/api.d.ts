@@ -21,6 +21,7 @@ import type * as cleanupTasks from "../cleanupTasks.js";
 import type * as cli_auth from "../cli/auth.js";
 import type * as cli_authInternal from "../cli/authInternal.js";
 import type * as cli_httpHandlers from "../cli/httpHandlers.js";
+import type * as cli_ops from "../cli/ops.js";
 import type * as crypto from "../crypto.js";
 import type * as dashboard from "../dashboard.js";
 import type * as discussions from "../discussions.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "cli/auth": typeof cli_auth;
   "cli/authInternal": typeof cli_authInternal;
   "cli/httpHandlers": typeof cli_httpHandlers;
+  "cli/ops": typeof cli_ops;
   crypto: typeof crypto;
   dashboard: typeof dashboard;
   discussions: typeof discussions;

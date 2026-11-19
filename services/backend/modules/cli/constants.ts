@@ -29,3 +29,10 @@ export const CLI_POLL_INTERVAL_MS = 2_000;
 export const CLI_UNAUTH_BODY_LIMIT = 8_192;
 /** Retry-After (seconds) sent with 429 responses on login request creation. */
 export const CLI_RATE_LIMIT_RETRY_AFTER_S = 60;
+
+/** Max body size for POST /cli/v1/call (bytes). */
+export const CLI_CALL_BODY_LIMIT = 65_536;
+/** Default `limit` for list ops. */
+export const CLI_LIST_DEFAULT_LIMIT = 200;
+/** Maximum accepted `limit` for list ops. */
+export const CLI_LIST_MAX_LIMIT = 500;
