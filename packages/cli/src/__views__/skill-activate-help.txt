@@ -1,0 +1,14 @@
+Usage: goals skill activate
+
+Print the install guidance, the skill stub and the full command reference.
+
+Options:
+  --help, -h  Show this help.
+
+Examples:
+  goals skill activate
+
+Notes:
+  Prints to stdout and writes no files.
+  Makes no network call and works when you are logged out.
+  Save the printed stub as a skill named goals-cli so your agent can find it.

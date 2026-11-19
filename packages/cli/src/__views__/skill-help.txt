@@ -1,0 +1,8 @@
+Usage: goals skill <action> [options]
+
+Print the agent skill that explains this CLI.
+
+Actions:
+  activate  Print the install guidance, the skill stub and the full command reference.
+
+Run `goals skill <action> --help` for details.

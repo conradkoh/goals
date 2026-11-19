@@ -10,6 +10,8 @@ import { goalHelp } from './commands/goal-help.js';
 import { runGoalCommand } from './commands/goal.js';
 import { initiativeHelp } from './commands/initiative-help.js';
 import { runInitiativeCommand } from './commands/initiative.js';
+import { skillHelp } from './commands/skill-help.js';
+import { runSkillCommand } from './commands/skill.js';
 import type { CliDeps, CommandContext } from './deps.js';
 import { defaultDeps } from './deps.js';
 import { CliError, safeMessage, UsageError } from './errors.js';
@@ -24,6 +26,7 @@ export const commandHelpFamilies: readonly CommandFamilyHelp[] = [
   goalHelp,
   initiativeHelp,
   exportHelp,
+  skillHelp,
 ];
 
 type FamilyRunner = (args: readonly string[], ctx: CommandContext) => Promise<void>;
@@ -33,6 +36,7 @@ const FAMILIES: Record<string, FamilyRunner> = {
   goal: runGoalCommand,
   initiative: runInitiativeCommand,
   export: runExportCommand,
+  skill: runSkillCommand,
 };
 
 const ROOT_USAGE = 'goals <command> [options]. Run `goals --help` for commands.';
