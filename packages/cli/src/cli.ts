@@ -6,6 +6,8 @@ import { runAuthCommand } from './auth/command.js';
 import { authHelp } from './auth/help.js';
 import { goalHelp } from './commands/goal-help.js';
 import { runGoalCommand } from './commands/goal.js';
+import { initiativeHelp } from './commands/initiative-help.js';
+import { runInitiativeCommand } from './commands/initiative.js';
 import type { CliDeps, CommandContext } from './deps.js';
 import { defaultDeps } from './deps.js';
 import { CliError, safeMessage, UsageError } from './errors.js';
@@ -15,13 +17,18 @@ import { createApiClient } from './http.js';
 import { readCliVersion } from './version.js';
 
 /** Every help page the CLI knows; later packages append their families here. */
-export const commandHelpFamilies: readonly CommandFamilyHelp[] = [authHelp, goalHelp];
+export const commandHelpFamilies: readonly CommandFamilyHelp[] = [
+  authHelp,
+  goalHelp,
+  initiativeHelp,
+];
 
 type FamilyRunner = (args: readonly string[], ctx: CommandContext) => Promise<void>;
 
 const FAMILIES: Record<string, FamilyRunner> = {
   auth: runAuthCommand,
   goal: runGoalCommand,
+  initiative: runInitiativeCommand,
 };
 
 const ROOT_USAGE = 'goals <command> [options]. Run `goals --help` for commands.';

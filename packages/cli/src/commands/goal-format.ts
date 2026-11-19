@@ -5,7 +5,7 @@ import { htmlToPlainText } from '../vendor/quarterly-markdown/index.js';
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 /** `YYYY-MM-DD` in UTC; the wire contract stores instants, the CLI prints calendar dates. */
-function isoDate(ms: number): string {
+export function isoDate(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
@@ -67,8 +67,11 @@ function detailRows(detail: CliGoalDetail): DetailRow[] {
   return rows;
 }
 
-function indentedBlock(title: string, body: string): string[] {
-  const lines = body.split('\n').filter((line) => line !== '');
+/** A blank line, a title, then the plain text of `html` indented two spaces; empty → no lines. */
+export function plainTextBlock(title: string, html: string): string[] {
+  const lines = htmlToPlainText(html)
+    .split('\n')
+    .filter((line) => line !== '');
   if (lines.length === 0) return [];
   return ['', title, ...lines.map((line) => `  ${line}`)];
 }
@@ -86,10 +89,9 @@ function childLines(detail: CliGoalDetail): string[] {
 
 /** The full `goal get` text: key/values, then plain-text details, then children. */
 export function formatGoalDetail(detail: CliGoalDetail): string {
-  const details = htmlToPlainText(detail.details ?? '');
   const blocks = [
     formatKeyValues(detailRows(detail)).trimEnd(),
-    ...indentedBlock('Details:', details),
+    ...plainTextBlock('Details:', detail.details ?? ''),
     ...childLines(detail),
   ];
   return `${blocks.join('\n')}\n`;

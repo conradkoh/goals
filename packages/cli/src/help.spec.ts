@@ -22,6 +22,9 @@ const HELP_PAGES: [string, string[]][] = [
   ['goal-help', ['goal', '--help']],
   ['goal-list-help', ['goal', 'list', '--help']],
   ['goal-get-help', ['goal', 'get', '--help']],
+  ['initiative-help', ['initiative', '--help']],
+  ['initiative-list-help', ['initiative', 'list', '--help']],
+  ['initiative-get-help', ['initiative', 'get', '--help']],
 ];
 
 describe('help output', () => {

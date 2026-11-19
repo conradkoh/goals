@@ -3,8 +3,9 @@ Usage: goals <command> [options]
 Command-line access to your Goals app data.
 
 Commands:
-  auth  Log in, log out and manage identities.
-  goal  Read and change your goals.
+  auth        Log in, log out and manage identities.
+  goal        Read and change your goals.
+  initiative  Read your initiatives.
 
 Global options:
   --help, -h  Show help for a command.

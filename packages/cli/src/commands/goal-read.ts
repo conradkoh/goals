@@ -1,10 +1,11 @@
 import type { FlagSpec, ParsedArgs } from '../args.js';
 import { booleanFlag, parseFlags, usageFailure } from '../args.js';
-import { selectIdentity } from '../auth/select.js';
+import { callAsIdentity } from '../auth/select.js';
 import type { CommandContext } from '../deps.js';
 import { toJson } from '../output.js';
 import { intFlag, omitUndefined, optionalText, requiredInt, scopeFlag } from './goal-flags.js';
 import { formatGoalDetail, formatGoalTable, truncationNote } from './goal-format.js';
+import { writeBoundedList } from './list-output.js';
 import type { CliGoalDetail, CliGoalListArgs, CliScope } from '../vendor/cli-contract/index.js';
 
 const LIST_HINT = 'goals goal list --help';
@@ -82,24 +83,16 @@ export async function runGoalList(args: readonly string[], ctx: CommandContext):
     initiativeId: optionalText(parsed, 'initiative', LIST_HINT),
     limit: intFlag(parsed, 'limit', LIST_HINT),
   });
-  const { credential } = await selectIdentity(parsed, ctx);
-  const result = await ctx.api.call(credential, 'goal.list', request);
+  const result = await callAsIdentity(ctx, parsed, 'goal.list', request);
 
   writeTruncation(ctx, result.truncated, result.items.length);
-  if (booleanFlag(parsed, 'json')) {
-    ctx.deps.stdout.write(toJson(result.items));
-    return;
-  }
-  ctx.deps.stdout.write(
-    result.items.length === 0 ? 'No goals found.\n' : formatGoalTable(result.items)
-  );
+  writeBoundedList(ctx, parsed, result, 'No goals found.\n', formatGoalTable);
 }
 
 /** `goals goal get` — one goal with parent, children, details and due date. */
 export async function runGoalGet(args: readonly string[], ctx: CommandContext): Promise<void> {
   const parsed = parseFlags(args, GET_FLAGS, GET_HINT, ONE_ID);
   const [id = ''] = parsed.positionals;
-  const { credential } = await selectIdentity(parsed, ctx);
-  const detail: CliGoalDetail = await ctx.api.call(credential, 'goal.get', { id });
+  const detail: CliGoalDetail = await callAsIdentity(ctx, parsed, 'goal.get', { id });
   ctx.deps.stdout.write(booleanFlag(parsed, 'json') ? toJson(detail) : formatGoalDetail(detail));
 }
