@@ -448,6 +448,7 @@ describe('goals auth logout', () => {
       backend.issued[2]?.token,
     ]);
     expect(backend.revoked.has(backend.issued[0]?.token ?? '')).toBe(true);
+    expectNoSecrets(store.accounts, result.stdout, result.stderr);
   });
 
   it('keeps a credential that replaced the label while the logout was in flight', async () => {
@@ -475,6 +476,7 @@ describe('goals auth logout', () => {
     expect(store.accounts[0]?.credentialId).toBe('cred_2');
     expect(store.accounts[0]?.token).toBe(backend.issued[1]?.token);
     expect(store.accounts[0]?.token).not.toBe(backend.issued[0]?.token);
+    expectNoSecrets(store.accounts, result.stdout, result.stderr);
   });
 
   it('reports a missing login', async () => {

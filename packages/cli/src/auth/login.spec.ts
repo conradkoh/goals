@@ -306,6 +306,7 @@ describe('goals auth login', () => {
     ]);
     expect(store.defaultLabel).toBe('b');
     expect(() => validateCredentials(store)).not.toThrow();
+    expectNoSecrets(backend, result.stdout, result.stderr);
   });
 
   it('rejects a label taken while the login waited and revokes the fresh token', async () => {
@@ -331,6 +332,7 @@ describe('goals auth login', () => {
     expect(store.accounts[0]?.userId).toBe('user_2');
     expect(store.accounts[0]?.token).toBe(backend.issued[1]?.token);
     expect(backend.revoked.has(backend.issued[0]?.token ?? '')).toBe(true);
+    expectNoSecrets(backend, result.stdout, result.stderr);
   });
 
   it('rejects a label collision after approval and revokes the new token', async () => {
