@@ -115,7 +115,7 @@ describe('CliApprovalForm', () => {
       />
     );
     expect(
-      screen.getByText(/Last attempt: another wrong code denies this request\./)
+      screen.getByText(/This may be your last attempt: another wrong code can deny this request\./)
     ).toBeInTheDocument();
   });
 

@@ -80,7 +80,7 @@ export function CliApprovalForm({
           <p id="cli-code-error" role="alert" className="text-sm text-destructive">
             That code doesn&apos;t match the one in your terminal.{' '}
             {mismatch.attemptsLeft === 1
-              ? 'Last attempt: another wrong code denies this request.'
+              ? 'This may be your last attempt: another wrong code can deny this request.'
               : `${mismatch.attemptsLeft} attempts left.`}
           </p>
         ) : (

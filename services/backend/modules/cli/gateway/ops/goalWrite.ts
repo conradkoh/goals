@@ -68,7 +68,9 @@ async function optionalInitiative(
 /** True when a parent goal is a scheduled (non-adhoc) goal of the given depth. */
 function isParentOfDepth(meta: OwnedGoalMeta, depth: number): boolean {
   return !meta.isAdhoc && meta.depth === depth;
-} /** Requires a parent of the given depth and returns it with its quarter. */
+}
+
+/** Requires a parent of the given depth and returns it with its quarter. */
 async function requireParent(
   o: OpCtx,
   parentId: string,
