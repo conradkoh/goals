@@ -162,6 +162,7 @@ describe('the built binary', () => {
       expect(
         path === 'package.json' ||
           path === 'README.md' ||
+          path === 'CHANGELOG.md' ||
           path.startsWith('dist/') ||
           path.startsWith('skills/')
       ).toBe(true);
