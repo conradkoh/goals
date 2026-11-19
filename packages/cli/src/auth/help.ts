@@ -20,11 +20,13 @@ export const authHelp: CommandFamilyHelp = {
         },
         {
           syntax: '--webapp-url <url>',
-          description: 'Webapp origin used for browser approval. Pass together with --convex-url.',
+          description:
+            'Override the webapp origin used for browser approval (default: https://goals-ten.vercel.app). Pass together with --convex-url.',
         },
         {
           syntax: '--convex-url <url>',
-          description: 'Goals HTTP origin (the .convex.site URL). Pass together with --webapp-url.',
+          description:
+            'Override the Goals HTTP origin, the .convex.site URL (default: https://happy-otter-123.convex.site). Pass together with --webapp-url.',
         },
       ],
       examples: [
@@ -33,6 +35,7 @@ export const authHelp: CommandFamilyHelp = {
       ],
       notes: [
         'The approval URL and a verification code are printed on stderr; type the code in the browser to approve.',
+        'Use the override pair only for a local or self-hosted deployment; the endpoints are stored with the credential and used for every later command.',
         'The credential is saved in your user config directory (goals/credentials.json, mode 0600) and is never printed.',
       ],
     },

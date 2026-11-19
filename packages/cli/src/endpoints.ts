@@ -7,15 +7,13 @@ export interface Endpoints {
   convexUrl: string;
 }
 
-/**
- * ===== PRODUCTION ENDPOINTS — NOT YET DECIDED =====
- * Fill BOTH values with https origins once the maintainer supplies them. While either is
- * empty, `goals auth login` fails with a usage error asking for --webapp-url/--convex-url.
- * Never read these from an environment variable or guess them.
- */
-// Asserted by cli.spec.ts, which skips the empty-default cases once this is filled.
+/** Production endpoints used by `goals auth login` when no --webapp-url/--convex-url pair is given. */
+// Asserted by endpoints.spec.ts and through the login flow in cli.spec.ts.
 // fallow-ignore-next-line unused-export
-export const DEFAULT_ENDPOINTS: Endpoints = { webappUrl: '', convexUrl: '' };
+export const DEFAULT_ENDPOINTS: Endpoints = {
+  webappUrl: 'https://goals-ten.vercel.app',
+  convexUrl: 'https://happy-otter-123.convex.site',
+};
 
 const WEBAPP_EXAMPLE = 'https://goals.example.com';
 const CONVEX_EXAMPLE = 'https://example-123.convex.site';
@@ -83,12 +81,8 @@ function validateEndpointPair(webappUrl: string, convexUrl: string): Endpoints {
   };
 }
 
+/** The production pair, validated exactly like a user-supplied pair so a bad default fails loudly. */
 function configuredDefaults(): Endpoints {
-  if (DEFAULT_ENDPOINTS.webappUrl === '' || DEFAULT_ENDPOINTS.convexUrl === '') {
-    throw new UsageError(
-      'no default Goals endpoints are configured; pass --webapp-url and --convex-url together'
-    );
-  }
   return validateEndpointPair(DEFAULT_ENDPOINTS.webappUrl, DEFAULT_ENDPOINTS.convexUrl);
 }
 
@@ -99,7 +93,6 @@ function bothMissing(webappUrl: string | undefined, convexUrl: string | undefine
 /**
  * Endpoints for a login: both flags together, or neither (then DEFAULT_ENDPOINTS).
  * Exactly one flag → UsageError('--webapp-url and --convex-url must be passed together').
- * Neither flag and an empty default → UsageError('no default Goals endpoints are configured; pass --webapp-url and --convex-url together').
  */
 export function resolveEndpoints(flags: { webappUrl?: string; convexUrl?: string }): Endpoints {
   const { webappUrl, convexUrl } = flags;

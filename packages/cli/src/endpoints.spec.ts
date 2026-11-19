@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseOrigin, resolveEndpoints } from './endpoints.js';
+import { DEFAULT_ENDPOINTS, parseOrigin, resolveEndpoints } from './endpoints.js';
 import { UsageError } from './errors.js';
 
 describe('parseOrigin', () => {
@@ -50,9 +50,16 @@ describe('resolveEndpoints', () => {
     });
   });
 
-  it('asks for the flags when no defaults are configured', () => {
-    expect(() => resolveEndpoints({})).toThrow(UsageError);
-    expect(() => resolveEndpoints({})).toThrow(/--webapp-url/);
+  it('uses the production defaults when neither flag is given', () => {
+    expect(resolveEndpoints({})).toEqual({
+      webappUrl: 'https://goals-ten.vercel.app',
+      convexUrl: 'https://happy-otter-123.convex.site',
+    });
+  });
+
+  it('ships valid default origins', () => {
+    expect(parseOrigin(DEFAULT_ENDPOINTS.webappUrl)).toBe(DEFAULT_ENDPOINTS.webappUrl);
+    expect(parseOrigin(DEFAULT_ENDPOINTS.convexUrl)).toBe(DEFAULT_ENDPOINTS.convexUrl);
   });
 
   it('names the offending flag', () => {

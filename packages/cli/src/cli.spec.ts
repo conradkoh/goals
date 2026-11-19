@@ -6,7 +6,7 @@ import type { FakeBackend, FakeBackendOptions } from './__testing__/fakeBackend.
 import { createFakeBackend } from './__testing__/fakeBackend.js';
 import type { Harness } from './__testing__/harness.js';
 import { createHarness } from './__testing__/harness.js';
-import { DEFAULT_ENDPOINTS } from './endpoints.js';
+import type { CredentialsFile } from './credentials.js';
 
 const LOGIN_ARGS = [
   'auth',
@@ -158,19 +158,20 @@ describe('goals cli dispatch', () => {
     expect(backend.requests).toEqual([]);
   });
 
-  it.skipIf(DEFAULT_ENDPOINTS.webappUrl !== '')(
-    'refuses plain login while no default endpoints are configured',
-    async () => {
-      const { backend, harness } = createWorld();
+  it('logs in with the production endpoints when neither flag is given', async () => {
+    const { backend, harness } = createWorld();
 
-      const result = await harness.run(['auth', 'login']);
+    const result = await harness.run(['auth', 'login']);
 
-      expect(result.code).toBe(2);
-      expect(result.stderr.startsWith('Usage: ')).toBe(true);
-      expect(result.stderr).toContain('no default Goals endpoints are configured');
-      expect(backend.requests).toEqual([]);
-    }
-  );
+    expect(result.code).toBe(0);
+    expect(backend.requests[0]?.method).toBe('POST');
+    expect(backend.requests[0]?.url).toBe('https://happy-otter-123.convex.site/cli/auth/requests');
+    expect(result.stderr).toContain('Open https://goals-ten.vercel.app/cli/authorize?request=');
+    const store = JSON.parse(readFileSync(harness.credentialsPath, 'utf8')) as CredentialsFile;
+    expect(store.accounts).toHaveLength(1);
+    expect(store.accounts[0]?.webappUrl).toBe('https://goals-ten.vercel.app');
+    expect(store.accounts[0]?.convexUrl).toBe('https://happy-otter-123.convex.site');
+  });
 
   it('reports a missing login without creating a file', async () => {
     const { backend, harness } = createWorld();
