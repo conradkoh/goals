@@ -128,6 +128,7 @@ interface LoginResult {
   handle: string;
   credentialId: string;
   expiresAt: number;
+  account: { userId: string; name: string; email?: string };
   requestId: string;
   deviceCode: string;
   userCode: string;
@@ -165,6 +166,7 @@ async function login(options: LoginOptions): Promise<LoginResult> {
     handle: await deriveSessionHandle(token),
     credentialId: exchanged.json.tokenId as string,
     expiresAt: exchanged.json.expiresAt as number,
+    account: exchanged.json.account as LoginResult['account'],
     requestId,
     deviceCode,
     userCode,
@@ -303,6 +305,19 @@ describe('scripted end-to-end login', () => {
         credentialId: exchanged.json.tokenId as Id<'cliCredentials'>,
       })
     ).resolves.toEqual({ success: true });
+  });
+
+  test('omits the account email for an anonymous approver', async () => {
+    const sessionId = `anon-${crypto.randomUUID()}` as SessionId;
+    await expect(t.mutation(api.auth.loginAnon, { sessionId })).resolves.toMatchObject({
+      success: true,
+    });
+
+    const anonymous = await login({ sessionId });
+
+    expect(Object.keys(anonymous.account).sort()).toEqual(['name', 'userId']);
+    expect(anonymous.account.email).toBeUndefined();
+    await expect(domainsFor(anonymous.handle)).resolves.toEqual([]);
   });
 });
 
