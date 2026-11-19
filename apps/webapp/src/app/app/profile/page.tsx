@@ -25,6 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useAuthState } from '@/modules/auth/AuthProvider';
 import { LoginCodeGenerator } from '@/modules/auth/LoginCodeGenerator';
+import { CliAccessSection } from '@/modules/cli/credentials/CliAccessSection';
 import { NameEditForm } from '@/modules/profile/NameEditForm';
 import { ThemeSettings } from '@/modules/theme/ThemeSettings';
 
@@ -71,6 +72,8 @@ function ProfilePageContent() {
         <ThemeSettings />
 
         <RecoveryCodeSection />
+
+        <CliAccessSection />
       </div>
     </div>
   );
