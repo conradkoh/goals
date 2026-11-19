@@ -94,21 +94,33 @@ profile page's CLI Access section.
 
 ## Releasing
 
-1. Bump `version` in `packages/cli/package.json`.
-2. Merge to `master`. CI publishes only if the version is newer than the one on npm.
+1. Bump `version` in `packages/cli/package.json` (and add a `CHANGELOG.md` entry).
+2. Merge to `master`. The `Publish goals-cli` workflow (`publish-goals-cli.yml`) publishes only if
+   the version is newer than the one on npm; an equal or older version is a green no-op.
 3. Watch the workflow run in GitHub Actions.
+
+Publishing uses npm trusted publishing (GitHub OIDC); there is no npm token. Do not add an
+`NPM_TOKEN`.
 
 ### One-time setup
 
-Publish the first version manually:
+Trusted publishing can only be configured for a package that already exists, so publish the first
+version manually from a clean checkout of `master`, with your 2FA:
 
 ```bash
+pnpm install
+pnpm --filter goals-cli build
 cd packages/cli
-npm login
-npm publish --access public
+npm pack
+npm publish goals-cli-0.1.0.tgz --access public
 ```
 
-`prepack` builds `dist/` before publishing. After the first release, add an npm Trusted
-Publisher so later releases publish from CI: npmjs.com → the package's **Settings** →
-**Trusted Publisher** → GitHub Actions, with owner `conradkoh`, repository `goals`, and the
-workflow filename of the publish workflow (set when that workflow lands).
+Then, within 2 days, register the trusted publisher:
+
+```bash
+npm trust github goals-cli --file publish-goals-cli.yml --repo conradkoh/goals --allow-publish
+```
+
+(or npmjs.com → the package's **Settings** → **Trusted Publisher** → GitHub Actions, owner
+`conradkoh`, repository `goals`, workflow filename `publish-goals-cli.yml`). Full maintainer notes:
+[docs/developer/goals-cli-release.md](https://github.com/conradkoh/goals/blob/master/docs/developer/goals-cli-release.md).
