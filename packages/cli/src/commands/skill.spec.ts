@@ -53,7 +53,8 @@ describe('goals skill activate', () => {
     const guidanceAt = result.stdout.indexOf('Save the stub below');
     const stubAt = result.stdout.indexOf(stub.trim());
     const fenceAt = result.stdout.indexOf('```markdown\n');
-    const separatorAt = result.stdout.indexOf('\n---\n', stubAt);
+    // REFERENCE never contains a `---` line, so the last separator is the one after the stub.
+    const separatorAt = result.stdout.lastIndexOf('\n---\n');
     const referenceAt = result.stdout.indexOf(reference.trim());
 
     expect(guidanceAt).toBeGreaterThanOrEqual(0);
