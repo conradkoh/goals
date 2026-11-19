@@ -53,9 +53,25 @@ describe('publish-goals-cli workflow', () => {
   });
 
   it('runs the publish job only when the gate says the version is newer', () => {
-    expect(WORKFLOW).toContain("if: needs.check_version.outputs.should_publish == 'true'");
+    expect(WORKFLOW).toContain(
+      "if: needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master'"
+    );
     expect(WORKFLOW).toContain('needs: [verify, check_version]');
-    expect(WORKFLOW).toContain('npm publish "$TARBALL" --access public --ignore-scripts');
+    expect(WORKFLOW).toContain(
+      'npm publish "$TARBALL" --access public --ignore-scripts --tag "$tag"'
+    );
+  });
+
+  it('publishes prereleases under the next dist-tag, never latest', () => {
+    expect(WORKFLOW).toContain('if [[ "$VERSION" == *-* ]]; then tag=next; else tag=latest; fi');
+    expect(WORKFLOW).not.toMatch(/npm publish[^\n]*--tag latest/);
+  });
+
+  it('keeps the master-only guard inside the publish job', () => {
+    const publishJob = WORKFLOW.slice(WORKFLOW.search(PUBLISH_JOB));
+    expect(publishJob).toContain(
+      "if: needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master'"
+    );
   });
 
   it('rebuilds when the CLI or its vendored shared sources change', () => {
