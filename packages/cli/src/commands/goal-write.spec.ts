@@ -433,6 +433,23 @@ describe('goals goal rename', () => {
 });
 
 describe('goals goal complete and reopen', () => {
+  it.each([
+    ['complete', '99'],
+    ['complete', 'abc'],
+    ['reopen', '99'],
+    ['reopen', 'abc'],
+  ])('%s rejects --week %s before reading credentials', async (verb, raw) => {
+    const { backend, harness } = createWorld();
+
+    const result = await harness.run(['goal', verb, 'goal_1', '--week', raw]);
+
+    expect(result.code).toBe(2);
+    expect(result.stderr.startsWith('Usage: --week must be an integer from 1 to 53')).toBe(true);
+    expect(backend.ops()).toEqual([]);
+    expect(backend.requests).toEqual([]);
+    expect(existsSync(harness.credentialsPath)).toBe(false);
+  });
+
   it('sends one setComplete when --week is given', async () => {
     const { backend, harness } = createWorld();
     await signIn(harness);

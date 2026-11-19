@@ -184,19 +184,18 @@ function missingWeek(verb: string, scope: CliScope, now: number, hint: string): 
 }
 
 /**
- * Resolves `--week` from the flag or, for weekly and daily goals, reports a usage error after
- * the one `goal.get` that discovers the scope. Quarterly (and adhoc) need no week.
+ * Confirms the already-validated `--week`, or for weekly and daily goals reports a usage error
+ * after the one `goal.get` that discovers the scope. Quarterly (and adhoc) need no week.
  */
 async function completionWeek(
   ctx: CommandContext,
   credential: Pick<StoredCredential, 'convexUrl' | 'token'>,
-  parsed: ParsedArgs,
+  flaggedWeek: number | undefined,
   id: string,
   verb: string,
   hint: string
 ): Promise<number | undefined> {
-  const flagged = intFlag(parsed, 'week', hint);
-  if (flagged !== undefined) return flagged;
+  if (flaggedWeek !== undefined) return flaggedWeek;
   const detail = await ctx.api.call(credential, 'goal.get', { id });
   if (detail.scope === 'weekly' || detail.scope === 'daily') {
     missingWeek(verb, detail.scope, ctx.deps.now(), hint);
@@ -213,13 +212,20 @@ async function runSetComplete(
   const hint = `goals goal ${verb} --help`;
   const parsed = parseFlags(args, COMPLETE_FLAGS, hint, ONE_ID);
   const [id = ''] = parsed.positionals;
+  // Validate every flag before the credential lookup so usage errors never depend on login.
+  const week = intFlag(parsed, 'week', hint);
   const { credential } = await selectIdentity(parsed, ctx);
-  const week = await completionWeek(ctx, credential, parsed, id, verb, hint);
+  const completion = await completionWeek(ctx, credential, week, id, verb, hint);
   const includeChildren = booleanFlag(parsed, 'include-children');
   const result = await ctx.api.call(
     credential,
     'goal.setComplete',
-    omitUndefined({ id, isComplete, week, includeChildren: includeChildren ? true : undefined })
+    omitUndefined({
+      id,
+      isComplete,
+      week: completion,
+      includeChildren: includeChildren ? true : undefined,
+    })
   );
   ctx.deps.stdout.write(
     `Goal ${result.id} is now ${result.isComplete ? 'complete' : 'incomplete'}.\n`
