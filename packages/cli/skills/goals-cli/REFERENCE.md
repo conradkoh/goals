@@ -19,7 +19,7 @@ browser. No flags are needed for the production app. Pass `--webapp-url` togethe
 ```bash
 goals --version
 goals auth login
-goals auth login --name dev --env dev --webapp-url http://localhost:3000 --convex-url http://127.0.0.1:3211
+goals auth login --name local --env dev --webapp-url http://localhost:3000 --convex-url http://127.0.0.1:3211
 goals auth status
 ```
 
