@@ -1,6 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   // Migrated from knip.jsonc
+  // Pass-2 CLI entry point plus the build-time scripts that generate src/vendor
+  "entry": ["packages/cli/src/cli.ts", "packages/cli/scripts/*.mjs"],
   "ignoreDependencies": [
     "husky",
     "lint-staged",
@@ -58,6 +60,9 @@
     "**/next.config.{ts,js,mjs}",
     "**/playwright.config.{ts,js}",
     "**/eslint.config.{ts,js,mjs}",
+    // Generated vendor copies and spec-only test helpers
+    "packages/cli/src/vendor/**",
+    "**/__testing__/**",
   ],
   "ignoreExports": [{ "file": "**/components/ui/**", "exports": ["*"] }],
   "duplicates": {
@@ -67,6 +72,7 @@
       "**/*.test.{ts,tsx}",
       "**/*.spec.{ts,tsx}",
       "**/tests/**",
+      "**/__testing__/**",
       // RBAC Option A: mirror permissions/roles/resolve between webapp and backend (see application/README.md in each package)
       "apps/webapp/src/application/auth/**",
       "services/backend/application/auth/permissions.ts",

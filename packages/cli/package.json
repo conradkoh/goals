@@ -1,0 +1,38 @@
+{
+  "name": "goals-cli",
+  "version": "0.1.0",
+  "description": "Command-line access to your Goals app data",
+  "type": "module",
+  "bin": {
+    "goals": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/conradkoh/goals.git",
+    "directory": "packages/cli"
+  },
+  "license": "ISC",
+  "scripts": {
+    "vendor": "node scripts/vendor-shared.mjs",
+    "build": "node scripts/vendor-shared.mjs && tsc -p tsconfig.json",
+    "typecheck": "node scripts/vendor-shared.mjs && tsc -p tsconfig.spec.json --noEmit",
+    "test": "node scripts/vendor-shared.mjs && vitest run",
+    "prepack": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.24",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}

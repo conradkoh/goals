@@ -43,6 +43,8 @@ export default [
       // Convex codegen (any package layout, including services/backend/convex/_generated)
       '**/convex/_generated/**',
       'services/backend/convex/_generated/**',
+      // packages/cli vendors shared sources at build time; generated copies are not linted
+      '**/packages/cli/src/vendor/**',
     ],
   },
 
@@ -233,6 +235,17 @@ export default [
     languageOptions: {
       parserOptions: {
         project: true,
+      },
+    },
+  },
+
+  // packages/cli: typed linting uses the spec tsconfig so *.spec.ts files are part of the project
+  {
+    files: ['packages/cli/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./packages/cli/tsconfig.spec.json'],
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },

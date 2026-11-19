@@ -7,6 +7,9 @@ build
 .git
 .chatroom
 
+# packages/cli vendors shared sources at build time; generated copies are not formatted
+packages/cli/src/vendor/
+
 # Next.js auto-generated (also gitignored in apps/webapp/.gitignore)
 **/next-env.d.ts
 coverage
