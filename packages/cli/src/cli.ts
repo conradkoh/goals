@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { runAuthCommand } from './auth/command.js';
 import { authHelp } from './auth/help.js';
+import { goalHelp } from './commands/goal-help.js';
+import { runGoalCommand } from './commands/goal.js';
 import type { CliDeps, CommandContext } from './deps.js';
 import { defaultDeps } from './deps.js';
 import { CliError, safeMessage, UsageError } from './errors.js';
@@ -13,7 +15,14 @@ import { createApiClient } from './http.js';
 import { readCliVersion } from './version.js';
 
 /** Every help page the CLI knows; later packages append their families here. */
-export const commandHelpFamilies: readonly CommandFamilyHelp[] = [authHelp];
+export const commandHelpFamilies: readonly CommandFamilyHelp[] = [authHelp, goalHelp];
+
+type FamilyRunner = (args: readonly string[], ctx: CommandContext) => Promise<void>;
+
+const FAMILIES: Record<string, FamilyRunner> = {
+  auth: runAuthCommand,
+  goal: runGoalCommand,
+};
 
 const ROOT_USAGE = 'goals <command> [options]. Run `goals --help` for commands.';
 
@@ -45,11 +54,13 @@ function isVersionRequest(argv: readonly string[]): boolean {
   return argv.length === 1 && argv[0] === '--version';
 }
 
-/** Runs the requested command family; only `auth` exists today. */
+/** Runs the requested command family; unknown names are a usage error. */
 async function runCommand(argv: readonly string[], ctx: CommandContext): Promise<void> {
-  if (argv.length === 0) throw new UsageError(ROOT_USAGE);
-  if (argv[0] !== 'auth') throw unknownCommand(argv[0] ?? '');
-  await runAuthCommand(argv.slice(1), ctx);
+  const [name] = argv;
+  if (name === undefined) throw new UsageError(ROOT_USAGE);
+  const runner = Object.hasOwn(FAMILIES, name) ? FAMILIES[name] : undefined;
+  if (runner === undefined) throw unknownCommand(name);
+  await runner(argv.slice(1), ctx);
 }
 
 /** Dispatches one invocation; every failure is left to `report`. */

@@ -71,10 +71,45 @@ describe('goals cli dispatch', () => {
   it('rejects an unknown command', async () => {
     const { harness } = createWorld();
 
+    const result = await harness.run(['frobnicate']);
+
+    expect(result.code).toBe(2);
+    expect(result.stderr).toBe(
+      "Usage: unknown command 'frobnicate'. Run `goals --help` for commands.\n"
+    );
+  });
+
+  it('rejects a bare goal family', async () => {
+    const { harness } = createWorld();
+
     const result = await harness.run(['goal']);
 
     expect(result.code).toBe(2);
-    expect(result.stderr).toBe("Usage: unknown command 'goal'. Run `goals --help` for commands.\n");
+    expect(result.stderr).toBe(
+      'Usage: goals goal <action>. Run `goals goal --help` for actions.\n'
+    );
+  });
+
+  it('rejects a bare initiative family', async () => {
+    const { harness } = createWorld();
+
+    const result = await harness.run(['initiative']);
+
+    expect(result.code).toBe(2);
+    expect(result.stderr).toBe(
+      'Usage: goals initiative <action>. Run `goals initiative --help` for actions.\n'
+    );
+  });
+
+  it('treats an inherited object key as an unknown action', async () => {
+    const { harness } = createWorld();
+
+    const result = await harness.run(['goal', 'constructor']);
+
+    expect(result.code).toBe(2);
+    expect(result.stderr).toBe(
+      "Usage: unknown action 'constructor' for 'goals goal'. Run `goals goal --help` for actions.\n"
+    );
   });
 
   it('rejects a bare auth family', async () => {

@@ -4,21 +4,37 @@ import type { CredentialsFile, StoredCredential } from '../credentials.js';
 import { readCredentials, selectCredential } from '../credentials.js';
 import type { CommandContext } from '../deps.js';
 
+export interface SelectedIdentity {
+  credential: StoredCredential;
+  file: CredentialsFile;
+}
+
 /**
- * Parses a command's flags, reads the store and selects the target identity with the one
- * selection order every command shares (`--as`, GOALS_AS, the default, then the only account).
+ * Reads the store and selects the target identity with the one selection order every command
+ * shares (`--as`, GOALS_AS, the default, then the only account).
+ *
+ * Call this only after every flag has been parsed and validated, so usage errors never touch
+ * the credentials file.
  */
-export async function parseAndSelect(
-  args: readonly string[],
-  flags: FlagSpec,
-  hint: string,
+export async function selectIdentity(
+  parsed: ParsedArgs,
   ctx: CommandContext
-): Promise<{ parsed: ParsedArgs; credential: StoredCredential; file: CredentialsFile }> {
-  const parsed = parseFlags(args, flags, hint);
+): Promise<SelectedIdentity> {
   const { credentials } = await readCredentials(ctx.deps.storeOptions);
   const credential = selectCredential(credentials, {
     as: stringFlag(parsed, 'as'),
     env: ctx.deps.env,
   });
-  return { parsed, credential, file: credentials };
+  return { credential, file: credentials };
+}
+
+/** Parses a command's flags, then selects the identity; the shape every auth command uses. */
+export async function parseAndSelect(
+  args: readonly string[],
+  flags: FlagSpec,
+  hint: string,
+  ctx: CommandContext
+): Promise<{ parsed: ParsedArgs } & SelectedIdentity> {
+  const parsed = parseFlags(args, flags, hint);
+  return { parsed, ...(await selectIdentity(parsed, ctx)) };
 }

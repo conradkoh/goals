@@ -1,0 +1,16 @@
+Usage: goals goal get <id> [--json] [--as <label>]
+
+Show one goal with its parent, children, details and due date.
+
+Options:
+  <id>          Goal ID from `goals goal list` (use --json for scripts).
+  --json        Print one JSON object instead of text.
+  --as <label>  Identity to use (default: the default identity).
+
+Examples:
+  goals goal get goal_123
+  goals goal get goal_123 --json
+
+Notes:
+  IDs come from `goals goal list` (use --json for scripts).
+  Details are rich text and are printed as plain text.

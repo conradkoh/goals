@@ -86,6 +86,14 @@ export function parseFlags(
   return { flags: normalizeValues(parsed.values), positionals: collected };
 }
 
+/**
+ * A usage error whose message ends with the command's help hint, e.g.
+ * `Usage: --week is not supported for quarterly goals. Run \`goals goal list --help\` for usage.`
+ */
+export function usageFailure(message: string, hint: string): UsageError {
+  return new UsageError(`${message}. ${usageSuffix(hint)}`);
+}
+
 /** The flag's string value, or `undefined` when absent (`--as ""` is returned as `''`). */
 export function stringFlag(parsed: ParsedArgs, name: string): string | undefined {
   const value = parsed.flags[name];

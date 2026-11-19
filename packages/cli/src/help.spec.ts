@@ -19,6 +19,9 @@ const HELP_PAGES: [string, string[]][] = [
   ['auth-status-help', ['auth', 'status', '--help']],
   ['auth-list-help', ['auth', 'list', '--help']],
   ['auth-use-help', ['auth', 'use', '--help']],
+  ['goal-help', ['goal', '--help']],
+  ['goal-list-help', ['goal', 'list', '--help']],
+  ['goal-get-help', ['goal', 'get', '--help']],
 ];
 
 describe('help output', () => {
