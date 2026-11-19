@@ -244,6 +244,9 @@ async function persist(
     const { credentials } = await readCredentials(ctx.deps.storeOptions);
     // The re-read makes a new installationId when the file is still missing; keep the one the
     // create request already sent so this machine is identified consistently by the server.
+    // Accepted residual race: two simultaneous first-ever logins can each register a different
+    // installationId; the slower writer keeps the id already in the file, and the other
+    // credential stays active until it expires.
     const file =
       credentials.accounts.length === 0 ? { ...credentials, installationId } : credentials;
     const label = finalLabel(file, draft, options.requestedName);
