@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./utilities/markdown": "./src/utilities/markdown/index.ts",
+    "./utilities/quarterly-markdown": "./src/utilities/quarterly-markdown/index.ts",
     "./domain/entities/markdown-content": "./src/domain/entities/markdown-content.ts"
   },
   "scripts": {
