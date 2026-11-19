@@ -1,0 +1,32 @@
+Usage: goals goal create --scope <scope> --title <text> [--details <text>] [--year <year>] [--quarter <n>] [--week <n>] [--parent <id>] [--day <day>] [--domain <id>] [--initiative <id>] [--as <label>]
+
+Create one quarterly, weekly, daily or adhoc goal.
+
+Options:
+  --scope <scope>    quarterly, weekly, daily or adhoc; required.
+  --title <text>     Goal title, trimmed; required.
+  --details <text>   Rich-text details; printed as plain text by `goals goal get`.
+  --year <year>      Calendar year 2000-2100; required for quarterly, defaults for adhoc.
+  --quarter <n>      Quarter 1-4; required for quarterly, optional for weekly and daily.
+  --week <n>         ISO week 1-53; defaults to the current ISO week for weekly, daily and adhoc.
+  --parent <id>      Parent ID: a quarterly goal for weekly, a weekly goal for daily, an adhoc goal for adhoc; from `goals goal list --scope <same scope>`.
+  --day <day>        Day for daily goals: 1-7 or mon..sun (Monday is 1).
+  --domain <id>      Domain ID (shown as `domainId` in `goals goal get <id> --json`); adhoc only.
+  --initiative <id>  Initiative ID from `goals initiative list`.
+  --as <label>       Identity to use (default: the default identity).
+
+Examples:
+  goals goal create --scope quarterly --year 2026 --quarter 3 --title "Ship the beta"
+  goals goal create --scope weekly --parent goal_1 --title "Draft the launch"
+  goals goal create --scope daily --parent goal_2 --day tue --title "Call the printer"
+  goals goal create --scope adhoc --title "Book the venue" --domain domain_1
+
+Notes:
+  Quarterly needs --year and --quarter and rejects --parent, --day and --domain.
+  Weekly needs --parent (a quarterly goal) and rejects --day and --domain.
+  Daily needs --parent (a weekly goal) and --day, and rejects --domain.
+  Adhoc rejects --quarter and --day; --parent must be an adhoc goal.
+  Weekly and daily default --week to the current ISO week.
+  Adhoc defaults --year and --week to the current ISO year and week; another --year needs --week.
+  Quarterly without --week uses the first week of the quarter (server default).
+  IDs come from `goals goal list` (use --json for scripts); initiative IDs from `goals initiative list`.

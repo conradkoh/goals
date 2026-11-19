@@ -15,6 +15,32 @@ const INTEGER_RANGES = {
 } as const;
 
 type IntegerFlag = keyof typeof INTEGER_RANGES;
+type DayOfWeek = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+/** Every accepted `--day` spelling; Monday is 1 and Sunday is 7 (the backend's `DayOfWeek`). */
+const DAY_ALIASES: Record<string, DayOfWeek> = {
+  '1': 1,
+  '2': 2,
+  '3': 3,
+  '4': 4,
+  '5': 5,
+  '6': 6,
+  '7': 7,
+  mon: 1,
+  monday: 1,
+  tue: 2,
+  tuesday: 2,
+  wed: 3,
+  wednesday: 3,
+  thu: 4,
+  thursday: 4,
+  fri: 5,
+  friday: 5,
+  sat: 6,
+  saturday: 6,
+  sun: 7,
+  sunday: 7,
+};
 
 function integerText(name: IntegerFlag): string {
   const { min, max } = INTEGER_RANGES[name];
@@ -60,6 +86,24 @@ export function scopeFlag(parsed: ParsedArgs, hint: string, fallback?: CliScope)
   const scope = SCOPES.find((candidate) => candidate === raw);
   if (scope === undefined) throw usageFailure(`--scope must be one of ${SCOPES_TEXT}`, hint);
   return scope;
+}
+
+/** `--day` as 1-7 (Monday first), accepting `mon`/`monday`… and rejecting everything else. */
+export function dayFlag(parsed: ParsedArgs, hint: string): DayOfWeek | undefined {
+  const raw = stringFlag(parsed, 'day');
+  if (raw === undefined) return undefined;
+  const day = DAY_ALIASES[raw.trim().toLowerCase()];
+  if (day === undefined) throw usageFailure('--day must be 1-7 or mon..sun', hint);
+  return day;
+}
+
+/** A required text flag, trimmed; empty is a usage error, never an empty request value. */
+export function requiredText(parsed: ParsedArgs, name: string, hint: string): string {
+  const raw = stringFlag(parsed, name);
+  if (raw === undefined) throw usageFailure(`--${name} is required`, hint);
+  const value = raw.trim();
+  if (value === '') throw usageFailure(`--${name} must not be empty`, hint);
+  return value;
 }
 
 /** An optional text flag; an explicitly empty value is a usage error. */

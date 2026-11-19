@@ -1,5 +1,3 @@
-// fallow-ignore-file unused-file
-// Standalone until the goal commands import it in a later commit.
 /** An ISO-8601 week date: the week-based year and the week number within it. */
 export interface IsoWeek {
   year: number;

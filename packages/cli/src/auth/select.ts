@@ -17,7 +17,10 @@ export interface SelectedIdentity {
  * Call this only after every flag has been parsed and validated, so usage errors never touch
  * the credentials file.
  */
-async function selectIdentity(parsed: ParsedArgs, ctx: CommandContext): Promise<SelectedIdentity> {
+export async function selectIdentity(
+  parsed: ParsedArgs,
+  ctx: CommandContext
+): Promise<SelectedIdentity> {
   const { credentials } = await readCredentials(ctx.deps.storeOptions);
   const credential = selectCredential(credentials, {
     as: stringFlag(parsed, 'as'),

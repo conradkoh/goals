@@ -3,7 +3,12 @@ Usage: goals goal <action> [options]
 Read and change your goals.
 
 Actions:
-  list  List goals in one scope for a year (quarterly by default).
-  get   Show one goal with its parent, children, details and due date.
+  list      List goals in one scope for a year (quarterly by default).
+  get       Show one goal with its parent, children, details and due date.
+  create    Create one quarterly, weekly, daily or adhoc goal.
+  rename    Rename one goal.
+  complete  Mark one goal complete.
+  reopen    Mark one goal incomplete again.
+  delete    Delete one goal and all of its child goals.
 
 Run `goals goal <action> --help` for details.
