@@ -63,13 +63,30 @@ jobs:
         run: |
           set -uo pipefail
           err_file="$RUNNER_TEMP/npm-view.err"
-          if npm_version=$(npm view goals-cli version --registry=https://registry.npmjs.org 2>"$err_file"); then
+          registry=https://registry.npmjs.org
+          if npm_version=$(npm view goals-cli version --registry="$registry" 2>"$err_file"); then
             echo "npm has goals-cli $npm_version"
           elif grep -qE 'E404|404 Not Found' "$err_file"; then
             npm_version='0.0.0'
             echo "goals-cli is not on npm yet; treating the published version as $npm_version"
           else
             echo '::error::npm view failed for a reason other than "package not found"'
+            cat "$err_file" >&2
+            exit 1
+          fi
+          # `latest` ignores prereleases published under another dist-tag (e.g. `next`), so also
+          # look up the exact local version: if it is already on npm, publishing it again would fail.
+          local_version=$(node -p "require('./packages/cli/package.json').version")
+          lookup_version="${local_version%%+*}"
+          if exact=$(npm view "goals-cli@$lookup_version" version --registry="$registry" 2>"$err_file"); then
+            if [ -n "$exact" ]; then
+              echo "goals-cli $lookup_version is already published on npm; nothing to publish"
+              npm_version="$local_version"
+            fi
+          elif grep -qE 'E404|404 Not Found' "$err_file"; then
+            echo "goals-cli $lookup_version is not on npm yet"
+          else
+            echo '::error::npm view failed for a reason other than "version not found"'
             cat "$err_file" >&2
             exit 1
           fi
@@ -133,7 +150,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # A prerelease (e.g. 0.2.0-beta.1) must never become `latest`.
-          if [[ "$VERSION" == *-* ]]; then tag=next; else tag=latest; fi
+          # A prerelease (e.g. 0.2.0-beta.1) must never become `latest`. Build metadata (+...) is
+          # not a prerelease marker, so strip it before testing for a `-`.
+          core="${VERSION%%+*}"
+          if [[ "$core" == *-* ]]; then tag=next; else tag=latest; fi
           echo "Publishing $VERSION with dist-tag $tag"
           npm publish "$TARBALL" --access public --ignore-scripts --tag "$tag"

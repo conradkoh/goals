@@ -63,8 +63,17 @@ describe('publish-goals-cli workflow', () => {
   });
 
   it('publishes prereleases under the next dist-tag, never latest', () => {
-    expect(WORKFLOW).toContain('if [[ "$VERSION" == *-* ]]; then tag=next; else tag=latest; fi');
+    expect(WORKFLOW).toContain('core="${VERSION%%+*}"');
+    expect(WORKFLOW).toContain('if [[ "$core" == *-* ]]; then tag=next; else tag=latest; fi');
     expect(WORKFLOW).not.toMatch(/npm publish[^\n]*--tag latest/);
+  });
+
+  it('skips a version already on npm, whatever dist-tag it was published under', () => {
+    expect(WORKFLOW).toContain('npm view "goals-cli@$lookup_version" version');
+    expect(WORKFLOW).toContain('lookup_version="${local_version%%+*}"');
+    expect(WORKFLOW).toContain('npm_version="$local_version"');
+    // a non-404 registry error must still fail the job (once per npm view command)
+    expect(WORKFLOW.match(/npm view failed for a reason other than/g)).toHaveLength(2);
   });
 
   it('keeps the master-only guard inside the publish job', () => {
