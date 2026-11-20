@@ -62,8 +62,9 @@ environment.
 
 ### Re-register after the workflow rename
 
-Earlier setups may have trusted `publish-goals-cli.yml`. That workflow no longer exists. Before
-the next version bump, make sure the package trusts `deploy-prod.yml`: run the command above, or
+Earlier setups may have trusted a workflow file other than `deploy-prod.yml`, such as the retired
+publish workflow. That workflow no longer exists. Before the next version bump, make sure the
+package trusts `deploy-prod.yml`: run the command above, or
 change the workflow filename in npmjs.com → the package → **Settings** → **Trusted Publisher**.
 Then confirm the `publish` job of the next **Production Deployment** run passes.
 
@@ -85,7 +86,8 @@ Then confirm the `publish` job of the next **Production Deployment** run passes.
 - `check_version` fails with a registry error that is not "package not found" → rerun it. The
   step is deliberately fail-closed.
 - `publish` fails with a 404/403 "trusted publisher" error → the trust config is missing or
-  expired, names the old `publish-goals-cli.yml`, or the repository does not match. Redo
+  expired, names any workflow file other than `deploy-prod.yml`, or the repository does not
+  match. Redo
   [Configure trusted publishing](#configure-trusted-publishing-within-2-days-of-the-first-publish)
   with `deploy-prod.yml`.
 - The publish job fails the npm-version check → the runner image's Node 24 ships npm < 11.5.1.

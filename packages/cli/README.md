@@ -125,6 +125,7 @@ npm trust github goals-cli --file deploy-prod.yml --repo conradkoh/goals --allow
 
 (or npmjs.com → the package's **Settings** → **Trusted Publisher** → GitHub Actions, owner
 `conradkoh`, repository `goals`, workflow filename `deploy-prod.yml`). If the package was set up
-earlier against `publish-goals-cli.yml`, that workflow no longer exists: re-register against
+earlier against any workflow file other than `deploy-prod.yml` (the retired publish workflow),
+that workflow no longer exists: re-register against
 `deploy-prod.yml` with the same command before the next version bump. Full maintainer notes:
 [docs/developer/goals-cli-release.md](https://github.com/conradkoh/goals/blob/master/docs/developer/goals-cli-release.md).
