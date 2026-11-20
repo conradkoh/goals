@@ -173,10 +173,14 @@ export default defineSchema({
    * Combined schema supporting both template and app session types.
    */
   sessions: defineTable({
-    sessionId: v.string(), // this is provided by the client
+    // TEMPORARY (expand step): optional so `convex deploy` accepts a legacy production row that
+    // has neither createdAt nor sessionId. Restore both to required in a follow-up push once prod
+    // data is confirmed clean.
+    sessionId: v.optional(v.string()), // this is provided by the client
     userId: v.optional(v.id('users')), // undefined for pre-auth invite sessions
     pendingInviteId: v.optional(v.id('invites')), // invite signup flow
-    createdAt: v.number(),
+    // TEMPORARY: see sessionId. Backfilled by migrations:backfillSessionCreatedAt.
+    createdAt: v.optional(v.number()),
     status: v.optional(v.literal('active')), // App style status
     lastActiveAt: v.optional(v.number()), // App style activity tracking
     authMethod: v.optional(

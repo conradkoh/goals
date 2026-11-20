@@ -77,6 +77,30 @@ export const stripManagerRoleNames = migrations.define({
   },
 });
 
+/**
+ * Per-row rule for backfilling a missing `createdAt` on a session.
+ * Returns the patch to apply, or undefined when no write is needed (idempotent: a second pass is a no-op).
+ */
+export const sessionCreatedAtBackfill = (session: {
+  createdAt?: number;
+  lastActivityAt?: number;
+  lastActiveAt?: number;
+}): { createdAt: number } | undefined => {
+  if (session.createdAt !== undefined) {
+    return undefined;
+  }
+  return { createdAt: session.lastActivityAt ?? session.lastActiveAt ?? Date.now() };
+};
+
+/**
+ * Migration: Backfill missing `createdAt` on legacy sessions.
+ * Pairs with the optional `createdAt` in schema.ts. Only writes rows that lack `createdAt`.
+ */
+export const backfillSessionCreatedAt = migrations.define({
+  table: 'sessions',
+  migrateOne: async (_ctx, session) => sessionCreatedAtBackfill(session),
+});
+
 // ========================================
 // Batch Runners
 // ========================================
@@ -90,4 +114,5 @@ export const runAll = migrations.runner([
   internal.migrations.setUserAccessLevelDefault,
   internal.migrations.backfillUserRoleNames,
   internal.migrations.stripManagerRoleNames,
+  internal.migrations.backfillSessionCreatedAt,
 ]);
