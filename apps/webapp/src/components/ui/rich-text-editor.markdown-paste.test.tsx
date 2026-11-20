@@ -2,35 +2,9 @@ import { act, fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { RichTextEditor } from './rich-text-editor';
+import { RELEASE_NOTES_MD } from './rich-text-markdown-paste.fixtures';
 
 vi.mock('./rich-text-editor.module.css', () => ({ default: {} }));
-
-const RELEASE_NOTES_MD = [
-  '# Release notes',
-  '',
-  'Some **bold**, *italic*, ~~gone~~ and `inline code` with a [docs link](https://example.com/docs).',
-  '',
-  '## Steps',
-  '',
-  '- first item',
-  '  - nested item',
-  '',
-  '1. ordered one',
-  '2. ordered two',
-  '',
-  '- [ ] open task',
-  '- [x] done task',
-  '',
-  '> A quoted line',
-  '',
-  '```ts',
-  'const answer = 42;',
-  '```',
-  '',
-  '---',
-  '',
-  'Last paragraph.',
-].join('\n');
 
 function setup(html = '') {
   const { container } = render(<RichTextEditor value={html} onChange={() => {}} />);
@@ -131,5 +105,24 @@ describe('RichTextEditor Markdown paste', () => {
     const text = dom.textContent ?? '';
     expect(text).toContain('2 * 3 = 4');
     expect(text).toContain('snake_case and #1 priority');
+  });
+
+  it.each([
+    [
+      'shell snippet',
+      '# install deps\npip install -r requirements.txt\npython main.py',
+      'pip install -r requirements.txt',
+    ],
+    ['YAML list', '- name: web\n- version: 1.2.0', 'version: 1.2.0'],
+    ['sentence starting with a year', '2024. was a strong year', '2024. was a strong year'],
+  ])('keeps %s as literal text', (_label, text, visibleLine) => {
+    const { dom } = setup();
+    paste(dom, { text });
+
+    expect(dom.querySelector('h1')).toBeNull();
+    expect(dom.querySelector('ul')).toBeNull();
+    expect(dom.querySelector('ol')).toBeNull();
+    expect(dom.querySelector('pre')).toBeNull();
+    expect(dom.textContent).toContain(visibleLine);
   });
 });

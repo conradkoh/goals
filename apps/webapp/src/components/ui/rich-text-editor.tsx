@@ -298,9 +298,25 @@ const PWALinkClickHandler = Extension.create({
 });
 
 /**
+ * The `orderedList` extension claims any plain-text paste whose lines all start with a number
+ * marker, so text the detector rejected — `2024. was a strong year` — would still become a list.
+ * Such pastes are inserted literally instead.
+ */
+const NUMBERED_LINE = /^[ \t]*\d{1,9}[.)][ \t]+\S/;
+
+/** Plain-text blocks as paragraphs, mirroring how ProseMirror inserts plain text by default. */
+function literalParagraphs(text: string) {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .split(/\n+/)
+    .map((block) => ({ type: 'paragraph', content: [{ type: 'text', text: block }] }));
+}
+
+/**
  * Converts pasted raw Markdown (for example copied from a .md file) into rich text.
  * Conservative detection (see `looksLikeMarkdownDocument`): rich HTML pastes, plain prose,
- * and pastes inside code stay on the default handlers.
+ * and pastes inside code stay on the default handlers. A plain-text paste the detector
+ * rejects is inserted literally when another extension would otherwise reinterpret it.
  */
 const MarkdownPaste = Extension.create({
   name: 'markdown_paste',
@@ -313,7 +329,18 @@ const MarkdownPaste = Extension.create({
           handlePaste: (_view: EditorView, event: ClipboardEvent) => {
             if (!shouldInterceptPasteForMarkdownConversion(editor)) return false;
             const plainText = event.clipboardData?.getData('text/plain') ?? '';
-            if (!looksLikeMarkdownDocument(plainText)) return false;
+            if (!looksLikeMarkdownDocument(plainText)) {
+              // No HTML payload means the `orderedList` paste handler runs; keep the text literal.
+              if (
+                !(event.clipboardData?.getData('text/html') ?? '').trim() &&
+                NUMBERED_LINE.test(plainText)
+              ) {
+                event.preventDefault();
+                editor.commands.insertContent(literalParagraphs(plainText));
+                return true;
+              }
+              return false;
+            }
             const html = event.clipboardData?.getData('text/html') ?? '';
             if (html.trim() && !isPlainTextEquivalentHtml(html, plainText)) return false;
 

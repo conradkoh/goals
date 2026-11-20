@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import { isPlainTextEquivalentHtml, looksLikeMarkdownDocument } from './rich-text-markdown-paste';
+import { RELEASE_NOTES_MD } from './rich-text-markdown-paste.fixtures';
 
 describe('looksLikeMarkdownDocument', () => {
   it.each([
-    ['heading', '# Heading'],
+    ['heading followed by body text', '# Heading\n\nBody text.'],
     ['bold', 'Some **bold** text'],
     ['italic', 'an *italic* word'],
     ['strikethrough', 'a ~~gone~~ word'],
     ['inline code', 'use `code` here'],
     ['link', 'see [docs](https://example.com)'],
     ['bullet list', '- item'],
+    ['bullet list only', '- one\n- two'],
     ['task list', '* [ ] task'],
     ['ordered list', '1. first'],
+    ['ordered list only', '1. one\n2. two'],
     ['blockquote', '> quoted'],
     ['fenced code', '```ts\ncode\n```'],
     ['horizontal rule', '---'],
     ['CRLF document', '# Title\r\n\r\nbody'],
+    ['representative document', RELEASE_NOTES_MD],
   ])('detects %s', (_label, input) => {
     expect(looksLikeMarkdownDocument(input)).toBe(true);
   });
@@ -31,6 +35,15 @@ describe('looksLikeMarkdownDocument', () => {
     ['isolated asterisks', 'a * b * c'],
     ['underscored URL', 'https://example.com/path_with_underscores'],
     ['empty string', ''],
+    ['lone shell comment', '# install deps'],
+    [
+      'shell snippet with a comment',
+      '# install deps\npip install -r requirements.txt\npython main.py',
+    ],
+    ['python snippet with a comment', '# compute total\ntotal = sum(values)\nprint(total)'],
+    ['YAML list of key: value lines', '- name: web\n- version: 1.2.0'],
+    ['sentence starting with a year', '2024. was a strong year'],
+    ['python doctest prompt', '>>> print(1)\n1'],
   ])('rejects %s', (_label, input) => {
     expect(looksLikeMarkdownDocument(input)).toBe(false);
   });

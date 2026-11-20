@@ -2,15 +2,21 @@
  * Detection for pasted Markdown in the shared RichTextEditor.
  * Conservative: a paste counts as Markdown only when an unambiguous Markdown signal is present.
  * Plain prose such as `2 * 3 = 4`, `snake_case_name`, or `#1 priority` never matches.
+ * Code-like text (shell or Python comments, YAML `- key: value` lists, `>>>` prompts) never matches.
  */
 
 /** Block signals only count when they start a line. */
 const BLOCK_SIGNALS: readonly RegExp[] = [
-  /^ {0,3}#{1,6}[ \t]+\S/m, // "# Heading"
+  // "# Heading" counts only when a blank line and body text follow it. A `# comment` line in a
+  // shell or Python snippet is followed by code, so it does not match.
+  /^ {0,3}#{1,6}[ \t]+\S[^\n]*\n[ \t]*\n[ \t]*\S/m,
   /^ {0,3}(?:`{3,}|~{3,})/m, // "```ts" fenced code opener
-  /^[ \t]*[-*+][ \t]+\S/m, // "- item", "* item", "- [ ] task"
-  /^[ \t]*\d{1,9}[.)][ \t]+\S/m, // "1. item"
-  /^ {0,3}>[ \t]?\S/m, // "> quote"
+  // "- item", "* item", "- [ ] task". YAML-style "- key: value" lines do not count.
+  /^[ \t]*[-*+][ \t]+(?![\w.-]+:(?:[ \t]|$))\S/m,
+  // "1. item". Only a list that starts at 1 counts, so "2024. was a strong year" does not.
+  /^[ \t]*1[.)][ \t]+\S/m,
+  // "> quote". Python ">>> " prompts do not count.
+  /^ {0,3}>(?!>)[ \t]?\S/m,
   /^ {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$/m, // "---", "* * *"
 ];
 
