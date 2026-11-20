@@ -1,118 +1,26 @@
-import type { Doc } from '@workspace/backend/convex/_generated/dataModel';
+import { formatDateKey, formatDay, formatDayFromKey, formatGeneratedAt } from './dateFormat';
+import { htmlToPlainText } from './htmlToPlainText';
 import type {
-  MultipleQuarterlyGoalsSummary,
-  QuarterlyGoalSummary,
-} from '@workspace/backend/src/usecase/getWeekDetails';
-import DOMPurify from 'dompurify';
-import { DateTime } from 'luxon';
-
-/**
- * DOMPurify configuration for sanitizing HTML before text extraction.
- * Only allows safe formatting tags - no scripts, iframes, etc.
- */
-const SANITIZE_CONFIG = {
-  ALLOWED_TAGS: [
-    'p',
-    'b',
-    'i',
-    'u',
-    'strong',
-    'em',
-    'strike',
-    'br',
-    'ul',
-    'ol',
-    'li',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'blockquote',
-    'pre',
-    'code',
-    'span',
-    'a',
-    'div',
-  ],
-  ALLOWED_ATTR: ['href', 'class', 'target', 'title'],
-  ALLOWED_URI_REGEXP:
-    /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|xxx):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
-};
-
-/**
- * Converts HTML content to plain text for markdown output.
- * First sanitizes the HTML using DOMPurify to remove any malicious content,
- * then extracts clean text content.
- *
- * @param html - HTML content string (potentially untrusted)
- * @returns Sanitized plain text content
- */
-function htmlToPlainText(html: string): string {
-  if (!html) return '';
-
-  // First, sanitize the HTML to remove any malicious content
-  const sanitizedHtml = DOMPurify.sanitize(html, SANITIZE_CONFIG);
-
-  // Use DOMParser to safely extract text content
-  // This is safer than regex-based tag stripping as it properly handles
-  // nested tags, malformed HTML, and edge cases
-  if (typeof window !== 'undefined' && window.DOMParser) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sanitizedHtml, 'text/html');
-
-    // Get text content, which automatically strips all HTML tags
-    let text = doc.body.textContent || '';
-
-    // Clean up whitespace
-    text = text
-      .split(/\n+/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .join(' ');
-
-    return text.trim();
-  }
-
-  // Fallback for SSR/Node.js environments where DOMParser isn't available
-  // This is a simplified extraction - the primary sanitization is already done
-  let text = sanitizedHtml;
-
-  // Replace common HTML entities
-  text = text
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  // Convert block elements to line breaks
-  text = text.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n');
-
-  // Remove all remaining HTML tags
-  text = text.replace(/<[^>]*>/g, '');
-
-  // Clean up whitespace
-  text = text
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .join(' ');
-
-  return text.trim();
-}
+  MarkdownGoalLog,
+  MarkdownQuarterlyGoalSummary,
+  MarkdownQuarterSummary,
+  QuarterlySummaryMarkdownOptions,
+} from './types';
 
 /**
  * Formats goal log entries as markdown.
  * Groups logs by date and renders content.
  *
- * @param logs - Array of goal log entries
- * @param indent - Indentation level for nested lists (default: '')
- * @returns Formatted markdown string for logs
+ * @param logs - goal log entries
+ * @param timeZone - IANA zone for grouping keys; undefined = system zone
+ * @param indent - indentation level for nested lists (default: '')
+ * @returns formatted markdown string for logs
  */
-function formatGoalLogsAsMarkdown(logs: Doc<'goalLogs'>[], indent = ''): string {
+function formatGoalLogsAsMarkdown(
+  logs: MarkdownGoalLog[],
+  timeZone: string | undefined,
+  indent = ''
+): string {
   if (!logs || logs.length === 0) {
     return '';
   }
@@ -121,12 +29,13 @@ function formatGoalLogsAsMarkdown(logs: Doc<'goalLogs'>[], indent = ''): string 
   lines.push(`${indent}**Log:**`);
 
   // Group logs by date
-  const logsByDate = new Map<string, Doc<'goalLogs'>[]>();
+  const logsByDate = new Map<string, MarkdownGoalLog[]>();
   for (const log of logs) {
-    const dateKey = DateTime.fromMillis(log.logDate).toFormat('yyyy-MM-dd');
+    const dateKey = formatDateKey(log.logDate, timeZone);
     if (!logsByDate.has(dateKey)) {
       logsByDate.set(dateKey, []);
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- moved verbatim from the legacy generator; cleanup is out of scope
     logsByDate.get(dateKey)!.push(log);
   }
 
@@ -134,8 +43,9 @@ function formatGoalLogsAsMarkdown(logs: Doc<'goalLogs'>[], indent = ''): string 
   const sortedDates = [...logsByDate.keys()].sort((a, b) => b.localeCompare(a));
 
   for (const dateKey of sortedDates) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- moved verbatim from the legacy generator; cleanup is out of scope
     const dateLogs = logsByDate.get(dateKey)!;
-    const formattedDate = DateTime.fromFormat(dateKey, 'yyyy-MM-dd').toFormat('LLL d, yyyy');
+    const formattedDate = formatDayFromKey(dateKey);
     lines.push(`${indent}- **${formattedDate}:**`);
 
     for (const log of dateLogs) {
@@ -152,17 +62,6 @@ function formatGoalLogsAsMarkdown(logs: Doc<'goalLogs'>[], indent = ''): string 
 }
 
 /**
- * Options for generating quarterly summary markdown.
- */
-export interface QuarterlySummaryMarkdownOptions {
-  /**
-   * Whether to omit incomplete goals from the output.
-   * When true, only completed goals will be included.
-   */
-  omitIncomplete?: boolean;
-}
-
-/**
  * Generates a markdown representation of a quarterly goal summary.
  *
  * @param summaryData - The quarterly goal summary data
@@ -170,11 +69,11 @@ export interface QuarterlySummaryMarkdownOptions {
  * @returns A formatted markdown string
  */
 export function generateQuarterlySummaryMarkdown(
-  summaryData: QuarterlyGoalSummary,
+  summaryData: MarkdownQuarterlyGoalSummary,
   options: QuarterlySummaryMarkdownOptions = {}
 ): string {
   const { quarterlyGoal, weeklyGoalsByWeek, quarter, year, weekRange } = summaryData;
-  const { omitIncomplete = false } = options;
+  const { omitIncomplete = false, timeZone } = options;
 
   // Build the markdown content
   const lines: string[] = [];
@@ -192,14 +91,14 @@ export function generateQuarterlySummaryMarkdown(
 
   // Add completion date if completed
   if (quarterlyGoal.isComplete && quarterlyGoal.completedAt) {
-    const completedDate = DateTime.fromMillis(quarterlyGoal.completedAt).toFormat('LLL d, yyyy');
+    const completedDate = formatDay(quarterlyGoal.completedAt, timeZone);
     lines.push(`**Completed:** ${completedDate}`);
     lines.push('');
   }
 
   // Add quarterly goal logs if available
   if (quarterlyGoal.logs && quarterlyGoal.logs.length > 0) {
-    lines.push(formatGoalLogsAsMarkdown(quarterlyGoal.logs));
+    lines.push(formatGoalLogsAsMarkdown(quarterlyGoal.logs, timeZone));
     lines.push('');
   }
 
@@ -289,7 +188,7 @@ export function generateQuarterlySummaryMarkdown(
         // Add weekly goal logs if available
         if (weeklyGoal.logs && weeklyGoal.logs.length > 0) {
           lines.push('');
-          lines.push(formatGoalLogsAsMarkdown(weeklyGoal.logs));
+          lines.push(formatGoalLogsAsMarkdown(weeklyGoal.logs, timeZone));
         }
 
         // Add daily goals as bullet points
@@ -316,7 +215,7 @@ export function generateQuarterlySummaryMarkdown(
 
               // Add daily goal logs if available
               if (dailyGoal.logs && dailyGoal.logs.length > 0) {
-                lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, '  '));
+                lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, timeZone, '  '));
               }
             });
           }
@@ -337,7 +236,7 @@ export function generateQuarterlySummaryMarkdown(
 
   // Add generation timestamp
   lines.push('---');
-  lines.push(`*Generated on ${DateTime.now().toFormat("LLL d, yyyy 'at' h:mm a")}*`);
+  lines.push(`*Generated on ${formatGeneratedAt(options.now ?? Date.now(), timeZone)}*`);
 
   return lines.join('\n');
 }
@@ -350,11 +249,11 @@ export function generateQuarterlySummaryMarkdown(
  * @returns A formatted markdown string
  */
 export function generateMultipleQuarterlyGoalsMarkdown(
-  summaryData: MultipleQuarterlyGoalsSummary,
+  summaryData: MarkdownQuarterSummary,
   options: QuarterlySummaryMarkdownOptions = {}
 ): string {
   const { quarterlyGoals, adhocGoals, quarter, year, weekRange } = summaryData;
-  const { omitIncomplete = false } = options;
+  const { omitIncomplete = false, timeZone } = options;
 
   // Build the markdown content
   const lines: string[] = [];
@@ -461,14 +360,14 @@ export function generateMultipleQuarterlyGoalsMarkdown(
 
     // Add completion date if completed
     if (quarterlyGoal.isComplete && quarterlyGoal.completedAt) {
-      const completedDate = DateTime.fromMillis(quarterlyGoal.completedAt).toFormat('LLL d, yyyy');
+      const completedDate = formatDay(quarterlyGoal.completedAt, timeZone);
       lines.push(`**Completed:** ${completedDate}`);
       lines.push('');
     }
 
     // Add quarterly goal logs if available
     if (quarterlyGoal.logs && quarterlyGoal.logs.length > 0) {
-      lines.push(formatGoalLogsAsMarkdown(quarterlyGoal.logs));
+      lines.push(formatGoalLogsAsMarkdown(quarterlyGoal.logs, timeZone));
       lines.push('');
     }
 
@@ -550,7 +449,7 @@ export function generateMultipleQuarterlyGoalsMarkdown(
 
           // Add weekly goal logs if available
           if (weeklyGoal.logs && weeklyGoal.logs.length > 0) {
-            lines.push(formatGoalLogsAsMarkdown(weeklyGoal.logs, '  '));
+            lines.push(formatGoalLogsAsMarkdown(weeklyGoal.logs, timeZone, '  '));
           }
 
           // Add daily goals as sub-bullets
@@ -575,7 +474,7 @@ export function generateMultipleQuarterlyGoalsMarkdown(
 
                 // Add daily goal logs if available
                 if (dailyGoal.logs && dailyGoal.logs.length > 0) {
-                  lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, '    '));
+                  lines.push(formatGoalLogsAsMarkdown(dailyGoal.logs, timeZone, '    '));
                 }
               });
             }
@@ -649,7 +548,7 @@ export function generateMultipleQuarterlyGoalsMarkdown(
 
           // Add adhoc goal logs if available
           if (goal.logs && goal.logs.length > 0) {
-            lines.push(formatGoalLogsAsMarkdown(goal.logs, '  '));
+            lines.push(formatGoalLogsAsMarkdown(goal.logs, timeZone, '  '));
           }
         });
 
@@ -660,7 +559,7 @@ export function generateMultipleQuarterlyGoalsMarkdown(
 
   // Add generation timestamp
   lines.push('---');
-  lines.push(`*Generated on ${DateTime.now().toFormat("LLL d, yyyy 'at' h:mm a")}*`);
+  lines.push(`*Generated on ${formatGeneratedAt(options.now ?? Date.now(), timeZone)}*`);
 
   return lines.join('\n');
 }

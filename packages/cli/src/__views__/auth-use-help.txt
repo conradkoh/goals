@@ -1,0 +1,9 @@
+Usage: goals auth use <label>
+
+Set the default identity.
+
+Options:
+  <label>  A label shown by `goals auth list`.
+
+Examples:
+  goals auth use dev

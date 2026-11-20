@@ -1,10 +1,9 @@
 import type { InitiativeQuarterSummary } from '@workspace/backend/src/usecase/getWeekDetails';
-import { DateTime } from 'luxon';
-
 import {
   generateMultipleQuarterlyGoalsMarkdown,
   type QuarterlySummaryMarkdownOptions,
-} from './quarterlyMarkdown';
+} from '@workspace/shared/utilities/quarterly-markdown';
+import { DateTime } from 'luxon';
 
 import { formatInitiativeDateRange } from '@/lib/date/initiative-dates';
 

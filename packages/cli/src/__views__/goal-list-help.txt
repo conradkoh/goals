@@ -1,0 +1,24 @@
+Usage: goals goal list [--scope <scope>] --year <year> [--quarter <n>] [--week <n>] [--initiative <id>] [--limit <n>] [--json] [--as <label>]
+
+List goals in one scope for a year (quarterly by default).
+
+Options:
+  --scope <scope>    quarterly (default), weekly, daily or adhoc.
+  --year <year>      Calendar year, 2000-2100; required for every scope.
+  --quarter <n>      Quarter 1-4; required for quarterly, weekly and daily goals.
+  --week <n>         ISO week 1-53; required for weekly and daily goals, optional for adhoc.
+  --initiative <id>  Only goals tagged with this initiative; IDs come from `goals initiative list`.
+  --limit <n>        Maximum rows, 1-500 (default: 200).
+  --json             Print a JSON array instead of a table.
+  --as <label>       Identity to use (default: the default identity).
+
+Examples:
+  goals goal list --year 2026 --quarter 3
+  goals goal list --scope weekly --year 2026 --quarter 3 --week 31
+  goals goal list --scope adhoc --year 2026 --json
+
+Notes:
+  Default scope is quarterly; quarterly needs --year and --quarter and rejects --week.
+  Weekly and daily need --year, --quarter and --week; adhoc needs --year and rejects --quarter.
+  An empty list prints `No goals found.`; --json prints a bare array.
+  The default cap is 200 (--limit max 500); a truncation note goes to stderr.

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatCodeInputValue } from '@/modules/auth/formatCodeInput';
+import { sanitizeReturnTo } from '@/modules/auth/returnTo';
 
 /**
  * Displays login form for users to authenticate using temporary login codes.
@@ -17,7 +18,7 @@ import { formatCodeInputValue } from '@/modules/auth/formatCodeInput';
  * Design: Minimal and clean, matching the main login page aesthetic.
  * The input uses monospace font with centered text for code entry.
  */
-export function LoginWithCode() {
+export function LoginWithCode({ returnTo }: { returnTo?: string | null } = {}) {
   const router = useRouter();
   const verifyLoginCode = useSessionMutation(api.auth.verifyLoginCode);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,9 +47,10 @@ export function LoginWithCode() {
         setError,
         verifyLoginCode,
         router,
+        returnTo,
       });
     },
-    [code, router, verifyLoginCode]
+    [code, returnTo, router, verifyLoginCode]
   );
 
   // Computed values
@@ -121,13 +123,15 @@ interface _HandleSubmitParams {
   setError: (error: string | null) => void;
   verifyLoginCode: (params: { code: string }) => Promise<{ success: boolean; message: string }>;
   router: ReturnType<typeof useRouter>;
+  returnTo?: string | null;
 }
 
 /**
  * Handles form submission for login code verification with validation and error handling.
  */
+// fallow-ignore-next-line complexity
 async function _handleSubmit(params: _HandleSubmitParams): Promise<void> {
-  const { e, code, setIsLoading, setError, verifyLoginCode, router } = params;
+  const { e, code, setIsLoading, setError, verifyLoginCode, router, returnTo } = params;
 
   e.preventDefault();
 
@@ -152,7 +156,7 @@ async function _handleSubmit(params: _HandleSubmitParams): Promise<void> {
 
     if (result.success) {
       toast.success('Login successful');
-      router.push('/app');
+      router.push(sanitizeReturnTo(returnTo) ?? '/app');
     } else {
       setError(result.message);
       toast.error(result.message);

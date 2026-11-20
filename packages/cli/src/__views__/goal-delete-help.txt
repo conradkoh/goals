@@ -1,0 +1,17 @@
+Usage: goals goal delete <id> --yes [--as <label>]
+
+Delete one goal and all of its child goals.
+
+Options:
+  <id>          Goal ID from `goals goal list` (use --json for scripts).
+  --yes         Confirm the deletion; nothing is sent without it.
+  --as <label>  Identity to use (default: the default identity).
+
+Examples:
+  goals goal delete goal_123 --yes
+
+Notes:
+  Deletes this goal and all of its child goals.
+  --yes is required and nothing is sent without it.
+  Goal log history is kept.
+  IDs come from `goals goal list` (use --json for scripts).

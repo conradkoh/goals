@@ -1,0 +1,14 @@
+Usage: goals goal rename <id> --title <text> [--as <label>]
+
+Rename one goal.
+
+Options:
+  <id>            Goal ID from `goals goal list` (use --json for scripts).
+  --title <text>  New title, trimmed; must not be empty.
+  --as <label>    Identity to use (default: the default identity).
+
+Examples:
+  goals goal rename goal_123 --title "Ship the beta"
+
+Notes:
+  IDs come from `goals goal list` (use --json for scripts).

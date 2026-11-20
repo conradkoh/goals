@@ -7,10 +7,16 @@ build
 .git
 .chatroom
 
+# packages/cli vendors shared sources at build time; generated copies are not formatted
+packages/cli/src/vendor/
+
 # Next.js auto-generated (also gitignored in apps/webapp/.gitignore)
 **/next-env.d.ts
 coverage
 .pnpm-debug.log
+
+# Golden/fixture files must stay byte-exact
+**/__fixtures__/**
 # Convex codegen (glob + explicit backend path)
 **/convex/_generated/**
 services/backend/convex/_generated/**

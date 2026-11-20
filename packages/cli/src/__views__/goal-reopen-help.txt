@@ -1,0 +1,20 @@
+Usage: goals goal reopen <id> [--week <n>] [--include-children] [--as <label>]
+
+Mark one goal incomplete again.
+
+Options:
+  <id>                Goal ID from `goals goal list` (use --json for scripts).
+  --week <n>          ISO week 1-53; required for weekly and daily goals.
+  --include-children  Also mark child goals incomplete (off by default).
+  --as <label>        Identity to use (default: the default identity).
+
+Examples:
+  goals goal reopen goal_123 --week 31
+  goals goal reopen goal_123 --include-children
+
+Notes:
+  --week is required for weekly and daily goals; the error names the current ISO week.
+  Quarterly goals default to the quarter's first week server-side.
+  --include-children also applies to child goals; it is off by default.
+  Use `goals goal get <id>` to see a goal's scope.
+  IDs come from `goals goal list` (use --json for scripts).

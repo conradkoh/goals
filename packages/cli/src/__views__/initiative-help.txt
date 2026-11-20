@@ -1,0 +1,9 @@
+Usage: goals initiative <action> [options]
+
+Read your initiatives.
+
+Actions:
+  list  List initiatives.
+  get   Show one initiative and the goals tagged with it.
+
+Run `goals initiative <action> --help` for details.

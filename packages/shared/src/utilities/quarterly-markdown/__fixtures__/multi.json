@@ -1,0 +1,205 @@
+{
+  "quarterlyGoals": [
+    {
+      "quarterlyGoal": {
+        "title": "Ship shared markdown module",
+        "details": "Extract the generator without changing output.\nMigrate the webapp callers.",
+        "isComplete": true,
+        "completedAt": 1795044600000,
+        "logs": [
+          {
+            "logDate": 1795044600000,
+            "content": "<p>Shipped the shared module.</p>"
+          },
+          {
+            "logDate": 1794820500000,
+            "content": "<p>Alpha paragraph.</p><p>Beta paragraph.</p>"
+          },
+          {
+            "logDate": 1794816300000,
+            "content": "<p>Wrote the golden fixtures.</p>"
+          }
+        ]
+      },
+      "weeklyGoalsByWeek": {
+        "46": [
+          {
+            "title": "Create shared helpers",
+            "details": "Date helpers first.\nThen HTML to text.",
+            "isComplete": true,
+            "logs": [
+              {
+                "logDate": 1794820500000,
+                "content": "<ul><li>dateFormat.ts</li><li>htmlToPlainText.ts</li></ul>"
+              }
+            ],
+            "children": [
+              {
+                "title": "Write entity table",
+                "details": "Named entities only.\nNo third-party package.",
+                "isComplete": true,
+                "logs": [
+                  {
+                    "logDate": 1794820500000,
+                    "content": "<ul data-type=\"taskList\"><li data-checked=\"true\"><label><input type=\"checkbox\"><span></span></label><div><p>done</p></div></li></ul>"
+                  }
+                ]
+              },
+              {
+                "title": "Add zone coverage",
+                "isComplete": false
+              }
+            ]
+          },
+          {
+            "title": "Unfinished spike",
+            "isComplete": false,
+            "logs": [
+              {
+                "logDate": 1794468600000,
+                "content": "<p>Spike <a href=\"https://example.com/a?x=1&amp;y=2\">link</a> left open.</p>"
+              }
+            ]
+          }
+        ],
+        "47": [
+          {
+            "title": "Weekly goal without children field",
+            "isComplete": false
+          }
+        ],
+        "48": [
+          {
+            "title": "Weekly goal with empty children",
+            "isComplete": false,
+            "children": []
+          }
+        ]
+      },
+      "quarter": 4,
+      "year": 2026,
+      "weekRange": { "startWeek": 40, "endWeek": 52 }
+    },
+    {
+      "quarterlyGoal": {
+        "title": "Rewrite initiative markdown",
+        "details": "Out of scope for this slice.",
+        "isComplete": false,
+        "logs": [
+          {
+            "logDate": 1794468600000,
+            "content": "<p>Deferred to a later work package.</p>"
+          },
+          {
+            "logDate": 1794312000000,
+            "content": "<!-- parked --><p>Parked until the shared module lands.</p>"
+          }
+        ]
+      },
+      "weeklyGoalsByWeek": {
+        "46": [
+          {
+            "title": "Draft outline",
+            "isComplete": false,
+            "children": [
+              {
+                "title": "List sections",
+                "isComplete": false
+              }
+            ]
+          }
+        ]
+      },
+      "quarter": 4,
+      "year": 2026,
+      "weekRange": { "startWeek": 40, "endWeek": 52 }
+    },
+    {
+      "quarterlyGoal": {
+        "title": "Keep the CLI contract moving",
+        "details": "Started but not finished.",
+        "isComplete": false,
+        "logs": [
+          {
+            "logDate": 1794630000000,
+            "content": "<p>Prototyped the <script>alert(1)</script>output shape.</p>"
+          }
+        ]
+      },
+      "weeklyGoalsByWeek": {
+        "47": [
+          {
+            "title": "Sketch CLI output",
+            "details": "One file per quarter.\nShared generator.",
+            "isComplete": false,
+            "children": [
+              {
+                "title": "Generate year markdown",
+                "isComplete": true,
+                "logs": [
+                  {
+                    "logDate": 1794630000000,
+                    "content": "<p>First draft works.</p>"
+                  }
+                ]
+              },
+              {
+                "title": "Wire the CLI flag",
+                "isComplete": false
+              }
+            ]
+          },
+          {
+            "title": "Blocked spike",
+            "isComplete": false
+          }
+        ]
+      },
+      "quarter": 4,
+      "year": 2026,
+      "weekRange": { "startWeek": 40, "endWeek": 52 }
+    }
+  ],
+  "adhocGoals": [
+    {
+      "title": "Tidy fixture matrix",
+      "details": "Merge duplicate cases.\nKeep names stable.",
+      "isComplete": true,
+      "adhoc": { "weekNumber": 45 },
+      "logs": [
+        {
+          "logDate": 1794468600000,
+          "content": "<p>Dropped one redundant case.</p>"
+        }
+      ]
+    },
+    {
+      "title": "Unfinished cleanup",
+      "isComplete": false,
+      "adhoc": { "weekNumber": 45 },
+      "details": "Still pending.\nNeeds review."
+    },
+    {
+      "title": "Fix footer spacing",
+      "isComplete": true,
+      "adhoc": { "weekNumber": 46 },
+      "logs": [
+        {
+          "logDate": 1794630000000,
+          "content": "<p>Kept the existing format.</p>"
+        },
+        {
+          "logDate": 1794630000000,
+          "content": "   "
+        }
+      ]
+    },
+    {
+      "title": "Unfiled adhoc note",
+      "isComplete": false
+    }
+  ],
+  "year": 2026,
+  "quarter": 4,
+  "weekRange": { "startWeek": 40, "endWeek": 52 }
+}

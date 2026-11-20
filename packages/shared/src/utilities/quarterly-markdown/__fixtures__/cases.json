@@ -1,0 +1,51 @@
+{
+  "now": "2026-11-19T12:30:00.000Z",
+  "zones": [
+    { "id": "UTC", "label": "UTC" },
+    { "id": "Pacific/Auckland", "label": "Pacific-Auckland" }
+  ],
+  "cases": [
+    {
+      "name": "quarter-all",
+      "fixture": "quarter.json",
+      "generator": "quarter",
+      "omitIncomplete": false
+    },
+    {
+      "name": "quarter-completed",
+      "fixture": "quarter.json",
+      "generator": "quarter",
+      "omitIncomplete": true
+    },
+    {
+      "name": "multi-all",
+      "fixture": "multi.json",
+      "generator": "multi",
+      "omitIncomplete": false
+    },
+    {
+      "name": "multi-completed",
+      "fixture": "multi.json",
+      "generator": "multi",
+      "omitIncomplete": true
+    },
+    {
+      "name": "multi-empty",
+      "fixture": "multi-empty.json",
+      "generator": "multi",
+      "omitIncomplete": false
+    },
+    {
+      "name": "multi-adhoc-only",
+      "fixture": "multi-adhoc-only.json",
+      "generator": "multi",
+      "omitIncomplete": false
+    },
+    {
+      "name": "multi-adhoc-only-completed",
+      "fixture": "multi-adhoc-only.json",
+      "generator": "multi",
+      "omitIncomplete": true
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import { sanitizeReturnTo } from './returnTo';
+
 export type OAuthFlowType = 'login' | 'connect';
 
 export function createOAuthState(
@@ -43,7 +45,7 @@ export function getOAuthCallbackReturnTo(
 ): string | undefined {
   if (!encodedState) return undefined;
 
-  const returnTo = parseOAuthStateReturnTo(encodedState);
+  const returnTo = sanitizeReturnTo(parseOAuthStateReturnTo(encodedState));
   if (returnTo) return returnTo;
 
   return getDefaultOAuthReturnTo(parseOAuthStateFlowType(encodedState) ?? flowType);

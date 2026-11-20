@@ -3,6 +3,9 @@ node_modules
 dist/
 *.tsbuildinfo
 
+# packages/cli vendors shared sources at build time; never commit the copies
+packages/cli/src/vendor/
+
 # Turborepo
 .turbo
 

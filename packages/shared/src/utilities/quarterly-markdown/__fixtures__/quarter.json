@@ -1,0 +1,115 @@
+{
+  "quarterlyGoal": {
+    "title": "Shared markdown generator",
+    "details": "Move the generator into packages/shared.\nKeep legacy output byte-for-byte.",
+    "isComplete": true,
+    "completedAt": 1795044600000,
+    "logs": [
+      {
+        "logDate": 1794820500000,
+        "content": "<p>Started the extraction.</p>"
+      },
+      {
+        "logDate": 1794816300000,
+        "content": "<p>Captured legacy behaviour.</p>"
+      },
+      {
+        "logDate": 1794630000000,
+        "content": "<p>Entities &amp; &lt;b&gt; &quot;quoted&quot; &#39;apos&#39;&nbsp;</p>"
+      },
+      {
+        "logDate": 1794312000000,
+        "content": "<p>Blocked on DOM usage; removed <script>alert(1)</script>dependencies instead.</p>"
+      }
+    ]
+  },
+  "weeklyGoalsByWeek": {
+    "46": [
+      {
+        "title": "Extract generator",
+        "details": "Move types first.\nThen move helpers.",
+        "isComplete": true,
+        "logs": [
+          {
+            "logDate": 1794820500000,
+            "content": "<ul><li>Created types.ts</li><li>Created dateFormat.ts</li></ul>"
+          },
+          {
+            "logDate": 1794816300000,
+            "content": "<p>Reviewed the legacy file <!-- legacy note -->top to bottom.</p>"
+          }
+        ],
+        "children": [
+          {
+            "title": "Write types",
+            "details": "Structural types only.\nNo backend imports.",
+            "isComplete": true,
+            "logs": [
+              {
+                "logDate": 1794820500000,
+                "content": "<p>Types compile.</p>"
+              },
+              {
+                "logDate": 1794820500000,
+                "content": "<p>Second log on the same day.</p>"
+              }
+            ]
+          },
+          {
+            "title": "Write guard test",
+            "isComplete": false
+          }
+        ]
+      },
+      {
+        "title": "Draft tests",
+        "isComplete": false,
+        "logs": [
+          {
+            "logDate": 1794468600000,
+            "content": "<p>Tasks: <a href=\"https://example.com/a?x=1&amp;y=2\">link</a></p>"
+          },
+          {
+            "logDate": 1794468600000,
+            "content": ""
+          }
+        ],
+        "children": []
+      }
+    ],
+    "47": [],
+    "48": [
+      {
+        "title": "Migrate webapp",
+        "details": "Swap imports.\nDelete legacy file.",
+        "isComplete": false,
+        "children": [
+          {
+            "title": "Swap view imports",
+            "isComplete": true,
+            "details": "Two components.\nOne markdown helper.",
+            "logs": [
+              {
+                "logDate": 1794820500000,
+                "content": "<ul data-type=\"taskList\"><li data-checked=\"true\"><label><input type=\"checkbox\"><span></span></label><div><p>done</p></div></li></ul>"
+              }
+            ]
+          },
+          {
+            "title": "Delete legacy",
+            "isComplete": false,
+            "logs": [
+              {
+                "logDate": 1794816300000,
+                "content": "   "
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "quarter": 4,
+  "year": 2026,
+  "weekRange": { "startWeek": 40, "endWeek": 52 }
+}

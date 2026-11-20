@@ -17,6 +17,7 @@ import { useGoogleAuthAvailable } from '@/modules/app/useAppInfo';
 import { AnonymousLoginButton } from '@/modules/auth/AnonymousLoginButton';
 import { useAuthState } from '@/modules/auth/AuthProvider';
 import { GoogleLoginButton } from '@/modules/auth/GoogleLoginButton';
+import { sanitizeReturnTo } from '@/modules/auth/returnTo';
 
 /**
  * Login page component providing multiple authentication options.
@@ -33,11 +34,11 @@ function LoginPageContent() {
   const isLoading = authState === undefined;
 
   /**
-   * Redirects authenticated users — prefers returnTo param, falls back to /app.
+   * Redirects authenticated users — prefers a sanitized returnTo param, falls back to /app.
    */
   const redirectAuthenticated = useCallback(
     (returnTo?: string | null) => {
-      router.push(returnTo || '/app');
+      router.push(sanitizeReturnTo(returnTo) ?? '/app');
     },
     [router]
   );
@@ -59,7 +60,7 @@ function LoginPageContent() {
     return _renderDisabledState();
   }
 
-  const returnTo = searchParams.get('returnTo');
+  const returnTo = sanitizeReturnTo(searchParams.get('returnTo'));
   return _renderLoginForm(googleAuthAvailable, sessionId, returnTo);
 }
 
@@ -226,13 +227,15 @@ function _renderLoginOptions(options: {
         )}
 
         {/* Login with Code */}
-        {_renderCodeLoginOption()}
+        {_renderCodeLoginOption(returnTo)}
 
         {/* Invite Signup */}
         {inviteSignupAllowed && _renderInviteSignupOption()}
 
         {/* Anonymous Login */}
-        {sessionId && selfSignupAllowed && <AnonymousLoginButton variant="list" />}
+        {sessionId && selfSignupAllowed && (
+          <AnonymousLoginButton variant="list" returnTo={returnTo} />
+        )}
       </div>
 
       {/* Recovery Section */}
@@ -244,9 +247,12 @@ function _renderLoginOptions(options: {
 /**
  * Renders the login with code option.
  */
-function _renderCodeLoginOption() {
+function _renderCodeLoginOption(returnTo: string | null) {
   return (
-    <Link href="/login/code" className="block no-underline">
+    <Link
+      href={returnTo ? { pathname: '/login/code', query: { returnTo } } : '/login/code'}
+      className="block no-underline"
+    >
       <div className="flex items-center justify-between h-16 px-6 hover:bg-muted transition-colors cursor-pointer group">
         <div className="flex items-center gap-4">
           <div className="flex items-center justify-center w-8 h-8">

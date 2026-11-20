@@ -1,0 +1,14 @@
+Usage: goals auth logout [--as <label>]
+
+Revoke the credential and remove it from this machine.
+
+Options:
+  --as <label>  Identity to log out (default: the default identity).
+
+Examples:
+  goals auth logout
+  goals auth logout --as dev
+
+Notes:
+  The local entry is always removed, even if the server cannot be reached.
+  Identity selection: --as, then GOALS_AS, then the default identity, then the only stored identity.

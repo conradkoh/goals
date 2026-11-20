@@ -1,0 +1,16 @@
+Usage: goals initiative get <id> [--json] [--as <label>]
+
+Show one initiative and the goals tagged with it.
+
+Options:
+  <id>          Initiative ID from `goals initiative list` (use --json for scripts).
+  --json        Print one JSON object instead of text.
+  --as <label>  Identity to use (default: the default identity).
+
+Examples:
+  goals initiative get init_123
+  goals initiative get init_123 --json
+
+Notes:
+  IDs come from `goals initiative list` (use --json for scripts).
+  The goals table lists goals tagged with the initiative, quarterly first.

@@ -18,6 +18,22 @@ const nextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: process.env.TURBOPACK_FS_CACHE === '1',
   },
+  async headers() {
+    // The approval URL's `request` id is effectively a bearer link, and the page is a
+    // clickjacking target (approve button), so lock it down.
+    return [
+      {
+        source: '/cli/authorize',
+        headers: [
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Cache-Control', value: 'no-store' },
+          { key: 'X-Robots-Tag', value: 'noindex' },
+        ],
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX({

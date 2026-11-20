@@ -1,0 +1,16 @@
+Usage: goals initiative list [--limit <n>] [--json] [--as <label>]
+
+List initiatives.
+
+Options:
+  --limit <n>   Maximum rows, 1-500 (default: 200).
+  --json        Print a JSON array instead of a table.
+  --as <label>  Identity to use (default: the default identity).
+
+Examples:
+  goals initiative list
+  goals initiative list --json
+
+Notes:
+  An empty list prints `No initiatives found.`; --json prints a bare array.
+  The default cap is 200 (--limit max 500); a truncation note goes to stderr.

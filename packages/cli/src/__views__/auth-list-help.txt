@@ -1,0 +1,12 @@
+Usage: goals auth list [--json]
+
+List stored identities.
+
+Options:
+  --json  Print a JSON array instead of a table.
+
+Examples:
+  goals auth list
+
+Notes:
+  Reads the local file only; no network call. * marks the default identity.

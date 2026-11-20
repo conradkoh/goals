@@ -226,6 +226,54 @@ export default defineSchema({
   }).index('by_sessionId', ['sessionId']),
 
   /**
+   * Device-code login requests for the `goals` CLI. The deviceCode is never stored (only its hash);
+   * `userCode` is compared by a human on the approval page and is never returned to the browser.
+   */
+  cliAuthRequests: defineTable({
+    requestId: v.string(),
+    deviceCodeHash: v.string(),
+    userCode: v.string(),
+    installationId: v.string(),
+    machineName: v.string(),
+    environment: v.optional(v.string()),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('approved'),
+      v.literal('denied'),
+      v.literal('consumed')
+    ),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    approvedByUserId: v.optional(v.id('users')),
+    resolvedAt: v.optional(v.number()),
+    codeAttempts: v.number(),
+  })
+    .index('by_requestId', ['requestId'])
+    .index('by_status_and_expiresAt', ['status', 'expiresAt'])
+    .index('by_installationId_and_status', ['installationId', 'status']),
+
+  /**
+   * Per-device CLI credentials. Only a hash of the derived session handle is stored; the bearer token
+   * is known only to the CLI machine.
+   */
+  cliCredentials: defineTable({
+    userId: v.id('users'),
+    handleHash: v.string(),
+    installationId: v.string(),
+    machineName: v.string(),
+    environment: v.optional(v.string()),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    lastUsedAt: v.optional(v.number()),
+    revokedAt: v.optional(v.number()),
+    revokedReason: v.optional(
+      v.union(v.literal('user'), v.literal('logout'), v.literal('replaced'), v.literal('limit'))
+    ),
+  })
+    .index('by_handleHash', ['handleHash'])
+    .index('by_userId', ['userId']),
+
+  /**
    * Authentication provider configuration for dynamic auth provider setup.
    * Supports multiple auth providers (Google, GitHub, etc.) with unified structure.
    */

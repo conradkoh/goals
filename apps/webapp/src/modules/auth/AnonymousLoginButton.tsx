@@ -10,10 +10,12 @@ import { toast } from 'sonner';
 import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { sanitizeReturnTo } from '@/modules/auth/returnTo';
 
 export interface AnonymousLoginButtonProps {
   variant?: 'list' | 'button';
   className?: string;
+  returnTo?: string | null;
 }
 
 /**
@@ -23,6 +25,7 @@ export interface AnonymousLoginButtonProps {
 export const AnonymousLoginButton = ({
   variant = 'button',
   className = 'w-full',
+  returnTo,
 }: AnonymousLoginButtonProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -36,14 +39,14 @@ export const AnonymousLoginButton = ({
     try {
       await loginAnon();
       toast.success('Logged in anonymously');
-      router.push('/app');
+      router.push(sanitizeReturnTo(returnTo) ?? '/app');
     } catch (error) {
       console.error('Anonymous login failed:', error);
       toast.error('Failed to login. Please try again later.');
     } finally {
       setIsLoading(false);
     }
-  }, [loginAnon, router]);
+  }, [loginAnon, returnTo, router]);
 
   // List-style layout
   if (variant === 'list') {

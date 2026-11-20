@@ -1,9 +1,8 @@
 import type { MultipleQuarterlyGoalsSummary } from '@workspace/backend/src/usecase/getWeekDetails';
+import { generateMultipleQuarterlyGoalsMarkdown } from '@workspace/shared/utilities/quarterly-markdown';
 import React from 'react';
 
 import { QuarterlySummaryMarkdownExportView } from './QuarterlySummaryMarkdownExportView';
-
-import { generateMultipleQuarterlyGoalsMarkdown } from '@/lib/markdown/quarterlyMarkdown';
 
 interface MultiQuarterlySummaryMarkdownViewProps {
   summaryData: MultipleQuarterlyGoalsSummary;

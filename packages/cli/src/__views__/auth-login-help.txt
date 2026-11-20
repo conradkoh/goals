@@ -1,0 +1,18 @@
+Usage: goals auth login [--name <label>] [--env <qualifier>] [--webapp-url <url> --convex-url <url>]
+
+Log in through your browser and store a credential.
+
+Options:
+  --name <label>      Name this identity (default: the environment qualifier, else "default").
+  --env <qualifier>   Environment qualifier such as "dev"; shown in status and list.
+  --webapp-url <url>  Override the webapp origin used for browser approval (default: https://goals-ten.vercel.app). Pass together with --convex-url.
+  --convex-url <url>  Override the Goals HTTP origin, the .convex.site URL (default: https://happy-otter-123.convex.site). Pass together with --webapp-url.
+
+Examples:
+  goals auth login
+  goals auth login --name dev --env dev --webapp-url http://localhost:3000 --convex-url http://127.0.0.1:3211
+
+Notes:
+  The approval URL and a verification code are printed on stderr; type the code in the browser to approve.
+  Use the override pair only for a local or self-hosted deployment; the endpoints are stored with the credential and used for every later command.
+  The credential is saved in your user config directory (goals/credentials.json, mode 0600) and is never printed.
