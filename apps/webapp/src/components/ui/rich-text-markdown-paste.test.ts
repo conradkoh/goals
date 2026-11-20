@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPlainTextEquivalentHtml, looksLikeMarkdownDocument } from './rich-text-markdown-paste';
+import {
+  isPlainTextEquivalentHtml,
+  looksLikeMarkdownDocument,
+  splitMarkdownTables,
+} from './rich-text-markdown-paste';
 import { RELEASE_NOTES_MD } from './rich-text-markdown-paste.fixtures';
 
 describe('looksLikeMarkdownDocument', () => {
@@ -50,6 +54,38 @@ describe('looksLikeMarkdownDocument', () => {
     ['table with alignment markers', '| a | b |\n|:-|-:|\n| 1 | 2 |'],
   ])('rejects %s', (_label, input) => {
     expect(looksLikeMarkdownDocument(input)).toBe(false);
+  });
+});
+
+describe('splitMarkdownTables', () => {
+  it('keeps prose on either side of a table as markdown chunks', () => {
+    expect(splitMarkdownTables('# Title\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\nAfter')).toEqual([
+      { kind: 'markdown', text: '# Title\n' },
+      { kind: 'table', text: '| a | b |\n| - | - |\n| 1 | 2 |' },
+      { kind: 'markdown', text: '\nAfter' },
+    ]);
+  });
+
+  it('ends a table at a block start with no blank line between', () => {
+    expect(splitMarkdownTables('| a | b |\n| - | - |\n| 1 | 2 |\n# Next')).toEqual([
+      { kind: 'table', text: '| a | b |\n| - | - |\n| 1 | 2 |' },
+      { kind: 'markdown', text: '# Next' },
+    ]);
+  });
+
+  it('returns a table-only document as one table chunk', () => {
+    expect(splitMarkdownTables('| a | b |\n| - | - |')).toEqual([
+      { kind: 'table', text: '| a | b |\n| - | - |' },
+    ]);
+  });
+
+  it('does not split a table written inside a fenced code block', () => {
+    const fenced = '```\n| a | b |\n| - | - |\n```';
+    expect(splitMarkdownTables(fenced)).toEqual([{ kind: 'markdown', text: fenced }]);
+  });
+
+  it('returns no chunks for an empty document', () => {
+    expect(splitMarkdownTables('')).toEqual([]);
   });
 });
 

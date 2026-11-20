@@ -12,6 +12,81 @@
 const GFM_TABLE_DELIMITER =
   /^(?=[ \t|:-]*\|)(?=[ \t|:-]*-)[ \t]*\|?[ \t]*:?-+:?(?:[ \t]*\|[ \t]*:?-+:?)*[ \t]*\|?[ \t]*$/m;
 
+/** A block-start line. A GFM table body ends at one, even without a blank line between them. */
+const BLOCK_START_ENDS_TABLE = /^ {0,3}(?:#{1,6}[ \t]|`{3,}|~{3,}|>|[-*+][ \t]|\d{1,9}[.)][ \t])/;
+
+/** A fence opener. Group 1 is the fence run, such as ``` or ~~~. */
+const FENCE_OPENER = /^ {0,3}(`{3,}|~{3,})/;
+
+/** A line that closes an open fence: the same fence character, at least as long as the opener. */
+function closesFence(line: string, opener: string): boolean {
+  const match = /^ {0,3}(`{3,}|~{3,})[ \t]*$/.exec(line);
+  return match !== null && match[1][0] === opener[0] && match[1].length >= opener.length;
+}
+
+/** A table header is a line with a pipe, followed by a GFM delimiter row. */
+function startsTable(lines: readonly string[], index: number): boolean {
+  const next = lines[index + 1];
+  return (
+    next !== undefined &&
+    lines[index].includes('|') &&
+    !BLOCK_START_ENDS_TABLE.test(lines[index]) &&
+    GFM_TABLE_DELIMITER.test(next)
+  );
+}
+
+/** One run of a Markdown document: prose to convert, or a GFM table to keep literal. */
+export type MarkdownChunk = { kind: 'markdown' | 'table'; text: string };
+
+/**
+ * Splits a Markdown document into prose and GFM table chunks. Lines are joined with `\n`, and
+ * a prose chunk that is only whitespace is dropped. Input line endings are normalized.
+ */
+export function splitMarkdownTables(markdown: string): MarkdownChunk[] {
+  const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
+  const chunks: MarkdownChunk[] = [];
+  let prose: string[] = [];
+  let fence: string | null = null;
+
+  const endProse = () => {
+    const text = prose.join('\n');
+    if (text.trim()) chunks.push({ kind: 'markdown', text });
+    prose = [];
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (fence !== null) {
+      if (closesFence(line, fence)) fence = null;
+      prose.push(line);
+      continue;
+    }
+    const opener = FENCE_OPENER.exec(line);
+    if (opener) {
+      fence = opener[1];
+      prose.push(line);
+      continue;
+    }
+    if (startsTable(lines, i)) {
+      let end = i + 2; // header and delimiter row
+      while (
+        end < lines.length &&
+        lines[end].trim() !== '' &&
+        !BLOCK_START_ENDS_TABLE.test(lines[end])
+      ) {
+        end++;
+      }
+      endProse();
+      chunks.push({ kind: 'table', text: lines.slice(i, end).join('\n') });
+      i = end - 1;
+      continue;
+    }
+    prose.push(line);
+  }
+  endProse();
+  return chunks;
+}
+
 /** Block signals only count when they start a line. */
 const BLOCK_SIGNALS: readonly RegExp[] = [
   // "# Heading" counts only when a blank line and body text follow it. A `# comment` line in a
