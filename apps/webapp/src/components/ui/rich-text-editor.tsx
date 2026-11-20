@@ -2,6 +2,7 @@ import { Extension } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
+import { Markdown } from '@tiptap/markdown';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -9,7 +10,9 @@ import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useImperativeHandle, useRef } from 'react';
 
 import styles from './rich-text-editor.module.css';
+import { isPlainTextEquivalentHtml, looksLikeMarkdownDocument } from './rich-text-markdown-paste';
 
+import { shouldInterceptPasteForMarkdownConversion } from '@/components/markdown-editor/utils/pasteHandler';
 import { cn } from '@/lib/utils';
 
 /** Returns true when the event target is a TipTap task-list checkbox or its label. */
@@ -294,6 +297,38 @@ const PWALinkClickHandler = Extension.create({
   },
 });
 
+/**
+ * Converts pasted raw Markdown (for example copied from a .md file) into rich text.
+ * Conservative detection (see `looksLikeMarkdownDocument`): rich HTML pastes, plain prose,
+ * and pastes inside code stay on the default handlers.
+ */
+const MarkdownPaste = Extension.create({
+  name: 'markdown_paste',
+  addProseMirrorPlugins() {
+    const editor = this.editor;
+    return [
+      new Plugin({
+        key: new PluginKey('markdownPaste'),
+        props: {
+          handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+            if (!shouldInterceptPasteForMarkdownConversion(editor)) return false;
+            const plainText = event.clipboardData?.getData('text/plain') ?? '';
+            if (!looksLikeMarkdownDocument(plainText)) return false;
+            const html = event.clipboardData?.getData('text/html') ?? '';
+            if (html.trim() && !isPlainTextEquivalentHtml(html, plainText)) return false;
+
+            event.preventDefault();
+            editor.commands.insertContent(plainText.replace(/\r\n?/g, '\n'), {
+              contentType: 'markdown',
+            });
+            return true;
+          },
+        },
+      }),
+    ];
+  },
+});
+
 const MarkdownTaskListPaste = Extension.create({
   name: 'markdown_task_list_paste',
   addProseMirrorPlugins() {
@@ -499,12 +534,18 @@ export function RichTextEditor({
       Placeholder.configure({
         placeholder,
       }),
+      Markdown,
       NoNewLineOnSubmit,
       KeepTabInEditor,
       MarkdownLineShortcuts,
       LinkPasteHandler,
       PWALinkClickHandler,
       MarkdownTaskListPaste,
+      // Registered after `MarkdownTaskListPaste` on purpose: TipTap builds its plugin list by
+      // reversing the extension list for equal-priority extensions, so a later entry runs its
+      // `handlePaste` first. Markdown documents that contain task items must reach the Markdown
+      // converter before the task-list fallback claims them.
+      MarkdownPaste,
     ],
     content: value || '',
     editorProps: {
