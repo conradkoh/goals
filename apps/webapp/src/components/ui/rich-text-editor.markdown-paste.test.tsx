@@ -395,7 +395,46 @@ describe('RichTextEditor paste position', () => {
     expect(selection?.anchorNode?.textContent).toBe('text');
     expect(selection?.anchorOffset).toBe(4);
   });
+
+  it('splits a paragraph at a Markdown heading and joins the last paragraph to the text after the caret', () => {
+    const { dom } = setup('<p>abcdef</p>');
+    selectText(dom, 'def', true); // caret: abc|def
+    paste(dom, { text: '# Heading\n\n- item one\n- item two\n\nTail' });
+
+    expect(Array.from(dom.children).map((el) => el.tagName)).toEqual(['P', 'H1', 'UL', 'P']);
+    expect(dom.firstElementChild?.textContent).toBe('abc');
+    expect(dom.querySelector('h1')?.textContent).toBe('Heading');
+    expect(Array.from(dom.querySelectorAll('ul > li')).map((li) => li.textContent)).toEqual([
+      'item one',
+      'item two',
+    ]);
+    expect(dom.lastElementChild?.textContent).toBe('Taildef');
+  });
+
+  it('replaces only the selected text with a Markdown list paste', () => {
+    const { dom } = setup('<p>abcdef</p>');
+    selectText(dom, 'cde'); // selects cde
+    paste(dom, { text: '- one\n- two' });
+
+    expect(Array.from(dom.children).map((el) => el.tagName)).toEqual(['P', 'UL', 'P']);
+    expect(dom.firstElementChild?.textContent).toBe('ab');
+    expect(Array.from(dom.querySelectorAll('ul > li')).map((li) => li.textContent)).toEqual([
+      'one',
+      'two',
+    ]);
+    expect(dom.lastElementChild?.textContent).toBe('f');
+    expect(dom.textContent).not.toContain('cde');
+  });
 });
+
+/** Converted, this is an `h1`. The default paste keeps the `#` as literal text, so the two outcomes differ. */
+const FALLBACK_MARKDOWN = '# T\n\nbody';
+
+function expectDefaultPasteOfFallbackText(dom: HTMLElement) {
+  expect(dom.querySelector('h1')).toBeNull();
+  expect(dom.textContent).toContain('# T');
+  expect(dom.textContent).toContain('body');
+}
 
 describe('RichTextEditor Markdown paste fallback', () => {
   afterEach(() => {
@@ -403,22 +442,24 @@ describe('RichTextEditor Markdown paste fallback', () => {
   });
 
   it('falls back to the default paste when the Markdown parser throws', () => {
-    vi.spyOn(MarkdownManager.prototype, 'parse').mockImplementation(() => {
+    const parse = vi.spyOn(MarkdownManager.prototype, 'parse').mockImplementation(() => {
       throw new Error('parser failed');
     });
     const { dom } = setup();
-    expect(() => paste(dom, { text: '**Note** pasted text' })).not.toThrow();
-    expect(dom.textContent).toContain('pasted text');
+    expect(() => paste(dom, { text: FALLBACK_MARKDOWN })).not.toThrow();
+    expect(parse).toHaveBeenCalled();
+    expectDefaultPasteOfFallbackText(dom);
   });
 
   it('falls back to the default paste when the parser returns a node the schema does not know', () => {
-    vi.spyOn(MarkdownManager.prototype, 'parse').mockReturnValue({
+    const parse = vi.spyOn(MarkdownManager.prototype, 'parse').mockReturnValue({
       type: 'doc',
       content: [{ type: 'unknownBlock' }],
     } as ReturnType<MarkdownManager['parse']>);
     const { dom } = setup();
-    expect(() => paste(dom, { text: '**Note** pasted text' })).not.toThrow();
-    expect(dom.textContent).toContain('pasted text');
+    expect(() => paste(dom, { text: FALLBACK_MARKDOWN })).not.toThrow();
+    expect(parse).toHaveBeenCalled();
+    expectDefaultPasteOfFallbackText(dom);
   });
 });
 

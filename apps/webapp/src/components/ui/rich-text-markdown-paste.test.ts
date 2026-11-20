@@ -86,6 +86,13 @@ describe('splitMarkdownTables', () => {
     expect(splitMarkdownTables(fenced)).toEqual([{ kind: 'markdown', text: fenced }]);
   });
 
+  it('ends a tilde fence so a table after it is split out', () => {
+    expect(splitMarkdownTables('~~~\ncode\n~~~\n\n| a | b |\n| - | - |\n| 1 | 2 |')).toEqual([
+      { kind: 'markdown', text: '~~~\ncode\n~~~\n' },
+      { kind: 'table', text: '| a | b |\n| - | - |\n| 1 | 2 |' },
+    ]);
+  });
+
   it('returns no chunks for an empty document', () => {
     expect(splitMarkdownTables('')).toEqual([]);
   });
