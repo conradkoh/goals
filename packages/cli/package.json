@@ -1,6 +1,6 @@
 {
   "name": "goals-cli",
-  "version": "0.1.0",
+  "version": "1.3.0",
   "description": "Command-line access to your Goals app data",
   "type": "module",
   "bin": {
