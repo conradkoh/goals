@@ -235,3 +235,36 @@ describe('RichTextEditor paste preservation', () => {
     expect(dom.querySelector('strong')).toBeNull();
   });
 });
+
+function paragraphTexts(dom: HTMLElement): (string | null)[] {
+  return Array.from(dom.querySelectorAll('p')).map((p) => p.textContent);
+}
+
+describe('RichTextEditor paste position', () => {
+  it('joins multi-line plain text at the caret', () => {
+    const { dom } = setup('<p>abcdef</p>');
+    selectText(dom, 'def', true); // caret: abc|def
+    paste(dom, { text: 'foo\nbar' });
+    expect(paragraphTexts(dom)).toEqual(['abcfoo', 'bar', 'def']);
+  });
+
+  it('adds no empty paragraph for a trailing newline', () => {
+    const { dom } = setup();
+    paste(dom, { text: 'first line\nsecond line\n' });
+    expect(paragraphTexts(dom)).toEqual(['first line', 'second line']);
+  });
+
+  it('inserts a single line with a trailing newline inline', () => {
+    const { dom } = setup('<p>abc</p>');
+    selectText(dom, 'abc', true); // caret: |abc
+    paste(dom, { text: 'foo\n' });
+    expect(paragraphTexts(dom)).toEqual(['fooabc']);
+  });
+
+  it('replaces only the selected text with a multi-line paste', () => {
+    const { dom } = setup('<p>abcdef</p>');
+    selectText(dom, 'cde'); // selects cde
+    paste(dom, { text: 'foo\nbar' });
+    expect(paragraphTexts(dom)).toEqual(['abfoo', 'barf']);
+  });
+});

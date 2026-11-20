@@ -3,6 +3,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { Markdown } from '@tiptap/markdown';
+import { Fragment, Slice, type Node as PMNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -306,18 +307,55 @@ const PWALinkClickHandler = Extension.create({
 const NUMBERED_LINE = /^[ \t]*\d{1,9}[.)][ \t]+\S/;
 
 function isLiteralBlockPaste(plainText: string, html: string): boolean {
-  return !html.trim() && (plainText.includes('\n') || NUMBERED_LINE.test(plainText));
+  if (html.trim() || !trimPasteNewlines(plainText)) return false;
+  return plainText.includes('\n') || NUMBERED_LINE.test(plainText);
 }
 
-/** Plain-text blocks as paragraphs, mirroring how ProseMirror inserts plain text by default. */
-function literalParagraphs(text: string) {
-  return text
-    .replace(/\r\n?/g, '\n')
-    .split(/\n+/)
-    .map((block) => ({
-      type: 'paragraph',
-      content: block ? [{ type: 'text', text: block }] : undefined,
-    }));
+/** Line breaks at either end of a paste never create blocks of their own. */
+function trimPasteNewlines(text: string): string {
+  return text.replace(/\r\n?/g, '\n').replace(/^\n+|\n+$/g, '');
+}
+
+/**
+ * Inserts blocks the way ProseMirror inserts plain text: when the first (or last) block is a
+ * paragraph, its text joins the text before (or after) the caret instead of splitting the
+ * paragraph. A caret in an empty paragraph is replaced so no empty block is left behind.
+ */
+function insertBlocks(view: EditorView, blocks: PMNode[]): void {
+  const { state } = view;
+  const { selection } = state;
+  const { $from } = selection;
+  const isEmptyCaretBlock =
+    selection.empty && $from.parent.isTextblock && $from.parent.content.size === 0;
+  const tr = isEmptyCaretBlock
+    ? state.tr.replaceWith($from.before(), $from.after(), blocks)
+    : state.tr.replaceSelection(
+        new Slice(
+          Fragment.from(blocks),
+          blocks[0].type.name === 'paragraph' ? 1 : 0,
+          // A collapsed caret has no text after it, so only the text before it joins the paste.
+          !selection.empty && blocks[blocks.length - 1].type.name === 'paragraph' ? 1 : 0
+        )
+      );
+  view.dispatch(tr.scrollIntoView());
+}
+
+/**
+ * Plain-text paste. One line is inserted as text at the caret. Several lines become paragraphs
+ * whose first and last lines join the surrounding text.
+ */
+function insertLiteralText(view: EditorView, text: string): void {
+  const lines = trimPasteNewlines(text).split(/\n+/);
+  if (lines.length === 1) {
+    view.dispatch(view.state.tr.insertText(lines[0]).scrollIntoView());
+    return;
+  }
+  const { paragraph } = view.state.schema.nodes;
+  const { schema } = view.state;
+  insertBlocks(
+    view,
+    lines.map((line) => paragraph.create(null, line ? schema.text(line) : null))
+  );
 }
 
 /**
@@ -334,14 +372,14 @@ const MarkdownPaste = Extension.create({
       new Plugin({
         key: new PluginKey('markdownPaste'),
         props: {
-          handlePaste: (_view: EditorView, event: ClipboardEvent) => {
+          handlePaste: (view: EditorView, event: ClipboardEvent) => {
             if (!shouldInterceptPasteForMarkdownConversion(editor)) return false;
             const plainText = event.clipboardData?.getData('text/plain') ?? '';
             if (!looksLikeMarkdownDocument(plainText)) {
               // No HTML payload means the block paste handlers run; keep the text literal.
               if (isLiteralBlockPaste(plainText, event.clipboardData?.getData('text/html') ?? '')) {
                 event.preventDefault();
-                editor.commands.insertContent(literalParagraphs(plainText));
+                insertLiteralText(view, plainText);
                 return true;
               }
               return false;
@@ -631,10 +669,17 @@ export function RichTextEditor({
     };
   }, [editorRef]);
 
-  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided)
+  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided).
+  // The editor is created with `value` as its initial content, so the first run is skipped:
+  // re-applying the value would replace the document with itself and move the caret to the end.
+  const hasAppliedInitialValueRef = useRef(false);
   useEffect(() => {
     if (isUncontrolled) return;
     if (!editor || editor.isDestroyed) return;
+    if (!hasAppliedInitialValueRef.current) {
+      hasAppliedInitialValueRef.current = true;
+      return;
+    }
     if (editor.isFocused) return;
     const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
     if (currentHtml !== value) {
