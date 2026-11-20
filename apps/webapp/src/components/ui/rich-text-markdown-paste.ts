@@ -43,13 +43,42 @@ export function looksLikeMarkdownDocument(text: string): boolean {
 }
 
 /**
- * True when the clipboard HTML carries no content beyond the plain text — for example a code
- * editor's syntax-highlighted copy, whose line breaks may be missing from the markup.
- * Whitespace is ignored on both sides so lost newlines do not count as a difference.
+ * Elements that make pasted HTML rich. A Markdown conversion of the plain text would drop their
+ * structure or emphasis, so such HTML keeps its own markup. Wrappers such as `div`, `span`, `p`,
+ * `br`, and `code` do not count: a code editor's syntax-highlighted copy is built from them and
+ * must still convert.
+ */
+const STRUCTURAL_HTML_SELECTOR = [
+  'a[href]',
+  'ul',
+  'ol',
+  'li',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'pre',
+  'table',
+  'img',
+  'strong',
+  'em',
+  'b',
+  'i',
+].join(', ');
+
+/**
+ * True when the clipboard HTML is only a wrapper around the plain text: it carries no structural
+ * element, and its visible text matches the plain text. A code editor's syntax-highlighted copy
+ * qualifies even when its line breaks are missing from the markup. Whitespace is ignored on both
+ * sides so lost newlines do not count as a difference.
  */
 export function isPlainTextEquivalentHtml(html: string, plainText: string): boolean {
-  const htmlText = new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '';
-  return withoutWhitespace(htmlText) === withoutWhitespace(plainText);
+  const { body } = new DOMParser().parseFromString(html, 'text/html');
+  if (body.querySelector(STRUCTURAL_HTML_SELECTOR)) return false;
+  return withoutWhitespace(body.textContent ?? '') === withoutWhitespace(plainText);
 }
 
 function withoutWhitespace(value: string): string {

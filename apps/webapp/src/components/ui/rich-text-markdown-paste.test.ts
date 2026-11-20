@@ -54,10 +54,34 @@ describe('looksLikeMarkdownDocument', () => {
 });
 
 describe('isPlainTextEquivalentHtml', () => {
-  it('ignores inline formatting differences', () => {
-    expect(isPlainTextEquivalentHtml('<p>Hello <strong>world</strong></p>', 'Hello world')).toBe(
-      true
-    );
+  it.each([
+    ['link', '<p><a href="https://example.com/docs">**docs**</a></p>', '**docs**'],
+    ['list item', '<ul><li>- item</li></ul>', '- item'],
+    ['ordered list item', '<ol><li>1. first</li></ol>', '1. first'],
+    ['heading', '<h1># Title</h1>', '# Title'],
+    ['blockquote', '<blockquote>&gt; quoted</blockquote>', '> quoted'],
+    ['preformatted block', '<pre>- item</pre>', '- item'],
+    ['table cell', '<table><tr><td>- item</td></tr></table>', '- item'],
+    ['image', '<p><img src="https://example.com/a.png">- item</p>', '- item'],
+    ['strong', '<p><strong>**bold**</strong></p>', '**bold**'],
+    ['em', '<p><em>*italic*</em></p>', '*italic*'],
+    ['b', '<p><b>**bold**</b></p>', '**bold**'],
+    ['i', '<p><i>*italic*</i></p>', '*italic*'],
+  ])('treats %s markup as rich HTML', (_label, html, plainText) => {
+    expect(isPlainTextEquivalentHtml(html, plainText)).toBe(false);
+  });
+
+  it.each([
+    [
+      'div and span wrappers (VS Code copy)',
+      '<div><span style="color: #569cd6"># Heading</span></div><div><span>body</span></div>',
+      '# Heading\n\nbody',
+    ],
+    ['code', '<p>Hello <code>world</code></p>', 'Hello world'],
+    ['line break', '<p>Plain<br>text</p>', 'Plain\ntext'],
+    ['paragraph', '<p>Hello world</p>', 'Hello world'],
+  ])('keeps %s equivalent to its plain text', (_label, html, plainText) => {
+    expect(isPlainTextEquivalentHtml(html, plainText)).toBe(true);
   });
 
   it('ignores line breaks missing from the markup', () => {
@@ -68,5 +92,11 @@ describe('isPlainTextEquivalentHtml', () => {
 
   it('reports false when the markup carries extra visible text', () => {
     expect(isPlainTextEquivalentHtml('<ul><li>a</li></ul>', '• a')).toBe(false);
+  });
+
+  it('treats escaped markup as text, not structure', () => {
+    expect(
+      isPlainTextEquivalentHtml('&lt;strong&gt;Hello&lt;/strong&gt;', '<strong>Hello</strong>')
+    ).toBe(true);
   });
 });
