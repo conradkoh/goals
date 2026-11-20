@@ -302,14 +302,14 @@ const PWALinkClickHandler = Extension.create({
   },
 });
 
+const NUMBERED_LINE = /^[ \t]*\d{1,9}[.)][ \t]+\S/;
+
 /**
  * The `orderedList` extension claims any plain-text paste whose lines all start with a number
  * marker (`2024. was a strong year`), and the mark paste rules consume `**text**` in plain-text
  * pastes. A block-level plain-text paste that the detector rejected is inserted literally so no
  * extension reinterprets it.
  */
-const NUMBERED_LINE = /^[ \t]*\d{1,9}[.)][ \t]+\S/;
-
 function isLiteralBlockPaste(plainText: string, html: string): boolean {
   if (html.trim() || !trimPasteNewlines(plainText)) return false;
   return plainText.includes('\n') || NUMBERED_LINE.test(plainText);
