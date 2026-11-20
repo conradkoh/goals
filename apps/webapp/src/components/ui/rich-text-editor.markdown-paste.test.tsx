@@ -267,4 +267,12 @@ describe('RichTextEditor paste position', () => {
     paste(dom, { text: 'foo\nbar' });
     expect(paragraphTexts(dom)).toEqual(['abfoo', 'barf']);
   });
+
+  it('keeps a single-line Markdown paste inline in its paragraph', () => {
+    const { dom } = setup('<p>abc def</p>');
+    selectText(dom, 'def', true); // caret: abc |def
+    paste(dom, { text: 'some **bold** word' });
+    expect(paragraphTexts(dom)).toEqual(['abc some bold worddef']);
+    expect(dom.querySelector('p strong')?.textContent).toBe('bold');
+  });
 });

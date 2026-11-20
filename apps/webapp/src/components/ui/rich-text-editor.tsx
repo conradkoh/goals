@@ -1,9 +1,9 @@
-import { Extension } from '@tiptap/core';
+import { Extension, type Editor } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { Markdown } from '@tiptap/markdown';
-import { Fragment, Slice, type Node as PMNode } from '@tiptap/pm/model';
+import { Fragment, Slice, type Node as PMNode, type Schema } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -358,6 +358,20 @@ function insertLiteralText(view: EditorView, text: string): void {
   );
 }
 
+/** Parses pasted Markdown into top-level blocks. Empty when the parser produces nothing. */
+function markdownBlocks(editor: Editor, schema: Schema, markdown: string): PMNode[] {
+  const parsed = editor.markdown?.parse(markdown);
+  if (!parsed) return [];
+  const blocks: PMNode[] = [];
+  schema.nodeFromJSON(parsed).forEach((block) => blocks.push(block));
+  return blocks;
+}
+
+/** Inline content joins the caret's paragraph with no block split. */
+function insertInline(view: EditorView, content: Fragment): void {
+  view.dispatch(view.state.tr.replaceSelection(new Slice(content, 0, 0)).scrollIntoView());
+}
+
 /**
  * Converts pasted raw Markdown (for example copied from a .md file) into rich text.
  * Conservative detection (see `looksLikeMarkdownDocument`): rich HTML pastes, plain prose,
@@ -387,10 +401,16 @@ const MarkdownPaste = Extension.create({
             const html = event.clipboardData?.getData('text/html') ?? '';
             if (html.trim() && !isPlainTextEquivalentHtml(html, plainText)) return false;
 
+            const markdown = plainText.replace(/\r\n?/g, '\n');
+            const blocks = markdownBlocks(editor, view.state.schema, markdown);
+            if (blocks.length === 0) return false;
+
             event.preventDefault();
-            editor.commands.insertContent(plainText.replace(/\r\n?/g, '\n'), {
-              contentType: 'markdown',
-            });
+            if (blocks.length === 1 && blocks[0].type.name === 'paragraph') {
+              insertInline(view, blocks[0].content);
+            } else {
+              insertBlocks(view, blocks);
+            }
             return true;
           },
         },
