@@ -30,8 +30,8 @@ Object.assign(Range.prototype, {
   getBoundingClientRect: zeroRect,
 });
 
-function setup(html = '') {
-  const { container } = render(<RichTextEditor value={html} onChange={() => {}} />);
+function setup(html = '', onChange: (value: string) => void = () => {}) {
+  const { container } = render(<RichTextEditor value={html} onChange={onChange} />);
   const dom = container.querySelector('.ProseMirror') as HTMLElement;
   return { dom };
 }
@@ -386,4 +386,47 @@ describe('RichTextEditor Markdown paste fallback', () => {
     expect(() => paste(dom, { text: '**Note** pasted text' })).not.toThrow();
     expect(dom.textContent).toContain('pasted text');
   });
+});
+
+describe('RichTextEditor Markdown paste safety', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const UNSAFE_MARKDOWN: Record<string, string> = {
+    'raw script': '**Note**\n\n<script>alert(1)</script>',
+    'escaped script': '**Note**\n\n&lt;script&gt;alert(1)&lt;/script&gt;',
+    'img onerror': '**Note**\n\nsee <img src=x onerror=alert(1)>',
+    'javascript link': '**Note**\n\n[x](javascript:alert(1))',
+  };
+
+  function expectNoActiveMarkupInDom(dom: HTMLElement) {
+    expect(dom.querySelector('script')).toBeNull();
+    expect(dom.querySelector('img')).toBeNull();
+    expect(dom.querySelector('[onerror]')).toBeNull();
+    for (const link of Array.from(dom.querySelectorAll('a'))) {
+      expect(link.getAttribute('href') ?? '').not.toMatch(/javascript:/i);
+    }
+  }
+
+  function expectNoActiveMarkupInHtml(html: string) {
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toMatch(/<img/i);
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).not.toMatch(/javascript:/i);
+  }
+
+  it.each(Object.entries(UNSAFE_MARKDOWN))(
+    'pastes %s Markdown without active markup',
+    (_name, text) => {
+      const onChange = vi.fn();
+      const { dom } = setup('', onChange);
+      expect(() => paste(dom, { text })).not.toThrow();
+      expect(dom.textContent).toContain('Note');
+      expectNoActiveMarkupInDom(dom);
+      // Assert the callback ran, so the HTML check cannot pass vacuously.
+      expect(onChange).toHaveBeenCalled();
+      expectNoActiveMarkupInHtml(onChange.mock.calls.at(-1)?.[0] as string);
+    }
+  );
 });
