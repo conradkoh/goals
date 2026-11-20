@@ -299,17 +299,25 @@ const PWALinkClickHandler = Extension.create({
 
 /**
  * The `orderedList` extension claims any plain-text paste whose lines all start with a number
- * marker, so text the detector rejected — `2024. was a strong year` — would still become a list.
- * Such pastes are inserted literally instead.
+ * marker (`2024. was a strong year`), and the mark paste rules consume `**text**` in plain-text
+ * pastes. A block-level plain-text paste that the detector rejected is inserted literally so no
+ * extension reinterprets it.
  */
 const NUMBERED_LINE = /^[ \t]*\d{1,9}[.)][ \t]+\S/;
+
+function isLiteralBlockPaste(plainText: string, html: string): boolean {
+  return !html.trim() && (plainText.includes('\n') || NUMBERED_LINE.test(plainText));
+}
 
 /** Plain-text blocks as paragraphs, mirroring how ProseMirror inserts plain text by default. */
 function literalParagraphs(text: string) {
   return text
     .replace(/\r\n?/g, '\n')
     .split(/\n+/)
-    .map((block) => ({ type: 'paragraph', content: [{ type: 'text', text: block }] }));
+    .map((block) => ({
+      type: 'paragraph',
+      content: block ? [{ type: 'text', text: block }] : undefined,
+    }));
 }
 
 /**
@@ -330,11 +338,8 @@ const MarkdownPaste = Extension.create({
             if (!shouldInterceptPasteForMarkdownConversion(editor)) return false;
             const plainText = event.clipboardData?.getData('text/plain') ?? '';
             if (!looksLikeMarkdownDocument(plainText)) {
-              // No HTML payload means the `orderedList` paste handler runs; keep the text literal.
-              if (
-                !(event.clipboardData?.getData('text/html') ?? '').trim() &&
-                NUMBERED_LINE.test(plainText)
-              ) {
+              // No HTML payload means the block paste handlers run; keep the text literal.
+              if (isLiteralBlockPaste(plainText, event.clipboardData?.getData('text/html') ?? '')) {
                 event.preventDefault();
                 editor.commands.insertContent(literalParagraphs(plainText));
                 return true;

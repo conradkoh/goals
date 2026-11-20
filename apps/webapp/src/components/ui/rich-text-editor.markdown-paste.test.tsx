@@ -225,4 +225,13 @@ describe('RichTextEditor paste preservation', () => {
     expect(dom.querySelector('ul, ol, pre, blockquote, hr, strong, em, s, a')).toBeNull();
     expect(dom.textContent).toBe('');
   });
+
+  it('keeps a GFM table readable instead of dropping its cells', () => {
+    const { dom } = setup();
+    paste(dom, { text: '**Status**\n\n| Name | Count |\n| --- | --- |\n| alpha | 1 |' });
+
+    expect(dom.textContent).toContain('| alpha | 1 |');
+    expect(dom.textContent).toContain('| Name | Count |');
+    expect(dom.querySelector('strong')).toBeNull();
+  });
 });

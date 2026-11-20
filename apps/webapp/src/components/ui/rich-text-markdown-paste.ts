@@ -5,6 +5,13 @@
  * Code-like text (shell or Python comments, YAML `- key: value` lists, `>>>` prompts) never matches.
  */
 
+/**
+ * A GFM table delimiter row such as `| --- | :---: |` or `--- | ---`. The converter has no table
+ * node, so a document with a table would lose its cells. Such documents stay plain text.
+ */
+const GFM_TABLE_DELIMITER =
+  /^(?=[ \t|:-]*\|)(?=[ \t|:-]*-)[ \t]*\|?[ \t]*:?-+:?(?:[ \t]*\|[ \t]*:?-+:?)*[ \t]*\|?[ \t]*$/m;
+
 /** Block signals only count when they start a line. */
 const BLOCK_SIGNALS: readonly RegExp[] = [
   // "# Heading" counts only when a blank line and body text follow it. A `# comment` line in a
@@ -31,6 +38,7 @@ const INLINE_SIGNALS: readonly RegExp[] = [
 
 export function looksLikeMarkdownDocument(text: string): boolean {
   const lf = text.replace(/\r\n?/g, '\n');
+  if (GFM_TABLE_DELIMITER.test(lf)) return false;
   return [...BLOCK_SIGNALS, ...INLINE_SIGNALS].some((signal) => signal.test(lf));
 }
 
