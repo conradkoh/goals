@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { MarkdownManager } from '@tiptap/markdown';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { RichTextEditor } from './rich-text-editor';
 import { RELEASE_NOTES_MD } from './rich-text-markdown-paste.fixtures';
@@ -359,5 +360,30 @@ describe('RichTextEditor paste position', () => {
     paste(dom, { text: 'some **bold** word' });
     expect(paragraphTexts(dom)).toEqual(['abc some bold worddef']);
     expect(dom.querySelector('p strong')?.textContent).toBe('bold');
+  });
+});
+
+describe('RichTextEditor Markdown paste fallback', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('falls back to the default paste when the Markdown parser throws', () => {
+    vi.spyOn(MarkdownManager.prototype, 'parse').mockImplementation(() => {
+      throw new Error('parser failed');
+    });
+    const { dom } = setup();
+    expect(() => paste(dom, { text: '**Note** pasted text' })).not.toThrow();
+    expect(dom.textContent).toContain('pasted text');
+  });
+
+  it('falls back to the default paste when the parser returns a node the schema does not know', () => {
+    vi.spyOn(MarkdownManager.prototype, 'parse').mockReturnValue({
+      type: 'doc',
+      content: [{ type: 'unknownBlock' }],
+    } as ReturnType<MarkdownManager['parse']>);
+    const { dom } = setup();
+    expect(() => paste(dom, { text: '**Note** pasted text' })).not.toThrow();
+    expect(dom.textContent).toContain('pasted text');
   });
 });

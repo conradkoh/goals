@@ -368,19 +368,24 @@ function literalParagraph(schema: Schema, line: string): PMNode {
 /**
  * Parses pasted Markdown into top-level blocks, chunk by chunk. The converter has no table node,
  * so each table row becomes a literal paragraph, and the prose around it converts normally.
- * Empty when nothing converts.
+ * Empty when nothing converts, or when the parser or schema rejects the Markdown: the paste then
+ * falls through to the default handler instead of throwing.
  */
 function markdownBlocks(editor: Editor, schema: Schema, markdown: string): PMNode[] {
-  const blocks: PMNode[] = [];
-  for (const chunk of splitMarkdownTables(markdown)) {
-    if (chunk.kind === 'table') {
-      chunk.text.split('\n').forEach((row) => blocks.push(literalParagraph(schema, row)));
-      continue;
+  try {
+    const blocks: PMNode[] = [];
+    for (const chunk of splitMarkdownTables(markdown)) {
+      if (chunk.kind === 'table') {
+        chunk.text.split('\n').forEach((row) => blocks.push(literalParagraph(schema, row)));
+        continue;
+      }
+      const parsed = editor.markdown?.parse(chunk.text);
+      if (parsed) schema.nodeFromJSON(parsed).forEach((block) => blocks.push(block));
     }
-    const parsed = editor.markdown?.parse(chunk.text);
-    if (parsed) schema.nodeFromJSON(parsed).forEach((block) => blocks.push(block));
+    return blocks;
+  } catch {
+    return [];
   }
-  return blocks;
 }
 
 /** Inline content joins the caret's paragraph with no block split. */
