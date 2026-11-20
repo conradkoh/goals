@@ -41,11 +41,11 @@ pnpm --filter goals-cli build
 cd packages/cli
 npm login
 npm pack
-npm publish goals-cli-0.1.0.tgz --access public
+npm publish goals-cli-1.3.0.tgz --access public
 ```
 
 Use the version in `package.json` for the tarball name, and remove the tarball afterwards
-(`rm goals-cli-0.1.0.tgz`).
+(`rm goals-cli-1.3.0.tgz`).
 
 ## Configure trusted publishing (within 2 days of the first publish)
 

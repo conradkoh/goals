@@ -114,7 +114,7 @@ pnpm install
 pnpm --filter goals-cli build
 cd packages/cli
 npm pack
-npm publish goals-cli-0.1.0.tgz --access public
+npm publish goals-cli-1.3.0.tgz --access public
 ```
 
 Then, within 2 days, register the trusted publisher against `deploy-prod.yml`:
