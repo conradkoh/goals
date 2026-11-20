@@ -6,6 +6,29 @@ import { RELEASE_NOTES_MD } from './rich-text-markdown-paste.fixtures';
 
 vi.mock('./rich-text-editor.module.css', () => ({ default: {} }));
 
+/**
+ * jsdom has no layout engine, so it omits the range geometry ProseMirror asks for while scrolling
+ * a selection into view. Empty client rects plus a zero bounding rect keep that code on its
+ * no-layout path instead of throwing.
+ */
+const zeroRect = () =>
+  ({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }) as DOMRect;
+
+Object.assign(Range.prototype, {
+  getClientRects: () => [] as unknown as DOMRectList,
+  getBoundingClientRect: zeroRect,
+});
+
 function setup(html = '') {
   const { container } = render(<RichTextEditor value={html} onChange={() => {}} />);
   const dom = container.querySelector('.ProseMirror') as HTMLElement;
@@ -124,5 +147,82 @@ describe('RichTextEditor Markdown paste', () => {
     expect(dom.querySelector('ol')).toBeNull();
     expect(dom.querySelector('pre')).toBeNull();
     expect(dom.textContent).toContain(visibleLine);
+  });
+});
+
+/**
+ * Places a DOM selection over the first occurrence of `text` in the editor. ProseMirror mirrors
+ * the DOM selection into its state on `selectionchange`. With `collapse`, the caret goes to the
+ * start of `text` instead of selecting it.
+ */
+function selectText(dom: HTMLElement, text: string, collapse = false) {
+  const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const start = node.textContent?.indexOf(text) ?? -1;
+    if (start === -1) continue;
+    const range = document.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, collapse ? start : start + text.length);
+    act(() => {
+      dom.focus();
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      document.dispatchEvent(new Event('selectionchange'));
+    });
+    return;
+  }
+  throw new Error(`Text not found in editor: ${text}`);
+}
+
+describe('RichTextEditor paste preservation', () => {
+  it('keeps formatting from a rich HTML paste', () => {
+    const { dom } = setup();
+    paste(dom, {
+      text: '# Title\n\n- item',
+      // The emphasis only exists in the HTML, so a Markdown conversion of the plain text would lose it.
+      html: '<h1>Title</h1><ul><li><em>item</em></li></ul>',
+    });
+
+    expect(dom.querySelector('h1')?.textContent).toBe('Title');
+    expect(dom.querySelector('ul > li')?.textContent).toBe('item');
+    expect(dom.querySelector('ul > li em')?.textContent).toBe('item');
+    expect(dom.textContent).not.toContain('# Title');
+  });
+
+  it('turns a pasted URL into a link over the selected text', () => {
+    const { dom } = setup('<p>docs</p>');
+    selectText(dom, 'docs');
+    paste(dom, { text: 'https://example.com/docs' });
+
+    const link = dom.querySelector('a');
+    expect(link?.getAttribute('href')).toBe('https://example.com/docs');
+    expect(link?.textContent).toBe('docs');
+  });
+
+  it('inserts Markdown-looking text literally inside a code block', () => {
+    const { dom } = setup('<pre><code>const x = 1;</code></pre>');
+    selectText(dom, 'const x', true);
+    paste(dom, { text: '# not a heading\n- not a list' });
+
+    expect(dom.querySelector('h1')).toBeNull();
+    expect(dom.querySelector('ul')).toBeNull();
+    expect(dom.querySelector('pre code')?.textContent).toContain('# not a heading');
+  });
+
+  it('undoes a whole Markdown paste in one step', () => {
+    const { dom } = setup();
+    paste(dom, { text: RELEASE_NOTES_MD });
+    expect(dom.querySelector('h1')).not.toBeNull();
+
+    // jsdom's navigator.platform is not a Mac, so ProseMirror's Mod-z is Ctrl-z here.
+    act(() => {
+      fireEvent.keyDown(dom, { key: 'z', ctrlKey: true });
+    });
+
+    expect(dom.querySelector('h1')).toBeNull();
+    expect(dom.querySelector('h2')).toBeNull();
+    expect(dom.querySelector('ul, ol, pre, blockquote, hr, strong, em, s, a')).toBeNull();
+    expect(dom.textContent).toBe('');
   });
 });
