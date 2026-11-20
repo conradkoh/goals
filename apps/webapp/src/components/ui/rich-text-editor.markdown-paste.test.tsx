@@ -176,6 +176,24 @@ function selectText(dom: HTMLElement, text: string, collapse = false) {
   throw new Error(`Text not found in editor: ${text}`);
 }
 
+/**
+ * Places a collapsed DOM selection inside the `index`th paragraph. An empty paragraph has no text
+ * node to anchor on, so `selectText` cannot place the caret there.
+ */
+function placeCaretInParagraph(dom: HTMLElement, index: number) {
+  const paragraph = dom.querySelectorAll('p')[index];
+  const range = document.createRange();
+  range.setStart(paragraph, 0);
+  range.collapse(true);
+  act(() => {
+    dom.focus();
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event('selectionchange'));
+  });
+}
+
 describe('RichTextEditor paste preservation', () => {
   it('keeps formatting from a rich HTML paste', () => {
     const { dom } = setup();
@@ -360,6 +378,22 @@ describe('RichTextEditor paste position', () => {
     paste(dom, { text: 'some **bold** word' });
     expect(paragraphTexts(dom)).toEqual(['abc some bold worddef']);
     expect(dom.querySelector('p strong')?.textContent).toBe('bold');
+  });
+
+  it('leaves the caret at the end of a Markdown paste that replaces an empty paragraph', () => {
+    const { dom } = setup('<p>a</p><p></p><p>b</p>');
+    expect(paragraphTexts(dom)).toEqual(['a', '', 'b']);
+    placeCaretInParagraph(dom, 1); // caret in the empty middle paragraph
+    paste(dom, { text: '# H\n\ntext' });
+
+    expect(dom.querySelector('h1')?.textContent).toBe('H');
+    expect(paragraphTexts(dom)).toEqual(['a', 'text', 'b']);
+
+    // Assert the selection itself: the caret must be after "text", not at the start of "b".
+    const selection = window.getSelection();
+    expect(selection?.isCollapsed).toBe(true);
+    expect(selection?.anchorNode?.textContent).toBe('text');
+    expect(selection?.anchorOffset).toBe(4);
   });
 });
 

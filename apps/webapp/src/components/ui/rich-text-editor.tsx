@@ -1,4 +1,4 @@
-import { Extension, type Editor } from '@tiptap/core';
+import { Extension, selectionToInsertionEnd, type Editor } from '@tiptap/core';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
@@ -323,7 +323,8 @@ function trimPasteNewlines(text: string): string {
 /**
  * Inserts blocks the way ProseMirror inserts plain text: when the first (or last) block is a
  * paragraph, its text joins the text before (or after) the caret instead of splitting the
- * paragraph. A caret in an empty paragraph is replaced so no empty block is left behind.
+ * paragraph. A caret in an empty paragraph is replaced so no empty block is left behind, and the
+ * caret ends at the end of the inserted content.
  */
 function insertBlocks(view: EditorView, blocks: PMNode[]): void {
   const { state } = view;
@@ -331,15 +332,20 @@ function insertBlocks(view: EditorView, blocks: PMNode[]): void {
   const { $from } = selection;
   const isEmptyCaretBlock =
     selection.empty && $from.parent.isTextblock && $from.parent.content.size === 0;
-  const tr = isEmptyCaretBlock
-    ? state.tr.replaceWith($from.before(), $from.after(), blocks)
-    : state.tr.replaceSelection(
-        new Slice(
-          Fragment.from(blocks),
-          blocks[0].type.name === 'paragraph' ? 1 : 0,
-          blocks[blocks.length - 1].type.name === 'paragraph' ? 1 : 0
-        )
-      );
+  const tr = state.tr;
+  if (isEmptyCaretBlock) {
+    tr.replaceWith($from.before(), $from.after(), blocks);
+    // Mapping the caret through the replaced range can land it at the start of the next block.
+    selectionToInsertionEnd(tr, 0, -1);
+  } else {
+    tr.replaceSelection(
+      new Slice(
+        Fragment.from(blocks),
+        blocks[0].type.name === 'paragraph' ? 1 : 0,
+        blocks[blocks.length - 1].type.name === 'paragraph' ? 1 : 0
+      )
+    );
+  }
   view.dispatch(tr.scrollIntoView());
 }
 
