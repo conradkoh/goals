@@ -11,7 +11,11 @@ import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useImperativeHandle, useRef } from 'react';
 
 import styles from './rich-text-editor.module.css';
-import { isPlainTextEquivalentHtml, looksLikeMarkdownDocument } from './rich-text-markdown-paste';
+import {
+  isPlainTextEquivalentHtml,
+  looksLikeMarkdownDocument,
+  splitMarkdownTables,
+} from './rich-text-markdown-paste';
 
 import { shouldInterceptPasteForMarkdownConversion } from '@/components/markdown-editor/utils/pasteHandler';
 import { cn } from '@/lib/utils';
@@ -349,20 +353,33 @@ function insertLiteralText(view: EditorView, text: string): void {
     view.dispatch(view.state.tr.insertText(lines[0]).scrollIntoView());
     return;
   }
-  const { paragraph } = view.state.schema.nodes;
   const { schema } = view.state;
   insertBlocks(
     view,
-    lines.map((line) => paragraph.create(null, line ? schema.text(line) : null))
+    lines.map((line) => literalParagraph(schema, line))
   );
 }
 
-/** Parses pasted Markdown into top-level blocks. Empty when the parser produces nothing. */
+/** A paragraph holding `line` as plain text. Marks are never parsed from it. */
+function literalParagraph(schema: Schema, line: string): PMNode {
+  return schema.nodes.paragraph.create(null, line ? schema.text(line) : null);
+}
+
+/**
+ * Parses pasted Markdown into top-level blocks, chunk by chunk. The converter has no table node,
+ * so each table row becomes a literal paragraph, and the prose around it converts normally.
+ * Empty when nothing converts.
+ */
 function markdownBlocks(editor: Editor, schema: Schema, markdown: string): PMNode[] {
-  const parsed = editor.markdown?.parse(markdown);
-  if (!parsed) return [];
   const blocks: PMNode[] = [];
-  schema.nodeFromJSON(parsed).forEach((block) => blocks.push(block));
+  for (const chunk of splitMarkdownTables(markdown)) {
+    if (chunk.kind === 'table') {
+      chunk.text.split('\n').forEach((row) => blocks.push(literalParagraph(schema, row)));
+      continue;
+    }
+    const parsed = editor.markdown?.parse(chunk.text);
+    if (parsed) schema.nodeFromJSON(parsed).forEach((block) => blocks.push(block));
+  }
   return blocks;
 }
 
@@ -373,9 +390,10 @@ function insertInline(view: EditorView, content: Fragment): void {
 
 /**
  * Converts pasted raw Markdown (for example copied from a .md file) into rich text.
- * Conservative detection (see `looksLikeMarkdownDocument`): rich HTML pastes, plain prose,
- * and pastes inside code stay on the default handlers. A plain-text paste the detector
- * rejects is inserted literally when another extension would otherwise reinterpret it.
+ * Conservative detection (see `looksLikeMarkdownDocument`): GFM tables stay literal text,
+ * rich HTML pastes, plain prose, and pastes inside code stay on the default handlers. A
+ * plain-text paste the detector rejects is inserted literally when another extension would
+ * otherwise reinterpret it.
  */
 const MarkdownPaste = Extension.create({
   name: 'markdown_paste',

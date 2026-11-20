@@ -248,13 +248,75 @@ describe('RichTextEditor paste preservation', () => {
     expect(dom.textContent).toBe('');
   });
 
-  it('keeps a GFM table readable instead of dropping its cells', () => {
+  it('keeps a table literal while converting the Markdown around it', () => {
     const { dom } = setup();
     paste(dom, { text: '**Status**\n\n| Name | Count |\n| --- | --- |\n| alpha | 1 |' });
 
-    expect(dom.textContent).toContain('| alpha | 1 |');
-    expect(dom.textContent).toContain('| Name | Count |');
+    expect(dom.querySelector('strong')?.textContent).toBe('Status');
+    expect(paragraphTexts(dom)).toEqual([
+      'Status',
+      '| Name | Count |',
+      '| --- | --- |',
+      '| alpha | 1 |',
+    ]);
+  });
+
+  it('keeps a table-only paste literal with no converted block', () => {
+    const { dom } = setup();
+    paste(dom, { text: '| **Name** | Count |\n| --- | --- |\n| alpha | 1 |' });
+
+    expect(paragraphTexts(dom)).toEqual(['| **Name** | Count |', '| --- | --- |', '| alpha | 1 |']);
     expect(dom.querySelector('strong')).toBeNull();
+    expect(dom.querySelector('ul, ol, h1, h2, h3, blockquote')).toBeNull();
+  });
+
+  it('keeps the blocks around a table in document order', () => {
+    const { dom } = setup();
+    paste(dom, {
+      text: [
+        '# Title',
+        '',
+        '- first',
+        '- second',
+        '',
+        'Some **bold** text.',
+        '',
+        '| alpha | 1 |',
+        '| --- | --- |',
+        '| beta | 2 |',
+        '',
+        '## After',
+        '',
+        'Final paragraph.',
+      ].join('\n'),
+    });
+
+    expect(Array.from(dom.children).map((el) => el.tagName)).toEqual([
+      'H1',
+      'UL',
+      'P',
+      'P',
+      'P',
+      'P',
+      'H2',
+      'P',
+    ]);
+    expect(dom.querySelector('h1')?.textContent).toBe('Title');
+    expect(Array.from(dom.querySelectorAll('ul > li')).map((li) => li.textContent)).toEqual([
+      'first',
+      'second',
+    ]);
+    expect(dom.querySelector('p strong')?.textContent).toBe('bold');
+    expect(dom.querySelector('h2')?.textContent).toBe('After');
+    expect(paragraphTexts(dom)).toEqual([
+      'first',
+      'second',
+      'Some bold text.',
+      '| alpha | 1 |',
+      '| --- | --- |',
+      '| beta | 2 |',
+      'Final paragraph.',
+    ]);
   });
 });
 

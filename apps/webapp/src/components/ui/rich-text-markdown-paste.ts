@@ -6,8 +6,8 @@
  */
 
 /**
- * A GFM table delimiter row such as `| --- | :---: |` or `--- | ---`. The converter has no table
- * node, so a document with a table would lose its cells. Such documents stay plain text.
+ * A GFM table delimiter row such as `| --- | :---: |` or `--- | ---`. A delimiter row marks a
+ * table, which is kept literal (one paragraph per row) because the converter has no table node.
  */
 const GFM_TABLE_DELIMITER =
   /^(?=[ \t|:-]*\|)(?=[ \t|:-]*-)[ \t]*\|?[ \t]*:?-+:?(?:[ \t]*\|[ \t]*:?-+:?)*[ \t]*\|?[ \t]*$/m;
@@ -111,10 +111,17 @@ const INLINE_SIGNALS: readonly RegExp[] = [
   /\[[^\]\n]+\]\((?:https?:\/\/|mailto:)[^)\s]+\)/, // [text](url)
 ];
 
+/** Stands in for each table when the detector reads the document. A bare word matches no signal. */
+const TABLE_PLACEHOLDER = 'table';
+
 export function looksLikeMarkdownDocument(text: string): boolean {
   const lf = text.replace(/\r\n?/g, '\n');
-  if (GFM_TABLE_DELIMITER.test(lf)) return false;
-  return [...BLOCK_SIGNALS, ...INLINE_SIGNALS].some((signal) => signal.test(lf));
+  // Each table becomes a neutral word, so a heading or bold line beside a table still counts,
+  // and a document that is only a table does not.
+  const signalText = splitMarkdownTables(lf)
+    .map((chunk) => (chunk.kind === 'table' ? TABLE_PLACEHOLDER : chunk.text))
+    .join('\n');
+  return [...BLOCK_SIGNALS, ...INLINE_SIGNALS].some((signal) => signal.test(signalText));
 }
 
 /**

@@ -25,6 +25,8 @@ describe('looksLikeMarkdownDocument', () => {
     ['horizontal rule', '---'],
     ['CRLF document', '# Title\r\n\r\nbody'],
     ['pipe in a bullet list', '- a | b\n- c'],
+    ['table after bold line', '**Status**\n\n| Name | Count |\n| --- | --- |\n| alpha | 1 |'],
+    ['heading followed by a table', '# Title\n\n| a | b |\n| - | - |\n| 1 | 2 |'],
     ['representative document', RELEASE_NOTES_MD],
   ])('detects %s', (_label, input) => {
     expect(looksLikeMarkdownDocument(input)).toBe(true);
@@ -49,9 +51,9 @@ describe('looksLikeMarkdownDocument', () => {
     ['YAML list of key: value lines', '- name: web\n- version: 1.2.0'],
     ['sentence starting with a year', '2024. was a strong year'],
     ['python doctest prompt', '>>> print(1)\n1'],
-    ['table after bold line', '**Status**\n\n| Name | Count |\n| --- | --- |\n| alpha | 1 |'],
     ['table without outer pipes', 'a | b\n--- | ---'],
     ['table with alignment markers', '| a | b |\n|:-|-:|\n| 1 | 2 |'],
+    ['table only with bold cells', '| **a** | b |\n| - | - |'],
   ])('rejects %s', (_label, input) => {
     expect(looksLikeMarkdownDocument(input)).toBe(false);
   });
