@@ -190,6 +190,28 @@ describe('RichTextEditor paste preservation', () => {
     expect(dom.textContent).not.toContain('# Title');
   });
 
+  it('keeps list and emphasis markup from a rich paste whose text looks like Markdown', () => {
+    const { dom } = setup();
+    paste(dom, {
+      text: '- item',
+      html: '<ul><li><em>- item</em></li></ul>',
+    });
+
+    expect(dom.querySelector('ul > li')).not.toBeNull();
+    expect(dom.querySelector('ul > li em')?.textContent).toBe('- item');
+  });
+
+  it('converts a VS Code highlighted copy of Markdown into rich text', () => {
+    const { dom } = setup();
+    paste(dom, {
+      text: '# Heading\n\nbody',
+      html: '<div><span style="color: #569cd6"># Heading</span></div><div><span>body</span></div>',
+    });
+
+    expect(dom.querySelector('h1')?.textContent).toBe('Heading');
+    expect(dom.textContent).not.toContain('# Heading');
+  });
+
   it('turns a pasted URL into a link over the selected text', () => {
     const { dom } = setup('<p>docs</p>');
     selectText(dom, 'docs');
