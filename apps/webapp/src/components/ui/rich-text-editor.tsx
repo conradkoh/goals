@@ -688,17 +688,10 @@ export function RichTextEditor({
     };
   }, [editorRef]);
 
-  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided).
-  // The editor is created with `value` as its initial content, so the first run is skipped:
-  // re-applying the value would replace the document with itself and move the caret to the end.
-  const hasAppliedInitialValueRef = useRef(false);
+  // Controlled mode: sync value prop → editor (only when editorRef is NOT provided)
   useEffect(() => {
     if (isUncontrolled) return;
     if (!editor || editor.isDestroyed) return;
-    if (!hasAppliedInitialValueRef.current) {
-      hasAppliedInitialValueRef.current = true;
-      return;
-    }
     if (editor.isFocused) return;
     const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
     if (currentHtml !== value) {

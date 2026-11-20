@@ -255,7 +255,8 @@ describe('RichTextEditor paste position', () => {
   });
 
   it('inserts a single line with a trailing newline inline', () => {
-    const { dom } = setup('<p>abc</p>');
+    // The editor serializes paragraphs with this class, so this is what the app stores as `value`.
+    const { dom } = setup('<p class="leading-normal">abc</p>');
     selectText(dom, 'abc', true); // caret: |abc
     paste(dom, { text: 'foo\n' });
     expect(paragraphTexts(dom)).toEqual(['fooabc']);
