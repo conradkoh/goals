@@ -333,8 +333,7 @@ function insertBlocks(view: EditorView, blocks: PMNode[]): void {
         new Slice(
           Fragment.from(blocks),
           blocks[0].type.name === 'paragraph' ? 1 : 0,
-          // A collapsed caret has no text after it, so only the text before it joins the paste.
-          !selection.empty && blocks[blocks.length - 1].type.name === 'paragraph' ? 1 : 0
+          blocks[blocks.length - 1].type.name === 'paragraph' ? 1 : 0
         )
       );
   view.dispatch(tr.scrollIntoView());

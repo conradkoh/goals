@@ -245,7 +245,7 @@ describe('RichTextEditor paste position', () => {
     const { dom } = setup('<p>abcdef</p>');
     selectText(dom, 'def', true); // caret: abc|def
     paste(dom, { text: 'foo\nbar' });
-    expect(paragraphTexts(dom)).toEqual(['abcfoo', 'bar', 'def']);
+    expect(paragraphTexts(dom)).toEqual(['abcfoo', 'bardef']);
   });
 
   it('adds no empty paragraph for a trailing newline', () => {
