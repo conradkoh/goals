@@ -140,7 +140,7 @@ Run all tests with `pnpm test`. For conventions and examples, see the [Testing G
 
 1. Generate a production deploy key in the [Convex Dashboard](https://dashboard.convex.dev) (Project Settings → Generate Production Deploy Key).
 2. Add it to GitHub Secrets as `CONVEX_DEPLOY_KEY_PROD`.
-3. Pushes to `master` deploy via [.github/workflows/deploy-prod.yml](.github/workflows/deploy-prod.yml).
+3. Pushes to `master` run [.github/workflows/deploy-prod.yml](.github/workflows/deploy-prod.yml) (**Production Deployment**). It deploys the Convex backend and publishes `goals-cli` to npm when the version in `packages/cli/package.json` is newer than npm's.
 
 ### Vercel (Frontend)
 

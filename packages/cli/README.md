@@ -95,12 +95,14 @@ profile page's CLI Access section.
 ## Releasing
 
 1. Bump `version` in `packages/cli/package.json` (and add a `CHANGELOG.md` entry).
-2. Merge to `master`. The `Publish goals-cli` workflow (`publish-goals-cli.yml`) publishes only if
-   the version is newer than the one on npm; an equal or older version is a green no-op.
-3. Watch the workflow run in GitHub Actions.
+2. Merge to `master`. The **Production Deployment** workflow (`deploy-prod.yml`) deploys the backend
+   and publishes goals-cli only if the version is newer than the one on npm; an equal or older
+   version is a green no-op for the publish step. A CLI-only merge also redeploys the Convex backend
+   (idempotent).
+3. Watch the **Production Deployment** run in GitHub Actions.
 
 Publishing uses npm trusted publishing (GitHub OIDC); there is no npm token. Do not add an
-`NPM_TOKEN`.
+`NPM_TOKEN`. The trusted workflow filename is `deploy-prod.yml`; never rename it.
 
 ### One-time setup
 
@@ -115,12 +117,14 @@ npm pack
 npm publish goals-cli-0.1.0.tgz --access public
 ```
 
-Then, within 2 days, register the trusted publisher:
+Then, within 2 days, register the trusted publisher against `deploy-prod.yml`:
 
 ```bash
-npm trust github goals-cli --file publish-goals-cli.yml --repo conradkoh/goals --allow-publish
+npm trust github goals-cli --file deploy-prod.yml --repo conradkoh/goals --allow-publish
 ```
 
 (or npmjs.com → the package's **Settings** → **Trusted Publisher** → GitHub Actions, owner
-`conradkoh`, repository `goals`, workflow filename `publish-goals-cli.yml`). Full maintainer notes:
+`conradkoh`, repository `goals`, workflow filename `deploy-prod.yml`). If the package was set up
+earlier against `publish-goals-cli.yml`, that workflow no longer exists: re-register against
+`deploy-prod.yml` with the same command before the next version bump. Full maintainer notes:
 [docs/developer/goals-cli-release.md](https://github.com/conradkoh/goals/blob/master/docs/developer/goals-cli-release.md).
