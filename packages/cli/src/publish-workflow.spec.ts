@@ -1,100 +1,128 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
 /**
- * Guards the release pipeline against regressions that would break npm trusted publishing or
- * couple a CLI release to the Convex deploy. The workflow file is inspected as text: this catches
- * forbidden tokens, permissions and path filters, but says nothing about GitHub's semantic
- * evaluation of the workflow (that needs a real run).
+ * Guards the production workflow against regressions that would break npm trusted publishing,
+ * widen the publish gate, or change the Convex deploy. The workflow is inspected as text: this
+ * catches forbidden tokens, permissions, job wiring and path filters, but says nothing about
+ * GitHub's semantic evaluation of the workflow (that needs a real run).
  */
 
 const WORKFLOW = readFileSync(
-  fileURLToPath(new URL('../../../.github/workflows/publish-goals-cli.yml', import.meta.url)),
-  'utf8'
-);
-
-const DEPLOY_WORKFLOW = readFileSync(
   fileURLToPath(new URL('../../../.github/workflows/deploy-prod.yml', import.meta.url)),
   'utf8'
 );
 
-const PUBLISH_JOB = /^  publish:$/m;
+const RETIRED_WORKFLOW_PATH = fileURLToPath(
+  new URL('../../../.github/workflows/publish-goals-cli.yml', import.meta.url)
+);
 
-const PATH_FILTERS = [
-  "'packages/cli/**'",
-  "'packages/shared/src/utilities/quarterly-markdown/**'",
-  "'packages/shared/src/utilities/cli-contract/**'",
-  "'pnpm-lock.yaml'",
-  "'.github/workflows/publish-goals-cli.yml'",
+const PUSH_PATHS = [
+  '.github/workflows/deploy-prod.yml',
+  'services/backend/**',
+  'packages/cli/**',
+  'packages/shared/src/utilities/quarterly-markdown/**',
+  'packages/shared/src/utilities/cli-contract/**',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  'turbo.json',
 ];
 
-describe('publish-goals-cli workflow', () => {
-  it('does not authenticate with a token or force provenance', () => {
-    expect(WORKFLOW).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN|secrets\./);
-    // `registry-url` makes setup-node write an .npmrc with a token placeholder that breaks OIDC.
-    expect(WORKFLOW).not.toMatch(/registry-url/);
-    expect(WORKFLOW).not.toMatch(/--provenance/);
+const JOB_IDS = ['deploy_backend', 'verify', 'check_version', 'publish'];
+
+/** The text of one job: from its `  <id>:` line up to the next job key, or end of file. */
+function jobBlock(id: string): string {
+  const lines = WORKFLOW.split('\n');
+  const start = lines.indexOf(`  ${id}:`);
+  if (start === -1) throw new Error(`job "${id}" is missing from deploy-prod.yml`);
+  const next = lines.findIndex((line, index) => index > start && /^  [a-z_]+:$/.test(line));
+  return lines.slice(start, next === -1 ? lines.length : next).join('\n');
+}
+
+describe('deploy-prod workflow', () => {
+  it('no longer ships the standalone CLI publish workflow', () => {
+    expect(existsSync(RETIRED_WORKFLOW_PATH)).toBe(false);
   });
 
-  it('grants id-token: write only to the publish job', () => {
+  it('is named for production and keeps manual dispatch', () => {
+    expect(WORKFLOW).toMatch(/^name: Production Deployment$/m);
+    expect(WORKFLOW).toMatch(/^  workflow_dispatch:$/m);
+  });
+
+  it('runs on master pushes that touch the backend or the CLI release inputs', () => {
+    expect(WORKFLOW).toMatch(/^    branches: \[master\]$/m);
+    for (const filter of PUSH_PATHS) expect(WORKFLOW).toContain(`- '${filter}'`);
+  });
+
+  it('declares exactly the four jobs', () => {
+    const jobs = WORKFLOW.slice(WORKFLOW.indexOf('\njobs:\n'));
+    const ids = [...jobs.matchAll(/^  ([a-z_]+):$/gm)].map((match) => match[1]);
+    expect(ids).toEqual(JOB_IDS);
+  });
+
+  it('reads the token as read-only by default and grants id-token only to publish', () => {
+    expect(WORKFLOW).toMatch(/^permissions:\n  contents: read$/m);
     expect(WORKFLOW.match(/id-token: write/g)).toHaveLength(1);
-
-    const beforePublish = WORKFLOW.slice(0, WORKFLOW.search(PUBLISH_JOB));
-    expect(beforePublish).not.toContain('id-token');
+    expect(jobBlock('publish')).toContain('id-token: write');
+    for (const id of ['deploy_backend', 'verify', 'check_version']) {
+      expect(jobBlock(id)).not.toContain('id-token');
+    }
   });
 
-  it('publishes from master pushes and manual dispatches only', () => {
-    expect(WORKFLOW).toContain('name: Publish goals-cli');
-    expect(WORKFLOW).toContain('branches: [master]');
-    expect(WORKFLOW).toContain('workflow_dispatch');
-    expect(WORKFLOW).toContain('cancel-in-progress: false');
+  it('serializes runs without cancelling an in-flight deploy or publish', () => {
+    expect(WORKFLOW).toMatch(/^concurrency:\n  group: deploy-prod\n  cancel-in-progress: false$/m);
   });
 
-  it('runs the publish job only when the gate says the version is newer', () => {
-    expect(WORKFLOW).toContain(
+  it('keeps the Convex deploy and migrations, master-only and independent of the CLI jobs', () => {
+    const deploy = jobBlock('deploy_backend');
+    expect(deploy).toContain("if: github.ref == 'refs/heads/master'");
+    expect(deploy).toContain('run: pnpm --filter @workspace/backend run deploy');
+    expect(deploy).toContain('run: pnpm --filter @workspace/backend run migrate');
+    expect(deploy).toContain('CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY_PROD }}');
+    expect(deploy).not.toMatch(/^    needs:/m);
+  });
+
+  it('runs the CLI and shared-utility checks in the verify job', () => {
+    const verify = jobBlock('verify');
+    expect(verify).toContain('run: pnpm --filter goals-cli test');
+    expect(verify).toContain('run: pnpm --filter goals-cli typecheck');
+    expect(verify).toContain('run: pnpm --filter goals-cli build');
+    expect(verify).toContain('run: pnpm --filter @workspace/shared test');
+  });
+
+  it('gates publishing on a version strictly newer than npm, reading npm both ways', () => {
+    const gate = jobBlock('check_version');
+    expect(gate).toContain('npm view goals-cli version --registry="$registry"');
+    expect(gate).toContain('npm view "goals-cli@$lookup_version" version --registry="$registry"');
+    expect(gate).toContain('npm_version="$local_version"');
+    expect(gate).toContain('node packages/cli/scripts/version-gate.mjs');
+    // a non-404 registry error must still fail the job (once per npm view command)
+    expect(gate.match(/npm view failed for a reason other than/g)).toHaveLength(2);
+  });
+
+  it('publishes only on master, after verify and the version gate', () => {
+    const publish = jobBlock('publish');
+    expect(publish).toContain('needs: [verify, check_version]');
+    expect(publish).toContain(
       "if: needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master'"
     );
-    expect(WORKFLOW).toContain('needs: [verify, check_version]');
-    expect(WORKFLOW).toContain(
+  });
+
+  it('tags prereleases next and never publishes a prerelease as latest', () => {
+    const publish = jobBlock('publish');
+    expect(publish).toContain('core="${VERSION%%+*}"');
+    expect(publish).toContain('if [[ "$core" == *-* ]]; then tag=next; else tag=latest; fi');
+    expect(publish).toContain(
       'npm publish "$TARBALL" --access public --ignore-scripts --tag "$tag"'
     );
   });
 
-  it('publishes prereleases under the next dist-tag, never latest', () => {
-    expect(WORKFLOW).toContain('core="${VERSION%%+*}"');
-    expect(WORKFLOW).toContain('if [[ "$core" == *-* ]]; then tag=next; else tag=latest; fi');
-    expect(WORKFLOW).not.toMatch(/npm publish[^\n]*--tag latest/);
-  });
-
-  it('skips a version already on npm, whatever dist-tag it was published under', () => {
-    expect(WORKFLOW).toContain('npm view "goals-cli@$lookup_version" version');
-    expect(WORKFLOW).toContain('lookup_version="${local_version%%+*}"');
-    expect(WORKFLOW).toContain('npm_version="$local_version"');
-    // a non-404 registry error must still fail the job (once per npm view command)
-    expect(WORKFLOW.match(/npm view failed for a reason other than/g)).toHaveLength(2);
-  });
-
-  it('keeps the master-only guard inside the publish job', () => {
-    const publishJob = WORKFLOW.slice(WORKFLOW.search(PUBLISH_JOB));
-    expect(publishJob).toContain(
-      "if: needs.check_version.outputs.should_publish == 'true' && github.ref == 'refs/heads/master'"
-    );
-  });
-
-  it('rebuilds when the CLI or its vendored shared sources change', () => {
-    for (const filter of PATH_FILTERS) expect(WORKFLOW).toContain(filter);
-  });
-
-  it('declares the verify, check_version and publish jobs exactly once', () => {
-    for (const job of ['verify', 'check_version', 'publish']) {
-      expect(WORKFLOW.match(new RegExp(`^  ${job}:$`, 'gm'))).toHaveLength(1);
-    }
-  });
-
-  it('leaves the Convex production deploy untouched', () => {
-    expect(DEPLOY_WORKFLOW).toContain("'services/backend/**'");
-    expect(DEPLOY_WORKFLOW).not.toContain('packages/cli');
+  it('authenticates only through GitHub OIDC: no npm token, registry-url or provenance flag', () => {
+    expect(WORKFLOW).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/);
+    expect(WORKFLOW).not.toMatch(/secrets\.(?!CONVEX_DEPLOY_KEY_PROD\b)/);
+    expect(WORKFLOW).not.toMatch(/registry-url/);
+    expect(WORKFLOW).not.toMatch(/--provenance/);
   });
 });
