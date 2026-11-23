@@ -25,12 +25,11 @@ Import the reusable hook that manages the escape key behavior:
 
 ```tsx
 // MyDialog.tsx
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useDialogEscapeHandler } from "@/hooks/useDialogEscapeHandler";
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 
 export function MyDialog({ open, onOpenChange }) {
-  const { handleEscapeKeyDown, handleNestedActiveChange } =
-    useDialogEscapeHandler();
+  const { handleEscapeKeyDown, handleNestedActiveChange } = useDialogEscapeHandler();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,7 +52,7 @@ The child component needs to:
 
 ```tsx
 // MyForm.tsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 
 interface MyFormProps {
   onActiveChange?: (isActive: boolean) => void;
@@ -76,7 +75,7 @@ export function MyForm({ onActiveChange }: MyFormProps) {
 
   // Handle Escape key within the form
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
       setIsExpanded(false);
@@ -101,7 +100,7 @@ export function MyForm({ onActiveChange }: MyFormProps) {
 The `useDialogEscapeHandler` hook is located at `apps/webapp/src/hooks/useDialogEscapeHandler.ts`:
 
 ```tsx
-import { useCallback, useRef } from "react";
+import { useCallback, useRef } from 'react';
 
 export function useDialogEscapeHandler() {
   // Use ref instead of state to avoid re-renders and ensure synchronous access
@@ -178,10 +177,10 @@ When your form contains popovers (like date pickers), you need to check if the E
 ```tsx
 const handleKeyDown = useCallback(
   (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       // Don't handle if inside a popover (let the popover close first)
       const target = e.target as HTMLElement;
-      const isInPopover = target.closest("[data-radix-popper-content-wrapper]");
+      const isInPopover = target.closest('[data-radix-popper-content-wrapper]');
       if (!isInPopover) {
         e.preventDefault();
         e.stopPropagation();
@@ -203,7 +202,12 @@ The `GoalDetailsPopoverView` component accepts an `onEscapeKeyDown` prop that fo
   trigger={<GoalPopoverTrigger title={goal.title} />}
   onEscapeKeyDown={handleEscapeKeyDown}
 >
-  <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
+  <GoalDetailsBody
+    goalId={goal._id}
+    title={goal.title}
+    details={goal.details ?? ''}
+    onFormActiveChange={handleNestedActiveChange}
+  />
 </GoalDetailsPopoverView>
 ```
 
@@ -212,6 +216,7 @@ The `GoalDetailsPopoverView` component accepts an `onEscapeKeyDown` prop that fo
 See the implementation in:
 
 - `apps/webapp/src/hooks/useDialogEscapeHandler.ts`
-- `apps/webapp/src/components/molecules/goal-log/GoalLogTab.tsx`
+- `apps/webapp/src/components/molecules/goal-details-popover/view/components/GoalDetailsBody.tsx`
+- `apps/webapp/src/components/molecules/goal-log/GoalLogSection.tsx`
 - `apps/webapp/src/components/molecules/goal-log/GoalLogCreateForm.tsx`
 - `apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx`
