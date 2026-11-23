@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
@@ -639,5 +639,76 @@ describe('GoalLogSection', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Add log entry...' })).toHaveFocus();
     });
+  });
+
+  it('collapses an open add form when Full history turns on, and it cannot be submitted', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    setLogs({
+      logs: makeLogs([1, 2, 3]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4]),
+    });
+    render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Half-written');
+    await user.click(screen.getByRole('button', { name: 'Full history' }));
+
+    expect(screen.queryByLabelText('Content')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Entry' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Switch to current view to add entries' })
+    ).toBeDisabled();
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('keeps the typed draft and chosen time when the add form reopens in Current only', async () => {
+    const user = userEvent.setup();
+    setLogs({
+      logs: makeLogs([1, 2, 3]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4]),
+    });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Half-written');
+    fireEvent.change(document.querySelector('input[type="time"]') as HTMLInputElement, {
+      target: { value: '14:30' },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Full history' }));
+    await user.click(screen.getByRole('button', { name: 'Current only' }));
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+
+    expect(screen.getByLabelText('Content')).toHaveValue('Half-written');
+    expect(document.querySelector('input[type="time"]')).toHaveValue('14:30');
+  });
+
+  it('returns focus to the Log heading, not the disabled trigger, when Full history collapses the form', async () => {
+    const user = userEvent.setup();
+    setLogs({
+      logs: makeLogs([1, 2, 3]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4]),
+    });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.click(screen.getByRole('button', { name: 'Full history' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /^Log/ })).toHaveFocus();
+    });
+    expect(document.activeElement).not.toBe(document.body);
   });
 });

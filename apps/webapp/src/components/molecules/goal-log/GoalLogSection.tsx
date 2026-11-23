@@ -83,7 +83,8 @@ function GoalLogHeading({
     <div className="flex items-center gap-2">
       <h4
         ref={headingRef}
-        className="min-w-0 flex-1 rounded-md bg-muted px-4 py-1.5 text-sm font-semibold text-foreground"
+        tabIndex={-1}
+        className="min-w-0 flex-1 rounded-md bg-muted px-4 py-1.5 text-sm font-semibold text-foreground outline-none"
       >
         Log{' '}
         {!isLoadingLogs && (
@@ -189,6 +190,17 @@ function ShowAllFooter({ count, expanded, onToggle, collapseDisabledReason }: Sh
       </Button>
     </div>
   );
+}
+
+/**
+ * Returns focus after the add form collapses: to the trigger, or to the Log heading
+ * when the trigger is disabled (a disabled control cannot take focus).
+ */
+function focusAfterCreateCollapse(
+  trigger: HTMLButtonElement | null,
+  heading: HTMLHeadingElement | null
+): void {
+  (trigger && !trigger.disabled ? trigger : heading)?.focus();
 }
 
 /**
@@ -345,29 +357,34 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
     [deleteLog]
   );
 
-  const handleToggleFullHistory = useCallback(() => {
-    setShowFullHistory((value) => !value);
+  const handleCreateExpandedChange = useCallback((expanded: boolean) => {
+    returnFocusToTriggerRef.current = !expanded;
+    setIsCreateFormExpanded(expanded);
   }, []);
+
+  const handleToggleFullHistory = useCallback(() => {
+    // Turning Full history on collapses an open add form. Its draft stays in GoalLogCreateForm.
+    if (!showFullHistory && isCreateFormExpanded) handleCreateExpandedChange(false);
+    setShowFullHistory(!showFullHistory);
+  }, [showFullHistory, isCreateFormExpanded, handleCreateExpandedChange]);
 
   const handleToggleShowAll = useCallback(() => {
     scrollHeadingOnCollapseRef.current = showAll;
     setShowAll(!showAll);
   }, [showAll]);
 
-  const handleCreateExpandedChange = useCallback((expanded: boolean) => {
-    returnFocusToTriggerRef.current = !expanded;
-    setIsCreateFormExpanded(expanded);
-  }, []);
-
-  // On expand: bring the form into view. On collapse: return focus to the add trigger.
-  // Runs on mount with isCreateFormExpanded=false and no pending focus return, so it does nothing.
+  // On expand: bring the form into view.
   useEffect(() => {
-    if (isCreateFormExpanded) {
-      formWrapperRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    } else if (returnFocusToTriggerRef.current) {
-      returnFocusToTriggerRef.current = false;
-      addTriggerRef.current?.focus();
+    if (isCreateFormExpanded && formWrapperRef.current) {
+      formWrapperRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
+  }, [isCreateFormExpanded]);
+
+  // On collapse: return focus to the add trigger. Runs on mount with no pending focus return.
+  useEffect(() => {
+    if (isCreateFormExpanded || !returnFocusToTriggerRef.current) return;
+    returnFocusToTriggerRef.current = false;
+    focusAfterCreateCollapse(addTriggerRef.current, headingRef.current);
   }, [isCreateFormExpanded]);
 
   // After an edit closes, the add trigger is enabled again: return focus to it.
@@ -421,6 +438,7 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
         <GoalLogCreateForm
           onSubmit={handleCreateLog}
           isSubmitting={isCreating}
+          expanded={isCreateFormExpanded}
           onExpandedChange={handleCreateExpandedChange}
           disabled={showFullHistory || editingLog !== null}
           disabledLabel={showFullHistory ? undefined : 'Finish editing to add entries'}
