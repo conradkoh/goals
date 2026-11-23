@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import { useQuery } from 'convex/react';
 import type { SessionId } from 'convex-helpers/server/sessions';
@@ -33,13 +33,25 @@ vi.mock('sonner', () => ({
 }));
 
 vi.mock('./StandardGoalPopoverContent', () => ({
-  StandardGoalPopoverContent: function MockStandardGoalPopoverContent() {
+  StandardGoalPopoverContent: function MockStandardGoalPopoverContent({
+    onNestedActiveChange,
+  }: {
+    onNestedActiveChange?: (isActive: boolean) => void;
+  }) {
     const { goal } = useGoalContext();
     return (
-      <GoalInitiativeField
-        selectedInitiativeId={goal.initiativeId ?? null}
-        onInitiativeChange={vi.fn().mockResolvedValue(undefined)}
-      />
+      <>
+        <GoalInitiativeField
+          selectedInitiativeId={goal.initiativeId ?? null}
+          onInitiativeChange={vi.fn().mockResolvedValue(undefined)}
+        />
+        <button type="button" onClick={() => onNestedActiveChange?.(true)}>
+          Open nested form
+        </button>
+        <button type="button" onClick={() => onNestedActiveChange?.(false)}>
+          Close nested form
+        </button>
+      </>
     );
   },
 }));
@@ -104,11 +116,11 @@ function mockConvexQueries(goalDetails: ReturnType<typeof makeGoalDetails> | nul
   }) as typeof useQuery);
 }
 
-function renderModal() {
+function renderModal(onOpenChange: (open: boolean) => void = vi.fn()) {
   return render(
     <StandaloneGoalModal
       open
-      onOpenChange={vi.fn()}
+      onOpenChange={onOpenChange}
       goalId={GOAL_ID}
       goalCategory="standard"
       year={2024}
@@ -149,5 +161,44 @@ describe('StandaloneGoalModal initiative display', () => {
     renderModal();
 
     expect(screen.getByRole('combobox')).toHaveTextContent('Tag to an initiative...');
+  });
+});
+
+describe('StandaloneGoalModal escape handling', () => {
+  beforeEach(() => {
+    vi.mocked(useSession).mockReturnValue({ sessionId: SESSION_ID } as ReturnType<
+      typeof useSession
+    >);
+    vi.mocked(useInitiatives).mockReturnValue({
+      initiatives,
+      createInitiative: vi.fn(),
+      updateInitiative: vi.fn(),
+      deleteInitiative: vi.fn(),
+      isCreating: false,
+      isUpdating: false,
+      isDeleting: false,
+    });
+    mockConvexQueries(makeGoalDetails());
+  });
+
+  it('does not close on Escape while a nested form reports active', () => {
+    const onOpenChange = vi.fn();
+    renderModal(onOpenChange);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open nested form' }));
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it('closes on Escape after the nested form reports inactive', () => {
+    const onOpenChange = vi.fn();
+    renderModal(onOpenChange);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open nested form' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close nested form' }));
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

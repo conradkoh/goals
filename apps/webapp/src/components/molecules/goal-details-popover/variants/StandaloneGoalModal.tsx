@@ -27,6 +27,7 @@ import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import { GoalProvider } from '@/contexts/GoalContext';
+import { useDialogEscapeHandler } from '@/hooks/useDialogEscapeHandler';
 import { WeekProvider } from '@/hooks/useWeek';
 import { useSession } from '@/modules/auth/useSession';
 
@@ -91,10 +92,12 @@ export function StandaloneGoalModal({
     open && goalId && sessionId ? { sessionId, goalId } : 'skip'
   );
 
+  const { createEscapeBlockingOpenChange, handleNestedActiveChange } = useDialogEscapeHandler();
+
   if (!goalId) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
       <FixedSizeDialog>
         <DialogHeader className="sr-only">
           <DialogTitle>Goal Details</DialogTitle>
@@ -114,9 +117,16 @@ export function StandaloneGoalModal({
             <WeekProvider weekData={{ ...weekData, year, quarter }}>
               <GoalProvider goal={goalDetails as unknown as GoalWithDetailsAndChildren}>
                 {goalCategory === 'standard' ? (
-                  <StandardGoalPopoverContent onComplete={onComplete} />
+                  <StandardGoalPopoverContent
+                    onComplete={onComplete}
+                    onNestedActiveChange={handleNestedActiveChange}
+                  />
                 ) : (
-                  <AdhocGoalPopoverContent onComplete={onComplete} weekNumber={weekNumber} />
+                  <AdhocGoalPopoverContent
+                    onComplete={onComplete}
+                    weekNumber={weekNumber}
+                    onNestedActiveChange={handleNestedActiveChange}
+                  />
                 )}
               </GoalProvider>
             </WeekProvider>

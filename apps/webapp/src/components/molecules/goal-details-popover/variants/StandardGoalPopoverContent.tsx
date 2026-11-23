@@ -48,6 +48,8 @@ import { useWeek } from '@/hooks/useWeek';
 export interface StandardGoalPopoverContentProps {
   /** Callback fired when the goal is marked as complete */
   onComplete?: () => void;
+  /** Escape-guard callback from a host dialog. Falls back to this component's own escape handler when absent. */
+  onNestedActiveChange?: (isActive: boolean) => void;
 }
 
 /**
@@ -88,6 +90,8 @@ interface StandardGoalPopoverContentInnerProps {
   handleCreateWeeklyGoal: () => Promise<void>;
   /** Handler for updating initiative tag */
   onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
+  /** Escape-guard callback from a host dialog. Falls back to this component's own escape handler when absent. */
+  onNestedActiveChange?: (isActive: boolean) => void;
 }
 
 /**
@@ -101,7 +105,10 @@ interface StandardGoalPopoverContentInnerProps {
  * @param props - Component props
  * @returns Rendered quarterly goal content
  */
-export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverContentProps) {
+export function StandardGoalPopoverContent({
+  onComplete,
+  onNestedActiveChange,
+}: StandardGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { weekNumber, year, quarter, createWeeklyGoalOptimistic, updateQuarterlyGoalStatus } =
     useWeek();
@@ -215,6 +222,7 @@ export function StandardGoalPopoverContent({ onComplete }: StandardGoalPopoverCo
           setNewWeeklyGoalTitle={setNewWeeklyGoalTitle}
           handleCreateWeeklyGoal={handleCreateWeeklyGoal}
           onInitiativeChange={handleInitiativeChange}
+          onNestedActiveChange={onNestedActiveChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -243,11 +251,14 @@ function StandardGoalPopoverContentInner({
   setNewWeeklyGoalTitle,
   handleCreateWeeklyGoal,
   onInitiativeChange,
+  onNestedActiveChange,
 }: StandardGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { year, quarter, weekNumber } = useWeek();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { handleNestedActiveChange } = useDialogEscapeHandler();
+  const ownEscapeHandler = useDialogEscapeHandler();
+  const handleNestedActiveChange =
+    onNestedActiveChange ?? ownEscapeHandler.handleNestedActiveChange;
   const handleTitleSave = useGoalTitleSave(onSave, goal);
 
   return (

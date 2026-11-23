@@ -48,6 +48,8 @@ export interface AdhocGoalPopoverContentProps {
   onComplete?: () => void;
   /** Week number for domain popover context */
   weekNumber?: number;
+  /** Escape-guard callback from a host dialog. Falls back to this component's own escape handler when absent. */
+  onNestedActiveChange?: (isActive: boolean) => void;
 }
 
 /**
@@ -97,6 +99,8 @@ interface AdhocGoalPopoverContentInnerProps {
   onCreateChild: (parentId: Id<'goals'>, title: string) => Promise<void>;
   /** Handler for updating initiative tag */
   onInitiativeChange: (initiativeId: Id<'initiatives'> | null) => Promise<void>;
+  /** Escape-guard callback from a host dialog. Falls back to this component's own escape handler when absent. */
+  onNestedActiveChange?: (isActive: boolean) => void;
 }
 
 /**
@@ -111,7 +115,11 @@ interface AdhocGoalPopoverContentInnerProps {
  * @returns Rendered adhoc goal content
  */
 // fallow-ignore-next-line complexity
-export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPopoverContentProps) {
+export function AdhocGoalPopoverContent({
+  onComplete,
+  weekNumber,
+  onNestedActiveChange,
+}: AdhocGoalPopoverContentProps) {
   const { goal } = useGoalContext();
   const { sessionId } = useSession();
   const { updateAdhocGoal, deleteAdhocGoal, createAdhocGoal } = useAdhocGoals(sessionId);
@@ -242,6 +250,7 @@ export function AdhocGoalPopoverContent({ onComplete, weekNumber }: AdhocGoalPop
           onChildDelete={handleChildDelete}
           onCreateChild={handleCreateChild}
           onInitiativeChange={handleInitiativeChange}
+          onNestedActiveChange={onNestedActiveChange}
         />
       </GoalDisplayProvider>
     </GoalEditProvider>
@@ -271,10 +280,13 @@ function AdhocGoalPopoverContentInner({
   onChildDelete,
   onCreateChild,
   onInitiativeChange,
+  onNestedActiveChange,
 }: AdhocGoalPopoverContentInnerProps) {
   const { goal } = useGoalContext();
   const { isEditing, editingGoal, stopEditing } = useGoalEditContext();
-  const { handleNestedActiveChange } = useDialogEscapeHandler();
+  const ownEscapeHandler = useDialogEscapeHandler();
+  const handleNestedActiveChange =
+    onNestedActiveChange ?? ownEscapeHandler.handleNestedActiveChange;
   const handleTitleSave = useGoalTitleSave(onSave, goal);
 
   return (
