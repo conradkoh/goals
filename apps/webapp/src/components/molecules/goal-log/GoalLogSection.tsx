@@ -23,6 +23,15 @@ import { useSession } from '@/modules/auth/useSession';
 /** Number of most recent entries shown before "Show all". */
 const RECENT_LOG_LIMIT = 5;
 
+/** Reason shown while an edit is open. Tooltip of every control it blocks. */
+const OPEN_EDIT_REASON = 'Save or cancel the open edit first';
+
+/** Reason shown on Edit while the add form is open. */
+const OPEN_CREATE_REASON = 'Save or cancel the new entry first';
+
+/** Banner text when a live update deletes the entry being edited. */
+const DELETED_EDIT_MESSAGE = 'This entry was deleted, so your edit was discarded.';
+
 /** Props for GoalLogSection. */
 export interface GoalLogSectionProps {
   /** The goal whose log is shown. */
@@ -52,9 +61,13 @@ interface GoalLogHeadingProps {
   showFullHistory: boolean;
   /** Switches between the current-instance and all-instances views. */
   onToggleFullHistory: () => void;
+  /** Why the Full history toggle is unavailable. Undefined when it is available. */
+  toggleDisabledReason?: string;
 }
 
 /** Heading chip with the entry count and the Full history toggle. Presentational only. */
+// The disabled branch is the pinned design: one toggle, three states (available, locked, hidden).
+// fallow-ignore-next-line complexity
 function GoalLogHeading({
   headingRef,
   count,
@@ -62,7 +75,9 @@ function GoalLogHeading({
   hasCarryOverHistory,
   showFullHistory,
   onToggleFullHistory,
+  toggleDisabledReason,
 }: GoalLogHeadingProps) {
+  const toggleDisabled = toggleDisabledReason !== undefined;
   // Heading row: heading chip (flex-1, truncates) and Full history toggle (shrink-0).
   return (
     <div className="flex items-center gap-2">
@@ -79,8 +94,13 @@ function GoalLogHeading({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 shrink-0 gap-1.5 px-2 text-xs"
+          className={cn(
+            'h-7 shrink-0 gap-1.5 px-2 text-xs',
+            toggleDisabled && 'text-muted-foreground/50 cursor-not-allowed'
+          )}
           onClick={onToggleFullHistory}
+          disabled={toggleDisabled}
+          title={toggleDisabledReason}
         >
           <History className="h-3.5 w-3.5" />
           {showFullHistory ? 'Current only' : 'Full history'}
@@ -92,13 +112,13 @@ function GoalLogHeading({
 
 /** Props for ListErrorBanner. */
 interface ListErrorBannerProps {
-  /** The underlying save error message. */
+  /** Full banner text. */
   message: string;
   /** Clears the banner. */
   onDismiss: () => void;
 }
 
-/** Dismissible alert for a failed checkbox save. Presentational only. */
+/** Dismissible alert for a list-level failure. Presentational only. */
 function ListErrorBanner({ message, onDismiss }: ListErrorBannerProps) {
   return (
     <div
@@ -106,7 +126,7 @@ function ListErrorBanner({ message, onDismiss }: ListErrorBannerProps) {
       className="mx-2 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
     >
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-      <p className="min-w-0 flex-1 break-words">{`Couldn't save that change. ${message}`}</p>
+      <p className="min-w-0 flex-1 break-words">{message}</p>
       <Button
         variant="ghost"
         size="sm"
@@ -124,28 +144,38 @@ interface ShowAllFooterProps {
   /** Total number of entries in the current view. */
   count: number;
   /** Whether every entry is shown. */
-  showAll: boolean;
+  expanded: boolean;
   /** Expands or collapses the capped list. */
   onToggle: () => void;
+  /** Why Show fewer is unavailable. Undefined when it is available. */
+  collapseDisabledReason?: string;
 }
 
 /** Footer with the Showing text and the Show all / Show fewer button. Presentational only. */
-function ShowAllFooter({ count, showAll, onToggle }: ShowAllFooterProps) {
+// The disabled collapse branch is the pinned design: one button, two labels, one locked state.
+// fallow-ignore-next-line complexity
+function ShowAllFooter({ count, expanded, onToggle, collapseDisabledReason }: ShowAllFooterProps) {
+  const collapseDisabled = expanded && collapseDisabledReason !== undefined;
   return (
     <div className="flex items-center justify-between gap-2 px-2">
       <p className="text-xs text-muted-foreground">
-        {showAll
+        {expanded
           ? `Showing all ${count} entries`
           : `Showing ${RECENT_LOG_LIMIT} of ${count} entries`}
       </p>
       <Button
         variant="ghost"
         size="sm"
-        className="h-7 shrink-0 gap-1.5 px-2 text-xs"
+        className={cn(
+          'h-7 shrink-0 gap-1.5 px-2 text-xs',
+          collapseDisabled && 'text-muted-foreground/50 cursor-not-allowed'
+        )}
         onClick={onToggle}
-        aria-expanded={showAll}
+        disabled={collapseDisabled}
+        title={collapseDisabled ? collapseDisabledReason : undefined}
+        aria-expanded={expanded}
       >
-        {showAll ? (
+        {expanded ? (
           <>
             <ChevronUp className="h-3.5 w-3.5" />
             Show fewer
@@ -163,7 +193,7 @@ function ShowAllFooter({ count, showAll, onToggle }: ShowAllFooterProps) {
 
 /**
  * The Log section: heading with count, Full history toggle, add control, optional
- * checkbox error banner, list area (skeleton while loading), and Show all / Show fewer footer.
+ * error banner, list area (skeleton while loading), and Show all / Show fewer footer.
  */
 // Complexity is intentional: one fixed single-scroll layout whose branches are presentational states the design pins.
 // fallow-ignore-next-line complexity
@@ -192,6 +222,8 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   const formWrapperRef = useRef<HTMLDivElement>(null);
   // Set when the create form collapses; the effect below returns focus to the add trigger.
   const returnFocusToTriggerRef = useRef(false);
+  // Set when an edit closes; the effect below returns focus to the add trigger.
+  const returnFocusAfterEditRef = useRef(false);
   // Set when Show fewer is clicked; the effect below brings the heading back into view.
   const scrollHeadingOnCollapseRef = useRef(false);
 
@@ -217,8 +249,27 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   const isLoadingLogs = showFullHistory ? isLoadingFullHistory : isLoading;
   const entries = displayedLogs ?? NO_LOGS;
   const count = entries.length;
-  const maxEntries = showFullHistory || showAll ? undefined : RECENT_LOG_LIMIT;
   const canCollapse = !showFullHistory && count > RECENT_LOG_LIMIT;
+
+  // The open edit's entry as the data now has it. Undefined when a live update removed it.
+  const liveEditedLog = editingLog
+    ? entries.find((entry) => entry._id === editingLog._id)
+    : undefined;
+  // Collapsing would hide the open edit's entry. The list stays expanded and Show fewer is disabled.
+  const editHoldsListOpen =
+    !showFullHistory &&
+    liveEditedLog !== undefined &&
+    isHiddenByCap(entries, liveEditedLog, RECENT_LOG_LIMIT);
+  const isExpanded = showFullHistory || showAll || editHoldsListOpen;
+  const maxEntries = isExpanded ? undefined : RECENT_LOG_LIMIT;
+  // The open edit's entry was deleted by a live update. Checked only once the list has loaded.
+  const editedEntryMissing = editingLog !== null && !isLoadingLogs && liveEditedLog === undefined;
+
+  // One edit at a time, and no edit while the add draft is open, so its draft is never discarded.
+  const editDisabledReason =
+    editingLog !== null ? OPEN_EDIT_REASON : isCreateFormExpanded ? OPEN_CREATE_REASON : undefined;
+  // Switching views would drop the open edit, so the toggle waits for it.
+  const fullHistoryToggleDisabledReason = editingLog !== null ? OPEN_EDIT_REASON : undefined;
 
   /**
    * Whether saving this entry would hide it under the cap, so the list must expand to show it.
@@ -250,10 +301,26 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
         await updateLog(logId, { content: newContent });
         setListError(null);
       } catch (err: unknown) {
-        setListError(err instanceof Error ? err.message : 'Failed to save your change');
+        const reason = err instanceof Error ? err.message : 'Failed to save your change';
+        setListError(`Couldn't save that change. ${reason}`);
       }
     },
     [updateLog]
+  );
+
+  /** Closes the edit form. Focus returns to the add trigger once it is enabled again. */
+  const closeEdit = useCallback(() => {
+    returnFocusAfterEditRef.current = true;
+    setEditingLog(null);
+  }, []);
+
+  /** Opens the edit form for an entry. Refused while another edit or the add form is open. */
+  const handleStartEdit = useCallback(
+    (log: GoalLog) => {
+      if (editDisabledReason !== undefined) return;
+      setEditingLog(log);
+    },
+    [editDisabledReason]
   );
 
   /**
@@ -265,9 +332,9 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
       if (!editingLog) return;
       await updateLog(editingLog._id, { logDate, content });
       if (wouldLeaveCappedView({ ...editingLog, logDate })) setShowAll(true);
-      setEditingLog(null);
+      closeEdit();
     },
-    [editingLog, updateLog, wouldLeaveCappedView]
+    [editingLog, updateLog, wouldLeaveCappedView, closeEdit]
   );
 
   /** Deletes an entry. Errors propagate to the confirm dialog in GoalLogEntry. */
@@ -279,8 +346,6 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   );
 
   const handleToggleFullHistory = useCallback(() => {
-    // Switching views discards an open edit: its entry may not exist in the other view.
-    setEditingLog(null);
     setShowFullHistory((value) => !value);
   }, []);
 
@@ -305,6 +370,22 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
     }
   }, [isCreateFormExpanded]);
 
+  // After an edit closes, the add trigger is enabled again: return focus to it.
+  useEffect(() => {
+    if (editingLog === null && returnFocusAfterEditRef.current) {
+      returnFocusAfterEditRef.current = false;
+      addTriggerRef.current?.focus();
+    }
+  }, [editingLog]);
+
+  // A live update deleted the entry being edited. It cannot be saved, so close the edit and say why.
+  useEffect(() => {
+    if (!editedEntryMissing) return;
+    // eslint-disable-next-line -- A live deletion is only observable after a render, and the banner must be raised once.
+    setListError(DELETED_EDIT_MESSAGE);
+    closeEdit();
+  }, [editedEntryMissing, closeEdit]);
+
   // After Show fewer: keep the heading in view, since the content above the viewport is now shorter.
   useEffect(() => {
     if (!showAll && scrollHeadingOnCollapseRef.current) {
@@ -325,6 +406,7 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
         hasCarryOverHistory={hasCarryOverHistory}
         showFullHistory={showFullHistory}
         onToggleFullHistory={handleToggleFullHistory}
+        toggleDisabledReason={fullHistoryToggleDisabledReason}
       />
       {hasCarryOverHistory && (
         <p className="px-4 text-xs text-muted-foreground">
@@ -365,23 +447,29 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
             className={count === 0 ? 'py-4' : undefined}
             maxEntries={maxEntries}
             editingLogId={editingLog?._id ?? null}
+            editDisabledReason={editDisabledReason}
             renderEditForm={(log) => (
               <GoalLogEditForm
                 log={log}
                 onSave={handleSaveEdit}
-                onCancel={() => setEditingLog(null)}
+                onCancel={closeEdit}
                 isSubmitting={isUpdating}
               />
             )}
             onContentChange={handleContentChange}
-            onEdit={setEditingLog}
+            onEdit={handleStartEdit}
             onDelete={handleDelete}
           />
         </div>
       )}
 
       {!isLoadingLogs && canCollapse && (
-        <ShowAllFooter count={count} showAll={showAll} onToggle={handleToggleShowAll} />
+        <ShowAllFooter
+          count={count}
+          expanded={isExpanded}
+          onToggle={handleToggleShowAll}
+          collapseDisabledReason={editHoldsListOpen ? OPEN_EDIT_REASON : undefined}
+        />
       )}
     </section>
   );

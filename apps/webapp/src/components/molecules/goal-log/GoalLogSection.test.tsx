@@ -508,4 +508,136 @@ describe('GoalLogSection', () => {
     unmount();
     expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
   });
+
+  it('keeps an open edit visible when Show fewer would hide its entry', async () => {
+    const user = userEvent.setup();
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Show all (7)' }));
+    await user.click(screen.getByText('log-1'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const showFewer = screen.getByRole('button', { name: 'Show fewer' });
+    expect(showFewer).toBeDisabled();
+    await user.click(showFewer);
+
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish editing to add entries' })).toBeDisabled();
+  });
+
+  it('keeps the edit open when a live update pushes its entry below the cap, then closes it when the entry is deleted', async () => {
+    const onFormActiveChange = vi.fn();
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7]) });
+    const { rerender } = render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+
+    // A newer day arrives: log-3 is now 6th in display order, beyond the cap.
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7, 8]) });
+    rerender(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish editing to add entries' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toBeDisabled();
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+
+    // The edited entry is deleted by a live update.
+    setLogs({ logs: makeLogs([1, 2, 4, 5, 6, 7, 8]) });
+    rerender(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    expect(screen.queryByText('Edit Log Entry')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'This entry was deleted, so your edit was discarded.'
+    );
+    const addTrigger = screen.getByRole('button', { name: 'Add log entry...' });
+    expect(addTrigger).toBeEnabled();
+    await waitFor(() => {
+      expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+      expect(addTrigger).toHaveFocus();
+    });
+  });
+
+  it('disables Edit on other entries while an edit is open and keeps the open draft', async () => {
+    const user = userEvent.setup();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.type(screen.getByLabelText('Content'), ' draft');
+
+    await user.click(screen.getByText('log-2'));
+    const otherEdit = screen.getByRole('button', { name: 'Edit' });
+    expect(otherEdit).toBeDisabled();
+    expect(otherEdit).toHaveAttribute('title', 'Save or cancel the open edit first');
+    await user.click(otherEdit);
+
+    expect(screen.getByLabelText('Content')).toHaveValue('log-3 draft');
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
+  });
+
+  it('disables Edit on entries while the add form is open and keeps the create draft', async () => {
+    const user = userEvent.setup();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'draft');
+    await user.click(screen.getByText('log-3'));
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    expect(screen.getByLabelText('Content')).toHaveValue('draft');
+    expect(screen.queryByText('Edit Log Entry')).not.toBeInTheDocument();
+  });
+
+  it('disables the Full history toggle while an edit is open', async () => {
+    const user = userEvent.setup();
+    setLogs({
+      logs: makeLogs([1, 2, 3]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4]),
+    });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByRole('button', { name: 'Full history' })).toBeDisabled();
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+  });
+
+  it('closes an edit on Cancel and returns focus to the add trigger', async () => {
+    const user = userEvent.setup();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByText('Edit Log Entry')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Add log entry...' })).toHaveFocus();
+    });
+  });
 });

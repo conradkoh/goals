@@ -33,6 +33,8 @@ export interface GoalLogEntryProps {
   onContentChange?: (logId: Id<'goalLogs'>, newContent: string) => void;
   /** Callback when edit is requested */
   onEdit?: (log: GoalLog) => void;
+  /** Why Edit is unavailable for this entry. Undefined when Edit is available. */
+  editDisabledReason?: string;
   /** Callback when delete is requested */
   onDelete?: (logId: Id<'goalLogs'>) => void;
   /** Additional CSS classes */
@@ -58,6 +60,7 @@ export function GoalLogEntry({
   showDate = false,
   onContentChange,
   onEdit,
+  editDisabledReason,
   onDelete,
   className,
 }: GoalLogEntryProps) {
@@ -152,7 +155,14 @@ export function GoalLogEntry({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                  className={cn(
+                    'h-7 px-2',
+                    editDisabledReason !== undefined
+                      ? 'text-muted-foreground/50 cursor-not-allowed'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                  disabled={editDisabledReason !== undefined}
+                  title={editDisabledReason}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(log);

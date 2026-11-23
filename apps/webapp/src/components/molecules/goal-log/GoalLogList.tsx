@@ -34,6 +34,8 @@ export interface GoalLogListProps {
   editingLogId?: Id<'goalLogs'> | null;
   /** Renders the edit form inside the editing entry's slot */
   renderEditForm?: (log: GoalLog) => ReactNode;
+  /** Why Edit is unavailable on every rendered entry. Undefined when Edit is available. */
+  editDisabledReason?: string;
 }
 
 /**
@@ -103,6 +105,7 @@ export function GoalLogList({
   maxEntries,
   editingLogId = null,
   renderEditForm,
+  editDisabledReason,
 }: GoalLogListProps) {
   const shownLogs = useMemo(() => selectVisibleLogs(logs, maxEntries), [logs, maxEntries]);
 
@@ -147,6 +150,7 @@ export function GoalLogList({
                   onContentChange={onContentChange}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  editDisabledReason={editDisabledReason}
                 />
               )
             )}
