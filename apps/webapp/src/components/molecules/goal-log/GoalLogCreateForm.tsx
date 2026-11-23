@@ -7,7 +7,7 @@
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { CalendarIcon, Clock, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useCallback, useState } from 'react';
+import { type Ref, useCallback, useState } from 'react';
 
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -56,6 +56,10 @@ export interface GoalLogCreateFormProps {
   onExpandedChange?: (expanded: boolean) => void;
   /** Whether the form is disabled (e.g., when viewing full history) */
   disabled?: boolean;
+  /** Label shown on the collapsed trigger while disabled. Defaults to 'Switch to current view to add entries'. */
+  disabledLabel?: string;
+  /** Ref forwarded to the collapsed 'Add log entry...' button, so a parent can return focus to it */
+  triggerRef?: Ref<HTMLButtonElement>;
   /** Additional CSS classes */
   className?: string;
 }
@@ -79,6 +83,8 @@ export function GoalLogCreateForm({
   isSubmitting = false,
   onExpandedChange,
   disabled = false,
+  disabledLabel = 'Switch to current view to add entries',
+  triggerRef,
   className,
 }: GoalLogCreateFormProps) {
   const [logDate, setLogDate] = useState<Date>(new Date());
@@ -166,6 +172,7 @@ export function GoalLogCreateForm({
     return (
       <div className={cn('border-t pt-4', className)}>
         <Button
+          ref={triggerRef}
           variant="outline"
           className={cn(
             'w-full justify-start',
@@ -177,7 +184,7 @@ export function GoalLogCreateForm({
           disabled={disabled}
         >
           <Plus className="h-4 w-4 mr-2" />
-          {disabled ? 'Switch to current view to add entries' : 'Add log entry...'}
+          {disabled ? disabledLabel : 'Add log entry...'}
         </Button>
       </div>
     );
