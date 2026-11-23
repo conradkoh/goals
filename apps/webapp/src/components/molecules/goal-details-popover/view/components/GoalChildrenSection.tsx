@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Separator } from '@/components/ui/separator';
 
 export interface GoalChildrenSectionProps {
-  /** Section title (e.g., "Weekly Goals", "Daily Goals") */
+  /** Section title; used as the heading and hint text when there are no children */
   title: string;
   /** Children list component */
   childrenList?: ReactNode;
@@ -35,7 +35,7 @@ export interface GoalChildrenSectionProps {
  * ```
  */
 export function GoalChildrenSection({
-  title: _title,
+  title,
   childrenList,
   createInput,
   showSeparator = true,
@@ -49,6 +49,14 @@ export function GoalChildrenSection({
     <>
       {showSeparator && <Separator className="my-2" />}
       <div className="pt-1 space-y-3">
+        {!childrenList && (
+          <>
+            <h4 className="mt-3 rounded-md bg-muted px-4 py-1.5 text-sm font-semibold text-foreground">
+              {title}
+            </h4>
+            <p className="px-4 text-xs text-muted-foreground">{`No ${title.toLowerCase()} yet`}</p>
+          </>
+        )}
         {childrenList}
         {createInput && <div className="px-4 pt-1 pb-2">{createInput}</div>}
       </div>
