@@ -10,8 +10,8 @@ import {
   GoalBreadcrumb,
   GoalChildrenSection,
   GoalCompletionDate,
+  GoalDetailsBody,
   GoalDetailsChildrenList,
-  GoalDetailsSection,
   GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
@@ -23,7 +23,6 @@ import {
 
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
 import {
@@ -33,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoalProvider, useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { resolveGoalType } from '@/domain/goal-actions';
@@ -275,25 +273,17 @@ function GoalQuickViewContentInternal({
             className="mt-3 space-y-2"
           />
 
-          {/* Tabs for Details and Log */}
-          <Tabs defaultValue="details" className="mt-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="log">Log</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="mt-4">
-              <GoalDetailsSection
-                title={goal.title}
-                details={goal.details ?? ''}
-                onDetailsChange={handleDetailsChange}
-                showSeparator={false}
-              />
-
-              {/* Weekly Goals section for quarterly goals */}
-              {isQuarterlyGoal && (
+          <GoalDetailsBody
+            goalId={goal._id}
+            title={goal.title}
+            details={goal.details ?? ''}
+            onDetailsChange={handleDetailsChange}
+            onFormActiveChange={onNestedActiveChange}
+            childrenSection={
+              isQuarterlyGoal ? (
                 <GoalChildrenSection
                   title="Weekly Goals"
+                  showSeparator={false}
                   childrenList={
                     hasChildren ? (
                       <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
@@ -308,14 +298,11 @@ function GoalQuickViewContentInternal({
                       onEscape={() => setNewChildGoalTitle('')}
                     />
                   }
-                  showSeparator={!!goal.details}
                 />
-              )}
-
-              {/* Daily Goals section for weekly goals */}
-              {isWeeklyGoal && (
+              ) : isWeeklyGoal ? (
                 <GoalChildrenSection
                   title="Daily Goals"
+                  showSeparator={false}
                   childrenList={
                     hasChildren ? (
                       <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
@@ -351,15 +338,10 @@ function GoalQuickViewContentInternal({
                       </div>
                     </CreateGoalInput>
                   }
-                  showSeparator={!!goal.details}
                 />
-              )}
-            </TabsContent>
-
-            <TabsContent value="log" className="mt-4">
-              <GoalLogTab goalId={goal._id} onFormActiveChange={onNestedActiveChange} />
-            </TabsContent>
-          </Tabs>
+              ) : undefined
+            }
+          />
         </FireGoalsProvider>
       </FixedSizeDialogContent>
 
