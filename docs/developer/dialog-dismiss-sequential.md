@@ -180,7 +180,7 @@ const handleKeyDown = useCallback(
     if (e.key === 'Escape') {
       // Don't handle if inside a popover (let the popover close first)
       const target = e.target as HTMLElement;
-      const isInPopover = target.closest('[data-radix-popper-content-wrapper]');
+      const isInPopover = target.closest('[data-slot="popover-content"]');
       if (!isInPopover) {
         e.preventDefault();
         e.stopPropagation();

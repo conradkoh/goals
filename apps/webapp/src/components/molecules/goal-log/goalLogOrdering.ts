@@ -21,9 +21,7 @@ export function dayKeyOf(logDate: number): string {
  * Orders entries the way the list displays them: day descending, then createdAt descending.
  * Returns a new array; the input is not mutated.
  */
-// Used by the two selectors in this module and unit-tested directly; no other module imports it.
-// fallow-ignore-next-line unused-export
-export function sortForDisplay<T extends OrderableLogEntry>(entries: readonly T[]): T[] {
+function sortForDisplay<T extends OrderableLogEntry>(entries: readonly T[]): T[] {
   return [...entries].sort((a, b) => {
     const byDay = dayKeyOf(b.logDate).localeCompare(dayKeyOf(a.logDate));
     return byDay !== 0 ? byDay : b.createdAt - a.createdAt;

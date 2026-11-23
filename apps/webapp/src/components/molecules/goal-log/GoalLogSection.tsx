@@ -240,6 +240,10 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   } = useGoalLogs(sessionId, goalId);
 
   // The open edit: the entry as it was when editing began, and the draft being typed.
+  // The draft is kept through live updates. If a live update moves the edited entry to another
+  // day, its slot remounts and the draft still wins: Save writes the draft's date, time and
+  // content over the remote change, so a remote day move or edit is overwritten, not merged.
+  // The remount also clears the edit form's local save error.
   const [editing, setEditing] = useState<{ log: GoalLog; draft: GoalLogEditDraft } | null>(null);
   const editingLog = editing?.log ?? null;
   const [showFullHistory, setShowFullHistory] = useState(false);

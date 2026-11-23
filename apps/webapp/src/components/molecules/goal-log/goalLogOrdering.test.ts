@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 
-import { dayKeyOf, isHiddenByCap, selectVisibleLogs, sortForDisplay } from './goalLogOrdering';
+import { dayKeyOf, isHiddenByCap, selectVisibleLogs } from './goalLogOrdering';
 
 interface Entry {
   _id: string;
@@ -25,21 +25,19 @@ describe('dayKeyOf', () => {
   });
 });
 
-describe('sortForDisplay', () => {
+describe('selectVisibleLogs', () => {
   it('orders by day descending, then createdAt descending, without mutating the input', () => {
     const a = entry('A', 10, 5);
     const b = entry('B', 10, 9);
     const c = entry('C', 9, 100);
     const input = [a, b, c];
 
-    const ordered = sortForDisplay(input);
+    const ordered = selectVisibleLogs(input, undefined);
 
     expect(ordered.map((log) => log._id)).toEqual(['B', 'A', 'C']);
     expect(input.map((log) => log._id)).toEqual(['A', 'B', 'C']);
   });
-});
 
-describe('selectVisibleLogs', () => {
   it('returns every entry in display order when maxEntries is undefined', () => {
     const ordered = selectVisibleLogs([entry('A', 10, 5), entry('C', 9, 100)], undefined);
 

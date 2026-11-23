@@ -783,4 +783,117 @@ describe('GoalLogSection', () => {
     expect(screen.getByLabelText('Content')).toHaveValue('Reworded');
     expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
   });
+
+  it('Escape cancels the open create form without reaching the dialog', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    const outerKeyDown = vi.fn();
+    const documentKeyDown = vi.fn();
+    document.addEventListener('keydown', documentKeyDown);
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(
+      <div onKeyDown={outerKeyDown}>
+        <GoalLogSection
+          goalId={'goals:test' as Id<'goals'>}
+          onFormActiveChange={onFormActiveChange}
+        />
+      </div>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+    await user.type(screen.getByLabelText('Content'), 'Half-written');
+    // Typing itself dispatches keydowns; only the Escape must stay inside the form.
+    outerKeyDown.mockClear();
+    documentKeyDown.mockClear();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByLabelText('Content')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add log entry...' })).toBeEnabled();
+    await waitFor(() => {
+      expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+    });
+    expect(outerKeyDown).not.toHaveBeenCalled();
+    expect(documentKeyDown).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', documentKeyDown);
+  });
+
+  it('Escape cancels an open edit without reaching the dialog', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    const outerKeyDown = vi.fn();
+    const documentKeyDown = vi.fn();
+    document.addEventListener('keydown', documentKeyDown);
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(
+      <div onKeyDown={outerKeyDown}>
+        <GoalLogSection
+          goalId={'goals:test' as Id<'goals'>}
+          onFormActiveChange={onFormActiveChange}
+        />
+      </div>
+    );
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+    await user.click(screen.getByLabelText('Content'));
+    // Clicking into the field dispatches no keydowns, but clear anyway so only Escape is measured.
+    outerKeyDown.mockClear();
+    documentKeyDown.mockClear();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByText('Edit Log Entry')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+    });
+    expect(outerKeyDown).not.toHaveBeenCalled();
+    expect(documentKeyDown).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', documentKeyDown);
+  });
+
+  it('returns focus to the add trigger after a successful edit save', async () => {
+    const user = userEvent.setup();
+    const logs = makeLogs([1, 2, 3]);
+    const updateLog = makeStoringUpdate(logs);
+    setLogs({ logs, updateLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByLabelText('Content'));
+    await user.type(screen.getByLabelText('Content'), 'Reworded');
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    expect(updateLog).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Add log entry...' })).toHaveFocus();
+    });
+  });
+
+  it('Escape inside the date popover closes only the calendar and keeps the draft', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Half-written');
+    await user.click(document.querySelector('[data-slot="popover-trigger"]') as HTMLElement);
+
+    const popup = await waitFor(() => {
+      const el = document.querySelector('[data-slot="popover-content"]');
+      if (!el) throw new Error('calendar not open');
+      return el as HTMLElement;
+    });
+    fireEvent.keyDown(popup, { key: 'Escape' });
+
+    expect(screen.getByLabelText('Content')).toHaveValue('Half-written');
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+  });
 });

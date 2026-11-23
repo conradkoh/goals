@@ -80,12 +80,13 @@ function isSubmitShortcut(e: React.KeyboardEvent): boolean {
 }
 
 /**
- * Whether the event targets a control inside an open popover (the calendar).
+ * Whether the event targets a control inside an open popover (the calendar). Matches the
+ * Base UI popup that ui/popover.tsx renders, which carries data-slot="popover-content".
  * @param e - The keyboard event
  * @returns True when the event belongs to a popover
  */
 function isInsidePopover(e: React.KeyboardEvent): boolean {
-  return (e.target as HTMLElement).closest('[data-radix-popper-content-wrapper]') !== null;
+  return (e.target as HTMLElement).closest('[data-slot="popover-content"]') !== null;
 }
 
 /**
@@ -415,6 +416,8 @@ export function GoalLogCreateForm({
 
 /**
  * Editable fields of an open edit. GoalLogSection owns it so it survives a remount.
+ * A live update that moves the entry to another day remounts this form; the draft still wins
+ * on save. See the note on `editing` in GoalLogSection.tsx.
  */
 export interface GoalLogEditDraft {
   logDate: Date;
