@@ -45,6 +45,8 @@ export interface AdhocSubGoalsListProps {
   onCreateChild?: (parentId: Id<'goals'>, title: string) => Promise<void>;
   /** Parent goal ID for creating new children */
   parentId: Id<'goals'>;
+  /** Whether to show the separator above the sub-tasks section. Default true. */
+  showSeparator?: boolean;
 }
 
 /**
@@ -60,6 +62,7 @@ export function AdhocSubGoalsList({
   onDelete,
   onCreateChild,
   parentId,
+  showSeparator = true,
 }: AdhocSubGoalsListProps) {
   const [newSubGoalTitle, setNewSubGoalTitle] = useState('');
   const [optimisticSubGoals, setOptimisticSubGoals] = useState<_OptimisticSubGoal[]>([]);
@@ -136,7 +139,7 @@ export function AdhocSubGoalsList({
 
   return (
     <>
-      <Separator className="my-3" />
+      {showSeparator && <Separator className="my-3" />}
       <div className="space-y-2">
         <h4 className="text-sm font-medium text-muted-foreground">Sub-tasks</h4>
 
