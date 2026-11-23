@@ -256,14 +256,18 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
     [updateLog]
   );
 
-  /** Saves an edited entry. Errors propagate to GoalLogEditForm, which shows them. */
+  /**
+   * Saves an edited entry, then expands the capped list when the saved entry would be hidden,
+   * so an edit that moves an entry older never makes it vanish. Errors propagate to GoalLogEditForm.
+   */
   const handleSaveEdit = useCallback(
     async (logDate: number, content: string) => {
       if (!editingLog) return;
       await updateLog(editingLog._id, { logDate, content });
+      if (wouldLeaveCappedView({ ...editingLog, logDate })) setShowAll(true);
       setEditingLog(null);
     },
-    [editingLog, updateLog]
+    [editingLog, updateLog, wouldLeaveCappedView]
   );
 
   /** Deletes an entry. Errors propagate to the confirm dialog in GoalLogEntry. */

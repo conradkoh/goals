@@ -111,6 +111,45 @@ function makeStoringCreate(logs: GoalLog[]): ReturnType<typeof vi.fn> {
   return createLog;
 }
 
+/**
+ * An update mock that stores the patch on the matching entry, so the hooks mock returns the
+ * saved entry on the next render. The entry keeps its createdAt.
+ */
+function makeStoringUpdate(logs: GoalLog[]): ReturnType<typeof vi.fn> {
+  const updateLog = vi.fn(
+    async (id: Id<'goalLogs'>, patch: { logDate?: number; content?: string }) => {
+      const index = logs.findIndex((log) => log._id === id);
+      const previous = logs[index];
+      if (!previous) throw new Error(`unknown log ${id}`);
+      logs[index] = makeSavedLog(
+        id,
+        patch.logDate ?? previous.logDate,
+        patch.content ?? previous.content,
+        previous.createdAt
+      );
+      setLogs({ logs: [...logs], updateLog });
+      return undefined;
+    }
+  );
+  return updateLog;
+}
+
+/**
+ * Picks a day in an open Calendar popover. The calendar opens on the current month, so it
+ * walks back month by month until the requested day button renders.
+ */
+async function pickDay(user: ReturnType<typeof userEvent.setup>, dayLabel: RegExp) {
+  for (let months = 0; months < 12; months++) {
+    const day = screen.queryByRole('button', { name: dayLabel });
+    if (day) {
+      await user.click(day);
+      return;
+    }
+    await user.click(screen.getByRole('button', { name: 'Go to the Previous Month' }));
+  }
+  throw new Error(`calendar day ${dayLabel} not reachable`);
+}
+
 interface SetLogsOptions {
   logs: GoalLog[] | undefined;
   rootGoalId?: Id<'goals'>;
@@ -315,6 +354,50 @@ describe('GoalLogSection', () => {
     await waitFor(() => {
       expect(createLog).toHaveBeenCalledTimes(1);
     });
+    expect(screen.queryByRole('button', { name: 'Show fewer' })).not.toBeInTheDocument();
+  });
+
+  it('expands a capped list when an edit moves an entry older than the 5th display day', async () => {
+    const user = userEvent.setup();
+    const logs = makeLogs([1, 2, 3, 4, 5, 6, 7]);
+    const log7Id = 'log7' as Id<'goalLogs'>;
+    const updateLog = makeStoringUpdate(logs);
+    setLogs({ logs, updateLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-7'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: /Mar 07, 2026/ }));
+    await pickDay(user, /March 1st, 2026/);
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => {
+      expect(updateLog).toHaveBeenCalledWith(log7Id, {
+        logDate: DateTime.local(2026, 3, 1, 9).toMillis(),
+        content: '<p>log-7</p>',
+      });
+    });
+    expect(await screen.findByText('log-7')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+  });
+
+  it('does not expand when an edit keeps the entry in the capped view', async () => {
+    const user = userEvent.setup();
+    const logs = makeLogs([1, 2, 3, 4, 5, 6, 7]);
+    const updateLog = makeStoringUpdate(logs);
+    setLogs({ logs, updateLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByText('log-7'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByLabelText('Content'));
+    await user.type(screen.getByLabelText('Content'), 'log-7');
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => {
+      expect(updateLog).toHaveBeenCalledTimes(1);
+    });
+    expect(await screen.findByRole('button', { name: 'Show all (7)' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Show fewer' })).not.toBeInTheDocument();
   });
 
