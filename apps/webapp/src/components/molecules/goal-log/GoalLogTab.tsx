@@ -39,6 +39,8 @@ export interface GoalLogTabProps {
  * ```
  */
 export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTabProps) {
+  // Temporary: this file duplicates GoalLogSection until P5 deletes it; the suppressions are removed with it.
+  // fallow-ignore-next-line code-duplication
   const { sessionId } = useSession();
   const {
     logs,
@@ -54,6 +56,7 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
 
   const [editingLog, setEditingLog] = useState<GoalLog | null>(null);
   const [showFullHistory, setShowFullHistory] = useState(false);
+  // fallow-ignore-next-line code-duplication
   const [isCreateFormExpanded, setIsCreateFormExpanded] = useState(false);
 
   // Notify parent when any form becomes active (for blocking dialog escape)
@@ -95,6 +98,7 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
   const handleContentChange = useCallback(
     async (logId: Id<'goalLogs'>, newContent: string) => {
       await updateLog(logId, { content: newContent });
+      // fallow-ignore-next-line code-duplication
     },
     [updateLog]
   );

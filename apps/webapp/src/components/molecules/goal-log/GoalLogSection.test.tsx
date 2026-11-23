@@ -1,0 +1,363 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { Id } from '@workspace/backend/convex/_generated/dataModel';
+import type { GoalLog } from '@workspace/backend/convex/goalLogs';
+import { DateTime } from 'luxon';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+import { GoalLogSection } from './GoalLogSection';
+
+const hooks = vi.hoisted(() => ({
+  useGoalLogs: vi.fn(),
+  useGoalLogsByRootGoal: vi.fn(),
+}));
+
+vi.mock('@/hooks/useGoalLogs', () => ({
+  useGoalLogs: hooks.useGoalLogs,
+  useGoalLogsByRootGoal: hooks.useGoalLogsByRootGoal,
+}));
+
+vi.mock('@/modules/auth/useSession', () => ({
+  useSession: () => ({ sessionId: 'session-1' }),
+}));
+
+// jsdom cannot load the editor CSS. Render the HTML, and expose a "Toggle task" control that
+// simulates a checkbox toggle through onContentChange.
+vi.mock('@/components/ui/interactive-html', () => ({
+  InteractiveHTML: ({
+    html,
+    className,
+    onContentChange,
+  }: {
+    html: string;
+    className?: string;
+    onContentChange?: (html: string) => void;
+  }) => (
+    <div className={className}>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+      {onContentChange && (
+        <button type="button" onClick={() => onContentChange('<p>changed</p>')}>
+          Toggle task
+        </button>
+      )}
+    </div>
+  ),
+}));
+
+// Textarea stand-in for the rich text editor: value is plain text, onChange wraps it in <p>.
+vi.mock('@/components/ui/rich-text-editor', () => ({
+  isHTMLEmpty: (html: string) => html.replace(/<[^>]*>/g, '').trim() === '',
+  stripTrailingEmptyParagraphs: (html: string) => html,
+  RichTextEditor: ({ value, onChange }: { value: string; onChange: (html: string) => void }) => (
+    <textarea
+      aria-label="Content"
+      value={value.replace(/<[^>]*>/g, '')}
+      onChange={(e) => onChange(`<p>${e.target.value}</p>`)}
+    />
+  ),
+}));
+
+beforeAll(() => {
+  // jsdom does not implement scrollIntoView.
+  Element.prototype.scrollIntoView = vi.fn();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.clearAllMocks();
+});
+
+function makeLog(day: number, createdAt?: number): GoalLog {
+  return {
+    _id: `log${day}` as Id<'goalLogs'>,
+    _creationTime: 0,
+    userId: 'users:test' as Id<'users'>,
+    goalId: 'goals:test' as Id<'goals'>,
+    rootGoalId: 'goals:test' as Id<'goals'>,
+    logDate: DateTime.local(2026, 3, day, 9).toMillis(),
+    content: `<p>log-${day}</p>`,
+    createdAt: createdAt ?? day,
+  };
+}
+
+function makeLogs(days: number[]): GoalLog[] {
+  return days.map((day) => makeLog(day));
+}
+
+interface SetLogsOptions {
+  logs: GoalLog[] | undefined;
+  rootGoalId?: Id<'goals'>;
+  hasCarryOverHistory?: boolean;
+  isLoading?: boolean;
+  createLog?: ReturnType<typeof vi.fn>;
+  updateLog?: ReturnType<typeof vi.fn>;
+  deleteLog?: ReturnType<typeof vi.fn>;
+  fullLogs?: GoalLog[];
+}
+
+function setLogs({
+  logs,
+  rootGoalId,
+  hasCarryOverHistory = false,
+  isLoading = false,
+  createLog,
+  updateLog,
+  deleteLog,
+  fullLogs,
+}: SetLogsOptions) {
+  hooks.useGoalLogs.mockReturnValue({
+    logs,
+    rootGoalId,
+    hasCarryOverHistory,
+    isLoading,
+    isCreating: false,
+    isUpdating: false,
+    isDeleting: false,
+    createLog: createLog ?? vi.fn().mockResolvedValue(null),
+    updateLog: updateLog ?? vi.fn().mockResolvedValue(undefined),
+    deleteLog: deleteLog ?? vi.fn(),
+  });
+  hooks.useGoalLogsByRootGoal.mockReturnValue({
+    logs: rootGoalId ? fullLogs : undefined,
+    isLoading: false,
+  });
+}
+
+describe('GoalLogSection', () => {
+  it('renders a plain Log heading and no tabs', () => {
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /^Log/ })).toBeInTheDocument();
+  });
+
+  it('shows 5 of 7 entries with Show all', () => {
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.getByText('log-7')).toBeInTheDocument();
+    expect(screen.getByText('log-3')).toBeInTheDocument();
+    expect(screen.queryByText('log-2')).not.toBeInTheDocument();
+    expect(screen.queryByText('log-1')).not.toBeInTheDocument();
+
+    expect(screen.getByText('Showing 5 of 7 entries')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show all (7)' })).toBeInTheDocument();
+  });
+
+  it('expands and collapses the capped list', async () => {
+    const user = userEvent.setup();
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Show all (7)' }));
+
+    expect(screen.getByText('log-2')).toBeInTheDocument();
+    expect(screen.getByText('log-1')).toBeInTheDocument();
+    expect(screen.getByText('Showing all 7 entries')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Show fewer' }));
+
+    expect(screen.queryByText('log-2')).not.toBeInTheDocument();
+    expect(screen.getByText('Showing 5 of 7 entries')).toBeInTheDocument();
+  });
+
+  it('hides the footer at 5 or fewer entries and shows the empty state', () => {
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5]) });
+    const { unmount } = render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
+    unmount();
+
+    setLogs({ logs: [] });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.getByText('No log entries yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
+  });
+
+  it('renders the add control as the first button', () => {
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.getAllByRole('button')[0]).toHaveAccessibleName('Add log entry...');
+  });
+
+  it('creates once, collapses, and returns focus to the add trigger', async () => {
+    const user = userEvent.setup();
+    const createLog = vi.fn().mockResolvedValue(null);
+    setLogs({ logs: makeLogs([1, 2, 3]), createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    await waitFor(() => {
+      expect(createLog).toHaveBeenCalledTimes(1);
+    });
+    expect(createLog).toHaveBeenCalledWith(expect.any(Number), '<p>Shipped</p>');
+
+    const trigger = await screen.findByRole('button', { name: 'Add log entry...' });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  it('keeps the content and shows the error when a create fails', async () => {
+    const user = userEvent.setup();
+    const createLog = vi.fn().mockRejectedValue(new Error('Network down'));
+    setLogs({ logs: makeLogs([1, 2, 3]), createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Network down');
+    expect(screen.getByLabelText('Content')).toHaveValue('Shipped');
+    expect(screen.getByRole('button', { name: 'Add Entry' })).toBeInTheDocument();
+  });
+
+  it('auto-expands a capped list when a backdated entry is created', async () => {
+    const user = userEvent.setup();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(DateTime.local(2026, 3, 1, 12).toJSDate());
+    const createLog = vi.fn().mockResolvedValue(null);
+    setLogs({ logs: makeLogs([2, 3, 4, 5, 6, 7]), createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    expect(await screen.findByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+  });
+
+  it('keeps a same-day or later create capped', async () => {
+    const user = userEvent.setup();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(DateTime.local(2026, 3, 8, 12).toJSDate());
+    const createLog = vi.fn().mockResolvedValue(null);
+    setLogs({ logs: makeLogs([2, 3, 4, 5, 6, 7]), createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    await waitFor(() => {
+      expect(createLog).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.queryByRole('button', { name: 'Show fewer' })).not.toBeInTheDocument();
+  });
+
+  it('shows full history without a cap and disables adding', async () => {
+    const user = userEvent.setup();
+    setLogs({
+      logs: makeLogs([1, 2, 3, 4, 5, 6, 7]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4, 5, 6, 7, 8, 9]),
+    });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Full history' }));
+
+    expect(screen.getByText('log-1')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show fewer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Current only' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Switch to current view to add entries' })
+    ).toBeDisabled();
+  });
+
+  it('shows only the list skeleton while loading', () => {
+    setLogs({ logs: undefined, isLoading: true });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    expect(screen.getByTestId('goal-log-loading')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Log' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add log entry...' })).toBeEnabled();
+    expect(screen.queryByText(/Showing/)).not.toBeInTheDocument();
+  });
+
+  it('edits an entry in place and disables the add trigger', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    await user.click(screen.getByText('log-3'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish editing to add entries' })).toBeDisabled();
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+    // The read-only entry paragraph is replaced by the edit form in the same slot.
+    expect(screen.queryByText('log-3', { selector: 'p' })).not.toBeInTheDocument();
+  });
+
+  it('shows a dismissible banner when saving a checkbox change fails', async () => {
+    const user = userEvent.setup();
+    const updateLog = vi.fn().mockRejectedValue(new Error('Server unavailable'));
+    setLogs({ logs: makeLogs([1, 2, 3]), updateLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getAllByRole('button', { name: 'Toggle task' })[0]);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "Couldn't save that change. Server unavailable"
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('keeps the section root free of scroll and fixed-height utilities', () => {
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    const { container } = render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    const root = container.querySelector('[data-slot="goal-log-section"]');
+    expect(root).not.toBeNull();
+
+    const classes = root?.className ?? '';
+    for (const forbidden of ['overflow', 'max-h', 'h-full', 'flex-1 min-h-0']) {
+      expect(classes).not.toContain(forbidden);
+    }
+  });
+
+  it('reports form active state on expand, cancel and unmount', async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    setLogs({ logs: makeLogs([1, 2, 3]) });
+    const { unmount } = render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => {
+      expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+
+    unmount();
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(false);
+  });
+});

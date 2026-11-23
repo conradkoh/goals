@@ -23,10 +23,21 @@
  * - `GoalLogList` - Display a grouped list of log entries
  * - `GoalLogCreateForm` - Form to create new log entries
  * - `GoalLogEditForm` - Form to edit existing log entries
+ *
+ * `GoalLogSection` is the Log section of the single-scroll goal details body.
+ *
+ * Until P5 of the single-scroll rebuild renders it, `GoalLogSection` has no consumer, so its
+ * export lines below carry temporary fallow suppressions. Remove them in P5, when the surfaces
+ * import the section.
  */
 
 export { GoalLogTab } from './GoalLogTab';
 export type { GoalLogTabProps } from './GoalLogTab';
+
+// fallow-ignore-next-line unused-export
+export { GoalLogSection, RECENT_LOG_LIMIT } from './GoalLogSection';
+// fallow-ignore-next-line unused-type
+export type { GoalLogSectionProps } from './GoalLogSection';
 
 export { GoalLogList } from './GoalLogList';
 export type { GoalLogListProps } from './GoalLogList';
