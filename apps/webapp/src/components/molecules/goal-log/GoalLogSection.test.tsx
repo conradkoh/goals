@@ -84,6 +84,33 @@ function makeLogs(days: number[]): GoalLog[] {
   return days.map((day) => makeLog(day));
 }
 
+/** An entry as the save mocks store it, with an explicit id, date, content and createdAt. */
+function makeSavedLog(id: string, logDate: number, content: string, createdAt: number): GoalLog {
+  return {
+    _id: id as Id<'goalLogs'>,
+    _creationTime: 0,
+    userId: 'users:test' as Id<'users'>,
+    goalId: 'goals:test' as Id<'goals'>,
+    rootGoalId: 'goals:test' as Id<'goals'>,
+    logDate,
+    content,
+    createdAt,
+  };
+}
+
+/**
+ * A create mock that stores the new entry, so the hooks mock returns it on the next render.
+ * The stored entry gets createdAt 100, newer than every entry in these tests.
+ */
+function makeStoringCreate(logs: GoalLog[]): ReturnType<typeof vi.fn> {
+  const createLog = vi.fn(async (logDate: number, content: string) => {
+    logs.push(makeSavedLog('new', logDate, content, 100));
+    setLogs({ logs: [...logs], createLog });
+    return null;
+  });
+  return createLog;
+}
+
 interface SetLogsOptions {
   logs: GoalLog[] | undefined;
   rootGoalId?: Id<'goals'>;
@@ -224,15 +251,53 @@ describe('GoalLogSection', () => {
     const user = userEvent.setup();
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(DateTime.local(2026, 3, 1, 12).toJSDate());
-    const createLog = vi.fn().mockResolvedValue(null);
-    setLogs({ logs: makeLogs([2, 3, 4, 5, 6, 7]), createLog });
+    const logs = makeLogs([2, 3, 4, 5, 6, 7]);
+    const createLog = makeStoringCreate(logs);
+    setLogs({ logs, createLog });
     render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
 
     await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
     await user.type(screen.getByLabelText('Content'), 'Shipped');
     await user.click(screen.getByRole('button', { name: 'Add Entry' }));
 
+    expect(await screen.findByText('Shipped')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Show fewer' })).toBeInTheDocument();
+  });
+
+  it('keeps a backdated create that lands on the 5th display day visible and capped', async () => {
+    const user = userEvent.setup();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(DateTime.local(2026, 3, 3, 12).toJSDate());
+    const logs = makeLogs([2, 3, 4, 5, 6, 7]);
+    const createLog = makeStoringCreate(logs);
+    setLogs({ logs, createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    expect(await screen.findByText('Shipped')).toBeInTheDocument();
+    expect(screen.queryByText('log-2')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show fewer' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show all (7)' })).toBeInTheDocument();
+  });
+
+  it('shows a backdated create below the cap without a footer', async () => {
+    const user = userEvent.setup();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(DateTime.local(2026, 2, 20, 12).toJSDate());
+    const logs = makeLogs([1, 2, 3]);
+    const createLog = makeStoringCreate(logs);
+    setLogs({ logs, createLog });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Add log entry...' }));
+    await user.type(screen.getByLabelText('Content'), 'Shipped');
+    await user.click(screen.getByRole('button', { name: 'Add Entry' }));
+
+    expect(await screen.findByText('Shipped')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show all/ })).not.toBeInTheDocument();
   });
 
   it('keeps a same-day or later create capped', async () => {

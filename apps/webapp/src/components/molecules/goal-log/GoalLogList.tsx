@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import { type ReactNode, useMemo } from 'react';
 
 import { GoalLogEntry } from './GoalLogEntry';
+import { dayKeyOf, selectVisibleLogs } from './goalLogOrdering';
 
 import { cn } from '@/lib/utils';
 
@@ -36,24 +37,6 @@ export interface GoalLogListProps {
 }
 
 /**
- * Returns the local ISO date key (YYYY-MM-DD) that a log entry is grouped under.
- */
-function dayKeyOf(log: GoalLog): string {
-  return DateTime.fromMillis(log.logDate).toISODate() ?? 'unknown';
-}
-
-/**
- * Orders entries the way the list displays them: day descending, then createdAt descending.
- * Returns a new array; the input is not mutated.
- */
-function sortForDisplay(logs: GoalLog[]): GoalLog[] {
-  return [...logs].sort((a, b) => {
-    const byDay = dayKeyOf(b).localeCompare(dayKeyOf(a));
-    return byDay !== 0 ? byDay : b.createdAt - a.createdAt;
-  });
-}
-
-/**
  * Groups log entries by their log date (day).
  * Returns an array of groups sorted by date descending (most recent first).
  */
@@ -61,7 +44,7 @@ function groupLogsByDay(logs: GoalLog[]): { date: string; dateLabel: string; log
   const groupMap = new Map<string, GoalLog[]>();
 
   for (const log of logs) {
-    const dateKey = dayKeyOf(log);
+    const dateKey = dayKeyOf(log.logDate);
     const existing = groupMap.get(dateKey) ?? [];
     existing.push(log);
     groupMap.set(dateKey, existing);
@@ -121,12 +104,9 @@ export function GoalLogList({
   editingLogId = null,
   renderEditForm,
 }: GoalLogListProps) {
-  const visibleLogs = useMemo(() => {
-    const ordered = sortForDisplay(logs);
-    return maxEntries === undefined ? ordered : ordered.slice(0, maxEntries);
-  }, [logs, maxEntries]);
+  const shownLogs = useMemo(() => selectVisibleLogs(logs, maxEntries), [logs, maxEntries]);
 
-  const groupedLogs = useMemo(() => groupLogsByDay(visibleLogs), [visibleLogs]);
+  const groupedLogs = useMemo(() => groupLogsByDay(shownLogs), [shownLogs]);
 
   if (logs.length === 0) {
     return (

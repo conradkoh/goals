@@ -7,12 +7,12 @@
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { AlertCircle, ChevronDown, ChevronUp, History } from 'lucide-react';
-import { DateTime } from 'luxon';
 import type { RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GoalLogCreateForm, GoalLogEditForm } from './GoalLogCreateForm';
 import { GoalLogList } from './GoalLogList';
+import { isHiddenByCap, type OrderableLogEntry } from './goalLogOrdering';
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,39 +35,8 @@ export interface GoalLogSectionProps {
 
 const NO_LOGS: GoalLog[] = [];
 
-/** Local day key (YYYY-MM-DD) that GoalLogList groups an entry under. */
-function dayKeyOf(logDate: number): string {
-  return DateTime.fromMillis(logDate).toISODate() ?? 'unknown';
-}
-
-/**
- * Whether a new entry's day sorts below the 5th-largest display day key, i.e. the cap would
- * hide it. Callers only ask when the list is capped.
- */
-function isBelowFifthDisplayDay(entries: GoalLog[], logDate: number): boolean {
-  const fifthDayKey =
-    entries
-      .map((log) => dayKeyOf(log.logDate))
-      .sort()
-      .reverse()[RECENT_LOG_LIMIT - 1] ?? '';
-  return dayKeyOf(logDate) < fifthDayKey;
-}
-
-/**
- * Whether creating an entry should expand the capped list so the new entry is visible.
- * Full history and an already-expanded list never expand, and a list below the cap shows
- * every entry already.
- */
-function shouldExpandAfterCreate(
-  entries: GoalLog[],
-  logDate: number,
-  showFullHistory: boolean,
-  showAll: boolean
-): boolean {
-  if (showFullHistory || showAll) return false;
-  if (entries.length < RECENT_LOG_LIMIT) return false;
-  return isBelowFifthDisplayDay(entries, logDate);
-}
+/** Id of an entry that is not saved yet. It never matches a stored entry. */
+const UNSAVED_ENTRY_ID = 'unsaved';
 
 /** Props for GoalLogHeading. */
 interface GoalLogHeadingProps {
@@ -252,16 +221,26 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   const canCollapse = !showFullHistory && count > RECENT_LOG_LIMIT;
 
   /**
+   * Whether saving this entry would hide it under the cap, so the list must expand to show it.
+   * Full history and an already-expanded list never need to expand.
+   */
+  const wouldLeaveCappedView = useCallback(
+    (candidate: OrderableLogEntry) =>
+      !showFullHistory && !showAll && isHiddenByCap(entries, candidate, RECENT_LOG_LIMIT),
+    [entries, showAll, showFullHistory]
+  );
+
+  /**
    * Creates an entry, then expands the capped list when the new entry would be hidden.
-   * GoalLogList orders by day descending first, so the 5th visible entry's day is the
-   * 5th-largest day key among all entries (see `shouldExpandAfterCreate`).
+   * A new entry is the newest, so it wins ties on its day.
    */
   const handleCreateLog = useCallback(
     async (logDate: number, content: string) => {
       await createLog(logDate, content);
-      if (shouldExpandAfterCreate(entries, logDate, showFullHistory, showAll)) setShowAll(true);
+      const created = { _id: UNSAVED_ENTRY_ID, logDate, createdAt: Number.MAX_SAFE_INTEGER };
+      if (wouldLeaveCappedView(created)) setShowAll(true);
     },
-    [createLog, entries, showAll, showFullHistory]
+    [createLog, wouldLeaveCappedView]
   );
 
   /** Saves a checkbox toggle. Failures show the dismissible banner; success clears it. */
