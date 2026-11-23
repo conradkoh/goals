@@ -95,10 +95,10 @@ export function GoalLogTab({ goalId, onFormActiveChange, className }: GoalLogTab
   /**
    * Handles updating log content (e.g., from interactive checkboxes).
    */
+  // fallow-ignore-next-line code-duplication
   const handleContentChange = useCallback(
     async (logId: Id<'goalLogs'>, newContent: string) => {
       await updateLog(logId, { content: newContent });
-      // fallow-ignore-next-line code-duplication
     },
     [updateLog]
   );
