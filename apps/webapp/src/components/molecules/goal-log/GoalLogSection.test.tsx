@@ -519,7 +519,8 @@ describe('GoalLogSection', () => {
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
     const showFewer = screen.getByRole('button', { name: 'Show fewer' });
-    expect(showFewer).toBeDisabled();
+    expect(showFewer).toHaveAttribute('aria-disabled', 'true');
+    expect(showFewer).toHaveAttribute('title', 'Save or cancel the open edit first');
     await user.click(showFewer);
 
     expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
@@ -552,7 +553,10 @@ describe('GoalLogSection', () => {
 
     expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Finish editing to add entries' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Show fewer' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
     expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
 
     // The edited entry is deleted by a live update.
@@ -587,10 +591,15 @@ describe('GoalLogSection', () => {
 
     await user.click(screen.getByText('log-2'));
     const otherEdit = screen.getByRole('button', { name: 'Edit' });
-    expect(otherEdit).toBeDisabled();
+    expect(otherEdit).toHaveAttribute('aria-disabled', 'true');
     expect(otherEdit).toHaveAttribute('title', 'Save or cancel the open edit first');
+    // Stays focusable while unavailable, so a keyboard user can reach the reason.
+    otherEdit.focus();
+    expect(otherEdit).toHaveFocus();
     await user.click(otherEdit);
 
+    // A click on the disabled Edit must not collapse the row, so the same Edit is still shown.
+    expect(otherEdit).toBeInTheDocument();
     expect(screen.getByLabelText('Content')).toHaveValue('log-3 draft');
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
   });
@@ -604,7 +613,7 @@ describe('GoalLogSection', () => {
     await user.type(screen.getByLabelText('Content'), 'draft');
     await user.click(screen.getByText('log-3'));
 
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Edit' })).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByLabelText('Content')).toHaveValue('draft');
     expect(screen.queryByText('Edit Log Entry')).not.toBeInTheDocument();
   });
@@ -622,7 +631,14 @@ describe('GoalLogSection', () => {
     await user.click(screen.getByText('log-3'));
     await user.click(screen.getByRole('button', { name: 'Edit' }));
 
-    expect(screen.getByRole('button', { name: 'Full history' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Full history' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Full history' })).toHaveAttribute(
+      'title',
+      'Save or cancel the open edit first'
+    );
     expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
   });
 
@@ -710,6 +726,26 @@ describe('GoalLogSection', () => {
       expect(screen.getByRole('heading', { name: /^Log/ })).toHaveFocus();
     });
     expect(document.activeElement).not.toBe(document.body);
+  });
+
+  it('returns focus to the Log heading after an edit closes in Full history', async () => {
+    const user = userEvent.setup();
+    setLogs({
+      logs: makeLogs([1, 2, 3]),
+      rootGoalId: 'goals:root' as Id<'goals'>,
+      hasCarryOverHistory: true,
+      fullLogs: makeLogs([1, 2, 3, 4]),
+    });
+    render(<GoalLogSection goalId={'goals:test' as Id<'goals'>} />);
+
+    await user.click(screen.getByRole('button', { name: 'Full history' }));
+    await user.click(screen.getByText('log-4'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /^Log/ })).toHaveFocus();
+    });
   });
 
   it("keeps an open edit's draft when a live update moves its entry to another day", async () => {

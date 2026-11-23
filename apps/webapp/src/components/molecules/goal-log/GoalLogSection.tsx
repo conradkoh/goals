@@ -106,11 +106,15 @@ function GoalLogHeading({
           size="sm"
           className={cn(
             'h-7 shrink-0 gap-1.5 px-2 text-xs',
-            toggleDisabled && 'text-muted-foreground/50 cursor-not-allowed'
+            toggleDisabled &&
+              'text-muted-foreground/50 cursor-not-allowed opacity-50 hover:bg-transparent hover:text-muted-foreground/50'
           )}
-          onClick={onToggleFullHistory}
-          disabled={toggleDisabled}
+          aria-disabled={toggleDisabled || undefined}
           title={toggleDisabledReason}
+          onClick={() => {
+            // Stays focusable while unavailable, so the guard keeps it inert.
+            if (!toggleDisabled) onToggleFullHistory();
+          }}
         >
           <History className="h-3.5 w-3.5" />
           {showFullHistory ? 'Current only' : 'Full history'}
@@ -178,12 +182,15 @@ function ShowAllFooter({ count, expanded, onToggle, collapseDisabledReason }: Sh
         size="sm"
         className={cn(
           'h-7 shrink-0 gap-1.5 px-2 text-xs',
-          collapseDisabled && 'text-muted-foreground/50 cursor-not-allowed'
+          collapseDisabled &&
+            'text-muted-foreground/50 cursor-not-allowed opacity-50 hover:bg-transparent hover:text-muted-foreground/50'
         )}
-        onClick={onToggle}
-        disabled={collapseDisabled}
+        aria-disabled={collapseDisabled || undefined}
         title={collapseDisabled ? collapseDisabledReason : undefined}
         aria-expanded={expanded}
+        onClick={() => {
+          if (!collapseDisabled) onToggle();
+        }}
       >
         {expanded ? (
           <>
@@ -202,10 +209,10 @@ function ShowAllFooter({ count, expanded, onToggle, collapseDisabledReason }: Sh
 }
 
 /**
- * Returns focus after the add form collapses: to the trigger, or to the Log heading
+ * Returns focus after the add or edit form closes: to the add trigger, or to the Log heading
  * when the trigger is disabled (a disabled control cannot take focus).
  */
-function focusAfterCreateCollapse(
+function focusAfterFormClose(
   trigger: HTMLButtonElement | null,
   heading: HTMLHeadingElement | null
 ): void {
@@ -402,14 +409,15 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   useEffect(() => {
     if (isCreateFormExpanded || !returnFocusToTriggerRef.current) return;
     returnFocusToTriggerRef.current = false;
-    focusAfterCreateCollapse(addTriggerRef.current, headingRef.current);
+    focusAfterFormClose(addTriggerRef.current, headingRef.current);
   }, [isCreateFormExpanded]);
 
-  // After an edit closes, the add trigger is enabled again: return focus to it.
+  // After an edit closes, return focus to the add trigger, or to the Log heading when
+  // Full history has disabled it.
   useEffect(() => {
     if (editingLog === null && returnFocusAfterEditRef.current) {
       returnFocusAfterEditRef.current = false;
-      addTriggerRef.current?.focus();
+      focusAfterFormClose(addTriggerRef.current, headingRef.current);
     }
   }, [editingLog]);
 

@@ -158,13 +158,15 @@ export function GoalLogEntry({
                   className={cn(
                     'h-7 px-2',
                     editDisabledReason !== undefined
-                      ? 'text-muted-foreground/50 cursor-not-allowed'
+                      ? 'text-muted-foreground/50 cursor-not-allowed opacity-50 hover:bg-transparent hover:text-muted-foreground/50'
                       : 'text-muted-foreground hover:text-foreground'
                   )}
-                  disabled={editDisabledReason !== undefined}
+                  aria-disabled={editDisabledReason !== undefined || undefined}
                   title={editDisabledReason}
                   onClick={(e) => {
+                    // Always stop here: the row beneath toggles its action row on click.
                     e.stopPropagation();
+                    if (editDisabledReason !== undefined) return;
                     onEdit(log);
                   }}
                 >
