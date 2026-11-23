@@ -4,6 +4,10 @@
  * and the carry-over Full history view. Replaces the former tabbed log layout.
  */
 
+// The root config used by the pre-commit hook omits this rule; enable it here so the
+// named suppression below is not removed as unused by `eslint --fix`.
+/* eslint react-hooks/set-state-in-effect: "error" */
+
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { AlertCircle, ChevronDown, ChevronUp, History } from 'lucide-react';
@@ -413,6 +417,7 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   useEffect(() => {
     if (!editedEntryMissing) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- A live deletion is only observable after a render, and the banner must be raised once.
     setListError(DELETED_EDIT_MESSAGE);
     closeEdit();
   }, [editedEntryMissing, closeEdit]);
