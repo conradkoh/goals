@@ -414,47 +414,69 @@ export function GoalLogCreateForm({
 }
 
 /**
+ * Editable fields of an open edit. GoalLogSection owns it so it survives a remount.
+ */
+export interface GoalLogEditDraft {
+  logDate: Date;
+  logTime: string;
+  content: string;
+}
+
+/**
+ * The draft an edit starts from: the entry's stored values.
+ * @param log - The entry being edited
+ * @returns The draft fields for that entry
+ */
+export function editDraftFromLog(log: GoalLog): GoalLogEditDraft {
+  const logDate = new Date(log.logDate);
+  return { logDate, logTime: getTimeFromDate(logDate), content: log.content };
+}
+
+/**
  * Props for the GoalLogEditForm component.
  */
 export interface GoalLogEditFormProps {
-  /** The log entry being edited */
-  log: GoalLog;
-  /** Callback when the log entry is saved */
+  /** The draft fields. The parent owns them. */
+  draft: GoalLogEditDraft;
+  /** Applies a partial change to the draft. */
+  onDraftChange: (patch: Partial<GoalLogEditDraft>) => void;
+  /** Callback when the entry is saved. Receives the combined timestamp and the cleaned content. */
   onSave: (logDate: number, content: string) => Promise<void>;
-  /** Callback when editing is cancelled */
+  /** Callback when editing is cancelled. */
   onCancel: () => void;
-  /** Whether the form is currently submitting */
+  /** Whether the form is currently submitting. */
   isSubmitting?: boolean;
-  /** Additional CSS classes */
+  /** Additional CSS classes. */
   className?: string;
 }
 
 /**
  * Form component for editing existing goal log entries.
  * Supports keyboard shortcuts: Cmd/Ctrl+Enter to save, Escape to cancel.
+ * The draft is owned by the parent, so remounting this form keeps it.
  *
  * @example
  * ```tsx
  * <GoalLogEditForm
- *   log={selectedLog}
+ *   draft={draft}
+ *   onDraftChange={updateEditDraft}
  *   onSave={async (logDate, content) => {
- *     await updateLog(selectedLog._id, { logDate, content });
+ *     await updateLog(editingLog._id, { logDate, content });
  *   }}
- *   onCancel={() => setEditingLog(null)}
+ *   onCancel={closeEdit}
  *   isSubmitting={isUpdating}
  * />
  * ```
  */
 export function GoalLogEditForm({
-  log,
+  draft,
+  onDraftChange,
   onSave,
   onCancel,
   isSubmitting = false,
   className,
 }: GoalLogEditFormProps) {
-  const [logDate, setLogDate] = useState<Date>(new Date(log.logDate));
-  const [logTime, setLogTime] = useState<string>(getTimeFromDate(new Date(log.logDate)));
-  const [content, setContent] = useState(log.content);
+  const { logDate, logTime, content } = draft;
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(async () => {
@@ -486,9 +508,9 @@ export function GoalLogEditForm({
         logTime={logTime}
         content={content}
         error={error}
-        onLogDateChange={setLogDate}
-        onLogTimeChange={setLogTime}
-        onContentChange={setContent}
+        onLogDateChange={(date) => onDraftChange({ logDate: date })}
+        onLogTimeChange={(time) => onDraftChange({ logTime: time })}
+        onContentChange={(next) => onDraftChange({ content: next })}
       />
 
       <LogFormActions

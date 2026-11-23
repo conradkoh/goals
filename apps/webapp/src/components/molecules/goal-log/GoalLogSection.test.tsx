@@ -711,4 +711,40 @@ describe('GoalLogSection', () => {
     });
     expect(document.activeElement).not.toBe(document.body);
   });
+
+  it("keeps an open edit's draft when a live update moves its entry to another day", async () => {
+    const user = userEvent.setup();
+    const onFormActiveChange = vi.fn();
+    setLogs({ logs: makeLogs([1, 2, 3, 4, 5, 6, 7]) });
+    const { rerender } = render(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Show all (7)' }));
+    await user.click(screen.getByText('log-1'));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByLabelText('Content'));
+    await user.type(screen.getByLabelText('Content'), 'Reworded');
+
+    // A live update moves the entry being edited to another day, remounting its slot.
+    const movedLogs = makeLogs([1, 2, 3, 4, 5, 6, 7]).map((log) =>
+      log._id === ('log1' as Id<'goalLogs'>)
+        ? { ...log, logDate: DateTime.local(2026, 3, 8, 9).toMillis() }
+        : log
+    );
+    setLogs({ logs: movedLogs });
+    rerender(
+      <GoalLogSection
+        goalId={'goals:test' as Id<'goals'>}
+        onFormActiveChange={onFormActiveChange}
+      />
+    );
+
+    expect(screen.getByText('Edit Log Entry')).toBeInTheDocument();
+    expect(screen.getByLabelText('Content')).toHaveValue('Reworded');
+    expect(onFormActiveChange).toHaveBeenLastCalledWith(true);
+  });
 });

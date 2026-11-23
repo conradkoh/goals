@@ -10,7 +10,12 @@ import { AlertCircle, ChevronDown, ChevronUp, History } from 'lucide-react';
 import type { RefObject } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { GoalLogCreateForm, GoalLogEditForm } from './GoalLogCreateForm';
+import {
+  editDraftFromLog,
+  type GoalLogEditDraft,
+  GoalLogCreateForm,
+  GoalLogEditForm,
+} from './GoalLogCreateForm';
 import { GoalLogList } from './GoalLogList';
 import { isHiddenByCap, type OrderableLogEntry } from './goalLogOrdering';
 
@@ -223,7 +228,9 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
     deleteLog,
   } = useGoalLogs(sessionId, goalId);
 
-  const [editingLog, setEditingLog] = useState<GoalLog | null>(null);
+  // The open edit: the entry as it was when editing began, and the draft being typed.
+  const [editing, setEditing] = useState<{ log: GoalLog; draft: GoalLogEditDraft } | null>(null);
+  const editingLog = editing?.log ?? null;
   const [showFullHistory, setShowFullHistory] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [isCreateFormExpanded, setIsCreateFormExpanded] = useState(false);
@@ -323,14 +330,21 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   /** Closes the edit form. Focus returns to the add trigger once it is enabled again. */
   const closeEdit = useCallback(() => {
     returnFocusAfterEditRef.current = true;
-    setEditingLog(null);
+    setEditing(null);
+  }, []);
+
+  /** Applies a change to the open edit's draft. Ignored when no edit is open. */
+  const updateEditDraft = useCallback((patch: Partial<GoalLogEditDraft>) => {
+    setEditing((current) =>
+      current ? { ...current, draft: { ...current.draft, ...patch } } : current
+    );
   }, []);
 
   /** Opens the edit form for an entry. Refused while another edit or the add form is open. */
   const handleStartEdit = useCallback(
     (log: GoalLog) => {
       if (editDisabledReason !== undefined) return;
-      setEditingLog(log);
+      setEditing({ log, draft: editDraftFromLog(log) });
     },
     [editDisabledReason]
   );
@@ -398,7 +412,7 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
   // A live update deleted the entry being edited. It cannot be saved, so close the edit and say why.
   useEffect(() => {
     if (!editedEntryMissing) return;
-    // eslint-disable-next-line -- A live deletion is only observable after a render, and the banner must be raised once.
+
     setListError(DELETED_EDIT_MESSAGE);
     closeEdit();
   }, [editedEntryMissing, closeEdit]);
@@ -466,14 +480,17 @@ export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLo
             maxEntries={maxEntries}
             editingLogId={editingLog?._id ?? null}
             editDisabledReason={editDisabledReason}
-            renderEditForm={(log) => (
-              <GoalLogEditForm
-                log={log}
-                onSave={handleSaveEdit}
-                onCancel={closeEdit}
-                isSubmitting={isUpdating}
-              />
-            )}
+            renderEditForm={() =>
+              editing && (
+                <GoalLogEditForm
+                  draft={editing.draft}
+                  onDraftChange={updateEditDraft}
+                  onSave={handleSaveEdit}
+                  onCancel={closeEdit}
+                  isSubmitting={isUpdating}
+                />
+              )
+            }
             onContentChange={handleContentChange}
             onEdit={handleStartEdit}
             onDelete={handleDelete}
