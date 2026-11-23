@@ -1,7 +1,7 @@
 /**
  * @file GoalLogSection: the Log section of the single-scroll goal details body.
  * Shows the most recent log entries with an in-place add control, a Show all toggle,
- * and the carry-over Full history view. Replaces the GoalLogTab layout.
+ * and the carry-over Full history view. Replaces the former tabbed log layout.
  */
 
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
@@ -21,9 +21,7 @@ import { cn } from '@/lib/utils';
 import { useSession } from '@/modules/auth/useSession';
 
 /** Number of most recent entries shown before "Show all". */
-// Temporary: no surface imports this export until P5 of the goal details rebuild; remove in P5.
-// fallow-ignore-next-line unused-export
-export const RECENT_LOG_LIMIT = 5;
+const RECENT_LOG_LIMIT = 5;
 
 /** Props for GoalLogSection. */
 export interface GoalLogSectionProps {
@@ -198,9 +196,8 @@ function ShowAllFooter({ count, showAll, onToggle }: ShowAllFooterProps) {
  * The Log section: heading with count, Full history toggle, add control, optional
  * checkbox error banner, list area (skeleton while loading), and Show all / Show fewer footer.
  */
-// Temporary: no surface renders this section until P5 of the goal details rebuild; remove in P5.
 // Complexity is intentional: one fixed single-scroll layout whose branches are presentational states the design pins.
-// fallow-ignore-next-line complexity unused-export
+// fallow-ignore-next-line complexity
 export function GoalLogSection({ goalId, onFormActiveChange, className }: GoalLogSectionProps) {
   const { sessionId } = useSession();
   const {
