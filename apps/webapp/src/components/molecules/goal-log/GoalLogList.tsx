@@ -7,7 +7,7 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalLog } from '@workspace/backend/convex/goalLogs';
 import { CalendarIcon } from 'lucide-react';
 import { DateTime } from 'luxon';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import { GoalLogEntry } from './GoalLogEntry';
 
@@ -27,6 +27,30 @@ export interface GoalLogListProps {
   onDelete?: (logId: Id<'goalLogs'>) => void;
   /** Additional CSS classes */
   className?: string;
+  /** Show at most this many entries. Applied after display ordering. Omit to show all. */
+  maxEntries?: number;
+  /** Id of the entry being edited. Its slot renders `renderEditForm` instead of the entry. */
+  editingLogId?: Id<'goalLogs'> | null;
+  /** Renders the edit form inside the editing entry's slot */
+  renderEditForm?: (log: GoalLog) => ReactNode;
+}
+
+/**
+ * Returns the local ISO date key (YYYY-MM-DD) that a log entry is grouped under.
+ */
+function dayKeyOf(log: GoalLog): string {
+  return DateTime.fromMillis(log.logDate).toISODate() ?? 'unknown';
+}
+
+/**
+ * Orders entries the way the list displays them: day descending, then createdAt descending.
+ * Returns a new array; the input is not mutated.
+ */
+function sortForDisplay(logs: GoalLog[]): GoalLog[] {
+  return [...logs].sort((a, b) => {
+    const byDay = dayKeyOf(b).localeCompare(dayKeyOf(a));
+    return byDay !== 0 ? byDay : b.createdAt - a.createdAt;
+  });
 }
 
 /**
@@ -37,7 +61,7 @@ function groupLogsByDay(logs: GoalLog[]): { date: string; dateLabel: string; log
   const groupMap = new Map<string, GoalLog[]>();
 
   for (const log of logs) {
-    const dateKey = DateTime.fromMillis(log.logDate).toISODate() ?? 'unknown';
+    const dateKey = dayKeyOf(log);
     const existing = groupMap.get(dateKey) ?? [];
     existing.push(log);
     groupMap.set(dateKey, existing);
@@ -93,8 +117,16 @@ export function GoalLogList({
   onEdit,
   onDelete,
   className,
+  maxEntries,
+  editingLogId = null,
+  renderEditForm,
 }: GoalLogListProps) {
-  const groupedLogs = useMemo(() => groupLogsByDay(logs), [logs]);
+  const visibleLogs = useMemo(() => {
+    const ordered = sortForDisplay(logs);
+    return maxEntries === undefined ? ordered : ordered.slice(0, maxEntries);
+  }, [logs, maxEntries]);
+
+  const groupedLogs = useMemo(() => groupLogsByDay(visibleLogs), [visibleLogs]);
 
   if (logs.length === 0) {
     return (
@@ -124,16 +156,20 @@ export function GoalLogList({
 
           {/* Log entries for this day */}
           <div className="space-y-1.5 pl-6">
-            {group.logs.map((log) => (
-              <GoalLogEntry
-                key={log._id}
-                log={log}
-                showDate={false}
-                onContentChange={onContentChange}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
+            {group.logs.map((log) =>
+              editingLogId === log._id && renderEditForm ? (
+                <div key={log._id}>{renderEditForm(log)}</div>
+              ) : (
+                <GoalLogEntry
+                  key={log._id}
+                  log={log}
+                  showDate={false}
+                  onContentChange={onContentChange}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              )
+            )}
           </div>
         </div>
       ))}
