@@ -29,8 +29,6 @@ export interface GoalDetailsBodyProps {
  * Single-scroll goal details body: Details, optional child goals, then the Log section.
  * Shared by all goal details surfaces so their layout cannot drift.
  */
-// Temporary: no surface renders this composition until P4 of the goal details rebuild; remove in P4.
-// fallow-ignore-next-line unused-export
 export function GoalDetailsBody({
   goalId,
   title,

@@ -17,7 +17,7 @@ import {
   GoalBreadcrumb,
   GoalCompletionDate,
   GoalCreatedDate,
-  GoalDetailsSection,
+  GoalDetailsBody,
   GoalDisplayProvider,
   GoalDomainDisplay,
   GoalDueDateDisplay,
@@ -29,8 +29,6 @@ import {
 } from '../view/components';
 
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
@@ -314,23 +312,13 @@ function AdhocGoalPopoverContentInner({
           <GoalDueDateDisplay dueDate={goal.adhoc.dueDate} isComplete={isComplete} />
         )}
 
-        {/* Tabs for Details and Log */}
-        {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
-        <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="log">Log</TabsTrigger>
-          </TabsList>
-
-          {/* overflow-y-auto allows Details content to scroll if it overflows */}
-          <TabsContent value="details" className="mt-4 overflow-y-auto">
-            <GoalDetailsSection
-              title={goal.title}
-              details={goal.details ?? ''}
-              onDetailsChange={onDetailsChange}
-              showSeparator={false}
-            />
-
+        <GoalDetailsBody
+          goalId={goal._id}
+          title={goal.title}
+          details={goal.details ?? ''}
+          onDetailsChange={onDetailsChange}
+          onFormActiveChange={handleNestedActiveChange}
+          childrenSection={
             <AdhocSubGoalsList
               subGoals={subGoals}
               currentDepth={0}
@@ -339,14 +327,10 @@ function AdhocGoalPopoverContentInner({
               onDelete={onChildDelete}
               onCreateChild={onCreateChild}
               parentId={goal._id}
+              showSeparator={false}
             />
-          </TabsContent>
-
-          {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
-          <TabsContent value="log" className="mt-4 flex flex-col">
-            <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
-          </TabsContent>
-        </Tabs>
+          }
+        />
       </FireGoalsProvider>
 
       <GoalEditModal isOpen={isEditing} goal={editingGoal} onSave={onSave} onClose={stopEditing} />

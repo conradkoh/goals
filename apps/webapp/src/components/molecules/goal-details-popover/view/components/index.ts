@@ -14,11 +14,7 @@ export {
   type GoalDetailsChildrenListProps,
 } from './GoalDetailsChildrenList';
 export { GoalDetailsContent, type GoalDetailsContentProps } from './GoalDetailsContent';
-// Temporary: no surface imports GoalDetailsBody until P4 of the goal details rebuild; remove in P4.
-// fallow-ignore-next-line unused-export
 export { GoalDetailsBody } from './GoalDetailsBody';
-// fallow-ignore-next-line unused-type
-export type { GoalDetailsBodyProps } from './GoalDetailsBody';
 export { GoalDetailsSection, type GoalDetailsSectionProps } from './GoalDetailsSection';
 export {
   GoalDisplayProvider,

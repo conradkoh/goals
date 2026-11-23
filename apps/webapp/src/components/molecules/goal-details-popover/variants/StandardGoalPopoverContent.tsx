@@ -16,8 +16,8 @@ import {
   GoalChildrenSection,
   GoalCompletionDate,
   GoalCreatedDate,
+  GoalDetailsBody,
   GoalDetailsChildrenList,
-  GoalDetailsSection,
   GoalDisplayProvider,
   GoalDueDateDisplay,
   GoalEditModal,
@@ -31,8 +31,6 @@ import {
 import { CreateGoalInput } from '@/components/atoms/CreateGoalInput';
 import { GoalStarPin, GoalStarPinContainer } from '@/components/atoms/GoalStarPin';
 import { GoalStatusIcons } from '@/components/atoms/GoalStatusIcons';
-import { GoalLogTab } from '@/components/molecules/goal-log';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGoalContext } from '@/contexts/GoalContext';
 import { FireGoalsProvider } from '@/contexts/GoalStatusContext';
 import { GoalType } from '@/domain/goal-actions';
@@ -289,25 +287,16 @@ function StandardGoalPopoverContentInner({
           className="mt-3 space-y-2"
         />
 
-        {/* Tabs for Details and Log */}
-        {/* flex-1 min-h-0 ensures Tabs takes remaining height and can shrink for Log tab scrolling */}
-        <Tabs defaultValue="details" className="mt-4 flex-1 min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="log">Log</TabsTrigger>
-          </TabsList>
-
-          {/* overflow-y-auto allows Details content to scroll if it overflows */}
-          <TabsContent value="details" className="mt-4 overflow-y-auto">
-            <GoalDetailsSection
-              title={goal.title}
-              details={goal.details ?? ''}
-              onDetailsChange={onDetailsChange}
-              showSeparator={false}
-            />
-
+        <GoalDetailsBody
+          goalId={goal._id}
+          title={goal.title}
+          details={goal.details ?? ''}
+          onDetailsChange={onDetailsChange}
+          onFormActiveChange={handleNestedActiveChange}
+          childrenSection={
             <GoalChildrenSection
               title="Weekly Goals"
+              showSeparator={false}
               childrenList={
                 hasChildren ? (
                   <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
@@ -322,15 +311,9 @@ function StandardGoalPopoverContentInner({
                   onEscape={() => setNewWeeklyGoalTitle('')}
                 />
               }
-              showSeparator={!!goal.details}
             />
-          </TabsContent>
-
-          {/* flex flex-col passes height constraint to GoalLogTab for internal scrolling */}
-          <TabsContent value="log" className="mt-4 flex flex-col">
-            <GoalLogTab goalId={goal._id} onFormActiveChange={handleNestedActiveChange} />
-          </TabsContent>
-        </Tabs>
+          }
+        />
       </FireGoalsProvider>
 
       <GoalEditModal isOpen={isEditing} goal={editingGoal} onSave={onSave} onClose={stopEditing} />
