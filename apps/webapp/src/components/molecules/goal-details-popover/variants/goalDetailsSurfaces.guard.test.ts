@@ -24,17 +24,18 @@ const SURFACES = [
 const IMPORTS_GOAL_DETAILS_BODY =
   /import\s*\{[^}]*\bGoalDetailsBody\b[^}]*\}\s*from\s*['"][^'"]+['"]/;
 const IMPORTS_TABS = /from\s*['"]@\/components\/ui\/tabs['"]/;
-const MENTIONS_GOAL_LOG_TAB = /\bGoalLogTab\b/;
+// Matches an import of any module under goal-log/ (surfaces must mount GoalDetailsBody only).
+const IMPORTS_GOAL_LOG = /from\s*['"][^'"]*\/goal-log(?:\/[^'"]*)?['"]/;
 
 describe('goal details surfaces: single-scroll layout guard', () => {
   it.each(SURFACES)('%s imports the shared GoalDetailsBody', (rel) => {
     expect(read(rel)).toMatch(IMPORTS_GOAL_DETAILS_BODY);
   });
 
-  it.each(SURFACES)('%s has no tab strip and no GoalLogTab reference', (rel) => {
+  it.each(SURFACES)('%s has no tab strip and no direct goal-log import', (rel) => {
     const source = read(rel);
     expect(source).not.toMatch(IMPORTS_TABS);
-    expect(source).not.toMatch(MENTIONS_GOAL_LOG_TAB);
+    expect(source).not.toMatch(IMPORTS_GOAL_LOG);
   });
 });
 
