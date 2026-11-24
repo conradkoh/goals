@@ -47,8 +47,8 @@ const COLLAPSIBLE_CHILD_LIST_SURFACES = [
   '../../focus/GoalQuickViewModal.tsx',
 ] as const;
 
-// Each opening <GoalDetailsChildrenList ...> tag. Props never contain '>', so [^>]* is safe.
-const CHILDREN_LIST_TAG = /<GoalDetailsChildrenList\b[^>]*>/g;
+// Each opening <GoalDetailsChildrenList ...> tag, through its self-closing "/>". Props may contain "=>".
+const CHILDREN_LIST_TAG = /<GoalDetailsChildrenList\b[\s\S]*?\/>/g;
 
 describe('goal details surfaces: collapsible child lists', () => {
   it.each(COLLAPSIBLE_CHILD_LIST_SURFACES)(
@@ -78,5 +78,39 @@ describe('GoalLogSection: no nested scroll', () => {
     expect(source).not.toMatch(/\boverflow-/);
     expect(source).not.toMatch(/\bmax-h-/);
     expect(source).not.toMatch(/\bh-\[/);
+  });
+});
+
+// Each opening <FixedSizeDialog ...> tag. Its props contain no ">".
+const FIXED_SIZE_DIALOG_TAG = /<FixedSizeDialog\b[^>]*>/g;
+
+// Desktop goal-details dialogs must carry the taller size.
+const GOAL_DIALOG_SITES = [
+  '../view/GoalDetailsPopoverView.tsx',
+  '../../focus/GoalQuickViewModal.tsx',
+  '../../focus/AdhocGoalQuickViewModal.tsx',
+] as const;
+
+// Other FixedSizeDialog consumers keep the default size.
+const NON_GOAL_DIALOG_SITES = [
+  '../../DomainPopover.tsx',
+  '../../focus/InitiativeDetailsDialog.tsx',
+] as const;
+
+describe('goal details dialogs: desktop height', () => {
+  it.each(GOAL_DIALOG_SITES)('%s gives every FixedSizeDialog the goal-details size', (rel) => {
+    const tags = read(rel).match(FIXED_SIZE_DIALOG_TAG) ?? [];
+    expect(tags.length).toBeGreaterThan(0);
+    for (const tag of tags) {
+      expect(tag).toContain('GOAL_DETAILS_DIALOG_CLASSNAME');
+    }
+  });
+
+  it.each(NON_GOAL_DIALOG_SITES)('%s keeps the default FixedSizeDialog size', (rel) => {
+    const tags = read(rel).match(FIXED_SIZE_DIALOG_TAG) ?? [];
+    expect(tags.length).toBeGreaterThan(0);
+    for (const tag of tags) {
+      expect(tag).not.toContain('GOAL_DETAILS_DIALOG_CLASSNAME');
+    }
   });
 });

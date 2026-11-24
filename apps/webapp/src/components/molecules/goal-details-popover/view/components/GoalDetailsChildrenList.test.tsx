@@ -10,12 +10,12 @@ vi.mock('@/hooks/useWeek', () => ({
   useWeek: () => ({ updateQuarterlyGoalTitle: vi.fn(), deleteGoalOptimistic: vi.fn() }),
 }));
 
-// Rows read their goal from GoalContext; the stub renders only the title.
+// Rows read their goal from GoalContext; each stub renders a distinct marker + title.
 vi.mock('@/components/molecules/day-of-week/components/WeeklyGoalTaskItem', async () => {
   const { useGoalContext } = await import('@/contexts/GoalContext');
   return {
     WeeklyGoalTaskItem: function WeeklyGoalTaskItemStub() {
-      return <div>{useGoalContext().goal.title}</div>;
+      return <div>{`weekly: ${useGoalContext().goal.title}`}</div>;
     },
   };
 });
@@ -23,7 +23,7 @@ vi.mock('@/components/organisms/DailyGoalTaskItem', async () => {
   const { useGoalContext } = await import('@/contexts/GoalContext');
   return {
     DailyGoalTaskItem: function DailyGoalTaskItemStub() {
-      return <div>{useGoalContext().goal.title}</div>;
+      return <div>{`daily: ${useGoalContext().goal.title}`}</div>;
     },
   };
 });
@@ -61,7 +61,7 @@ describe('GoalDetailsChildrenList', () => {
 
     expect(screen.getByRole('heading', { name: 'Weekly Goals' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Weekly Goals/ })).toBeNull();
-    expect(screen.getByText('Week one')).toBeVisible();
+    expect(screen.getByText('weekly: Week one')).toBeVisible();
   });
 
   it('collapses behind a count summary when collapsible', async () => {
@@ -78,11 +78,11 @@ describe('GoalDetailsChildrenList', () => {
     const trigger = screen.getByRole('button', { name: /Weekly Goals/ });
     expect(trigger).toHaveTextContent('2 weekly goals');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByText('Week one')).not.toBeVisible();
+    expect(screen.getByText('weekly: Week one')).not.toBeVisible();
 
     await user.click(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByText('Week one')).toBeVisible();
+    expect(screen.getByText('weekly: Week one')).toBeVisible();
   });
 
   it('adds the grandchild count for a quarterly parent', () => {
@@ -129,6 +129,32 @@ describe('GoalDetailsChildrenList', () => {
     expect(trigger).not.toHaveTextContent('1 weekly goals');
   });
 
+  it('renders a weekly row for quarterly children and a daily row for each grandchild', () => {
+    const parent = asParent(
+      makeGoal('goals:q', 'Quarter', 0, [
+        makeGoal('goals:w1', 'Week one', 1, [makeGoal('goals:d1', 'Day 1', 2)]),
+      ])
+    );
+    render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" />);
+
+    expect(screen.getByText('weekly: Week one')).toBeVisible();
+    expect(screen.getByText('daily: Day 1')).toBeVisible();
+    expect(screen.queryByText('daily: Week one')).toBeNull();
+  });
+
+  it('renders daily rows for weekly children', () => {
+    const parent = asParent(
+      makeGoal('goals:w', 'Week', 1, [
+        makeGoal('goals:d1', 'Day 1', 2),
+        makeGoal('goals:d2', 'Day 2', 2),
+      ])
+    );
+    render(<GoalDetailsChildrenList parentGoal={parent} title="Daily Goals" />);
+
+    expect(screen.getByText('daily: Day 1')).toBeVisible();
+    expect(screen.queryByText(/^weekly: /)).toBeNull();
+  });
+
   it('renders quarterly children that omit `children` without throwing (collapsible)', async () => {
     const user = userEvent.setup();
     const parent = asParent({
@@ -141,8 +167,8 @@ describe('GoalDetailsChildrenList', () => {
     render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" collapsible />);
 
     await user.click(screen.getByRole('button', { name: /Weekly Goals/ }));
-    expect(screen.getByText('Week one')).toBeVisible();
-    expect(screen.getByText('Week two')).toBeVisible();
+    expect(screen.getByText('weekly: Week one')).toBeVisible();
+    expect(screen.getByText('weekly: Week two')).toBeVisible();
   });
 
   it('renders quarterly children that omit `children` without throwing (not collapsible)', () => {
@@ -152,7 +178,7 @@ describe('GoalDetailsChildrenList', () => {
     });
     render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" />);
 
-    expect(screen.getByText('Week one')).toBeVisible();
+    expect(screen.getByText('weekly: Week one')).toBeVisible();
   });
 
   it('renders nothing when there are no children, even when collapsible', () => {
