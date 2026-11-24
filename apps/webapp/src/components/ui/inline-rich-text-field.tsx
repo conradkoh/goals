@@ -84,6 +84,29 @@ export function InlineRichTextEditorChrome({
   editorClassName,
   autoFocus = true,
 }: InlineRichTextEditorChromeProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  // True from pointerdown inside the chrome until any pointerup/pointercancel on the document.
+  const pointerHeldRef = useRef(false);
+  // Set when focus left the chrome while the pointer was held; resolved on release.
+  const deferredSaveRef = useRef(false);
+
+  useEffect(() => {
+    const handleRelease = () => {
+      if (!pointerHeldRef.current) return;
+      pointerHeldRef.current = false;
+      if (!deferredSaveRef.current) return;
+      deferredSaveRef.current = false;
+      const wrapper = wrapperRef.current;
+      if (wrapper && !wrapper.contains(document.activeElement)) onSave();
+    };
+    document.addEventListener('pointerup', handleRelease);
+    document.addEventListener('pointercancel', handleRelease);
+    return () => {
+      document.removeEventListener('pointerup', handleRelease);
+      document.removeEventListener('pointercancel', handleRelease);
+    };
+  }, [onSave]);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -97,11 +120,22 @@ export function InlineRichTextEditorChrome({
 
   return (
     <div
+      ref={wrapperRef}
       className={cn('min-w-0 rounded-md pt-4 pb-4 px-3 bg-muted', className)}
+      onPointerDown={() => {
+        pointerHeldRef.current = true;
+      }}
+      onMouseDown={(e) => {
+        // A press on the gray padding is not a text target: keep focus in the editor.
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-          onSave();
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        if (pointerHeldRef.current) {
+          deferredSaveRef.current = true;
+          return;
         }
+        onSave();
       }}
       onKeyDown={handleKeyDown}
     >
