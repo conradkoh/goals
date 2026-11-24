@@ -86,6 +86,7 @@ const FIXED_SIZE_DIALOG_TAG = /<FixedSizeDialog\b[^>]*>/g;
 
 // Desktop goal-details dialogs must carry the taller size.
 const GOAL_DIALOG_SITES = [
+  './StandaloneGoalModal.tsx',
   '../view/GoalDetailsPopoverView.tsx',
   '../../focus/GoalQuickViewModal.tsx',
   '../../focus/AdhocGoalQuickViewModal.tsx',
