@@ -21,13 +21,15 @@ interface GoalChildrenDisclosureProps {
 export function GoalChildrenDisclosure({ title, summary, children }: GoalChildrenDisclosureProps) {
   return (
     <Collapsible data-slot="goal-children-disclosure">
-      <CollapsibleTrigger className="group/children-trigger flex w-full items-center gap-2 rounded-md bg-muted px-4 py-1.5 text-left text-sm font-semibold text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]/children-trigger:rotate-90" />
-        <span className="min-w-0 truncate">{title}</span>
-        <span className="ml-auto min-w-0 truncate text-xs font-normal text-muted-foreground">
-          {summary}
-        </span>
-      </CollapsibleTrigger>
+      <h4 className="contents">
+        <CollapsibleTrigger className="group/children-trigger flex w-full items-center gap-2 rounded-md bg-muted px-4 py-1.5 text-left text-sm font-semibold text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]/children-trigger:rotate-90" />
+          <span className="min-w-0 truncate">{title}</span>
+          <span className="ml-auto min-w-0 truncate text-xs font-normal text-muted-foreground">
+            {summary}
+          </span>
+        </CollapsibleTrigger>
+      </h4>
       <CollapsibleContent keepMounted className="pt-3">
         {children}
       </CollapsibleContent>

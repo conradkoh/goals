@@ -74,8 +74,9 @@ describe('GoalDetailsChildrenList', () => {
     );
     render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" collapsible />);
 
-    expect(screen.queryByRole('heading', { name: 'Weekly Goals' })).toBeNull();
+    const heading = screen.getByRole('heading', { name: /Weekly Goals/ });
     const trigger = screen.getByRole('button', { name: /Weekly Goals/ });
+    expect(heading).toContainElement(trigger);
     expect(trigger).toHaveTextContent('2 weekly goals');
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(screen.getByText('weekly: Week one')).not.toBeVisible();

@@ -23,7 +23,9 @@ describe('GoalChildrenDisclosure', () => {
   it('is collapsed by default and keeps children in the document but hidden', () => {
     renderDisclosure();
 
+    const heading = screen.getByRole('heading', { name: /Weekly Goals/ });
     const trigger = screen.getByRole('button', { name: /Weekly Goals/ });
+    expect(heading).toContainElement(trigger);
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).toHaveTextContent('2 weekly goals');
     expect(screen.getByText('Alpha goal')).toBeInTheDocument();
