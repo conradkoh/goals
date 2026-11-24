@@ -39,6 +39,38 @@ describe('goal details surfaces: single-scroll layout guard', () => {
   });
 });
 
+// Surfaces whose child list is collapsible. The goal page keeps its always-expanded list.
+const COLLAPSIBLE_CHILD_LIST_SURFACES = [
+  'WeeklyGoalPopover.tsx',
+  'QuarterlyGoalPopover.tsx',
+  'StandardGoalPopoverContent.tsx',
+  '../../focus/GoalQuickViewModal.tsx',
+] as const;
+
+// Each opening <GoalDetailsChildrenList ...> tag. Props never contain '>', so [^>]* is safe.
+const CHILDREN_LIST_TAG = /<GoalDetailsChildrenList\b[^>]*>/g;
+
+describe('goal details surfaces: collapsible child lists', () => {
+  it.each(COLLAPSIBLE_CHILD_LIST_SURFACES)(
+    '%s passes collapsible to every GoalDetailsChildrenList',
+    (rel) => {
+      const tags = read(rel).match(CHILDREN_LIST_TAG) ?? [];
+      expect(tags.length).toBeGreaterThan(0);
+      for (const tag of tags) {
+        expect(tag).toMatch(/\bcollapsible\b/);
+      }
+    }
+  );
+
+  it('WeeklyGoalPageContent keeps the always-expanded child list', () => {
+    const tags = read('WeeklyGoalPageContent.tsx').match(CHILDREN_LIST_TAG) ?? [];
+    expect(tags.length).toBeGreaterThan(0);
+    for (const tag of tags) {
+      expect(tag).not.toMatch(/\bcollapsible\b/);
+    }
+  });
+});
+
 describe('GoalLogSection: no nested scroll', () => {
   it('carries no overflow-*, max-h-*, or fixed-height arbitrary class', () => {
     // From variants/: ../ = goal-details-popover, ../../ = molecules.

@@ -310,7 +310,7 @@ function StandardGoalPopoverContentInner({
               showSeparator={false}
               childrenList={
                 hasChildren ? (
-                  <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
+                  <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" collapsible />
                 ) : undefined
               }
               createInput={

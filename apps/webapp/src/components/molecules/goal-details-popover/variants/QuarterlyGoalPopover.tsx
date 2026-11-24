@@ -214,7 +214,7 @@ function QuarterlyGoalPopoverContentInner({
             showSeparator={false}
             childrenList={
               hasChildren ? (
-                <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
+                <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" collapsible />
               ) : undefined
             }
             createInput={

@@ -287,7 +287,7 @@ function GoalQuickViewContentInternal({
                   showSeparator={false}
                   childrenList={
                     hasChildren ? (
-                      <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" />
+                      <GoalDetailsChildrenList parentGoal={goal} title="Weekly Goals" collapsible />
                     ) : undefined
                   }
                   createInput={
@@ -306,7 +306,7 @@ function GoalQuickViewContentInternal({
                   showSeparator={false}
                   childrenList={
                     hasChildren ? (
-                      <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" />
+                      <GoalDetailsChildrenList parentGoal={goal} title="Daily Goals" collapsible />
                     ) : undefined
                   }
                   createInput={
