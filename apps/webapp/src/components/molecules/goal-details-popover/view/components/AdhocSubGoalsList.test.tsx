@@ -152,7 +152,7 @@ describe('AdhocSubGoalsList', () => {
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('adds the nested count when sub-tasks have their own children', () => {
+  it('counts only top-level sub-tasks when they have their own children', () => {
     const parentTask = {
       ...makeSubGoal('goals:a', 'Buy milk'),
       children: [makeSubGoal('goals:a1', 'Whole milk')],
@@ -165,9 +165,9 @@ describe('AdhocSubGoalsList', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /Sub-tasks/ })).toHaveTextContent(
-      '1 sub-task · 1 nested'
-    );
+    const trigger = screen.getByRole('button', { name: /Sub-tasks/ });
+    expect(trigger).toHaveTextContent('1 sub-task');
+    expect(trigger).not.toHaveTextContent('·');
   });
 
   it('keeps the plain heading and no disclosure when there are no sub-tasks', () => {

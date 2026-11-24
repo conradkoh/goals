@@ -20,16 +20,6 @@ import { cn } from '@/lib/utils';
 const MAX_ADHOC_GOAL_DEPTH = 3;
 
 /**
- * Counts every goal below the given level: children, grandchildren and deeper.
- */
-function countNestedGoals(goals: AdhocGoalWithChildren[]): number {
-  return goals.reduce(
-    (total, goal) => total + (goal.children?.length ?? 0) + countNestedGoals(goal.children ?? []),
-    0
-  );
-}
-
-/**
  * Sub-goal with optimistic update tracking.
  */
 type _OptimisticSubGoal = AdhocGoalWithChildren & {
@@ -157,10 +147,11 @@ export function AdhocSubGoalsList({
         {allSubGoals.length > 0 ? (
           <GoalChildrenDisclosure
             title="Sub-tasks"
-            summary={formatChildSummary(
-              { count: allSubGoals.length, singular: 'sub-task', plural: 'sub-tasks' },
-              { count: countNestedGoals(allSubGoals), singular: 'nested', plural: 'nested' }
-            )}
+            summary={formatChildSummary({
+              count: allSubGoals.length,
+              singular: 'sub-task',
+              plural: 'sub-tasks',
+            })}
           >
             <div className="space-y-1">
               {allSubGoals.map((subGoal) => (
