@@ -16,6 +16,7 @@ export {
 export { GoalDetailsContent, type GoalDetailsContentProps } from './GoalDetailsContent';
 export { GoalDetailsBody } from './GoalDetailsBody';
 export { GoalDetailsSection, type GoalDetailsSectionProps } from './GoalDetailsSection';
+export { GOAL_DETAILS_DIALOG_CLASSNAME } from './goalDetailsDialogLayout';
 export {
   GoalDisplayProvider,
   useGoalDisplayContext,

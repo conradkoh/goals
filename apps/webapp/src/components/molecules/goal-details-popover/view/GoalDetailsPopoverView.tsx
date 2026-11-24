@@ -1,5 +1,7 @@
 import { forwardRef, type ReactNode, useState } from 'react';
 
+import { GOAL_DETAILS_DIALOG_CLASSNAME } from './components/goalDetailsDialogLayout';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -166,7 +168,7 @@ export function GoalDetailsPopoverView({
         {trigger}
       </span>
       <Dialog open={dialogOpen} onOpenChange={handleEscapeBlockingOpenChange}>
-        <FixedSizeDialog>
+        <FixedSizeDialog className={GOAL_DETAILS_DIALOG_CLASSNAME}>
           <DialogHeader className="sr-only">
             <DialogTitle>Goal Details</DialogTitle>
           </DialogHeader>

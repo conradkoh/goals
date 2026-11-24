@@ -23,6 +23,7 @@ import { useMemo } from 'react';
 
 import { AdhocGoalPopoverContent } from './AdhocGoalPopoverContent';
 import { StandardGoalPopoverContent } from './StandardGoalPopoverContent';
+import { GOAL_DETAILS_DIALOG_CLASSNAME } from '../view/components/goalDetailsDialogLayout';
 
 import { Dialog, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FixedSizeDialog, FixedSizeDialogContent } from '@/components/ui/fixed-size-dialog';
@@ -98,7 +99,7 @@ export function StandaloneGoalModal({
 
   return (
     <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
-      <FixedSizeDialog>
+      <FixedSizeDialog className={GOAL_DETAILS_DIALOG_CLASSNAME}>
         <DialogHeader className="sr-only">
           <DialogTitle>Goal Details</DialogTitle>
         </DialogHeader>

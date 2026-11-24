@@ -13,6 +13,7 @@ import {
   GoalDetailsBody,
   GoalDetailsChildrenList,
   GoalDisplayProvider,
+  GOAL_DETAILS_DIALOG_CLASSNAME,
   GoalDueDateDisplay,
   GoalEditModal,
   GoalEditProvider,
@@ -94,7 +95,7 @@ export function GoalQuickViewModal({ open, onOpenChange, goal, goalId }: GoalQui
 
   return (
     <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
-      <FixedSizeDialog>
+      <FixedSizeDialog className={GOAL_DETAILS_DIALOG_CLASSNAME}>
         <GoalProvider goal={goalToDisplay}>
           <GoalEditProvider>
             <GoalDisplayProvider>

@@ -10,6 +10,7 @@ import {
   GoalCompletionDate,
   GoalDetailsBody,
   GoalDisplayProvider,
+  GOAL_DETAILS_DIALOG_CLASSNAME,
   GoalDomainDisplay,
   GoalDueDateDisplay,
   GoalEditModal,
@@ -154,7 +155,7 @@ export function AdhocGoalQuickViewModal({
 
   return (
     <Dialog open={open} onOpenChange={createEscapeBlockingOpenChange(onOpenChange)}>
-      <FixedSizeDialog>
+      <FixedSizeDialog className={GOAL_DETAILS_DIALOG_CLASSNAME}>
         <GoalProvider goal={goalAsStandardFormat}>
           <GoalEditProvider>
             <GoalDisplayProvider>

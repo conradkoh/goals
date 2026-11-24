@@ -202,3 +202,32 @@ describe('StandaloneGoalModal escape handling', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe('StandaloneGoalModal dialog size', () => {
+  beforeEach(() => {
+    vi.mocked(useSession).mockReturnValue({ sessionId: SESSION_ID } as ReturnType<
+      typeof useSession
+    >);
+    vi.mocked(useInitiatives).mockReturnValue({
+      initiatives,
+      createInitiative: vi.fn(),
+      updateInitiative: vi.fn(),
+      deleteInitiative: vi.fn(),
+      isCreating: false,
+      isUpdating: false,
+      isDeleting: false,
+    });
+  });
+
+  it('renders the desktop goal-details dialog at the taller size', () => {
+    mockConvexQueries(makeGoalDetails());
+    renderModal();
+
+    const dialog = document.querySelector('[data-slot="fixed-size-dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog).toHaveClass('sm:h-[92dvh]');
+    expect(dialog).toHaveClass('sm:max-h-[1100px]');
+    expect(dialog).not.toHaveClass('sm:h-[85vh]');
+    expect(dialog).not.toHaveClass('sm:max-h-[800px]');
+  });
+});
