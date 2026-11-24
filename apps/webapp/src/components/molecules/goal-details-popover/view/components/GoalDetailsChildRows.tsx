@@ -93,27 +93,30 @@ function GoalDetailsChildRow({
   weeklyRow: WeeklyRow,
   dailyRow: DailyRow,
 }: GoalDetailsChildRowProps) {
+  // Goals opened from the breadcrumb (dashboard.getGoalDetails) carry no `children` key.
+  const grandchildren: GoalWithDetailsAndChildren[] | undefined = child.children;
   return (
     <GoalProvider goal={child}>
       <div>
         {isQuarterlyParent ? (
-          // Render weekly goals when parent is quarterly - gets goal from context
-          <WeeklyRow />
+          <>
+            {/* Render weekly goals when parent is quarterly - gets goal from context */}
+            <WeeklyRow />
+
+            {/* If we have grandchildren (daily goals), show them indented under their weekly parent */}
+            {grandchildren !== undefined && grandchildren.length > 0 && (
+              <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-border pl-3">
+                {grandchildren.map((grandchild) => (
+                  <GoalProvider key={grandchild._id} goal={grandchild}>
+                    <DailyRow />
+                  </GoalProvider>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           // Render daily goals when parent is weekly - gets goal from context
           <DailyRow />
-        )}
-
-        {/* If the parent is a quarterly goal and we have grandchildren (daily goals),
-            show them indented under their weekly parent */}
-        {isQuarterlyParent && child.children.length > 0 && (
-          <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-border pl-3">
-            {child.children.map((grandchild) => (
-              <GoalProvider key={grandchild._id} goal={grandchild}>
-                <DailyRow />
-              </GoalProvider>
-            ))}
-          </div>
         )}
       </div>
     </GoalProvider>

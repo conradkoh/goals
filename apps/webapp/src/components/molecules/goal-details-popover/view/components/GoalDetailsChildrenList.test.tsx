@@ -40,7 +40,12 @@ function makeGoal(id: string, title: string, depth: number, children: unknown[] 
   };
 }
 
-function asParent(goal: ReturnType<typeof makeGoal>) {
+/** Mirrors dashboard.getGoalDetails children on the breadcrumb path: no `children` key at all. */
+function makeGoalWithoutChildren(id: string, title: string, depth: number) {
+  return { _id: id as Id<'goals'>, _creationTime: 1, title, depth, isComplete: false, inPath: '/' };
+}
+
+function asParent(goal: object) {
   return goal as unknown as GoalWithDetailsAndChildren;
 }
 
@@ -122,6 +127,32 @@ describe('GoalDetailsChildrenList', () => {
     const trigger = screen.getByRole('button', { name: /Weekly Goals/ });
     expect(trigger).toHaveTextContent('1 weekly goal');
     expect(trigger).not.toHaveTextContent('1 weekly goals');
+  });
+
+  it('renders quarterly children that omit `children` without throwing (collapsible)', async () => {
+    const user = userEvent.setup();
+    const parent = asParent({
+      ...makeGoal('goals:q', 'Quarter', 0),
+      children: [
+        makeGoalWithoutChildren('goals:w1', 'Week one', 1),
+        makeGoalWithoutChildren('goals:w2', 'Week two', 1),
+      ],
+    });
+    render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" collapsible />);
+
+    await user.click(screen.getByRole('button', { name: /Weekly Goals/ }));
+    expect(screen.getByText('Week one')).toBeVisible();
+    expect(screen.getByText('Week two')).toBeVisible();
+  });
+
+  it('renders quarterly children that omit `children` without throwing (not collapsible)', () => {
+    const parent = asParent({
+      ...makeGoal('goals:q', 'Quarter', 0),
+      children: [makeGoalWithoutChildren('goals:w1', 'Week one', 1)],
+    });
+    render(<GoalDetailsChildrenList parentGoal={parent} title="Weekly Goals" />);
+
+    expect(screen.getByText('Week one')).toBeVisible();
   });
 
   it('renders nothing when there are no children, even when collapsible', () => {

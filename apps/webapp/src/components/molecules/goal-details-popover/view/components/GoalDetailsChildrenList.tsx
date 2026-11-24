@@ -46,10 +46,11 @@ export function GoalDetailsChildrenList({
   collapsible,
 }: GoalDetailsChildrenListProps) {
   // Use provided subGoalsToRender if available, otherwise use parentGoal.children
-  const subGoals = subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.children;
+  const subGoals: GoalWithDetailsAndChildren[] | undefined =
+    subGoalsToRender !== undefined ? subGoalsToRender : parentGoal.children;
 
-  // If there are no sub-goals, don't render anything
-  if (subGoals.length === 0) {
+  // If there are no sub-goals (or the list is absent), don't render anything
+  if (!subGoals || subGoals.length === 0) {
     return null;
   }
 
