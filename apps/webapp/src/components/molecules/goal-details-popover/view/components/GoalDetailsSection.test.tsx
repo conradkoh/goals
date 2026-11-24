@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GoalDetailsSection } from './GoalDetailsSection';
@@ -159,5 +160,81 @@ describe('GoalDetailsSection', () => {
       <GoalDetailsSection title="Goal" details="" showSeparator={false} />
     );
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe('GoalDetailsSection pointer selection', () => {
+  it('keeps editing through a press on the padding, a drag outside, and a release outside', async () => {
+    const user = userEvent.setup();
+    const onDetailsChange = vi.fn();
+    render(
+      <>
+        <GoalDetailsSection
+          title="Goal"
+          details=""
+          onDetailsChange={onDetailsChange}
+          showSeparator={false}
+        />
+        <button type="button">Outside</button>
+      </>
+    );
+    await user.click(screen.getByRole('button', { name: /no details/i }));
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    const padding = editor.closest('[class*="rounded-md"]') as HTMLElement;
+    const outside = screen.getByRole('button', { name: 'Outside' });
+    act(() => editor.focus());
+    await user.pointer({ keys: '[MouseLeft>]', target: padding });
+    await user.pointer({ target: outside });
+    await user.pointer({ keys: '[/MouseLeft]', target: outside });
+    expect(screen.getByRole('textbox', { name: /goal details editor/i })).toBeInTheDocument();
+    expect(onDetailsChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps editing through a press in the editor text, a drag outside, and a release outside', async () => {
+    const user = userEvent.setup();
+    const onDetailsChange = vi.fn();
+    render(
+      <>
+        <GoalDetailsSection
+          title="Goal"
+          details=""
+          onDetailsChange={onDetailsChange}
+          showSeparator={false}
+        />
+        <button type="button">Outside</button>
+      </>
+    );
+    await user.click(screen.getByRole('button', { name: /no details/i }));
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    const outside = screen.getByRole('button', { name: 'Outside' });
+    act(() => editor.focus());
+    await user.pointer({ keys: '[MouseLeft>]', target: editor });
+    await user.pointer({ target: outside });
+    await user.pointer({ keys: '[/MouseLeft]', target: outside });
+    expect(screen.getByRole('textbox', { name: /goal details editor/i })).toBeInTheDocument();
+    expect(onDetailsChange).not.toHaveBeenCalled();
+  });
+
+  it('a genuine press outside saves the draft and exits editing', async () => {
+    const user = userEvent.setup();
+    const onDetailsChange = vi.fn();
+    render(
+      <>
+        <GoalDetailsSection
+          title="Goal"
+          details=""
+          onDetailsChange={onDetailsChange}
+          showSeparator={false}
+        />
+        <button type="button">Outside</button>
+      </>
+    );
+    await user.click(screen.getByRole('button', { name: /no details/i }));
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    fireEvent.change(editor, { target: { value: '<p>New details</p>' } });
+    act(() => editor.focus());
+    await user.click(screen.getByRole('button', { name: 'Outside' }));
+    expect(onDetailsChange).toHaveBeenCalledWith('<p>New details</p>');
+    expect(screen.queryByRole('textbox', { name: /goal details editor/i })).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -141,5 +142,65 @@ describe('InlineRichTextEditorChrome', () => {
     expect(container).not.toBeNull();
     fireEvent.blur(container as Element);
     expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps focus in the editor when the gray padding is pressed', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <InlineRichTextEditorChrome
+        draft=""
+        onDraftChange={() => {}}
+        onSave={onSave}
+        onCancel={() => {}}
+      />
+    );
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    const padding = editor.closest('[class*="rounded-md"]') as HTMLElement;
+    act(() => editor.focus());
+    await user.pointer({ keys: '[MouseLeft]', target: padding });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(editor).toHaveFocus();
+  });
+
+  it('defers a blur that happens while the pointer is held until release', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <InlineRichTextEditorChrome
+        draft=""
+        onDraftChange={() => {}}
+        onSave={onSave}
+        onCancel={() => {}}
+      />
+    );
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    act(() => editor.focus());
+    await user.pointer({ keys: '[MouseLeft>]', target: editor });
+    act(() => (editor as HTMLElement).blur());
+    expect(document.activeElement).not.toBe(editor);
+    expect(onSave).not.toHaveBeenCalled();
+    await user.pointer({ keys: '[/MouseLeft]', target: editor });
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not save on release when focus returned to the editor during the press', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    render(
+      <InlineRichTextEditorChrome
+        draft=""
+        onDraftChange={() => {}}
+        onSave={onSave}
+        onCancel={() => {}}
+      />
+    );
+    const editor = screen.getByRole('textbox', { name: /goal details editor/i });
+    act(() => editor.focus());
+    await user.pointer({ keys: '[MouseLeft>]', target: editor });
+    act(() => (editor as HTMLElement).blur());
+    act(() => editor.focus());
+    await user.pointer({ keys: '[/MouseLeft]', target: editor });
+    expect(onSave).not.toHaveBeenCalled();
   });
 });
