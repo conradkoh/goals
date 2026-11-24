@@ -4,16 +4,6 @@
  */
 
 export { AdhocSubGoalsList, type AdhocSubGoalsListProps } from './AdhocSubGoalsList';
-export {
-  // fallow-ignore-next-line unused-type
-  type ChildCountPhrase,
-  // fallow-ignore-next-line unused-export
-  formatChildSummary,
-  // fallow-ignore-next-line unused-export
-  GoalChildrenDisclosure,
-  // fallow-ignore-next-line unused-type
-  type GoalChildrenDisclosureProps,
-} from './GoalChildrenDisclosure';
 export { GoalBreadcrumb, type GoalBreadcrumbProps } from './GoalBreadcrumb';
 export { GoalActionMenuNew, type GoalActionMenuNewProps } from './GoalActionMenuNew';
 export { GoalChildrenSection, type GoalChildrenSectionProps } from './GoalChildrenSection';

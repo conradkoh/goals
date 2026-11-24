@@ -2,6 +2,8 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { GoalWithDetailsAndChildren } from '@workspace/backend/src/usecase/getWeekDetails';
 import { useCallback } from 'react';
 
+import { formatChildSummary, GoalChildrenDisclosure } from './GoalChildrenDisclosure';
+
 import { WeeklyGoalTaskItem } from '@/components/molecules/day-of-week/components/WeeklyGoalTaskItem';
 import { DailyGoalTaskItem } from '@/components/organisms/DailyGoalTaskItem';
 import { GoalActionsProvider } from '@/contexts/GoalActionsContext';
@@ -19,13 +21,22 @@ export interface GoalDetailsChildrenListProps {
   title: string;
   /** Optional filtered sub-goals to render. If not provided, uses parentGoal.children */
   subGoalsToRender?: GoalWithDetailsAndChildren[];
+  /**
+   * Render the list behind a collapsed count summary that expands on click.
+   * Default false: the title is shown as an always-expanded heading.
+   */
+  collapsible?: boolean;
 }
+
+const WEEKLY_NOUN = { singular: 'weekly goal', plural: 'weekly goals' };
+const DAILY_NOUN = { singular: 'daily goal', plural: 'daily goals' };
 
 /**
  * Displays a hierarchical list of sub-goals within a goal details view.
  * Renders weekly goals for quarterly parents, and daily goals for weekly parents.
  * Supports nested grandchildren (daily goals under weekly goals within quarterly).
  * Supports filtering via subGoalsToRender prop for selective display.
+ * With `collapsible`, the list sits behind a count summary.
  *
  * @example
  * ```tsx
@@ -39,6 +50,7 @@ export function GoalDetailsChildrenList({
   parentGoal,
   title,
   subGoalsToRender,
+  collapsible = false,
 }: GoalDetailsChildrenListProps) {
   const { updateQuarterlyGoalTitle, deleteGoalOptimistic } = useWeek();
 
@@ -83,40 +95,64 @@ export function GoalDetailsChildrenList({
 
   const isQuarterlyParent = parentGoal.depth === 0;
 
+  const list = (
+    <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={_handleDeleteGoal}>
+      <div className="space-y-1 px-4">
+        {subGoals.map((child) => (
+          <GoalProvider key={child._id} goal={child}>
+            <div>
+              {isQuarterlyParent ? (
+                // Render weekly goals when parent is quarterly - gets goal from context
+                <WeeklyGoalTaskItem />
+              ) : (
+                // Render daily goals when parent is weekly - gets goal from context
+                <DailyGoalTaskItem />
+              )}
+
+              {/* If the parent is a quarterly goal and we have grandchildren (daily goals),
+                  show them indented under their weekly parent */}
+              {isQuarterlyParent && child.children && child.children.length > 0 && (
+                <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-border pl-3">
+                  {child.children.map((grandchild) => (
+                    <GoalProvider key={grandchild._id} goal={grandchild}>
+                      <DailyGoalTaskItem />
+                    </GoalProvider>
+                  ))}
+                </div>
+              )}
+            </div>
+          </GoalProvider>
+        ))}
+      </div>
+    </GoalActionsProvider>
+  );
+
+  if (!collapsible) {
+    return (
+      <div className="mt-3">
+        <h4 className="text-sm font-semibold mb-3 text-foreground bg-muted py-1.5 px-4 rounded-md">
+          {title}
+        </h4>
+        {list}
+      </div>
+    );
+  }
+
+  // Direct children are the primary count. Quarterly parents add their weekly goals'
+  // children (daily goals) as the secondary count; weekly parents have no secondary part.
+  const grandchildCount = isQuarterlyParent
+    ? subGoals.reduce((total, child) => total + (child.children?.length ?? 0), 0)
+    : 0;
+  const summary = formatChildSummary(
+    { count: subGoals.length, ...(isQuarterlyParent ? WEEKLY_NOUN : DAILY_NOUN) },
+    { count: grandchildCount, ...DAILY_NOUN }
+  );
+
   return (
     <div className="mt-3">
-      <h4 className="text-sm font-semibold mb-3 text-foreground bg-muted py-1.5 px-4 rounded-md">
-        {title}
-      </h4>
-      <GoalActionsProvider onUpdateGoal={handleUpdateGoal} onDeleteGoal={_handleDeleteGoal}>
-        <div className="space-y-1 px-4">
-          {subGoals.map((child) => (
-            <GoalProvider key={child._id} goal={child}>
-              <div>
-                {isQuarterlyParent ? (
-                  // Render weekly goals when parent is quarterly - gets goal from context
-                  <WeeklyGoalTaskItem />
-                ) : (
-                  // Render daily goals when parent is weekly - gets goal from context
-                  <DailyGoalTaskItem />
-                )}
-
-                {/* If the parent is a quarterly goal and we have grandchildren (daily goals), 
-                    show them indented under their weekly parent */}
-                {isQuarterlyParent && child.children && child.children.length > 0 && (
-                  <div className="ml-6 mt-1 mb-2 space-y-1 border-l-2 border-border pl-3">
-                    {child.children.map((grandchild) => (
-                      <GoalProvider key={grandchild._id} goal={grandchild}>
-                        <DailyGoalTaskItem />
-                      </GoalProvider>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </GoalProvider>
-          ))}
-        </div>
-      </GoalActionsProvider>
+      <GoalChildrenDisclosure title={title} summary={summary}>
+        {list}
+      </GoalChildrenDisclosure>
     </div>
   );
 }

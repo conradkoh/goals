@@ -2,6 +2,8 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { useCallback, useState } from 'react';
 
+import { formatChildSummary, GoalChildrenDisclosure } from './GoalChildrenDisclosure';
+
 import { CreateInputView } from '@/components/atoms/CreateInput';
 import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';
 import { AdhocGoalPopover } from '@/components/molecules/goal-details-popover';
@@ -15,6 +17,16 @@ import { cn } from '@/lib/utils';
  * Maximum nesting depth for adhoc goals (soft limit).
  */
 const MAX_ADHOC_GOAL_DEPTH = 3;
+
+/**
+ * Counts every goal below the given level: children, grandchildren and deeper.
+ */
+function countNestedGoals(goals: AdhocGoalWithChildren[]): number {
+  return goals.reduce(
+    (total, goal) => total + (goal.children?.length ?? 0) + countNestedGoals(goal.children ?? []),
+    0
+  );
+}
 
 /**
  * Sub-goal with optimistic update tracking.
@@ -141,23 +153,30 @@ export function AdhocSubGoalsList({
     <>
       {showSeparator && <Separator className="my-3" />}
       <div className="space-y-2">
-        <h4 className="text-sm font-medium text-muted-foreground">Sub-tasks</h4>
-
-        {/* List of existing sub-goals */}
-        {allSubGoals.length > 0 && (
-          <div className="space-y-1">
-            {allSubGoals.map((subGoal) => (
-              <SubGoalItem
-                key={subGoal._id}
-                goal={subGoal}
-                onCompleteChange={handleCompleteChange}
-                onUpdate={onUpdate}
-                onDelete={onDelete}
-                onCreateChild={onCreateChild}
-                depth={currentDepth + 1}
-              />
-            ))}
-          </div>
+        {allSubGoals.length > 0 ? (
+          <GoalChildrenDisclosure
+            title="Sub-tasks"
+            summary={formatChildSummary(
+              { count: allSubGoals.length, singular: 'sub-task', plural: 'sub-tasks' },
+              { count: countNestedGoals(allSubGoals), singular: 'nested', plural: 'nested' }
+            )}
+          >
+            <div className="space-y-1">
+              {allSubGoals.map((subGoal) => (
+                <SubGoalItem
+                  key={subGoal._id}
+                  goal={subGoal}
+                  onCompleteChange={handleCompleteChange}
+                  onUpdate={onUpdate}
+                  onDelete={onDelete}
+                  onCreateChild={onCreateChild}
+                  depth={currentDepth + 1}
+                />
+              ))}
+            </div>
+          </GoalChildrenDisclosure>
+        ) : (
+          <h4 className="text-sm font-medium text-muted-foreground">Sub-tasks</h4>
         )}
 
         {/* Create input - always visible when allowed */}

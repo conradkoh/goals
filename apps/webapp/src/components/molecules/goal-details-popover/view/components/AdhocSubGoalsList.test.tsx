@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { describe, expect, it, vi } from 'vitest';
@@ -96,5 +97,90 @@ describe('AdhocSubGoalsList', () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('collapses sub-tasks behind a count summary by default', () => {
+    render(
+      <AdhocSubGoalsList
+        subGoals={[makeSubGoal('goals:a', 'Buy milk'), makeSubGoal('goals:b', 'Walk dog')]}
+        currentDepth={1}
+        parentId={'goals:parent' as Id<'goals'>}
+      />
+    );
+
+    const trigger = screen.getByRole('button', { name: /Sub-tasks/ });
+    expect(trigger).toHaveTextContent('2 sub-tasks');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByText('Buy milk')).not.toBeVisible();
+  });
+
+  it('keeps the create input visible while collapsed', () => {
+    render(
+      <AdhocSubGoalsList
+        subGoals={[makeSubGoal('goals:a', 'Buy milk')]}
+        currentDepth={1}
+        parentId={'goals:parent' as Id<'goals'>}
+        onCreateChild={vi.fn().mockResolvedValue(undefined)}
+      />
+    );
+
+    expect(screen.getByPlaceholderText('Add a new sub-task...')).toBeVisible();
+    expect(screen.getByRole('button', { name: /Sub-tasks/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
+  });
+
+  it('counts a sub-task created while collapsed without expanding', async () => {
+    const user = userEvent.setup();
+    // Never resolves: the optimistic sub-task stays in the list for the assertion.
+    const onCreateChild = vi.fn(() => new Promise<void>(() => {}));
+    render(
+      <AdhocSubGoalsList
+        subGoals={[makeSubGoal('goals:a', 'Buy milk')]}
+        currentDepth={1}
+        parentId={'goals:parent' as Id<'goals'>}
+        onCreateChild={onCreateChild}
+      />
+    );
+
+    await user.type(screen.getByPlaceholderText('Add a new sub-task...'), 'Walk dog{Enter}');
+
+    expect(onCreateChild).toHaveBeenCalledWith('goals:parent', 'Walk dog');
+    const trigger = screen.getByRole('button', { name: /Sub-tasks/ });
+    expect(trigger).toHaveTextContent('2 sub-tasks');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('adds the nested count when sub-tasks have their own children', () => {
+    const parentTask = {
+      ...makeSubGoal('goals:a', 'Buy milk'),
+      children: [makeSubGoal('goals:a1', 'Whole milk')],
+    };
+    render(
+      <AdhocSubGoalsList
+        subGoals={[parentTask]}
+        currentDepth={1}
+        parentId={'goals:parent' as Id<'goals'>}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: /Sub-tasks/ })).toHaveTextContent(
+      '1 sub-task · 1 nested'
+    );
+  });
+
+  it('keeps the plain heading and no disclosure when there are no sub-tasks', () => {
+    render(
+      <AdhocSubGoalsList
+        subGoals={[]}
+        currentDepth={1}
+        parentId={'goals:parent' as Id<'goals'>}
+        onCreateChild={vi.fn().mockResolvedValue(undefined)}
+      />
+    );
+
+    expect(screen.getByRole('heading', { name: 'Sub-tasks' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Sub-tasks/ })).toBeNull();
   });
 });

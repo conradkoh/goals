@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 /** One count inside a collapsed-state summary, e.g. 5 weekly goals. */
-export interface ChildCountPhrase {
+interface ChildCountPhrase {
   /** Number of child goals of this kind. */
   count: number;
   /** Noun used when count is exactly 1, e.g. "weekly goal". */
@@ -21,7 +21,6 @@ function formatChildCount({ count, singular, plural }: ChildCountPhrase): string
  * Builds the collapsed-state summary: "5 weekly goals" or "5 weekly goals · 12 daily goals".
  * The secondary part is omitted when its count is 0.
  */
-// fallow-ignore-next-line unused-export
 export function formatChildSummary(
   primary: ChildCountPhrase,
   secondary?: ChildCountPhrase
@@ -33,7 +32,7 @@ export function formatChildSummary(
   return parts.join(' · ');
 }
 
-export interface GoalChildrenDisclosureProps {
+interface GoalChildrenDisclosureProps {
   /** Section title on the left of the trigger bar, e.g. "Weekly Goals". */
   title: string;
   /** Summary on the right of the trigger bar, e.g. "5 weekly goals". Build it with formatChildSummary. */
@@ -48,7 +47,6 @@ export interface GoalChildrenDisclosureProps {
  * - The panel is keepMounted, so children (and any in-progress edit inside them) survive a toggle.
  * - Adds no scroll container; the dialog content stays the only scroll region.
  */
-// fallow-ignore-next-line unused-export
 export function GoalChildrenDisclosure({ title, summary, children }: GoalChildrenDisclosureProps) {
   return (
     <Collapsible data-slot="goal-children-disclosure">
