@@ -2,7 +2,8 @@ import type { Id } from '@workspace/backend/convex/_generated/dataModel';
 import type { AdhocGoalWithChildren } from '@workspace/backend/convex/adhocGoal';
 import { useCallback, useState } from 'react';
 
-import { formatChildSummary, GoalChildrenDisclosure } from './GoalChildrenDisclosure';
+import { formatChildSummary } from './childGoalSummary';
+import { GoalChildrenDisclosure } from './GoalChildrenDisclosure';
 
 import { CreateInputView } from '@/components/atoms/CreateInput';
 import { AdhocGoalActionIcons } from '@/components/molecules/goal-action-icons';

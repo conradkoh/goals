@@ -21,8 +21,8 @@ interface GoalDetailsChildRowsProps {
 /**
  * Renders the child goals of a goal-details list inside the goal action context.
  * Rows are weekly goals for a quarterly parent and daily goals for a weekly parent.
- * Row components are supplied by the caller so this module stays out of the goal-list-item
- * import cycles that the goal-details variants already take part in.
+ * The row components are injected by the caller only to keep this module out of the
+ * goal-list-item import cycles. That is a workaround for the cycle, not a pattern to extend.
  */
 export function GoalDetailsChildRows({
   subGoals,

@@ -3,35 +3,6 @@ import type { ReactNode } from 'react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-/** One count inside a collapsed-state summary, e.g. 5 weekly goals. */
-interface ChildCountPhrase {
-  /** Number of child goals of this kind. */
-  count: number;
-  /** Noun used when count is exactly 1, e.g. "weekly goal". */
-  singular: string;
-  /** Noun used for any other count, e.g. "weekly goals". */
-  plural: string;
-}
-
-function formatChildCount({ count, singular, plural }: ChildCountPhrase): string {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
-
-/**
- * Builds the collapsed-state summary: "5 weekly goals" or "5 weekly goals · 12 daily goals".
- * The secondary part is omitted when its count is 0.
- */
-export function formatChildSummary(
-  primary: ChildCountPhrase,
-  secondary?: ChildCountPhrase
-): string {
-  const parts = [formatChildCount(primary)];
-  if (secondary && secondary.count > 0) {
-    parts.push(formatChildCount(secondary));
-  }
-  return parts.join(' · ');
-}
-
 interface GoalChildrenDisclosureProps {
   /** Section title on the left of the trigger bar, e.g. "Weekly Goals". */
   title: string;
