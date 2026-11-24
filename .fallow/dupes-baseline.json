@@ -1,0 +1,28 @@
+{
+  "clone_groups": [
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx:26-65|apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx:32-53",
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx:203-226|apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx:125-152",
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx:242-321|apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx:163-218",
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx:284-310|apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopoverContent.tsx:190-212|apps/webapp/src/components/organisms/focus/OnFireGoalsSection.tsx:248-271|apps/webapp/src/components/organisms/focus/PendingGoalsSection.tsx:194-216",
+    "apps/webapp/src/components/molecules/focus/AdhocGoalQuickViewModal.tsx:368-385|apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx:178-190",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:142-151|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:87-96",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:143-166|apps/webapp/src/components/molecules/goal-details-popover/variants/StandardGoalPopoverContent.tsx:144-187",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:229-236|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:149-159|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:83-93",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:258-282|apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:140-156",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:318-342|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:203-226",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:320-340|apps/webapp/src/components/molecules/focus/InitiativeGoalTabCreate.tsx:174-196|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:289-308|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:205-224",
+    "apps/webapp/src/components/molecules/focus/GoalQuickViewModal.tsx:328-340|apps/webapp/src/components/molecules/focus/InitiativeGoalTabCreate.tsx:181-196|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:296-308|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:212-224|apps/webapp/src/components/organisms/WeekCardDailyGoals.tsx:487-499",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/AdhocGoalPopover.tsx:185-238|apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:151-191|apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:205-264",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/DailyGoalPopover.tsx:23-47|apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:24-42",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:88-98|apps/webapp/src/components/molecules/goal-details-popover/variants/StandardGoalPopoverContent.tsx:144-154",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:163-183|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:153-172",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:176-231|apps/webapp/src/components/molecules/goal-details-popover/variants/StandardGoalPopoverContent.tsx:266-299",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/QuarterlyGoalPopover.tsx:221-264|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:224-261",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:77-88|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:65-97",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:143-162|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:77-96",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:247-266|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:167-228",
+    "apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPageContent.tsx:278-310|apps/webapp/src/components/molecules/goal-details-popover/variants/WeeklyGoalPopover.tsx:194-226",
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:211-221|apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:44-57",
+    "apps/webapp/src/components/molecules/goal-details-popover/view/components/AdhocSubGoalsList.tsx:249-270|apps/webapp/src/components/molecules/goal-list-item/variants/AdhocGoalItem.tsx:125-146"
+  ]
+}
