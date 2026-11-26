@@ -2,7 +2,7 @@ import { Extension, type Editor } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 
-/** A single character that ends a word when typed directly after a non-whitespace character. */
+/** A character that ends a word (whitespace or sentence-end punctuation). */
 const WORD_END_CHAR = /^[\s.!?]$/;
 
 /** Range of document text inserted by the transaction's last step, or null if it inserted nothing. */
