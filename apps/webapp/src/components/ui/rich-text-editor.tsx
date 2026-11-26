@@ -17,7 +17,10 @@ import {
   splitMarkdownTables,
 } from './rich-text-markdown-paste';
 
-import { UndoWordBoundary } from '@/components/markdown-editor/extensions/undoHistory';
+import {
+  UndoWordBoundary,
+  setContentWithoutHistory,
+} from '@/components/markdown-editor/extensions/undoHistory';
 import { shouldInterceptPasteForMarkdownConversion } from '@/components/markdown-editor/utils/pasteHandler';
 import { cn } from '@/lib/utils';
 
@@ -701,7 +704,7 @@ export function RichTextEditor({
       setContent: (html: string) => {
         if (!editor || editor.isDestroyed) return;
         isExternalUpdateRef.current = true;
-        editor.commands.setContent(html || '');
+        setContentWithoutHistory(editor, html || '');
         isExternalUpdateRef.current = false;
       },
       getContent: () => {
@@ -726,7 +729,7 @@ export function RichTextEditor({
     if (editor.isFocused) return;
     const currentHtml = stripTrailingEmptyParagraphs(editor.getHTML());
     if (currentHtml !== value) {
-      editor.commands.setContent(value || '');
+      setContentWithoutHistory(editor, value || '');
     }
   }, [editor, value, isUncontrolled]);
 

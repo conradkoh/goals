@@ -4,6 +4,7 @@ import { looksLikeHtml, normalizeMarkdownContent } from '@workspace/shared/utili
 import { useCallback, useEffect, useRef } from 'react';
 
 import { createMarkdownEditorExtensions } from '../extensions/markdownEditorExtensions';
+import { setContentWithoutHistory } from '../extensions/undoHistory';
 import type { MarkdownContentNormalizer } from '../types';
 import { getNormalizedEditorMarkdown } from '../utils/getNormalizedEditorMarkdown';
 import { handleModEnter } from '../utils/handleModEnter';
@@ -73,7 +74,12 @@ export function useMarkdownEditor({
   });
   const setContent = useCallback(
     (md: string) =>
-      editor?.commands.setContent(normalize(md), { contentType: 'markdown', emitUpdate: false }),
+      editor
+        ? setContentWithoutHistory(editor, normalize(md), {
+            contentType: 'markdown',
+            emitUpdate: false,
+          })
+        : undefined,
     [editor, normalize]
   );
   useEffect(() => {
@@ -83,7 +89,7 @@ export function useMarkdownEditor({
     }
     const normalized = normalize(content);
     if (normalized !== getNormalizedEditorMarkdown(editor, normalize)) {
-      editor.commands.setContent(normalized, { contentType: 'markdown', emitUpdate: false });
+      setContentWithoutHistory(editor, normalized, { contentType: 'markdown', emitUpdate: false });
       if (normalized !== content.trim()) {
         internal.current = true;
         onUpdate(normalized);

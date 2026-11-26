@@ -1,4 +1,4 @@
-import { Extension } from '@tiptap/core';
+import { Extension, type Editor } from '@tiptap/core';
 import { closeHistory } from '@tiptap/pm/history';
 import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 
@@ -58,3 +58,18 @@ export const UndoWordBoundary = Extension.create({
     ];
   },
 });
+
+type SetContentOptions = Parameters<Editor['commands']['setContent']>[1];
+
+/**
+ * Replaces the document with programmatic content (initial load, server sync, reset) without
+ * recording an undo step, so Cmd/Ctrl+Z never restores pre-sync text or blanks loaded content.
+ * Options pass through unchanged (for example `emitUpdate`, `contentType: 'markdown'`).
+ */
+export function setContentWithoutHistory(
+  editor: Editor,
+  content: string,
+  options?: SetContentOptions
+): boolean {
+  return editor.chain().setMeta('addToHistory', false).setContent(content, options).run();
+}

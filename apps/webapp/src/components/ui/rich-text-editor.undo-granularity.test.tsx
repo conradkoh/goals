@@ -2,7 +2,7 @@ import { act, render } from '@testing-library/react';
 import type { Editor } from '@tiptap/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { RichTextEditor } from './rich-text-editor';
+import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';
 
 vi.mock('./rich-text-editor.module.css', () => ({ default: {} }));
 
@@ -65,5 +65,30 @@ describe('RichTextEditor undo granularity', () => {
     }
     act(() => void editor.commands.undo());
     expect(plain(editor)).toBe('alpha bravo');
+  });
+
+  it('undo after an external setContent (server sync) does not restore pre-sync text', () => {
+    const clock = withClock();
+    const ref: { current: RichTextEditorHandle | null } = { current: null };
+    const { container } = render(
+      <RichTextEditor value="" onChange={() => {}} editorRef={ref} autoFocus />
+    );
+    const editor = (container.querySelector('.ProseMirror') as HTMLElement & { editor: Editor })
+      .editor;
+    type(editor, 'local draft', 60, clock);
+    clock.now += 800;
+    act(() => ref.current?.setContent('<p>SERVER COPY</p>'));
+    clock.now += 800;
+    act(() => void editor.commands.undo());
+    expect(plain(editor)).toBe('SERVER COPY');
+  });
+
+  it('undo after a controlled value sync (document load) does not blank the document', () => {
+    const { container, rerender } = render(<RichTextEditor value="" onChange={() => {}} />);
+    const editor = (container.querySelector('.ProseMirror') as HTMLElement & { editor: Editor })
+      .editor;
+    rerender(<RichTextEditor value="<p>loaded from server</p>" onChange={() => {}} />);
+    act(() => void editor.commands.undo());
+    expect(plain(editor)).toBe('loaded from server');
   });
 });

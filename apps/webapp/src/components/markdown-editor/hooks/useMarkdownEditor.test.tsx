@@ -10,11 +10,21 @@ let mockGetMarkdown = vi.fn(() => '');
 vi.mock('@tiptap/react', () => ({
   useEditor: (options: Record<string, unknown>) => {
     captured = options;
+    const chain = {
+      setMeta: () => chain,
+      setContent: (...args: unknown[]) => {
+        mockSetContent(...args);
+        return chain;
+      },
+      setTextSelection: () => chain,
+      focus: () => chain,
+      run: vi.fn(),
+    };
     return {
       isDestroyed: false,
       commands: { setContent: mockSetContent, insertContent: vi.fn(), focus: vi.fn() },
       getMarkdown: mockGetMarkdown,
-      chain: () => ({ setTextSelection: () => ({ focus: () => ({ run: vi.fn() }) }) }),
+      chain: () => chain,
       view: { posAtCoords: () => null },
     };
   },
