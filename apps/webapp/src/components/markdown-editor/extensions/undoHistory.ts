@@ -27,12 +27,23 @@ function followsWordCharacter(tr: Transaction, pos: number): boolean {
   return before.length > 0 && !/\s/.test(before);
 }
 
-/** True when the transaction typed a word-ending character right after a non-whitespace character. */
+/** True when the inserted range starts and ends in different textblocks (a paragraph split, not text). */
+function crossesBlockBoundary(tr: Transaction, range: { from: number; to: number }): boolean {
+  return !tr.doc.resolve(range.from).sameParent(tr.doc.resolve(range.to));
+}
+
+/** True when the inserted text ends with a word-ending character right after a word character. */
+function endsWithWordEndChar(tr: Transaction, range: { from: number; to: number }): boolean {
+  const inserted = tr.doc.textBetween(range.from, range.to);
+  return isWordEndChar(inserted.slice(-1)) && followsWordCharacter(tr, range.from);
+}
+
+/** True when the transaction ends a word: a paragraph split (Enter), or a word-ending character typed after a word character. */
 function endsTypedWord(tr: Transaction): boolean {
   const range = lastInsertedRange(tr);
   if (!range || range.to <= range.from) return false;
-  const inserted = tr.doc.textBetween(range.from, range.to);
-  return isWordEndChar(inserted.slice(-1)) && followsWordCharacter(tr, range.from);
+  if (crossesBlockBoundary(tr, range)) return true;
+  return endsWithWordEndChar(tr, range);
 }
 
 /**

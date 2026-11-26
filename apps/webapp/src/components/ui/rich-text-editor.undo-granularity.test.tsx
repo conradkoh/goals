@@ -67,6 +67,18 @@ describe('RichTextEditor undo granularity', () => {
     expect(plain(editor)).toBe('alpha bravo');
   });
 
+  it('pressing Enter inside continuous typing starts a new undo group', () => {
+    const clock = withClock();
+    const editor = setup();
+    type(editor, 'alpha', 60, clock);
+    clock.now += 60;
+    act(() => void editor.commands.splitBlock());
+    type(editor, 'bravo', 60, clock);
+    act(() => void editor.commands.undo());
+    expect(editor.state.doc.childCount).toBe(2);
+    expect(plain(editor)).toBe('alpha');
+  });
+
   it('undo after an external setContent (server sync) does not restore pre-sync text', () => {
     const clock = withClock();
     const ref: { current: RichTextEditorHandle | null } = { current: null };

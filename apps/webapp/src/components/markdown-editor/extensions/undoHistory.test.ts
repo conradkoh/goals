@@ -45,6 +45,18 @@ describe('markdown editor undo granularity', () => {
     expect(plain(editor)).toBe('alpha bravo');
   });
 
+  it('pressing Enter inside continuous typing starts a new undo group', () => {
+    const clock = withClock();
+    const editor = createEditor();
+    typeText(editor, 'alpha', 60, clock);
+    clock.now += 60;
+    editor.commands.splitBlock();
+    typeText(editor, 'bravo', 60, clock);
+    editor.commands.undo();
+    expect(editor.state.doc.childCount).toBe(2);
+    expect(plain(editor)).toBe('alpha');
+  });
+
   it('a pause longer than the group delay still splits undo groups', () => {
     const clock = withClock();
     const editor = createEditor();
