@@ -5,6 +5,7 @@ import { Markdown } from '@tiptap/markdown';
 import StarterKit from '@tiptap/starter-kit';
 
 import { CodeBlockLineBoundarySelection } from './codeBlockLineBoundarySelection';
+import { UndoWordBoundary } from './undoHistory';
 
 export const ParagraphWithBlankLinePreservation = Paragraph.extend({
   renderMarkdown(node, h) {
@@ -21,5 +22,6 @@ export function createMarkdownEditorExtensions(placeholder?: string) {
     ...(placeholder ? [Placeholder.configure({ placeholder })] : []),
     Link.configure({ openOnClick: false }),
     Markdown,
+    UndoWordBoundary,
   ];
 }

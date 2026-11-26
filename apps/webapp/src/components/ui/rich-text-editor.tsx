@@ -17,6 +17,7 @@ import {
   splitMarkdownTables,
 } from './rich-text-markdown-paste';
 
+import { UndoWordBoundary } from '@/components/markdown-editor/extensions/undoHistory';
 import { shouldInterceptPasteForMarkdownConversion } from '@/components/markdown-editor/utils/pasteHandler';
 import { cn } from '@/lib/utils';
 
@@ -653,6 +654,7 @@ export function RichTextEditor({
         placeholder,
       }),
       Markdown,
+      UndoWordBoundary,
       NoNewLineOnSubmit,
       KeepTabInEditor,
       MarkdownLineShortcuts,
