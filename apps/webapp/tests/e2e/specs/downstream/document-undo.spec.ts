@@ -34,5 +34,11 @@ test.describe('Document undo', { tag: [TAG_DOWNSTREAM] }, () => {
     await expect
       .poll(async () => plainText(await editor.textContent()))
       .toBe('alpha bravo charlie');
+    for (let i = 0; i < 2; i++) {
+      await page.keyboard.press(`${MOD}+z`);
+      await expect
+        .poll(async () => plainText(await editor.textContent()))
+        .toBe('alpha bravo charlie');
+    }
   });
 });

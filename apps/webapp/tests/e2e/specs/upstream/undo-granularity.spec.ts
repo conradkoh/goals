@@ -72,8 +72,20 @@ test.describe('Undo granularity', { tag: [TAG_UPSTREAM] }, () => {
     await page.getByTestId('rte-async-load').click();
     await expect(pm).toContainText('loaded from server');
     await pm.click();
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press(`${MOD}+z`);
+      await expect.poll(() => plainText(pm)).toBe('loaded from server');
+    }
+  });
+
+  test('Enter inside continuous typing starts a new undo group', async ({ page }) => {
+    const pm = page.getByTestId('rte-controlled').locator('.ProseMirror');
+    await pm.click();
+    await page.keyboard.type('alpha', { delay: 60 });
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('bravo', { delay: 60 });
     await page.keyboard.press(`${MOD}+z`);
-    await expect.poll(() => plainText(pm)).toBe('loaded from server');
+    await expect.poll(() => plainText(pm)).toBe('alpha');
   });
 
   test('uncontrolled: undo right after external setContent does not restore pre-sync text', async ({
@@ -87,8 +99,10 @@ test.describe('Undo granularity', { tag: [TAG_UPSTREAM] }, () => {
     await expect(pm).toContainText('SERVER COPY');
     await page.waitForTimeout(800);
     await pm.click();
-    await page.keyboard.press(`${MOD}+z`);
-    await expect.poll(() => plainText(pm)).toBe('SERVER COPY');
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press(`${MOD}+z`);
+      await expect.poll(() => plainText(pm)).toBe('SERVER COPY');
+    }
   });
 
   test('bold toggle does not split the word-level undo for typed words', async ({ page }) => {

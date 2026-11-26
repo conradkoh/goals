@@ -63,6 +63,10 @@ test.describe('Scratchpad undo', { tag: [TAG_DOWNSTREAM] }, () => {
       await page.keyboard.press(`${MOD}+z`);
       // The synced content must stay put; undo must not resurrect pre-sync text.
       await expect.poll(async () => plainText(await editor.textContent())).toBe(remoteText);
+      for (let i = 0; i < 2; i++) {
+        await page.keyboard.press(`${MOD}+z`);
+        await expect.poll(async () => plainText(await editor.textContent())).toBe(remoteText);
+      }
     } finally {
       await remotePage.close();
     }
