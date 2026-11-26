@@ -67,4 +67,24 @@ describe('markdown editor undo granularity', () => {
     editor.commands.undo();
     expect(plain(editor)).toBe('alpha bravo');
   });
+
+  it('a pause in the middle of a word still splits the undo group', () => {
+    const clock = withClock();
+    const editor = createEditor();
+    typeText(editor, 'alp', 60, clock);
+    clock.now += 800;
+    typeText(editor, 'ha bravo', 60, clock);
+    editor.commands.undo();
+    expect(editor.getText()).toBe('alpha ');
+    editor.commands.undo();
+    expect(editor.getText()).toBe('alp');
+  });
+
+  it('undo keeps the trailing space of the remaining words exactly', () => {
+    const clock = withClock();
+    const editor = createEditor();
+    typeText(editor, 'alpha bravo charlie delta echo', 60, clock);
+    editor.commands.undo();
+    expect(editor.getText()).toBe('alpha bravo charlie delta ');
+  });
 });

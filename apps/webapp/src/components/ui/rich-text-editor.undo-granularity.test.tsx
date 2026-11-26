@@ -103,4 +103,24 @@ describe('RichTextEditor undo granularity', () => {
     act(() => void editor.commands.undo());
     expect(plain(editor)).toBe('loaded from server');
   });
+
+  it('a pause in the middle of a word still splits the undo group', () => {
+    const clock = withClock();
+    const editor = setup();
+    type(editor, 'alp', 60, clock);
+    clock.now += 800;
+    type(editor, 'ha bravo', 60, clock);
+    act(() => void editor.commands.undo());
+    expect(editor.getText()).toBe('alpha ');
+    act(() => void editor.commands.undo());
+    expect(editor.getText()).toBe('alp');
+  });
+
+  it('undo keeps the trailing space of the remaining words exactly', () => {
+    const clock = withClock();
+    const editor = setup();
+    type(editor, 'alpha bravo charlie delta echo', 60, clock);
+    act(() => void editor.commands.undo());
+    expect(editor.getText()).toBe('alpha bravo charlie delta ');
+  });
 });
