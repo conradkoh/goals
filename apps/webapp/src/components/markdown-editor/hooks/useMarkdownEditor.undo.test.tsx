@@ -55,4 +55,25 @@ describe('useMarkdownEditor undo-safe content sync', () => {
     });
     expect(plain(api.editor)).toBe('Second');
   });
+
+  it('repeated undo after the returned setContent never restores pre-sync text', () => {
+    let captured: Api | undefined;
+    const onReady = (a: Api) => {
+      captured = a;
+    };
+    render(<Harness content="" onReady={onReady} />);
+    const api = requireApi(captured);
+    act(() => {
+      api.editor.view.dispatch(api.editor.state.tr.insertText('local draft'));
+    });
+    act(() => {
+      api.setContent('SERVER COPY');
+    });
+    for (let i = 0; i < 3; i++) {
+      act(() => {
+        api.editor.commands.undo();
+      });
+      expect(plain(api.editor)).toBe('SERVER COPY');
+    }
+  });
 });

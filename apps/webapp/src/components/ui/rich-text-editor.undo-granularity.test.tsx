@@ -90,9 +90,10 @@ describe('RichTextEditor undo granularity', () => {
     type(editor, 'local draft', 60, clock);
     clock.now += 800;
     act(() => ref.current?.setContent('<p>SERVER COPY</p>'));
-    clock.now += 800;
-    act(() => void editor.commands.undo());
-    expect(plain(editor)).toBe('SERVER COPY');
+    for (let i = 0; i < 3; i++) {
+      act(() => void editor.commands.undo());
+      expect(plain(editor)).toBe('SERVER COPY');
+    }
   });
 
   it('undo after a controlled value sync (document load) does not blank the document', () => {
@@ -100,8 +101,29 @@ describe('RichTextEditor undo granularity', () => {
     const editor = (container.querySelector('.ProseMirror') as HTMLElement & { editor: Editor })
       .editor;
     rerender(<RichTextEditor value="<p>loaded from server</p>" onChange={() => {}} />);
+    for (let i = 0; i < 3; i++) {
+      act(() => void editor.commands.undo());
+      expect(plain(editor)).toBe('loaded from server');
+    }
+  });
+
+  it('typing after an external sync is undoable, and undo never goes back past the sync', () => {
+    const clock = withClock();
+    const ref: { current: RichTextEditorHandle | null } = { current: null };
+    const { container } = render(
+      <RichTextEditor value="" onChange={() => {}} editorRef={ref} autoFocus />
+    );
+    const editor = (container.querySelector('.ProseMirror') as HTMLElement & { editor: Editor })
+      .editor;
+    type(editor, 'local draft', 60, clock);
+    clock.now += 800;
+    act(() => ref.current?.setContent('<p>SERVER COPY</p>'));
+    clock.now += 800;
+    type(editor, ' more', 60, clock);
     act(() => void editor.commands.undo());
-    expect(plain(editor)).toBe('loaded from server');
+    expect(plain(editor)).toBe('SERVER COPY');
+    act(() => void editor.commands.undo());
+    expect(plain(editor)).toBe('SERVER COPY');
   });
 
   it('a pause in the middle of a word still splits the undo group', () => {
