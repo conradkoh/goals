@@ -6,7 +6,7 @@ Portable TipTap-based markdown editing primitives for downstream apps.
 
 - `components/` — MarkdownEditor, MarkdownViewer, EditableMarkdown, toolbar, and renderers.
 - `hooks/` — editor lifecycle hook.
-- `extensions/` — TipTap extension bundle.
+- `extensions/` — TipTap extension bundle. `undoHistory.ts` holds the shared word-boundary undo grouping (`UndoWordBoundary`) and `setContentWithoutHistory` for programmatic content sync.
 - `utils/` — normalization, keyboard, markdown, and typography helpers.
 
 ## Usage

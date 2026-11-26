@@ -1,6 +1,6 @@
 'use client';
 
-// TRIAGE HARNESS (dev-only, /test is redirected in production): mounts each editor family
+// Dev harness for the undo-granularity e2e (dev-only, /test is redirected in production): mounts each editor family
 // without Convex/auth so Playwright can measure Cmd/Ctrl+Z granularity.
 import { useRef, useState } from 'react';
 

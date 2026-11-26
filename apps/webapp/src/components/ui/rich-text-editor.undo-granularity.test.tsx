@@ -6,8 +6,8 @@ import { RichTextEditor, type RichTextEditorHandle } from './rich-text-editor';
 
 vi.mock('./rich-text-editor.module.css', () => ({ default: {} }));
 
-// TRIAGE REGRESSION SEAM: drives the real <RichTextEditor> through ProseMirror transactions with a
-// controllable clock, then asks the editor's own undo command what is left.
+// Drives the real <RichTextEditor> through ProseMirror transactions with a controllable clock,
+// then asks the editor's own undo command what is left.
 function setup(html = '') {
   const { container } = render(<RichTextEditor value={html} onChange={() => {}} autoFocus />);
   const dom = container.querySelector('.ProseMirror') as HTMLElement & { editor: Editor };
@@ -40,7 +40,6 @@ describe('RichTextEditor undo granularity', () => {
     const editor = setup();
     type(editor, 'alpha bravo charlie delta echo', 60, clock);
     act(() => void editor.commands.undo());
-    // RED today: whole sentence is one history group -> ''
     expect(plain(editor)).toBe('alpha bravo charlie delta');
   });
 
